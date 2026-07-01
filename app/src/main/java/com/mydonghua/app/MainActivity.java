@@ -468,23 +468,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
-        public String getDynamicColors() {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    android.content.res.Resources res = android.content.res.Resources.getSystem();
-                    int accent1 = res.getColor(android.R.color.system_accent1_500, null);
-                    int accent2 = res.getColor(android.R.color.system_accent2_500, null);
-                    int neutral1 = res.getColor(android.R.color.system_neutral1_500, null);
-                    String h1 = String.format("#%06X", 0xFFFFFF & accent1);
-                    String h2 = String.format("#%06X", 0xFFFFFF & accent2);
-                    String hn = String.format("#%06X", 0xFFFFFF & neutral1);
-                    return "{\"accent1\":\"" + h1 + "\",\"accent2\":\"" + h2 + "\",\"neutral1\":\"" + hn + "\"}";
-                }
-            } catch (Throwable ignored) {}
-            return "null";
-        }
-
-        @JavascriptInterface
         public String dbGetAllShows() {
             try { return dbHelper.getAllShows(); }
             catch (Throwable t) { t.printStackTrace(); return "[]"; }

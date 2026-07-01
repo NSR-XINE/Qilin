@@ -30,23 +30,7 @@ function updateThemeMeta() {
     else el.content = '#05060a';
 }
 
-function applyDynamicColors() {
-    if (!DB._available) return;
-    try {
-        const json = DB.getDynamicColors();
-        if (json && json !== 'null') {
-            const colors = JSON.parse(json);
-            const root = document.documentElement;
-            if (colors.accent1) root.style.setProperty('--accent-cyan', '#' + colors.accent1);
-            if (colors.accent2) root.style.setProperty('--accent-purple', '#' + colors.accent2);
-            if (colors.neutral1) root.style.setProperty('--text-primary', '#' + colors.neutral1);
-            root.classList.add('dynamic-colors');
-        }
-    } catch(e) {}
-}
-
 function initTheme() {
-    applyDynamicColors();
     let savedTheme = 'dark';
     if (DB._available) {
         savedTheme = DB.getSetting('app_theme', '') || DB.getLocal('app_theme') || 'dark';

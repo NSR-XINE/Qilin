@@ -1,16 +1,34 @@
+function openSeasonalModal() {
+    closeDrawer();
+    const modal = document.getElementById('seasonal-modal');
+    if (!modal) return;
+    renderSeasonalView();
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+}
+
+function closeSeasonalModal() {
+    const modal = document.getElementById('seasonal-modal');
+    if (modal) modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+}
+
 function renderSeasonalView() {
-    const container = document.getElementById('shows-sections-container');
-    const emptyStateEl = document.getElementById('empty-state');
+    const container = document.getElementById('seasonal-content');
     if (!container) return;
 
     if (shows.length === 0) {
-        container.innerHTML = '';
-        showEmptyState(emptyStateEl, 'No Shows', 'Add shows to see them grouped by season.', false);
+        container.innerHTML = '<div class="empty-state" style="display:flex;"><i class="fa-solid fa-seedling"></i><h3>No Shows</h3><p>Add shows to see them grouped by season.</p></div>';
         return;
     }
 
     const genreFilter = filters.genre ? filters.genre.toLowerCase() : '';
     const filteredShows = genreFilter ? shows.filter(s => s.genre && s.genre.toLowerCase().includes(genreFilter)) : shows;
+
+    if (filteredShows.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="display:flex;"><i class="fa-solid fa-filter"></i><h3>No Matches</h3><p>No shows match the selected genre filter.</p></div>';
+        return;
+    }
 
     const seasons = {};
     const now = new Date();
@@ -23,8 +41,7 @@ function renderSeasonalView() {
     });
 
     if (Object.keys(seasons).length === 0) {
-        container.innerHTML = '';
-        showEmptyState(emptyStateEl, 'No Matches', genreFilter ? `No shows match the selected genre filter.` : 'No shows found.', true);
+        container.innerHTML = '<div class="empty-state" style="display:flex;"><i class="fa-solid fa-calendar"></i><h3>No Matches</h3><p>No shows found.</p></div>';
         return;
     }
 
@@ -49,7 +66,6 @@ function renderSeasonalView() {
     });
 
     container.innerHTML = html;
-    emptyStateEl.style.display = 'none';
 }
 
 function getSeasonLabel(show) {
@@ -76,3 +92,12 @@ function getSeasonIcon(label) {
     const icons = { Winter: 'fa-snowflake', Spring: 'fa-seedling', Summer: 'fa-sun', Fall: 'fa-leaf' };
     return `<i class="fa-regular ${icons[season] || 'fa-calendar'}" style="color:var(--accent-cyan)"></i>`;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btn-open-seasonal');
+    if (btn) btn.addEventListener('click', openSeasonalModal);
+    const closeBtn = document.getElementById('btn-close-seasonal');
+    if (closeBtn) closeBtn.addEventListener('click', closeSeasonalModal);
+    const modal = document.getElementById('seasonal-modal');
+    if (modal) modal.addEventListener('click', (e) => { if (e.target.id === 'seasonal-modal') closeSeasonalModal(); });
+});

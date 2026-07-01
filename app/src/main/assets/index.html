@@ -73,6 +73,9 @@
             <button id="btn-open-history" class="drawer-item">
                 <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-purple);"></i> Watch History
             </button>
+            <button id="btn-open-seasonal" class="drawer-item">
+                <i class="fa-solid fa-tree" style="color:var(--accent-cyan);"></i> Seasonal View
+            </button>
             <hr class="drawer-divider">
             <button id="btn-open-settings" class="drawer-item">
                 <i class="fa-solid fa-gear" style="color:var(--accent-cyan);"></i> Settings
@@ -364,6 +367,19 @@
         </div>
     </div>
 
+    <!-- Seasonal View Modal -->
+    <div class="modal-overlay" id="seasonal-modal" style="display: none;">
+        <div class="modal-content glass-card animate-scale" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-tree" style="color: var(--accent-cyan);"></i> Seasonal View</h2>
+                <button id="btn-close-seasonal" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="seasonal-content" style="max-height: 65vh; overflow-y: auto;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Modal Overlay -->
     <div class="modal-overlay" id="donghua-modal" style="display: none;">
         <div class="modal-content glass-card animate-scale">
@@ -508,10 +524,6 @@
         <button class="nav-item" id="nav-btn-stopped" onclick="switchTab('stopped')">
             <i class="fa-solid fa-rocket"></i>
             <span>Stopped</span>
-        </button>
-        <button class="nav-item" id="nav-btn-seasonal" onclick="switchTab('seasonal')">
-            <i class="fa-regular fa-calendar"></i>
-            <span>Seasonal</span>
         </button>
     </nav>
 

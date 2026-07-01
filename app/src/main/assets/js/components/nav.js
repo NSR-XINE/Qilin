@@ -5,7 +5,7 @@ function switchTab(tabName) {
     if (tabName === 'add') return;
     activeTab = tabName;
 
-    document.body.classList.remove('tab-home', 'tab-airing', 'tab-stopped', 'tab-complete', 'tab-seasonal');
+    document.body.classList.remove('tab-home', 'tab-airing', 'tab-stopped', 'tab-complete');
     document.body.classList.add(`tab-${tabName}`);
 
     document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
@@ -37,12 +37,8 @@ function switchTab(tabName) {
             if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
             if (sectionsContainer) sectionsContainer.style.setProperty('display', 'block', 'important');
             renderShowsGrid();
-        } else if (tabName === 'seasonal') {
-            if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
-            if (sectionsContainer) sectionsContainer.style.setProperty('display', 'block', 'important');
-            renderSeasonalView();
         }
-        const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped' || tabName === 'seasonal';
+        const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
         const genreBar = document.getElementById('genre-filter-bar');
         if (genreBar) {
             genreBar.style.setProperty('display', showGenreBar ? 'flex' : 'none', 'important');
@@ -53,7 +49,7 @@ function switchTab(tabName) {
             if (el) el.style.display = '';
         });
         renderHeroBanner();
-        const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped' || tabName === 'seasonal';
+        const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
         const genreBar = document.getElementById('genre-filter-bar');
         if (genreBar) {
             genreBar.style.display = showGenreBar ? 'flex' : 'none';

@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addSwipeToDismiss('stats-modal', closeStatsModal);
     addSwipeToDismiss('calendar-modal', closeCalendarModal);
     addSwipeToDismiss('collections-modal', closeCollectionsModal);
+    addSwipeToDismiss('seasonal-modal', closeSeasonalModal);
 
     document.getElementById('btn-open-drawer')?.addEventListener('click', openDrawer);
     document.getElementById('btn-close-drawer')?.addEventListener('click', closeDrawer);

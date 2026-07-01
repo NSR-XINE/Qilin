@@ -182,7 +182,7 @@ function confirmExitApp() {
 function closeTopModal() {
     const drawer = document.getElementById('right-drawer');
     if (drawer && drawer.classList.contains('open')) { closeDrawer(); return; }
-    const modalIds = ['history-modal', 'stats-modal', 'calendar-modal', 'collections-modal', 'settings-modal', 'donghua-modal', 'import-modal', 'details-modal', 'exit-modal'];
+    const modalIds = ['history-modal', 'stats-modal', 'calendar-modal', 'collections-modal', 'seasonal-modal', 'settings-modal', 'donghua-modal', 'import-modal', 'details-modal', 'exit-modal'];
     for (let i = modalIds.length - 1; i >= 0; i--) {
         const el = document.getElementById(modalIds[i]);
         if (el && el.style.display === 'flex') {
@@ -190,6 +190,7 @@ function closeTopModal() {
             else if (modalIds[i] === 'stats-modal') closeStatsModal();
             else if (modalIds[i] === 'calendar-modal') closeCalendarModal();
             else if (modalIds[i] === 'collections-modal') closeCollectionsModal();
+            else if (modalIds[i] === 'seasonal-modal') closeSeasonalModal();
             else if (modalIds[i] === 'settings-modal') closeSettingsModal();
             else if (modalIds[i] === 'donghua-modal') closeModal();
             else if (modalIds[i] === 'import-modal') closeImportModal();
@@ -221,7 +222,7 @@ function closeImportModal() {
 }
 
 function handleBackPress() {
-    const modalIds = ['history-modal', 'stats-modal', 'calendar-modal', 'collections-modal', 'settings-modal', 'donghua-modal', 'import-modal', 'details-modal', 'exit-modal'];
+    const modalIds = ['history-modal', 'stats-modal', 'calendar-modal', 'collections-modal', 'seasonal-modal', 'settings-modal', 'donghua-modal', 'import-modal', 'details-modal', 'exit-modal'];
     for (let i = modalIds.length - 1; i >= 0; i--) {
         const el = document.getElementById(modalIds[i]);
         if (el && el.style.display === 'flex') {
@@ -358,15 +359,50 @@ function setupSettingsModal() {
 }
 
 function setupFormSubmission() {
+    const titleInput = document.getElementById('show-title');
+
+    if (titleInput) {
+        const container = document.createElement('div');
+        container.id = 'title-suggestions';
+        container.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;z-index:2000;max-height:180px;overflow-y:auto;margin-top:2px;display:none;';
+        titleInput.parentElement.style.position = 'relative';
+        titleInput.parentElement.appendChild(container);
+
+        const debouncedSuggest = debounce(() => {
+            const q = titleInput.value.trim().toLowerCase();
+            if (!q || q.length < 2) { container.style.display = 'none'; return; }
+            const matches = shows.filter(s => s.title.toLowerCase().includes(q)).slice(0, 6);
+            if (matches.length === 0) { container.style.display = 'none'; return; }
+            container.innerHTML = matches.map(s =>
+                `<div style="padding:0.4rem 0.6rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">${escapeHtml(s.title)}${s.titleZh ? ' <span style="color:var(--text-muted)">· ' + escapeHtml(s.titleZh) + '</span>' : ''}</div>`
+            ).join('');
+            container.style.display = 'block';
+            Array.from(container.children).forEach((el, i) => {
+                el.addEventListener('click', () => {
+                    const show = matches[i];
+                    if (!show) return;
+                    openModal(show);
+                    container.style.display = 'none';
+                });
+            });
+        }, 200);
+
+        titleInput.addEventListener('input', debouncedSuggest);
+        titleInput.addEventListener('blur', () => setTimeout(() => container.style.display = 'none', 200));
+        titleInput.addEventListener('focus', () => { if (container.children.length > 0 && titleInput.value.trim().length >= 2) container.style.display = 'block'; });
+    }
+
     document.getElementById('btn-fetch-poster')?.addEventListener('click', () => {
-        const title = document.getElementById('show-title')?.value.trim();
+        const title = titleInput?.value.trim();
         fetchShowDetails(title, false);
     });
 
-    document.getElementById('show-title')?.addEventListener('change', (e) => {
-        const title = e.target.value.trim();
-        fetchShowDetails(title, true);
-    });
+    if (titleInput) {
+        titleInput.addEventListener('change', (e) => {
+            const title = e.target.value.trim();
+            fetchShowDetails(title, true);
+        });
+    }
 
     document.getElementById('donghua-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
