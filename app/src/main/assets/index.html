@@ -7,7 +7,8 @@
     <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" as="style" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"></noscript>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="css/all.min.css">
     <!-- Custom CSS -->
@@ -33,7 +34,7 @@
             </div>
             <div class="loading-text" id="loading-status-text">Booting engine...</div>
             <div class="loading-offline" id="loading-offline-msg" style="display:none">
-                <i class="fa-solid fa-wifi-slash"></i> No internet connection
+                <i class="fa-solid fa-circle-exclamation"></i> No internet connection
             </div>
         </div>
     </div>
@@ -55,7 +56,7 @@
             </button>
         </div>
         <div class="offline-banner" id="offline-banner" style="display:none">
-            <i class="fa-solid fa-wifi-slash"></i> You are offline
+            <i class="fa-solid fa-circle-exclamation"></i> You are offline
         </div>
     </header>
 
