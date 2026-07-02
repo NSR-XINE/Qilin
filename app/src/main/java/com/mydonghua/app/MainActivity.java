@@ -46,6 +46,14 @@ public class MainActivity extends AppCompatActivity {
         insetsHelper.setOnApplyWindowInsetsListener();
 
         WebViewSetup.setupWebView(this, webView, dbHelper, insetsHelper);
+
+        requestPermissionsOnStart();
+    }
+
+    private void requestPermissionsOnStart() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+        requestNotificationPermission();
+        requestStoragePermission();
     }
 
     static final int FILE_CHOOSER_REQUEST_CODE = 1001;
