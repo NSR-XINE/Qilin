@@ -410,4 +410,19 @@ class AndroidBridge {
         }
         return true;
     }
+
+    @JavascriptInterface
+    public void requestStoragePermission() {
+        runOnUi(() -> {
+            MainActivity a = getActivity();
+            if (a != null) a.requestStoragePermission();
+        });
+    }
+
+    @JavascriptInterface
+    public boolean hasStoragePermission() {
+        MainActivity a = getActivity();
+        if (a != null) return a.hasStoragePermission();
+        return false;
+    }
 }

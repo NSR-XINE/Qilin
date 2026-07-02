@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     static final int NOTIFICATION_PERMISSION_CODE = 1002;
+    static final int STORAGE_PERMISSION_CODE = 1003;
 
     void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -100,6 +101,34 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    void requestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.READ_MEDIA_IMAGES},
+                        STORAGE_PERMISSION_CODE);
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                        STORAGE_PERMISSION_CODE);
+            }
+        }
+    }
+
+    boolean hasStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
+                    == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == NOTIFICATION_PERMISSION_CODE) {
@@ -107,6 +136,15 @@ public class MainActivity extends AppCompatActivity {
             if (webView != null) {
                 webView.evaluateJavascript(
                     "window.dispatchEvent(new CustomEvent('notificationPermissionResult', {detail: " +
+                    granted + "}));", null);
+            }
+            return;
+        }
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (webView != null) {
+                webView.evaluateJavascript(
+                    "window.dispatchEvent(new CustomEvent('storagePermissionResult', {detail: " +
                     granted + "}));", null);
             }
             return;
