@@ -84,21 +84,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (msg) msg.style.display = 'flex';
     }
 
-    function updateOfflineStatus() {
-        const offline = !navigator.onLine;
+    function setOfflineState(offline) {
         const banner = document.getElementById('offline-banner');
         if (banner) banner.style.display = offline ? 'flex' : 'none';
+        if (offline) showLoadingOffline();
     }
 
-    if (!navigator.onLine) showLoadingOffline();
-    setTimeout(() => { if (!navigator.onLine) showLoadingOffline(); }, 1500);
+    function checkConnectivity() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        fetch('https://1.1.1.1', { signal: controller.signal, mode: 'no-cors' })
+            .then(() => { clearTimeout(timeout); setOfflineState(false); })
+            .catch(() => { clearTimeout(timeout); setOfflineState(true); });
+    }
 
-    window.addEventListener('online', updateOfflineStatus);
-    window.addEventListener('offline', () => {
-        updateOfflineStatus();
-        showLoadingOffline();
-    });
-    updateOfflineStatus();
+    if (!navigator.onLine) setOfflineState(true);
+    checkConnectivity();
+
+    window.addEventListener('online', () => setOfflineState(false));
+    window.addEventListener('offline', () => setOfflineState(true));
 
     addSwipeToDismiss('settings-modal', closeSettingsModal);
     addSwipeToDismiss('donghua-modal', closeModal);
