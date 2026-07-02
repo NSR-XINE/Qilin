@@ -111,12 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePtrTop() {
         const header = document.querySelector('.app-header');
         ptrTop = header ? header.getBoundingClientRect().bottom : 0;
+        ptrIndicator.style.setProperty('--ptr-top', ptrTop + 'px');
     }
 
     const ptrIndicator = document.createElement('div');
     ptrIndicator.className = 'pull-to-refresh-indicator';
-    ptrIndicator.innerHTML = '<i class="fa-solid fa-spinner"></i><span>Pull to refresh</span>';
+    ptrIndicator.innerHTML = '<div class="ptr-bg"></div><div class="ptr-inner"><i class="fa-solid fa-spinner"></i><span>Pull to refresh</span></div>';
     document.body.appendChild(ptrIndicator);
+    const ptrBg = ptrIndicator.querySelector('.ptr-bg');
+    const ptrInner = ptrIndicator.querySelector('.ptr-inner');
     updatePtrTop();
     window.addEventListener('resize', updatePtrTop);
 
@@ -127,8 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetPtr() {
         isPulling = false;
-        ptrIndicator.style.transition = '';
-        ptrIndicator.style.transform = '';
+        ptrBg.style.transition = '';
+        ptrBg.style.transform = '';
+        ptrInner.classList.remove('visible');
         const icon = ptrIndicator.querySelector('i');
         if (icon) icon.className = 'fa-solid fa-spinner';
         const span = ptrIndicator.querySelector('span');
@@ -151,8 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
         touchMoveY = e.touches[0].clientY;
         const pullDist = touchMoveY - touchStartY;
         if (pullDist > 0) {
-            ptrIndicator.style.transition = 'none';
-            ptrIndicator.style.transform = 'translateY(' + (ptrTop + Math.min(pullDist * 0.4, 40)) + 'px)';
+            ptrBg.style.transition = 'none';
+            ptrBg.style.transform = 'translateY(' + Math.min(pullDist * 0.4, 40) + 'px)';
+            ptrInner.classList.add('visible');
             const icon = ptrIndicator.querySelector('i');
             if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
             const span = ptrIndicator.querySelector('span');
@@ -170,8 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
             const span = ptrIndicator.querySelector('span');
             if (span) span.textContent = 'Refreshing...';
-            ptrIndicator.style.transition = '';
-            ptrIndicator.style.transform = 'translateY(' + ptrTop + 'px)';
+            ptrBg.style.transition = '';
             refreshAllData();
             setTimeout(() => {
                 isRefreshing = false;
