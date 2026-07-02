@@ -1,3 +1,19 @@
+window.imageCache = new Map();
+
+window.onBannerImageLoad = function(img, url) {
+    if (img.classList.contains('loaded')) return;
+    img.classList.add('loaded');
+    const wrap = img.closest('.banner-image-wrap');
+    if (wrap) wrap.classList.remove('shimmer-loading');
+    if (url) window.imageCache.set(url, 'loaded');
+};
+
+window.onBannerImageError = function(img) {
+    img.style.display = 'none';
+    const wrap = img.closest('.banner-image-wrap');
+    if (wrap) wrap.classList.remove('shimmer-loading');
+};
+
 function renderHeroBanner() {
     const bannerEl = document.getElementById('next-up-banner');
     if (!bannerEl) return;
@@ -41,12 +57,27 @@ function renderHeroBanner() {
 
     const bannerGradient = getPosterGradient(show.title);
     const safePoster = safePosterUrl(show.poster);
-    const imageStyle = safePoster
-        ? `background-image: url(${safePoster}); background-size: cover; background-position: center; background-repeat: no-repeat;`
-        : `background: ${bannerGradient};`;
+    const isCached = safePoster && window.imageCache.get(safePoster) === 'loaded';
+
+    let imageHtml = '';
+    if (safePoster) {
+        const shimmerCls = isCached ? '' : ' shimmer-loading';
+        const loadedCls = isCached ? ' loaded' : '';
+        const escapedUrl = safePoster.replace(/'/g, "\\'");
+        imageHtml = `
+            <div class="banner-image-wrap${shimmerCls}" style="background: ${bannerGradient};">
+                <img class="banner-poster${loadedCls}"
+                     src="${safePoster}"
+                     alt="${escapeHtml(show.title)}"
+                     onload="onBannerImageLoad(this, '${escapedUrl}')"
+                     onerror="onBannerImageError(this)">
+            </div>`;
+    } else {
+        imageHtml = `<div class="banner-image-wrap" style="background: ${bannerGradient};"></div>`;
+    }
 
     bannerEl.innerHTML = `
-        <div class="banner-image-wrap" style="${imageStyle}"></div>
+        ${imageHtml}
         <div class="banner-info-section">
             <div class="banner-details">
                 <span class="banner-badge">

@@ -28,4 +28,4 @@ const LOADING_MESSAGES = [
     "Starting tracker engines..."
 ];
 
-const VALID_STATUSES = new Set(['ongoing', 'completed', 'stopped']);
+

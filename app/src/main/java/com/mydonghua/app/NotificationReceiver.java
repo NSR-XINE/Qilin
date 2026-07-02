@@ -15,12 +15,16 @@ public class NotificationReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (intent == null || context == null) return;
+
         String showId = intent.getStringExtra("show_id");
         String title = intent.getStringExtra("show_title");
         String releaseDay = intent.getStringExtra("release_day");
         String releaseTime = intent.getStringExtra("release_time");
         int alarmCode = intent.getIntExtra("alarm_code", -1);
+        int currentEp = intent.getIntExtra("current_ep", 0);
 
+        if (showId == null || showId.isEmpty()) return;
         if (title == null || title.isEmpty()) {
             title = "A Tracked Donghua";
         }
@@ -43,29 +47,15 @@ public class NotificationReceiver extends BroadcastReceiver {
         activityIntent.putExtra("target_show_id", showId);
         activityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        int requestCode = alarmCode > 0 ? alarmCode : (showId != null ? showId.hashCode() : (int) System.currentTimeMillis());
+        int requestCode = alarmCode > 0 ? alarmCode : Math.abs(showId.hashCode());
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags |= PendingIntent.FLAG_IMMUTABLE;
         }
         PendingIntent pi = PendingIntent.getActivity(context, requestCode, activityIntent, flags);
 
-        String episodeText = " is about to broadcast its next release.";
-        android.database.sqlite.SQLiteDatabase db = null;
-        try {
-            DatabaseHelper helper = new DatabaseHelper(context);
-            String showJson = helper.getShowsByStatus("ongoing");
-            org.json.JSONArray arr = new org.json.JSONArray(showJson);
-            for (int i = 0; i < arr.length(); i++) {
-                org.json.JSONObject s = arr.getJSONObject(i);
-                if (s.getString("id").equals(showId)) {
-                    int nextEp = s.optInt("currentEp", 0) + 1;
-                    episodeText = " Episode " + nextEp + " is airing now!";
-                    break;
-                }
-            }
-            helper.close();
-        } catch (Exception ignored) {}
+        int nextEp = currentEp + 1;
+        String episodeText = " Episode " + nextEp + " is airing now!";
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
@@ -77,11 +67,11 @@ public class NotificationReceiver extends BroadcastReceiver {
                 .setContentIntent(pi)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
-        int notifyId = alarmCode > 0 ? alarmCode : (showId != null ? Math.abs(showId.hashCode()) : (int) System.currentTimeMillis());
+        int notifyId = (showId + ":" + currentEp).hashCode() & Integer.MAX_VALUE;
         nm.notify(notifyId, builder.build());
 
-        if (showId != null && releaseDay != null && releaseTime != null && alarmCode > 0) {
-            AlarmScheduler.schedule(context, showId, title, releaseDay, releaseTime, alarmCode);
+        if (releaseDay != null && releaseTime != null && alarmCode > 0) {
+            AlarmScheduler.schedule(context, showId, title, releaseDay, releaseTime, alarmCode, currentEp);
         }
     }
 }

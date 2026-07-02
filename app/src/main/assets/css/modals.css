@@ -17,9 +17,9 @@
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(var(--white-rgb), 0.12);
     padding: 0 !important;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+    box-shadow: var(--shadow-elevated);
     position: relative;
     overflow: hidden;
 }
@@ -70,7 +70,7 @@ body.modal-open { overflow: hidden !important; height: 100vh !important; }
     transition: var(--transition-smooth);
 }
 
-.modal-close:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
+.modal-close:hover { background: rgba(var(--white-rgb), 0.05); color: var(--text-primary); }
 
 .modal-footer {
     display: flex;
@@ -130,7 +130,7 @@ body.modal-open { overflow: hidden !important; height: 100vh !important; }
 .form-group select:focus,
 .form-group textarea:focus {
     border-color: var(--accent-cyan);
-    box-shadow: 0 0 8px rgba(0, 242, 254, 0.15);
+    box-shadow: 0 0 8px rgba(var(--accent-cyan-rgb), 0.15);
 }
 
 .form-help { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }

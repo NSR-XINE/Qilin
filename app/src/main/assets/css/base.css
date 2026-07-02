@@ -10,9 +10,9 @@ html, body {
 }
 
 body {
-    background-color: var(--bg-dark);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
-    font-family: var(--font-body);
+    font-family: var(--font-main);
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
@@ -28,15 +28,26 @@ input, textarea {
 }
 
 :root {
-    --bg-dark: #0a0c14;
-    --bg-darker: #05060a;
+    --bg-primary: #0a0c14;
+    --bg-secondary: #05060a;
     --bg-card: rgba(20, 26, 38, 0.65);
     --bg-card-hover: rgba(28, 36, 53, 0.85);
+    --bg-elevated: rgba(20, 26, 38, 0.85);
+    --bg-input: rgba(0, 0, 0, 0.35);
+    --bg-header-day: rgba(255, 255, 255, 0.03);
+    --bg-overlay: rgba(5, 6, 10, 0.85);
+    --bg-card-header-start: #1b2030;
+    --bg-card-header-end: #2d1b3a;
+
     --border-color: rgba(255, 255, 255, 0.08);
     --border-hover: rgba(255, 255, 255, 0.18);
+    --border-light: rgba(255, 255, 255, 0.05);
+
     --text-primary: #f3f5f9;
     --text-secondary: #a0aec0;
     --text-muted: #718096;
+    --text-on-accent: var(--bg-secondary);
+
     --accent-cyan: #00f2fe;
     --accent-cyan-rgb: 0, 242, 254;
     --accent-purple: #9d4edd;
@@ -44,38 +55,65 @@ input, textarea {
     --accent-rose: #ff2a5f;
     --accent-rose-rgb: 255, 42, 95;
     --accent-green: #39ff14;
-    --bg-overlay: rgba(5, 6, 10, 0.85);
-    --bg-header-day: rgba(255, 255, 255, 0.03);
-    --bg-input: rgba(0, 0, 0, 0.35);
-    --shadow-neon-cyan: 0 0 15px rgba(0, 242, 254, 0.25);
-    --shadow-neon-purple: 0 0 15px rgba(157, 78, 221, 0.25);
-    --shadow-neon-rose: 0 0 15px rgba(255, 42, 95, 0.25);
-    --status-bar-height: env(safe-area-inset-top, 0px);
-    --navigation-bar-height: env(safe-area-inset-bottom, 0px);
+    --accent-green-rgb: 57, 255, 20;
+    --accent-orange: #f59e0b;
+    --accent-orange-rgb: 245, 158, 11;
+    --accent-red: #ef4444;
+    --accent-red-rgb: 239, 68, 68;
+    --accent-blue: #60a5fa;
+    --accent-blue-rgb: 96, 165, 250;
+
+    --overlay-bg: rgba(5, 6, 10, 0.85);
+
+    --glow-cyan: 0 0 15px rgba(0, 242, 254, 0.25);
+    --glow-purple: 0 0 15px rgba(157, 78, 221, 0.25);
+    --glow-rose: 0 0 15px rgba(255, 42, 95, 0.25);
+
+    --shadow-card: 0 15px 35px rgba(0,0,0,0.6);
+    --shadow-elevated: 0 25px 50px -12px rgba(0,0,0,0.8);
+
+    --font-heading: 'Outfit', -apple-system, sans-serif;
+    --font-main: 'Inter', -apple-system, sans-serif;
+
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
+
+    --loading-shimmer: rgba(255, 255, 255, 0.05);
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --font-heading: 'Outfit', -apple-system, sans-serif;
-    --font-body: 'Inter', -apple-system, sans-serif;
+    --stars-opacity: 0.15;
+
+    --white-rgb: 255, 255, 255;
+    --black-rgb: 0, 0, 0;
+    --bg-primary-rgb: 10, 12, 20;
+
+    --bg-dark: var(--bg-primary);
+    --bg-darker: var(--bg-secondary);
+    --font-body: var(--font-main);
+    --shadow-neon-cyan: var(--glow-cyan);
+    --shadow-neon-purple: var(--glow-purple);
+    --shadow-neon-rose: var(--glow-rose);
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-darker); }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: rgba(var(--white-rgb), 0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--white-rgb), 0.3); }
 
 .stars-bg {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background-image:
-        radial-gradient(1px 1px at 25px 35px, #fff, transparent),
-        radial-gradient(1.5px 1.5px at 150px 220px, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 300px 80px, #fff, transparent),
-        radial-gradient(2px 2px at 450px 380px, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1px 1px at 600px 180px, #fff, transparent),
-        radial-gradient(1.5px 1.5px at 750px 480px, rgba(255,255,255,0.6), transparent);
+        radial-gradient(1px 1px at 25px 35px, var(--text-primary), transparent),
+        radial-gradient(1.5px 1.5px at 150px 220px, rgba(var(--white-rgb), 0.8), transparent),
+        radial-gradient(1px 1px at 300px 80px, var(--text-primary), transparent),
+        radial-gradient(2px 2px at 450px 380px, rgba(var(--white-rgb), 0.7), transparent),
+        radial-gradient(1px 1px at 600px 180px, var(--text-primary), transparent),
+        radial-gradient(1.5px 1.5px at 750px 480px, rgba(var(--white-rgb), 0.6), transparent);
     background-size: 800px 600px;
-    opacity: 0.15;
+    opacity: var(--stars-opacity);
     pointer-events: none;
     z-index: 0;
 }
@@ -83,8 +121,8 @@ input, textarea {
 .status-bar-blocker {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: var(--status-bar-height, 0px);
-    background: var(--bg-darker);
+    height: var(--safe-area-top, 0px);
+    background: var(--bg-secondary);
     z-index: 201;
     pointer-events: none;
 }

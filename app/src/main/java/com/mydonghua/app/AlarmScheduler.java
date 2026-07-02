@@ -6,26 +6,35 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import java.util.Calendar;
-import java.util.TimeZone;
 
 public class AlarmScheduler {
 
     public static void schedule(Context context, String showId, String title, String releaseDay, String releaseTime, int alarmCode) {
+        schedule(context, showId, title, releaseDay, releaseTime, alarmCode, 0);
+    }
+
+    public static void schedule(Context context, String showId, String title, String releaseDay, String releaseTime, int alarmCode, int currentEp) {
+        if (context == null || showId == null || showId.isEmpty()) return;
+        if (releaseDay == null || releaseTime == null) return;
+
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
 
         Intent intent = new Intent(context, NotificationReceiver.class);
         intent.putExtra("show_id", showId);
-        intent.putExtra("show_title", title);
+        intent.putExtra("show_title", title != null ? title : "");
         intent.putExtra("release_day", releaseDay);
         intent.putExtra("release_time", releaseTime);
-        intent.putExtra("alarm_code", alarmCode);
+        intent.putExtra("current_ep", currentEp);
+
+        int effectiveCode = alarmCode > 0 ? alarmCode : Math.abs(showId.hashCode());
+        intent.putExtra("alarm_code", effectiveCode);
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags |= PendingIntent.FLAG_IMMUTABLE;
         }
-        PendingIntent pi = PendingIntent.getBroadcast(context, alarmCode, intent, flags);
+        PendingIntent pi = PendingIntent.getBroadcast(context, effectiveCode, intent, flags);
 
         long triggerTime = calculateNextReleaseTime(releaseDay, releaseTime);
         if (triggerTime == 0) return;
@@ -42,12 +51,15 @@ public class AlarmScheduler {
     }
 
     public static void cancel(Context context, String showId, int alarmCode) {
+        if (context == null) return;
+
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
 
+        int effectiveCode = alarmCode > 0 ? alarmCode : (showId != null ? Math.abs(showId.hashCode()) : 0);
         Intent intent = new Intent(context, NotificationReceiver.class);
         int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0;
-        PendingIntent pi = PendingIntent.getBroadcast(context, alarmCode, intent,
+        PendingIntent pi = PendingIntent.getBroadcast(context, effectiveCode, intent,
                 PendingIntent.FLAG_NO_CREATE | flags);
 
         if (pi != null) {
@@ -76,38 +88,20 @@ public class AlarmScheduler {
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
 
-            int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+            int currentDayOfWeek = now.get(Calendar.DAY_OF_WEEK);
             int daysUntil = (dayOfWeek - currentDayOfWeek + 7) % 7;
-
-            boolean isDstTransition = false;
-            TimeZone tz = TimeZone.getDefault();
-            long currentMillis = now.getTimeInMillis();
-            long targetMillis = cal.getTimeInMillis();
-
-            if (tz.useDaylightTime()) {
-                int dstOffset = tz.getOffset(targetMillis) - tz.getOffset(currentMillis);
-                if (dstOffset != 0) {
-                    targetMillis += dstOffset;
-                    cal.setTimeInMillis(targetMillis);
-                    isDstTransition = true;
-                }
-            }
-
-            if (daysUntil == 0 && (cal.getTimeInMillis() < currentMillis || isDstTransition)) {
-                if (!isDstTransition || cal.getTimeInMillis() < currentMillis) {
-                    daysUntil = 7;
-                }
-            }
 
             cal.add(Calendar.DAY_OF_YEAR, daysUntil);
 
-            long finalTrigger = cal.getTimeInMillis();
-            if (finalTrigger <= currentMillis) {
+            long triggerTime = cal.getTimeInMillis();
+            long nowMillis = now.getTimeInMillis();
+
+            if (triggerTime <= nowMillis) {
                 cal.add(Calendar.DAY_OF_YEAR, 7);
-                finalTrigger = cal.getTimeInMillis();
+                triggerTime = cal.getTimeInMillis();
             }
 
-            return finalTrigger;
+            return triggerTime;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;

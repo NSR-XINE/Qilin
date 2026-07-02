@@ -34,7 +34,7 @@ function calculateTimeRemaining(targetDate) {
 }
 
 function getCountdownHtml(show) {
-    if (show.status === 'completed') {
+    if (STATUS.isCompleted(show)) {
         return `
             <div class="card-countdown completed-state">
                 <i class="fa-solid fa-circle-check"></i> Series Completed

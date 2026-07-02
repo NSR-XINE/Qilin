@@ -42,7 +42,7 @@ function renderCollectionsView() {
                             ${(() => { const p = safePosterUrl(s.poster); return p ? `<img src="${p}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : getInitials(s.title); })()}
                         </div>
                         <span style="flex:1;font-size:0.78rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.title)}</span>
-                        <span class="status-badge ${s.status}" style="font-size:0.55rem;padding:0.1rem 0.3rem;">${getStatusDisplayName(s.status)}</span>
+                        <span class="status-badge ${s.status}" style="font-size:0.55rem;padding:0.1rem 0.3rem;">${STATUS.getDisplayName(s.status)}</span>
                     </div>
                 `).join('')}
             </div>

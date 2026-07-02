@@ -20,7 +20,7 @@ function renderShowsGrid() {
                    fuzzyMatch(show.titleZh, q) ||
                    fuzzyMatch(show.notes, q);
         })();
-        const matchesGenre = !genreFilter || (show.genre && show.genre.toLowerCase().includes(genreFilter));
+        const matchesGenre = !genreFilter || (show.genres && show.genres.toLowerCase().includes(genreFilter));
         return matchesSearch && matchesGenre && statusFilters.includes(show.status);
     });
 
@@ -72,10 +72,11 @@ function renderShowsGrid() {
     html += filteredShows.map(show => renderCard(show, todayName)).join('');
     html += '</div></div>';
     containerEl.innerHTML = html;
+    rebuildCardElementMap();
 }
 
 function renderCard(show, todayName) {
-    const isReleasingToday = show.status === 'ongoing' && show.releaseDay === todayName;
+    const isReleasingToday = STATUS.isAiring(show) && show.releaseDay === todayName;
     const safePoster = safePosterUrl(show.poster);
     const gradientBg = getPosterGradient(show.title);
     const initials = getInitials(show.title);
@@ -99,8 +100,8 @@ function renderCard(show, todayName) {
     return `<article class="show-card ${isReleasingToday ? 'releasing-today' : ''}" data-id="${show.id}">
         <div class="card-header">
             <div class="card-badges">
-                <span class="status-badge ${show.status}">${getStatusDisplayName(show.status)}</span>
-                ${show.isFavorite ? '<span class="status-badge" style="background:rgba(255,42,95,0.2);color:var(--accent-rose);border:1px solid rgba(255,42,95,0.4)"><i class="fa-solid fa-heart"></i></span>' : ''}
+                <span class="status-badge ${show.status}">${STATUS.getDisplayName(show.status)}</span>
+                ${show.isFavorite ? '<span class="status-badge favorite"><i class="fa-solid fa-heart"></i></span>' : ''}
                 ${isReleasingToday ? '<span class="status-badge releasing-today-badge">Airs Today</span>' : ''}
             </div>
             ${genreTags ? `<div class="card-genres">${genreTags}</div>` : ''}
@@ -116,7 +117,7 @@ function renderCard(show, todayName) {
             ${countdownHtml}
             <div class="card-schedule-info">
                 <i class="fa-regular fa-calendar"></i>
-                ${show.status === 'completed' ? '<span>Series Complete</span>' : `<span>${show.releaseDay}s at ${show.releaseTime}</span>`}
+                ${STATUS.isCompleted(show) ? '<span>Series Complete</span>' : `<span>${show.releaseDay}s at ${show.releaseTime}</span>`}
             </div>
             <div class="card-progress-section">
                 <div class="progress-header">
@@ -179,6 +180,7 @@ function renderFavoritesGrid() {
     html += filteredShows.map(show => renderCard(show, todayName)).join('');
     html += '</div></div>';
     containerEl.innerHTML = html;
+    rebuildCardElementMap();
 }
 
 function showEmptyState(el, title, text, showReset) {

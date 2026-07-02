@@ -6,7 +6,7 @@
 
 @keyframes pulse {
     0% { opacity: 0.6; }
-    50% { opacity: 1; text-shadow: 0 0 10px rgba(0, 242, 254, 0.8); }
+    50% { opacity: 1; text-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.8); }
     100% { opacity: 0.6; }
 }
 
@@ -20,7 +20,7 @@
 .loading-overlay {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: var(--bg-darker);
+    background: var(--bg-secondary);
     z-index: 100000;
     display: flex;
     align-items: center;
@@ -115,6 +115,26 @@
 @keyframes blinkText {
     0% { opacity: 0.4; }
     100% { opacity: 1; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.shimmer {
+    background: linear-gradient(90deg, var(--loading-shimmer) 25%, rgba(var(--white-rgb), 0.1) 50%, var(--loading-shimmer) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 body.loading-active { overflow: hidden !important; height: 100vh !important; }

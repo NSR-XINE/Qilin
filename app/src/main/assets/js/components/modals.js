@@ -5,7 +5,7 @@ function openDetailsModal(show) {
     if (!detailsModal || !detailsContent) return;
 
     detailsTitle.innerText = show.title;
-    const maxEps = show.totalEp && show.totalEp > 0 ? show.totalEp : Math.min(Math.max(12, show.currentEp + 10), 150);
+    const maxEps = show.totalEp > 0 ? show.totalEp : Math.max(12, show.currentEp + 10);
 
     let posterHtml = '';
     const safePoster = safePosterUrl(show.poster);
@@ -27,7 +27,7 @@ function openDetailsModal(show) {
         epPills += `<button class="ep-pill-btn" data-ep="${i}" style="padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; ${activeStyle}">${i}</button>`;
     }
 
-    const statusText = getStatusDisplayName(show.status).toUpperCase();
+    const statusText = STATUS.getDisplayName(show.status).toUpperCase();
 
     detailsContent.innerHTML = `
         <div style="display: flex; gap: 1rem; align-items: flex-start;">
@@ -36,14 +36,14 @@ function openDetailsModal(show) {
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                     <span class="status-badge ${show.status}" style="padding: 0.2rem 0.5rem; font-size: 0.65rem; border-radius: 4px; text-transform: uppercase;">${statusText}</span>
                     ${show.isFavorite ? '<span style="font-size:0.65rem;color:var(--accent-rose);"><i class="fa-solid fa-heart"></i> Favorite</span>' : ''}
-                    ${show.status === 'completed' ? '<span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-circle-check"></i> Series Complete</span>'
+                    ${STATUS.isCompleted(show) ? '<span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-circle-check"></i> Series Complete</span>'
                     : `<span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-regular fa-calendar"></i> ${show.releaseDay}s at ${show.releaseTime}</span>`}
                     ${show.totalEp ? `<span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-film"></i> ${show.totalEp} eps total</span>` : ''}
                 </div>
                 <h3 style="font-size: 1rem; color: #fff; margin: 0.2rem 0 0 0; font-family: var(--font-heading); font-weight: 700;">${escapeHtml(show.title)}</h3>
                 ${show.titleZh ? `<div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">${escapeHtml(show.titleZh)}</div>` : ''}
                 <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem;">
-                    Watched: <strong style="color: var(--accent-cyan);">${show.currentEp}</strong> episodes
+                    Watched: <strong id="watched-count" style="color: var(--accent-cyan);">${show.currentEp}</strong> episodes
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@ function openDetailsModal(show) {
         </div>
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <h4 style="font-size: 0.8rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Episodes ${show.totalEp ? `<span style="font-weight:400; color: var(--text-muted);">(${show.currentEp}/${show.totalEp})</span>` : ''}</h4>
+                <h4 style="font-size: 0.8rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Episodes ${show.totalEp ? `<span id="eps-progress" style="font-weight:400; color: var(--text-muted);">(${show.currentEp}/${show.totalEp})</span>` : ''}</h4>
                 <span style="font-size: 0.7rem; color: var(--text-muted);">Tap to update progress</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 0.4rem; max-height: 200px; overflow-y: auto; padding-right: 0.2rem;">
@@ -78,7 +78,19 @@ function openDetailsModal(show) {
             }
             show.lastUpdated = Date.now();
             persistState();
-            openDetailsModal(show);
+
+            detailsContent.querySelectorAll('.ep-pill-btn').forEach(b => {
+                const ep = parseInt(b.dataset.ep, 10);
+                const isWatched = ep <= show.currentEp;
+                const style = isWatched ? 'background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); border: none; color: #fff; font-weight: bold;' : 'background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-secondary);';
+                b.style.cssText = `padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; ${style}`;
+            });
+
+            const wc = document.getElementById('watched-count');
+            if (wc) wc.textContent = show.currentEp;
+
+            const epProg = document.getElementById('eps-progress');
+            if (epProg) epProg.textContent = `(${show.currentEp}/${show.totalEp})`;
         });
     });
 
@@ -129,7 +141,7 @@ function openModal(showData) {
 
 function setFormValue(id, val) {
     const el = document.getElementById(id);
-    if (el) el.value = val;
+    if (el) el.value = val != null ? val : '';
 }
 
 function closeModal() {
@@ -419,7 +431,7 @@ function setupFormSubmission() {
             totalEp: parseInt(document.getElementById('show-total-ep')?.value) || 0,
             poster: document.getElementById('show-poster')?.value?.trim() || '',
             collection: document.getElementById('show-collection')?.value?.trim() || '',
-            genre: document.getElementById('show-genre')?.value?.trim() || '',
+            genres: document.getElementById('show-genre')?.value?.trim() || '',
             notes: document.getElementById('show-notes')?.value?.trim() || '',
             lastUpdated: Date.now()
         };

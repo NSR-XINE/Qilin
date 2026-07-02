@@ -1,3 +1,42 @@
+let lastSyncTime = Date.now();
+let syncInterval = null;
+
+function showToast(message, duration = 2000) {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function updateLastSyncDisplay() {
+    const el = document.getElementById('last-sync-time');
+    if (!el) return;
+    const diff = Date.now() - lastSyncTime;
+    const seconds = Math.floor(diff / 1000);
+    if (seconds < 60) {
+        el.textContent = 'Last sync: ' + seconds + 's ago';
+    } else {
+        const minutes = Math.floor(seconds / 60);
+        el.textContent = 'Last sync: ' + minutes + ' min ago';
+    }
+}
+
+function refreshAllData() {
+    autoFetchPosters();
+    persistState();
+    resumeTimers();
+    lastSyncTime = Date.now();
+    updateLastSyncDisplay();
+    showToast('Refreshed!');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadState();
     initTheme();
@@ -67,6 +106,80 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('contextmenu', e => e.preventDefault());
 
     window.addEventListener('resize', () => switchTab(activeTab));
+
+    const ptrIndicator = document.createElement('div');
+    ptrIndicator.className = 'pull-to-refresh-indicator';
+    ptrIndicator.innerHTML = '<i class="fa-solid fa-spinner"></i><span>Pull to refresh</span>';
+    document.body.appendChild(ptrIndicator);
+
+    const lastSyncEl = document.createElement('div');
+    lastSyncEl.id = 'last-sync-time';
+    lastSyncEl.className = 'last-sync-time';
+    lastSyncEl.textContent = 'Last sync: just now';
+    document.querySelector('.header-content-wrapper')?.appendChild(lastSyncEl);
+
+    let touchStartY = 0;
+    let touchMoveY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+
+    document.body.addEventListener('touchstart', (e) => {
+        if (isRefreshing) return;
+        if (document.documentElement.scrollTop <= 0) {
+            touchStartY = e.touches[0].clientY;
+            isPulling = true;
+        }
+    }, { passive: true });
+
+    document.body.addEventListener('touchmove', (e) => {
+        if (!isPulling || isRefreshing) return;
+        touchMoveY = e.touches[0].clientY;
+        const pullDist = touchMoveY - touchStartY;
+        if (pullDist > 0) {
+            ptrIndicator.classList.add('visible');
+            const progress = Math.min(pullDist / 80, 1);
+            ptrIndicator.style.transform = 'translateY(' + Math.min(pullDist * 0.4, 40) + 'px)';
+            const icon = ptrIndicator.querySelector('i');
+            if (icon) icon.style.transform = 'rotate(' + (progress * 360) + 'deg)';
+            const span = ptrIndicator.querySelector('span');
+            if (span) span.textContent = pullDist > 60 ? 'Release to refresh' : 'Pull to refresh';
+        }
+    }, { passive: true });
+
+    document.body.addEventListener('touchend', () => {
+        if (!isPulling || isRefreshing) return;
+        isPulling = false;
+        const pullDist = touchMoveY - touchStartY;
+        ptrIndicator.style.transform = '';
+        const icon = ptrIndicator.querySelector('i');
+        if (icon) icon.style.transform = '';
+        if (pullDist > 60) {
+            isRefreshing = true;
+            if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
+            const span = ptrIndicator.querySelector('span');
+            if (span) span.textContent = 'Refreshing...';
+            refreshAllData();
+            setTimeout(() => {
+                ptrIndicator.classList.remove('visible');
+                if (icon) icon.className = 'fa-solid fa-spinner';
+                if (span) span.textContent = 'Pull to refresh';
+                isRefreshing = false;
+            }, 1500);
+        } else {
+            ptrIndicator.classList.remove('visible');
+            const span = ptrIndicator.querySelector('span');
+            if (span) span.textContent = 'Pull to refresh';
+        }
+        touchStartY = 0;
+        touchMoveY = 0;
+    }, { passive: true });
+
+    syncInterval = setInterval(() => {
+        autoFetchPosters();
+        updateLastSyncDisplay();
+    }, 300000);
+
+    setInterval(updateLastSyncDisplay, 10000);
 });
 
 window.pauseTimers = pauseTimers;
@@ -98,3 +211,8 @@ window.triggerAddModal = triggerAddModal;
 window.renderShowsGrid = renderShowsGrid;
 window.renderHeroBanner = renderHeroBanner;
 window.renderWeeklySchedule = renderWeeklySchedule;
+window.refreshAllData = refreshAllData;
+window.getContinueWatchingShow = getContinueWatchingShow;
+window.getRecentlyUpdated = getRecentlyUpdated;
+window.getAiringToday = getAiringToday;
+window.updateShowField = updateShowField;

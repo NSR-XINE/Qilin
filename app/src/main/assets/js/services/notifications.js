@@ -1,3 +1,10 @@
+function getContinueWatchingShow() {
+    const ongoing = getOngoingShows();
+    if (ongoing.length === 0) return null;
+    ongoing.sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+    return ongoing[0] || null;
+}
+
 function exportData() {
     let json = null;
     if (DB._available) {
@@ -5,10 +12,24 @@ function exportData() {
     } else {
         json = DB.getLocal('donghua_shows');
     }
-    if (!json || json === '[]') { alert('No data to export.'); return; }
-    if (DB._available && DB.shareJsonFile) {
-        DB.shareJsonFile(json);
+    if (!json) { alert('No data to export.'); return; }
+    try {
+        const parsed = JSON.parse(json);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+            alert('No data to export.');
+            return;
+        }
+    } catch (e) {
+        alert('Export failed: stored data is corrupted.');
         return;
+    }
+    if (DB._available && DB.shareJsonFile) {
+        try {
+            DB.shareJsonFile(json);
+            return;
+        } catch (e) {
+            // fall through to fallback
+        }
     }
     try {
         const blob = new Blob([json], { type: 'application/json' });
@@ -19,12 +40,12 @@ function exportData() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
         navigator.clipboard.writeText(json).then(() => {
             alert('Backup JSON copied to clipboard.');
         }).catch(() => {
-            alert('Export failed. Please try again.');
+            alert('Export failed. Please try again manually.');
         });
     }
 }

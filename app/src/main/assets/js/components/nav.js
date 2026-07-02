@@ -67,9 +67,9 @@ function triggerAddModal() {
 function openDetailsById(showId) {
     const show = getShowById(showId);
     if (show) {
-        if (show.status === 'ongoing') switchTab('airing');
-        else if (show.status === 'completed') switchTab('complete');
-        else if (show.status === 'stopped') switchTab('stopped');
+        if (STATUS.isAiring(show)) switchTab('airing');
+        else if (STATUS.isCompleted(show)) switchTab('complete');
+        else if (STATUS.isStopped(show)) switchTab('stopped');
         else switchTab('home');
         openDetailsModal(show);
     }
@@ -136,7 +136,7 @@ function populateGenreFilter() {
     if (!bar) return;
     const allGenres = new Set();
     shows.forEach(s => {
-        if (s.genre) s.genre.split(',').map(g => g.trim().toLowerCase()).filter(Boolean).forEach(g => allGenres.add(g));
+        if (s.genres) s.genres.split(',').map(g => g.trim().toLowerCase()).filter(Boolean).forEach(g => allGenres.add(g));
     });
     const sorted = Array.from(allGenres).sort();
     if (JSON.stringify(sorted) === JSON.stringify(_genreList) && bar.children.length > 0) return;

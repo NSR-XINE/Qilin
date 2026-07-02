@@ -5,14 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "mydonghua.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public static final String TABLE_SHOWS = "shows";
     public static final String TABLE_HISTORY = "watch_history";
@@ -90,11 +89,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 ")";
         db.execSQL(createHistoryTable);
 
-        db.execSQL("CREATE INDEX idx_history_show_id ON " + TABLE_HISTORY + " (" + COL_HIST_SHOW_ID + ")");
-        db.execSQL("CREATE INDEX idx_history_timestamp ON " + TABLE_HISTORY + " (" + COL_HIST_TIMESTAMP + " DESC)");
-        db.execSQL("CREATE INDEX idx_shows_status ON " + TABLE_SHOWS + " (" + COL_SHOW_STATUS + ")");
-        db.execSQL("CREATE INDEX idx_shows_favorite ON " + TABLE_SHOWS + " (" + COL_SHOW_IS_FAVORITE + ")");
-        db.execSQL("CREATE INDEX idx_shows_release_day ON " + TABLE_SHOWS + " (" + COL_SHOW_RELEASE_DAY + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_show_id ON " + TABLE_HISTORY + " (" + COL_HIST_SHOW_ID + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_timestamp ON " + TABLE_HISTORY + " (" + COL_HIST_TIMESTAMP + " DESC)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shows_status ON " + TABLE_SHOWS + " (" + COL_SHOW_STATUS + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shows_favorite ON " + TABLE_SHOWS + " (" + COL_SHOW_IS_FAVORITE + ")");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shows_release_day ON " + TABLE_SHOWS + " (" + COL_SHOW_RELEASE_DAY + ")");
 
         String createSettingsTable = "CREATE TABLE " + TABLE_SETTINGS + " (" +
                 COL_SET_KEY + " TEXT PRIMARY KEY, " +
@@ -126,10 +125,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         db.execSQL("UPDATE " + TABLE_SHOWS + " SET " + COL_SHOW_STATUS + " = 'ongoing' WHERE " + COL_SHOW_STATUS + " = 'upcoming'");
                     } catch (Exception ignored) {}
                     break;
+                case 2:
+                    try {
+                        db.execSQL("CREATE INDEX IF NOT EXISTS idx_genres ON " + TABLE_SHOWS + " (" + COL_SHOW_GENRES + ")");
+                        db.execSQL("CREATE INDEX IF NOT EXISTS idx_collection ON " + TABLE_SHOWS + " (" + COL_SHOW_COLLECTION + ")");
+                        db.execSQL("CREATE INDEX IF NOT EXISTS idx_last_updated ON " + TABLE_SHOWS + " (" + COL_SHOW_LAST_UPDATED + ")");
+                        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shows_release_day ON " + TABLE_SHOWS + " (" + COL_SHOW_RELEASE_DAY + ")");
+                    } catch (Exception ignored) {}
+                    break;
                 default:
                     break;
             }
         }
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SHOWS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORY);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SETTINGS);
+        onCreate(db);
     }
 
     @Override
@@ -247,30 +262,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor = db.rawQuery("SELECT * FROM " + TABLE_SHOWS + " ORDER BY " + COL_SHOW_DATE_ADDED + " DESC", null);
             if (cursor.moveToFirst()) {
                 do {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_ID)));
-                    obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_TITLE)));
-                    obj.put("titleZh", getStringOrEmpty(cursor, COL_SHOW_TITLE_ZH));
-                    obj.put("status", getStringOrEmpty(cursor, COL_SHOW_STATUS));
-                    obj.put("releaseDay", getStringOrEmpty(cursor, COL_SHOW_RELEASE_DAY));
-                    obj.put("releaseTime", getStringOrEmpty(cursor, COL_SHOW_RELEASE_TIME));
-                    obj.put("currentEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_CURRENT_EP)));
-                    obj.put("totalEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_TOTAL_EP)));
-                    obj.put("poster", getStringOrEmpty(cursor, COL_SHOW_POSTER));
-                    obj.put("watchUrl", getStringOrEmpty(cursor, COL_SHOW_WATCH_URL));
-                    obj.put("countdownUrl", getStringOrEmpty(cursor, COL_SHOW_COUNTDOWN_URL));
-                    obj.put("notes", getStringOrEmpty(cursor, COL_SHOW_NOTES));
-                    obj.put("isFavorite", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_IS_FAVORITE)) == 1);
-                    obj.put("rating", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RATING)));
-                    obj.put("lastUpdated", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_LAST_UPDATED)));
-                    obj.put("dateAdded", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_DATE_ADDED)));
-                    obj.put("alarmRequestCode", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_ALARM_CODE)));
-                    obj.put("genres", getStringOrEmpty(cursor, COL_SHOW_GENRES));
-                    obj.put("studio", getStringOrEmpty(cursor, COL_SHOW_STUDIO));
-                    obj.put("releaseYear", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RELEASE_YEAR)));
-                    obj.put("language", getStringOrEmpty(cursor, COL_SHOW_LANGUAGE));
-                    obj.put("collection", getStringOrEmpty(cursor, COL_SHOW_COLLECTION));
-                    arr.put(obj);
+                    arr.put(cursorToJson(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -289,30 +281,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor = db.query(TABLE_SHOWS, null, COL_SHOW_STATUS + " = ?", new String[]{status}, null, null, COL_SHOW_DATE_ADDED + " DESC");
             if (cursor.moveToFirst()) {
                 do {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_ID)));
-                    obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_TITLE)));
-                    obj.put("titleZh", getStringOrEmpty(cursor, COL_SHOW_TITLE_ZH));
-                    obj.put("status", status);
-                    obj.put("releaseDay", getStringOrEmpty(cursor, COL_SHOW_RELEASE_DAY));
-                    obj.put("releaseTime", getStringOrEmpty(cursor, COL_SHOW_RELEASE_TIME));
-                    obj.put("currentEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_CURRENT_EP)));
-                    obj.put("totalEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_TOTAL_EP)));
-                    obj.put("poster", getStringOrEmpty(cursor, COL_SHOW_POSTER));
-                    obj.put("watchUrl", getStringOrEmpty(cursor, COL_SHOW_WATCH_URL));
-                    obj.put("countdownUrl", getStringOrEmpty(cursor, COL_SHOW_COUNTDOWN_URL));
-                    obj.put("notes", getStringOrEmpty(cursor, COL_SHOW_NOTES));
-                    obj.put("isFavorite", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_IS_FAVORITE)) == 1);
-                    obj.put("rating", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RATING)));
-                    obj.put("lastUpdated", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_LAST_UPDATED)));
-                    obj.put("dateAdded", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_DATE_ADDED)));
-                    obj.put("alarmRequestCode", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_ALARM_CODE)));
-                    obj.put("genres", getStringOrEmpty(cursor, COL_SHOW_GENRES));
-                    obj.put("studio", getStringOrEmpty(cursor, COL_SHOW_STUDIO));
-                    obj.put("releaseYear", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RELEASE_YEAR)));
-                    obj.put("language", getStringOrEmpty(cursor, COL_SHOW_LANGUAGE));
-                    obj.put("collection", getStringOrEmpty(cursor, COL_SHOW_COLLECTION));
-                    arr.put(obj);
+                    arr.put(cursorToJson(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -331,30 +300,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor = db.query(TABLE_SHOWS, null, COL_SHOW_IS_FAVORITE + " = 1", null, null, null, COL_SHOW_DATE_ADDED + " DESC");
             if (cursor.moveToFirst()) {
                 do {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_ID)));
-                    obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_TITLE)));
-                    obj.put("titleZh", getStringOrEmpty(cursor, COL_SHOW_TITLE_ZH));
-                    obj.put("status", getStringOrEmpty(cursor, COL_SHOW_STATUS));
-                    obj.put("releaseDay", getStringOrEmpty(cursor, COL_SHOW_RELEASE_DAY));
-                    obj.put("releaseTime", getStringOrEmpty(cursor, COL_SHOW_RELEASE_TIME));
-                    obj.put("currentEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_CURRENT_EP)));
-                    obj.put("totalEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_TOTAL_EP)));
-                    obj.put("poster", getStringOrEmpty(cursor, COL_SHOW_POSTER));
-                    obj.put("watchUrl", getStringOrEmpty(cursor, COL_SHOW_WATCH_URL));
-                    obj.put("countdownUrl", getStringOrEmpty(cursor, COL_SHOW_COUNTDOWN_URL));
-                    obj.put("notes", getStringOrEmpty(cursor, COL_SHOW_NOTES));
-                    obj.put("isFavorite", true);
-                    obj.put("rating", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RATING)));
-                    obj.put("lastUpdated", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_LAST_UPDATED)));
-                    obj.put("dateAdded", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_DATE_ADDED)));
-                    obj.put("alarmRequestCode", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_ALARM_CODE)));
-                    obj.put("genres", getStringOrEmpty(cursor, COL_SHOW_GENRES));
-                    obj.put("studio", getStringOrEmpty(cursor, COL_SHOW_STUDIO));
-                    obj.put("releaseYear", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RELEASE_YEAR)));
-                    obj.put("language", getStringOrEmpty(cursor, COL_SHOW_LANGUAGE));
-                    obj.put("collection", getStringOrEmpty(cursor, COL_SHOW_COLLECTION));
-                    arr.put(obj);
+                    arr.put(cursorToJson(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -367,10 +313,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public synchronized String searchShows(String query) {
         JSONArray arr = new JSONArray();
+        if (query == null || query.trim().isEmpty()) {
+            return arr.toString();
+        }
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
         try {
-            String like = "%" + query.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fff\\s]", "") + "%";
+            String sanitized = query.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fff\\s]", "");
+            if (sanitized.isEmpty()) {
+                return arr.toString();
+            }
+            if (sanitized.length() > 100) {
+                sanitized = sanitized.substring(0, 100);
+            }
+            String like = "%" + sanitized + "%";
             cursor = db.rawQuery(
                     "SELECT * FROM " + TABLE_SHOWS +
                     " WHERE " + COL_SHOW_TITLE + " LIKE ? OR " + COL_SHOW_TITLE_ZH + " LIKE ? OR " + COL_SHOW_NOTES + " LIKE ?" +
@@ -378,18 +334,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     new String[]{like, like, like, query, query + "%"});
             if (cursor.moveToFirst()) {
                 do {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_ID)));
-                    obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_TITLE)));
-                    obj.put("titleZh", getStringOrEmpty(cursor, COL_SHOW_TITLE_ZH));
-                    obj.put("status", getStringOrEmpty(cursor, COL_SHOW_STATUS));
-                    obj.put("currentEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_CURRENT_EP)));
-                    obj.put("totalEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_TOTAL_EP)));
-                    obj.put("poster", getStringOrEmpty(cursor, COL_SHOW_POSTER));
-                    obj.put("isFavorite", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_IS_FAVORITE)) == 1);
-                    obj.put("lastUpdated", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_LAST_UPDATED)));
-                    obj.put("alarmRequestCode", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_ALARM_CODE)));
-                    arr.put(obj);
+                    arr.put(cursorToJson(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -402,18 +347,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public synchronized void addWatchHistory(String showId, int episodeNum) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COL_HIST_SHOW_ID, showId);
-        values.put(COL_HIST_EPISODE, episodeNum);
-        values.put(COL_HIST_TIMESTAMP, System.currentTimeMillis());
-        db.insertWithOnConflict(TABLE_HISTORY, null, values, SQLiteDatabase.CONFLICT_IGNORE);
-
+        db.beginTransaction();
         try {
+            ContentValues values = new ContentValues();
+            values.put(COL_HIST_SHOW_ID, showId);
+            values.put(COL_HIST_EPISODE, episodeNum);
+            values.put(COL_HIST_TIMESTAMP, System.currentTimeMillis());
+            db.insertWithOnConflict(TABLE_HISTORY, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+
             db.execSQL("DELETE FROM " + TABLE_HISTORY + " WHERE " + COL_HIST_ID + " NOT IN " +
                     "(SELECT " + COL_HIST_ID + " FROM " + TABLE_HISTORY +
                     " ORDER BY " + COL_HIST_TIMESTAMP + " DESC LIMIT 500)");
+
+            db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            db.endTransaction();
         }
     }
 
@@ -458,19 +408,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     COL_SHOW_LAST_UPDATED + " DESC", String.valueOf(Math.max(1, Math.min(limit, 100))));
             if (cursor.moveToFirst()) {
                 do {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_ID)));
-                    obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_TITLE)));
-                    obj.put("titleZh", getStringOrEmpty(cursor, COL_SHOW_TITLE_ZH));
-                    obj.put("status", getStringOrEmpty(cursor, COL_SHOW_STATUS));
-                    obj.put("currentEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_CURRENT_EP)));
-                    obj.put("totalEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_TOTAL_EP)));
-                    obj.put("poster", getStringOrEmpty(cursor, COL_SHOW_POSTER));
-                    obj.put("isFavorite", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_IS_FAVORITE)) == 1);
-                    obj.put("lastUpdated", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_LAST_UPDATED)));
-                    obj.put("releaseDay", getStringOrEmpty(cursor, COL_SHOW_RELEASE_DAY));
-                    obj.put("releaseTime", getStringOrEmpty(cursor, COL_SHOW_RELEASE_TIME));
-                    arr.put(obj);
+                    arr.put(cursorToJson(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -483,43 +421,79 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public synchronized String getStats() {
         SQLiteDatabase db = this.getReadableDatabase();
+        JSONObject stats = new JSONObject();
         Cursor cursor = null;
         try {
-            JSONObject stats = new JSONObject();
             cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS, null);
             if (cursor.moveToFirst()) stats.put("total", cursor.getInt(0));
-            cursor.close();
-
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_STATUS + " = 'ongoing'", null);
-            if (cursor.moveToFirst()) stats.put("airing", cursor.getInt(0));
-            cursor.close();
-
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_STATUS + " = 'completed'", null);
-            if (cursor.moveToFirst()) stats.put("completed", cursor.getInt(0));
-            cursor.close();
-
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_STATUS + " = 'stopped'", null);
-            if (cursor.moveToFirst()) stats.put("stopped", cursor.getInt(0));
-            cursor.close();
-
-            cursor = db.rawQuery("SELECT COALESCE(SUM(" + COL_SHOW_CURRENT_EP + "), 0) FROM " + TABLE_SHOWS, null);
-            if (cursor.moveToFirst()) stats.put("episodesWatched", cursor.getInt(0));
-            cursor.close();
-
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_HISTORY, null);
-            if (cursor.moveToFirst()) stats.put("watchHistoryEntries", cursor.getInt(0));
-            cursor.close();
-
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_IS_FAVORITE + " = 1", null);
-            if (cursor.moveToFirst()) stats.put("favorites", cursor.getInt(0));
-            cursor.close();
-
-            return stats.toString();
         } catch (Exception e) {
             e.printStackTrace();
-            return "{}";
         } finally {
             if (cursor != null) cursor.close();
+        }
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_STATUS + " = 'ongoing'", null);
+            if (cursor.moveToFirst()) stats.put("airing", cursor.getInt(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_STATUS + " = 'completed'", null);
+            if (cursor.moveToFirst()) stats.put("completed", cursor.getInt(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_STATUS + " = 'stopped'", null);
+            if (cursor.moveToFirst()) stats.put("stopped", cursor.getInt(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        try {
+            cursor = db.rawQuery("SELECT COALESCE(SUM(" + COL_SHOW_CURRENT_EP + "), 0) FROM " + TABLE_SHOWS, null);
+            if (cursor.moveToFirst()) stats.put("episodesWatched", cursor.getInt(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_HISTORY, null);
+            if (cursor.moveToFirst()) stats.put("watchHistoryEntries", cursor.getInt(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_SHOWS + " WHERE " + COL_SHOW_IS_FAVORITE + " = 1", null);
+            if (cursor.moveToFirst()) stats.put("favorites", cursor.getInt(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return stats.toString();
+    }
+
+    public synchronized void bulkInsert(JSONArray showsJson) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            for (int i = 0; i < showsJson.length(); i++) {
+                insertShow(showsJson.getJSONObject(i));
+            }
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
         }
     }
 
@@ -546,6 +520,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor != null) cursor.close();
         }
         return val;
+    }
+
+    private JSONObject cursorToJson(Cursor cursor) throws Exception {
+        JSONObject obj = new JSONObject();
+        obj.put("id", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_ID)));
+        obj.put("title", cursor.getString(cursor.getColumnIndexOrThrow(COL_SHOW_TITLE)));
+        obj.put("titleZh", getStringOrEmpty(cursor, COL_SHOW_TITLE_ZH));
+        obj.put("status", getStringOrEmpty(cursor, COL_SHOW_STATUS));
+        obj.put("releaseDay", getStringOrEmpty(cursor, COL_SHOW_RELEASE_DAY));
+        obj.put("releaseTime", getStringOrEmpty(cursor, COL_SHOW_RELEASE_TIME));
+        obj.put("currentEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_CURRENT_EP)));
+        obj.put("totalEp", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_TOTAL_EP)));
+        obj.put("poster", getStringOrEmpty(cursor, COL_SHOW_POSTER));
+        obj.put("watchUrl", getStringOrEmpty(cursor, COL_SHOW_WATCH_URL));
+        obj.put("countdownUrl", getStringOrEmpty(cursor, COL_SHOW_COUNTDOWN_URL));
+        obj.put("notes", getStringOrEmpty(cursor, COL_SHOW_NOTES));
+        obj.put("isFavorite", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_IS_FAVORITE)) == 1);
+        obj.put("rating", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RATING)));
+        obj.put("lastUpdated", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_LAST_UPDATED)));
+        obj.put("dateAdded", cursor.getLong(cursor.getColumnIndexOrThrow(COL_SHOW_DATE_ADDED)));
+        obj.put("alarmRequestCode", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_ALARM_CODE)));
+        obj.put("genres", getStringOrEmpty(cursor, COL_SHOW_GENRES));
+        obj.put("studio", getStringOrEmpty(cursor, COL_SHOW_STUDIO));
+        obj.put("releaseYear", cursor.getInt(cursor.getColumnIndexOrThrow(COL_SHOW_RELEASE_YEAR)));
+        obj.put("language", getStringOrEmpty(cursor, COL_SHOW_LANGUAGE));
+        obj.put("collection", getStringOrEmpty(cursor, COL_SHOW_COLLECTION));
+        return obj;
     }
 
     private String getStringOrEmpty(Cursor cursor, String column) {

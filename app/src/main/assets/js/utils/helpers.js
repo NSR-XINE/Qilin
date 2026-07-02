@@ -14,10 +14,6 @@ function safePosterUrl(url) {
     return trimmed;
 }
 
-function getStatusDisplayName(status) {
-    return STATUS_MAP[status] || status || 'Unknown';
-}
-
 function getPosterGradient(title) {
     let hash = 0;
     for (let i = 0; i < title.length; i++) {

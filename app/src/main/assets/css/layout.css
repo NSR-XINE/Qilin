@@ -1,16 +1,16 @@
 .app-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: calc(var(--status-bar-height, 0px) + var(--header-height, 80px)) calc(var(--safe-area-right, 0px) + 1.5rem) 0 calc(var(--safe-area-left, 0px) + 1.5rem);
+    padding: calc(var(--safe-area-top, 0px) + var(--header-height, 80px)) calc(var(--safe-area-right, 0px) + 1.5rem) 0 calc(var(--safe-area-left, 0px) + 1.5rem);
     position: relative;
     z-index: 1;
 }
 
 .app-header {
     position: fixed;
-    top: var(--status-bar-height, 0px);
+    top: var(--safe-area-top, 0px);
     left: 0; right: 0;
-    background: var(--bg-darker);
+    background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     z-index: 200;
 }
@@ -41,8 +41,8 @@
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
-    color: var(--bg-darker);
-    box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+    color: var(--text-on-accent);
+    box-shadow: 0 0 20px rgba(var(--accent-cyan-rgb), 0.3);
 }
 
 .logo-text h1 {

@@ -3,7 +3,7 @@
 @media (max-width: 1024px) {
     .bottom-nav {
         position: fixed;
-        bottom: calc(var(--navigation-bar-height, 0px) + 20px);
+        bottom: calc(var(--safe-area-bottom, 0px) + 20px);
         left: 50%;
         transform: translateX(-50%);
         width: calc(100% - 40px);
@@ -19,7 +19,7 @@
         align-items: center;
         padding: 0 10px;
         z-index: 99;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 242, 254, 0.15);
+        box-shadow: var(--shadow-card), 0 0 15px rgba(var(--accent-cyan-rgb), 0.15);
     }
 
     .nav-item {
@@ -43,7 +43,7 @@
 
     .nav-item i { font-size: 1.15rem; transition: var(--transition-smooth); }
     .nav-item.active { color: var(--accent-cyan); }
-    .nav-item.active i { transform: translateY(-2px); text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+    .nav-item.active i { transform: translateY(-2px); text-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.5); }
 
     .nav-btn-add-shortcut {
         position: relative;
@@ -60,9 +60,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-primary);
+        color: var(--text-on-accent);
         font-size: 1.3rem;
-        box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4), 0 0 0 4px rgba(10, 12, 20, 0.5);
+        box-shadow: 0 4px 15px rgba(var(--accent-cyan-rgb), 0.4), 0 0 0 4px rgba(var(--bg-primary-rgb), 0.5);
         transition: var(--transition-smooth);
     }
 
