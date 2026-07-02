@@ -143,10 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const pullDist = touchMoveY - touchStartY;
         if (pullDist > 0) {
             ptrIndicator.classList.add('visible');
-            const progress = Math.min(pullDist / 80, 1);
-            ptrIndicator.style.transform = 'translateY(' + Math.min(pullDist * 0.4, 40) + 'px)';
             const icon = ptrIndicator.querySelector('i');
-            if (icon) icon.style.transform = 'rotate(' + (progress * 360) + 'deg)';
+            if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
             const span = ptrIndicator.querySelector('span');
             if (span) span.textContent = pullDist > 60 ? 'Release to refresh' : 'Pull to refresh';
         }
