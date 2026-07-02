@@ -34,7 +34,6 @@ function refreshAllData() {
     resumeTimers();
     lastSyncTime = Date.now();
     updateLastSyncDisplay();
-    showToast('Refreshed!');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
