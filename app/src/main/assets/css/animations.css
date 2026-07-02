@@ -93,7 +93,7 @@
 }
 
 .loading-bar-container {
-    width: 200px; height: 4px;
+    width: 200px; height: 6px;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: 10px;
