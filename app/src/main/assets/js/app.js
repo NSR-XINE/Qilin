@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const ptrIndicator = document.createElement('div');
     ptrIndicator.className = 'pull-to-refresh-indicator';
-    ptrIndicator.innerHTML = '<i class="fa-solid fa-spinner"></i><span>Pull to refresh</span>';
+    ptrIndicator.innerHTML = '<i class="fa-solid fa-arrow-down"></i><span>Pull to refresh</span>';
     document.body.appendChild(ptrIndicator);
 
     let touchStartY = 0;
@@ -116,10 +116,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPulling = false;
     let isRefreshing = false;
 
+    function resetPtr() {
+        isPulling = false;
+        ptrIndicator.classList.remove('visible');
+        ptrIndicator.style.transform = '';
+        const icon = ptrIndicator.querySelector('i');
+        if (icon) { icon.className = 'fa-solid fa-arrow-down'; icon.style.transform = ''; }
+        const span = ptrIndicator.querySelector('span');
+        if (span) span.textContent = 'Pull to refresh';
+        touchStartY = 0;
+        touchMoveY = 0;
+    }
+
     document.body.addEventListener('touchstart', (e) => {
         if (isRefreshing) return;
         if (document.documentElement.scrollTop <= 0) {
             touchStartY = e.touches[0].clientY;
+            touchMoveY = touchStartY;
             isPulling = true;
         }
     }, { passive: true });
@@ -130,42 +143,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const pullDist = touchMoveY - touchStartY;
         if (pullDist > 0) {
             ptrIndicator.classList.add('visible');
-            const progress = Math.min(pullDist / 80, 1);
             ptrIndicator.style.transform = 'translateY(' + Math.min(pullDist * 0.4, 40) + 'px)';
             const icon = ptrIndicator.querySelector('i');
-            if (icon) icon.style.transform = 'rotate(' + (progress * 360) + 'deg)';
+            if (icon) {
+                icon.className = pullDist > 60 ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down';
+            }
             const span = ptrIndicator.querySelector('span');
             if (span) span.textContent = pullDist > 60 ? 'Release to refresh' : 'Pull to refresh';
         }
     }, { passive: true });
 
-    document.body.addEventListener('touchend', () => {
+    function onTouchEnd() {
         if (!isPulling || isRefreshing) return;
-        isPulling = false;
         const pullDist = touchMoveY - touchStartY;
-        ptrIndicator.style.transform = '';
-        const icon = ptrIndicator.querySelector('i');
-        if (icon) icon.style.transform = '';
         if (pullDist > 60) {
             isRefreshing = true;
+            const icon = ptrIndicator.querySelector('i');
             if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
             const span = ptrIndicator.querySelector('span');
             if (span) span.textContent = 'Refreshing...';
+            ptrIndicator.style.transform = '';
             refreshAllData();
             setTimeout(() => {
                 ptrIndicator.classList.remove('visible');
-                if (icon) icon.className = 'fa-solid fa-spinner';
-                if (span) span.textContent = 'Pull to refresh';
                 isRefreshing = false;
-            }, 1500);
-        } else {
-            ptrIndicator.classList.remove('visible');
-            const span = ptrIndicator.querySelector('span');
-            if (span) span.textContent = 'Pull to refresh';
+            }, 1200);
         }
-        touchStartY = 0;
-        touchMoveY = 0;
-    }, { passive: true });
+        resetPtr();
+    }
+
+    document.body.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.body.addEventListener('touchcancel', resetPtr, { passive: true });
 
     syncInterval = setInterval(() => {
         autoFetchPosters();
