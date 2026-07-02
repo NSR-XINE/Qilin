@@ -1,18 +1,18 @@
-window.imageCache = new Map();
-
-window.onBannerImageLoad = function(img, url) {
-    if (img.classList.contains('loaded')) return;
-    img.classList.add('loaded');
-    const wrap = img.closest('.banner-image-wrap');
-    if (wrap) wrap.classList.remove('shimmer-loading');
-    if (url) window.imageCache.set(url, 'loaded');
-};
-
-window.onBannerImageError = function(img) {
-    img.style.display = 'none';
-    const wrap = img.closest('.banner-image-wrap');
-    if (wrap) wrap.classList.remove('shimmer-loading');
-};
+document.getElementById('next-up-banner')?.addEventListener('click', (e) => {
+    const streamLink = e.target.closest('.banner-stream-link');
+    if (streamLink) {
+        const showId = streamLink.dataset.showId;
+        const url = getWatchUrlById(showId);
+        if (url) openWatchScreen(url);
+        return;
+    }
+    const banner = e.currentTarget;
+    const showId = banner.dataset.id;
+    if (showId) {
+        const show = getShowById(showId);
+        if (show) openDetailsModal(show);
+    }
+});
 
 function renderHeroBanner() {
     const bannerEl = document.getElementById('next-up-banner');
@@ -55,25 +55,38 @@ function renderHeroBanner() {
             </div>`;
     }
 
-    const bannerGradient = getPosterGradient(show.title);
     const safePoster = safePosterUrl(show.poster);
-    const isCached = safePoster && window.imageCache.get(safePoster) === 'loaded';
+    const isCached = safePoster && ImageCache.has(safePoster);
 
     let imageHtml = '';
     if (safePoster) {
         const shimmerCls = isCached ? '' : ' shimmer-loading';
         const loadedCls = isCached ? ' loaded' : '';
-        const escapedUrl = safePoster.replace(/'/g, "\\'");
         imageHtml = `
-            <div class="banner-image-wrap${shimmerCls}" style="background: ${bannerGradient};">
+            <div class="banner-image-wrap${shimmerCls}" style="background: ${getPosterGradient(show.title)};">
                 <img class="banner-poster${loadedCls}"
                      src="${safePoster}"
-                     alt="${escapeHtml(show.title)}"
-                     onload="onBannerImageLoad(this, '${escapedUrl}')"
-                     onerror="onBannerImageError(this)">
+                     alt="${escapeHtml(show.title)}">
             </div>`;
+        if (!isCached) {
+            ImageCache.loadImage(safePoster).then(() => {
+                const wrap = bannerEl.querySelector('.banner-image-wrap');
+                if (wrap) {
+                    wrap.classList.remove('shimmer-loading');
+                    const img = wrap.querySelector('img');
+                    if (img) img.classList.add('loaded');
+                }
+            }).catch(() => {
+                const wrap = bannerEl.querySelector('.banner-image-wrap');
+                if (wrap) {
+                    wrap.classList.remove('shimmer-loading');
+                    const img = wrap.querySelector('img');
+                    if (img) img.style.display = 'none';
+                }
+            });
+        }
     } else {
-        imageHtml = `<div class="banner-image-wrap" style="background: ${bannerGradient};"></div>`;
+        imageHtml = `<div class="banner-image-wrap" style="background: ${getPosterGradient(show.title)};"></div>`;
     }
 
     bannerEl.innerHTML = `
@@ -88,7 +101,7 @@ function renderHeroBanner() {
                 <div class="banner-meta">
                     <span><i class="fa-solid fa-calendar"></i> ${show.releaseDay}s at ${show.releaseTime}</span>
                     <span><i class="fa-solid fa-play"></i> Episode ${show.currentEp + 1} next</span>
-                    <span><span onclick="openWatchScreen(getWatchUrlById('${String(show.id).replace(/'/g, "\\'")}'))" style="color: var(--accent-cyan); cursor: pointer;"><i class="fa-solid fa-up-right-from-square"></i> Stream Link</span></span>
+                    <span class="banner-stream-link" data-show-id="${show.id}" style="color: var(--accent-cyan); cursor: pointer;"><i class="fa-solid fa-up-right-from-square"></i> Stream Link</span>
                 </div>
             </div>
             ${countdownHtml}

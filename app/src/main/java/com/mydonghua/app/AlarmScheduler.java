@@ -9,6 +9,10 @@ import java.util.Calendar;
 
 public class AlarmScheduler {
 
+    private static final int MIN_SCHEDULE_INTERVAL_MS = 60000;
+    private static final java.util.concurrent.ConcurrentHashMap<String, Long> _lastScheduled =
+        new java.util.concurrent.ConcurrentHashMap<>();
+
     public static void schedule(Context context, String showId, String title, String releaseDay, String releaseTime, int alarmCode) {
         schedule(context, showId, title, releaseDay, releaseTime, alarmCode, 0);
     }
@@ -16,6 +20,16 @@ public class AlarmScheduler {
     public static void schedule(Context context, String showId, String title, String releaseDay, String releaseTime, int alarmCode, int currentEp) {
         if (context == null || showId == null || showId.isEmpty()) return;
         if (releaseDay == null || releaseTime == null) return;
+
+        String dedupKey = showId + "|" + releaseDay + "|" + releaseTime;
+        long now = System.currentTimeMillis();
+        Long lastTime = _lastScheduled.get(dedupKey);
+        if (lastTime != null && (now - lastTime) < MIN_SCHEDULE_INTERVAL_MS) return;
+        _lastScheduled.put(dedupKey, now);
+
+        int effectiveCode = alarmCode > 0 ? alarmCode : Math.abs(showId.hashCode());
+
+        cancel(context, showId, effectiveCode);
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
@@ -26,11 +40,9 @@ public class AlarmScheduler {
         intent.putExtra("release_day", releaseDay);
         intent.putExtra("release_time", releaseTime);
         intent.putExtra("current_ep", currentEp);
-
-        int effectiveCode = alarmCode > 0 ? alarmCode : Math.abs(showId.hashCode());
         intent.putExtra("alarm_code", effectiveCode);
 
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        int flags = PendingIntent.FLAG_CANCEL_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags |= PendingIntent.FLAG_IMMUTABLE;
         }

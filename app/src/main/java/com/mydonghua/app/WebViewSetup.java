@@ -88,8 +88,8 @@ public class WebViewSetup {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowContentAccess(true);
+        webSettings.setAllowFileAccess(false);
+        webSettings.setAllowContentAccess(false);
         webSettings.setDatabaseEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         webView.clearCache(true);

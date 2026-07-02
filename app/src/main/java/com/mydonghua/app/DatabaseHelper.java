@@ -151,6 +151,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
         db.setForeignKeyConstraintsEnabled(true);
+        db.execSQL("PRAGMA journal_mode = WAL");
+        db.execSQL("PRAGMA synchronous = NORMAL");
+        db.execSQL("PRAGMA temp_store = MEMORY");
+        db.execSQL("PRAGMA mmap_size = 268435456");
+        db.execSQL("PRAGMA page_size = 4096");
+        db.execSQL("PRAGMA cache_size = -32768");
     }
 
     public synchronized boolean insertShow(JSONObject showJson) {
@@ -483,17 +489,55 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public synchronized void bulkInsert(JSONArray showsJson) {
+        if (showsJson == null || showsJson.length() == 0) return;
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
             for (int i = 0; i < showsJson.length(); i++) {
-                insertShow(showsJson.getJSONObject(i));
+                JSONObject obj = showsJson.getJSONObject(i);
+                ContentValues values = showJsonToValues(obj);
+                if (values != null) {
+                    db.insertWithOnConflict(TABLE_SHOWS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
             }
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             db.endTransaction();
+        }
+    }
+
+    private ContentValues showJsonToValues(JSONObject showJson) {
+        ContentValues values = new ContentValues();
+        try {
+            String showId = showJson.getString("id");
+            values.put(COL_SHOW_ID, showId);
+            values.put(COL_SHOW_TITLE, showJson.getString("title"));
+            values.put(COL_SHOW_TITLE_ZH, showJson.optString("titleZh", ""));
+            values.put(COL_SHOW_STATUS, showJson.optString("status", "ongoing"));
+            values.put(COL_SHOW_RELEASE_DAY, showJson.optString("releaseDay", "Sunday"));
+            values.put(COL_SHOW_RELEASE_TIME, showJson.optString("releaseTime", "10:00"));
+            values.put(COL_SHOW_CURRENT_EP, showJson.optInt("currentEp", 0));
+            values.put(COL_SHOW_TOTAL_EP, showJson.optInt("totalEp", 0));
+            values.put(COL_SHOW_POSTER, showJson.optString("poster", ""));
+            values.put(COL_SHOW_WATCH_URL, showJson.optString("watchUrl", ""));
+            values.put(COL_SHOW_COUNTDOWN_URL, showJson.optString("countdownUrl", ""));
+            values.put(COL_SHOW_NOTES, showJson.optString("notes", ""));
+            values.put(COL_SHOW_IS_FAVORITE, showJson.optBoolean("isFavorite", false) ? 1 : 0);
+            values.put(COL_SHOW_RATING, showJson.optInt("rating", 0));
+            values.put(COL_SHOW_LAST_UPDATED, showJson.optLong("lastUpdated", System.currentTimeMillis()));
+            values.put(COL_SHOW_DATE_ADDED, showJson.optLong("dateAdded", System.currentTimeMillis()));
+            values.put(COL_SHOW_ALARM_CODE, showJson.optInt("alarmRequestCode", Math.abs(showId.hashCode())));
+            values.put(COL_SHOW_GENRES, showJson.optString("genres", ""));
+            values.put(COL_SHOW_STUDIO, showJson.optString("studio", ""));
+            values.put(COL_SHOW_RELEASE_YEAR, showJson.optInt("releaseYear", 0));
+            values.put(COL_SHOW_LANGUAGE, showJson.optString("language", "Chinese"));
+            values.put(COL_SHOW_COLLECTION, showJson.optString("collection", ""));
+            return values;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

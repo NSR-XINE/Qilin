@@ -302,6 +302,18 @@ class AndroidBridge {
     }
 
     @JavascriptInterface
+    public boolean dbBulkInsert(final String showsJsonStr) {
+        try {
+            org.json.JSONArray arr = new org.json.JSONArray(showsJsonStr);
+            dbHelper.bulkInsert(arr);
+            return true;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return false;
+        }
+    }
+
+    @JavascriptInterface
     public void dbSaveSetting(final String key, final String value) {
         try { dbHelper.saveSetting(key, value); }
         catch (Throwable t) { t.printStackTrace(); }

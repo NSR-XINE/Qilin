@@ -1,3 +1,4 @@
+/* Theme overrides - only override variables, no hardcoded colors */
 body.light-theme {
     --bg-primary: #f0f2f5;
     --bg-secondary: #ffffff;
@@ -43,7 +44,6 @@ body.light-theme {
     --shadow-elevated: 0 25px 50px -12px rgba(0,0,0,0.15);
 
     --loading-shimmer: rgba(0, 0, 0, 0.05);
-
     --stars-opacity: 0;
 }
 
@@ -70,4 +70,12 @@ body.amoled {
     --text-on-accent: #f3f5f9;
 
     --loading-shimmer: rgba(255, 255, 255, 0.03);
+}
+
+/* Material You dynamic color support via media query */
+@media (dynamic-range: high) {
+    :root {
+        --accent-cyan: color(display-p3 0 0.95 0.996);
+        --accent-purple: color(display-p3 0.616 0.306 0.867);
+    }
 }

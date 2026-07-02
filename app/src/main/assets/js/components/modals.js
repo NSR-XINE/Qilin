@@ -10,6 +10,9 @@ function openDetailsModal(show) {
     let posterHtml = '';
     const safePoster = safePosterUrl(show.poster);
     if (safePoster) {
+        if (!ImageCache.has(safePoster)) {
+            ImageCache.loadImage(safePoster).catch(() => {});
+        }
         posterHtml = `<img src="${safePoster}" style="width: 90px; height: 130px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.5);" alt="${show.title}" loading="lazy">`;
     } else {
         const gradient = getPosterGradient(show.title);
@@ -368,6 +371,41 @@ function setupSettingsModal() {
     const settingsModal = document.getElementById('settings-modal');
     if (settingsModal) settingsModal.addEventListener('click', (e) => { if (e.target.id === 'settings-modal') closeSettingsModal(); });
     document.getElementById('btn-open-settings')?.addEventListener('click', openSettingsModal);
+    document.getElementById('btn-close-settings')?.addEventListener('click', closeSettingsModal);
+
+    document.querySelectorAll('[data-source]')?.forEach(el => {
+        el.addEventListener('click', () => selectPreferredSource(el.dataset.source));
+    });
+    document.querySelectorAll('[data-theme]')?.forEach(el => {
+        el.addEventListener('click', () => setThemeMode(el.dataset.theme));
+    });
+
+    document.getElementById('btn-clear-image-cache')?.addEventListener('click', () => {
+        if (typeof ImageCache !== 'undefined' && ImageCache.clear) {
+            ImageCache.clear();
+        } else {
+            try { localStorage.removeItem('image_cache'); } catch (_) {}
+        }
+        showToast('Image cache cleared');
+    });
+
+    document.getElementById('btn-clear-local-data')?.addEventListener('click', () => {
+        if (confirm('This will clear all local preferences (theme, source, notification settings). Watchlist data will NOT be affected. Continue?')) {
+            try {
+                const keep = ['shows', 'watch_history', 'favorites'];
+                const keys = Object.keys(localStorage);
+                for (const key of keys) {
+                    if (!keep.includes(key) && !key.startsWith('show:')) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                initTheme();
+                showToast('Local preferences cleared');
+            } catch (e) {
+                console.error('Failed to clear local data', e);
+            }
+        }
+    });
 }
 
 function setupFormSubmission() {
@@ -385,9 +423,17 @@ function setupFormSubmission() {
             if (!q || q.length < 2) { container.style.display = 'none'; return; }
             const matches = shows.filter(s => s.title.toLowerCase().includes(q)).slice(0, 6);
             if (matches.length === 0) { container.style.display = 'none'; return; }
-            container.innerHTML = matches.map(s =>
-                `<div style="padding:0.4rem 0.6rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">${escapeHtml(s.title)}${s.titleZh ? ' <span style="color:var(--text-muted)">· ' + escapeHtml(s.titleZh) + '</span>' : ''}</div>`
+            container.innerHTML = matches.map((s, i) =>
+                `<div data-suggestion-idx="${i}" style="padding:0.4rem 0.6rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.15s">${escapeHtml(s.title)}${s.titleZh ? ' <span style="color:var(--text-muted)">· ' + escapeHtml(s.titleZh) + '</span>' : ''}</div>`
             ).join('');
+            container.addEventListener('mouseover', (ev) => {
+                const div = ev.target.closest('[data-suggestion-idx]');
+                if (div) div.style.background = 'rgba(255,255,255,0.05)';
+            });
+            container.addEventListener('mouseout', (ev) => {
+                const div = ev.target.closest('[data-suggestion-idx]');
+                if (div) div.style.background = 'transparent';
+            });
             container.style.display = 'block';
             Array.from(container.children).forEach((el, i) => {
                 el.addEventListener('click', () => {
@@ -447,6 +493,11 @@ function setupFormSubmission() {
             newShowData.id = 'dh-' + Date.now();
             newShowData.dateAdded = Date.now();
             shows.push(newShowData);
+        }
+
+        const savedShow = showId ? shows.find(s => s.id === showId) : shows[shows.length - 1];
+        if (savedShow && getNotifyPref(savedShow.id)) {
+            scheduleReminderForShow(savedShow);
         }
 
         persistState();

@@ -1,15 +1,33 @@
+const _posterCache = new Map();
+const _pendingFetches = new Map();
+const _posterCallbacks = new Set();
+
+function _cleanupPosterCallback(name) {
+    _posterCallbacks.delete(name);
+    delete window[name];
+}
+
+function _registerPosterCallback(name, fn, timeoutMs = 30000) {
+    _posterCallbacks.add(name);
+    window[name] = function(...args) {
+        _cleanupPosterCallback(name);
+        return fn(...args);
+    };
+    setTimeout(() => {
+        if (window[name]) _cleanupPosterCallback(name);
+    }, timeoutMs);
+}
+
 function fetchShowBanner(showId, countdownUrl) {
     if (!DB._available) return;
     if (!countdownUrl || !countdownUrl.startsWith('http')) return;
+    if (_pendingFetches.has(showId + '_banner')) return;
 
-    const callbackName = "cb_banner_" + showId.replace(/[^a-zA-Z0-9]/g, '') + "_" + Date.now();
-    const timeoutId = setTimeout(() => {
-        if (window[callbackName]) { delete window[callbackName]; }
-    }, 30000);
+    _pendingFetches.set(showId + '_banner', true);
+    const callbackName = 'cb_banner_' + showId.replace(/[^a-zA-Z0-9]/g, '') + '_' + Date.now();
 
-    window[callbackName] = function(html) {
-        delete window[callbackName];
-        clearTimeout(timeoutId);
+    _registerPosterCallback(callbackName, function(html) {
+        _pendingFetches.delete(showId + '_banner');
         if (!html) return;
         try {
             const parser = new DOMParser();
@@ -36,18 +54,32 @@ function fetchShowBanner(showId, countdownUrl) {
         } catch (e) {
             console.error("Failed to parse banner HTML for ID: " + showId, e);
         }
-    };
+    });
     DB.fetchUrl(countdownUrl, callbackName);
 }
 
 function fetchPosterFromJikan(showId, title) {
     if (!DB._available) return;
+    if (_pendingFetches.has(showId + '_jikan')) return;
+
+    const cacheKey = 'jikan_' + title;
+    const cached = _posterCache.get(cacheKey);
+    if (cached) {
+        const show = getShowById(showId);
+        if (show && show.poster !== cached) {
+            show.poster = cached;
+            persistState();
+        }
+        return;
+    }
+
+    _pendingFetches.set(showId + '_jikan', true);
     const query = encodeURIComponent(title);
     const url = 'https://api.jikan.moe/v4/anime?q=' + query + '&limit=1';
     const callbackName = 'cb_jikan_' + showId.replace(/[^a-zA-Z0-9]/g, '') + '_' + Date.now();
 
-    window[callbackName] = function(json) {
-        delete window[callbackName];
+    _registerPosterCallback(callbackName, function(json) {
+        _pendingFetches.delete(showId + '_jikan');
         if (!json) return;
         try {
             const data = JSON.parse(json);
@@ -55,6 +87,7 @@ function fetchPosterFromJikan(showId, title) {
             if (!entry) return;
             const imageUrl = entry.images && entry.images.jpg && entry.images.jpg.large_image_url;
             if (!imageUrl) return;
+            _posterCache.set(cacheKey, imageUrl);
             const show = getShowById(showId);
             if (show && show.poster !== imageUrl) {
                 show.poster = imageUrl;
@@ -63,7 +96,7 @@ function fetchPosterFromJikan(showId, title) {
         } catch(e) {
             console.error('Jikan parse error', e);
         }
-    };
+    });
     DB.fetchUrl(url, callbackName);
 }
 
@@ -110,8 +143,7 @@ function fetchShowDetails(title, silent) {
         const body = JSON.stringify({ query, variables: { search: title } });
         if (DB._available) {
             const cb = 'cb_anilist_' + Date.now();
-            window[cb] = function(json) {
-                delete window[cb];
+            _registerPosterCallback(cb, function(json) {
                 if (!json) { if (!silent) alert('No matching show found.'); return; }
                 try {
                     const data = JSON.parse(json);
@@ -126,7 +158,7 @@ function fetchShowDetails(title, silent) {
                     };
                     fillFormFromEntry(mapped, 'AniList');
                 } catch(e) { if (!silent) alert('Error parsing AniList response.'); }
-            };
+            });
             DB.fetchUrlPost('https://graphql.anilist.co/', body, cb);
         } else {
             if (!silent) alert('No matching show found.');
@@ -138,8 +170,7 @@ function fetchShowDetails(title, silent) {
 
     if (DB._available) {
         const cbName = 'cb_modal_poster_' + Date.now();
-        window[cbName] = function(json) {
-            delete window[cbName];
+        _registerPosterCallback(cbName, function(json) {
             if (!json) { tryAnilistFallback(); return; }
             try {
                 const data = JSON.parse(json);
@@ -147,7 +178,7 @@ function fetchShowDetails(title, silent) {
                 if (!entry) { tryAnilistFallback(); return; }
                 fillFormFromEntry(entry, 'MyAnimeList');
             } catch(e) { tryAnilistFallback(); }
-        };
+        });
         DB.fetchUrl(url, cbName);
     } else {
         fetch(url).then(r => r.json()).then(data => {
@@ -158,21 +189,35 @@ function fetchShowDetails(title, silent) {
     }
 }
 
+const _autoFetchQueue = [];
+let _autoFetchRunning = false;
+
 function autoFetchPosters() {
-    setTimeout(() => {
-        shows.forEach(show => {
-            if (!show.poster) {
-                if (show.watchUrl && show.watchUrl.startsWith('https://donghuastream.org/')) {
-                    fetchShowBanner(show.id, show.watchUrl);
-                } else if (show.countdownUrl && show.countdownUrl.startsWith('https://animecountdown.com/')) {
-                    fetchShowBanner(show.id, show.countdownUrl);
-                } else {
-                    setTimeout(() => fetchPosterFromJikan(show.id, show.title),
-                        shows.indexOf(show) * 800);
-                }
+    shows.forEach(show => {
+        if (!show.poster) {
+            if (show.watchUrl && show.watchUrl.startsWith('https://donghuastream.org/')) {
+                _autoFetchQueue.push(() => fetchShowBanner(show.id, show.watchUrl));
+            } else if (show.countdownUrl && show.countdownUrl.startsWith('https://animecountdown.com/')) {
+                _autoFetchQueue.push(() => fetchShowBanner(show.id, show.countdownUrl));
+            } else {
+                _autoFetchQueue.push(() => fetchPosterFromJikan(show.id, show.title));
             }
-        });
-    }, 2000);
+        }
+    });
+    if (!_autoFetchRunning) {
+        _autoFetchRunning = true;
+        _processAutoFetchQueue();
+    }
+}
+
+function _processAutoFetchQueue() {
+    if (_autoFetchQueue.length === 0) {
+        _autoFetchRunning = false;
+        return;
+    }
+    const task = _autoFetchQueue.shift();
+    try { task(); } catch(e) { console.error('Auto-fetch error', e); }
+    setTimeout(_processAutoFetchQueue, 250);
 }
 
 function getWatchUrl(show) {
@@ -226,5 +271,14 @@ function updateSourceUI(source) {
 }
 
 function setupPosterFetch() {
-    autoFetchPosters();
+    setTimeout(autoFetchPosters, 2000);
+}
+
+function _cleanupAllPosterCallbacks() {
+    for (const name of _posterCallbacks) {
+        delete window[name];
+    }
+    _posterCallbacks.clear();
+    _autoFetchQueue.length = 0;
+    _autoFetchRunning = false;
 }

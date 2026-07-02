@@ -5,6 +5,42 @@ function getContinueWatchingShow() {
     return ongoing[0] || null;
 }
 
+const NOTIFY_PREFS_KEY = 'notification_prefs';
+
+function getNotifyPref(showId) {
+    try {
+        const raw = localStorage.getItem(NOTIFY_PREFS_KEY);
+        const prefs = raw ? JSON.parse(raw) : {};
+        return prefs[showId] !== false;
+    } catch (e) { return true; }
+}
+
+function setNotifyPref(showId, enabled) {
+    try {
+        const raw = localStorage.getItem(NOTIFY_PREFS_KEY);
+        const prefs = raw ? JSON.parse(raw) : {};
+        prefs[showId] = enabled;
+        localStorage.setItem(NOTIFY_PREFS_KEY, JSON.stringify(prefs));
+    } catch (e) {}
+}
+
+function toggleNotifyForShow(showId) {
+    const current = getNotifyPref(showId);
+    setNotifyPref(showId, !current);
+    return !current;
+}
+
+function scheduleReminderForShow(show) {
+    if (!show || !STATUS.isAiring(show)) return;
+    if (!getNotifyPref(show.id)) return;
+    try {
+        DB.scheduleReminder(show.id, show.title, show.releaseDay, show.releaseTime,
+            show.alarmRequestCode || hashCode(show.id));
+    } catch (e) {
+        console.error('Failed to schedule reminder for', show.id, e);
+    }
+}
+
 function exportData() {
     let json = null;
     if (DB._available) {

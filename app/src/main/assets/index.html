@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+    <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#05060a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="My Donghua">
+    <meta name="description" content="Track Chinese anime (Donghua) episodes, countdowns, and schedules">
     <title>My Donghua - Next Episode Countdown</title>
     <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,7 +56,7 @@
                     <h1>东画 <span>My Donghua</span></h1>
                 </div>
             </div>
-            <button id="btn-open-drawer" class="dev-header-btn" title="Menu">
+            <button id="btn-open-drawer" class="dev-header-btn" title="Menu" aria-label="Open menu" role="button">
                 <i class="fa-solid fa-bars"></i>
             </button>
         </div>
@@ -106,7 +111,7 @@
                 <div class="panel-search">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="search-input" placeholder="Search donghua...">
+                        <input type="text" id="search-input" placeholder="Search donghua..." aria-label="Search shows" autocomplete="off">
                     </div>
                 </div>
                 <div class="genre-filter-bar" id="genre-filter-bar" style="display:none;margin-top:0.5rem;padding:0 0.5rem;flex-wrap:wrap;gap:0.3rem;"></div>
@@ -181,7 +186,7 @@
                 <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; margin: 0;">
                     <i class="fa-solid fa-gear" style="color: var(--accent-cyan);"></i> Settings
                 </h2>
-                <button onclick="window.closeSettingsModal()" class="modal-close" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-xmark"></i></button>
+                <button id="btn-close-settings" class="modal-close" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.8rem; max-height: 65vh; overflow-y: auto; padding-right: 0.4rem;">
                 
@@ -194,7 +199,7 @@
                     
                     <div style="display: flex; flex-direction: column; gap: 0.8rem;">
                         <!-- Donghua Stream Selectable Card -->
-                        <div id="source-card-donghua" onclick="window.selectPreferredSource('donghuastream')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: all 0.2s ease;">
+                        <div id="source-card-donghua" data-source="donghuastream" style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: all 0.2s ease;">
                             <div style="display: flex; align-items: center; gap: 0.6rem;">
                                 <i class="fa-solid fa-circle-play" style="color: var(--accent-cyan); font-size: 1.1rem;"></i>
                                 <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">Donghua Stream</span>
@@ -203,7 +208,7 @@
                         </div>
 
                         <!-- Lucifer Donghua Selectable Card -->
-                        <div id="source-card-lucifer" onclick="window.selectPreferredSource('luciferdonghua')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: all 0.2s ease;">
+                        <div id="source-card-lucifer" data-source="luciferdonghua" style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: all 0.2s ease;">
                             <div style="display: flex; align-items: center; gap: 0.6rem;">
                                 <i class="fa-solid fa-dragon" style="color: var(--accent-purple); font-size: 1.1rem;"></i>
                                 <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">Lucifer Donghua</span>
@@ -220,13 +225,13 @@
                     </h3>
                     <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Choose your preferred visual style</p>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button id="btn-theme-dark" onclick="window.setThemeMode('dark')" class="btn theme-btn" style="flex: 1; padding: 0.5rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
+                        <button id="btn-theme-dark" data-theme="dark" class="btn theme-btn" style="flex: 1; padding: 0.5rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
                             <i class="fa-solid fa-moon"></i> Dark
                         </button>
-                        <button id="btn-theme-light" onclick="window.setThemeMode('light')" class="btn theme-btn" style="flex: 1; padding: 0.5rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
+                        <button id="btn-theme-light" data-theme="light" class="btn theme-btn" style="flex: 1; padding: 0.5rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
                             <i class="fa-solid fa-sun"></i> Light
                         </button>
-                        <button id="btn-theme-amoled" onclick="window.setThemeMode('amoled')" class="btn theme-btn" style="flex: 1; padding: 0.5rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
+                        <button id="btn-theme-amoled" data-theme="amoled" class="btn theme-btn" style="flex: 1; padding: 0.5rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.2rem;">
                             <i class="fa-solid fa-circle"></i> AMOLED
                         </button>
                     </div>
@@ -244,6 +249,22 @@
                         </button>
                         <button id="btn-trigger-import" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
                             <i class="fa-solid fa-file-import"></i> Import JSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section: Cache & Data -->
+                <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 1.2rem;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-broom" style="color: var(--accent-cyan);"></i> Cache & Data
+                    </h3>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Manage local cached data and preferences</p>
+                    <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+                        <button id="btn-clear-image-cache" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                            <i class="fa-solid fa-image"></i> Clear Image Cache
+                        </button>
+                        <button id="btn-clear-local-data" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 80, 80, 0.3); border-radius: 8px; color: var(--accent-rose); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                            <i class="fa-solid fa-trash"></i> Clear Local Data
                         </button>
                     </div>
                 </div>
@@ -272,7 +293,7 @@
                             <i class="fa-solid fa-code-branch" style="color: var(--accent-rose); width: 18px; text-align: center;"></i>
                             <div>
                                 <div style="color: var(--text-muted); font-size: 0.6rem; text-transform: uppercase;">App Version</div>
-                                <div style="font-weight: 600; color: var(--text-primary);">v6.6 (Build 56)</div>
+                                <div style="font-weight: 600; color: var(--text-primary);">v6.7 (Build 57)</div>
                             </div>
                         </div>
                         <div class="dev-info-item" style="display: flex; align-items: center; gap: 0.6rem;">
@@ -503,7 +524,7 @@
     <div class="modal-overlay" id="exit-modal" style="display: none;">
         <div class="modal-content glass-card animate-scale" style="max-width: 320px; text-align: center;">
             <div class="modal-body" style="padding: 1.8rem;">
-                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-top: 0; margin-bottom: 0.5rem;">Exit Application</h3>
+                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 0.5rem;">Exit Application</h3>
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.4;">Are you sure you want to close My Donghua?</p>
                 <div style="display: flex; gap: 0.8rem; justify-content: center;">
                     <button class="btn btn-secondary" onclick="closeExitModal()" style="flex: 1;">Cancel</button>
@@ -536,6 +557,8 @@
     </nav>
 
     <!-- Custom Scripts -->
+    <script src="js/services/imageCache.js?v=6.7"></script>
+    <script src="js/services/offline.js?v=6.7"></script>
     <script src="js/utils/constants.js?v=6.7"></script>
     <script src="js/services/status.js?v=6.7"></script>
     <script src="js/utils/helpers.js?v=6.7"></script>

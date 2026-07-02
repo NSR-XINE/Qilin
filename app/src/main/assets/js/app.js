@@ -1,5 +1,32 @@
 let lastSyncTime = Date.now();
 let syncInterval = null;
+let _renderRafId = null;
+
+function _debouncedRender(fn) {
+    if (_renderRafId) cancelAnimationFrame(_renderRafId);
+    _renderRafId = requestAnimationFrame(() => {
+        _renderRafId = null;
+        try { fn(); } catch (e) { console.error('Render error', e); }
+    });
+}
+
+const _debouncedRenderSchedule = () => _debouncedRender(renderWeeklySchedule);
+const _debouncedRenderBanner = () => _debouncedRender(renderHeroBanner);
+const _debouncedRenderGrid = () => _debouncedRender(renderShowsGrid);
+
+window.addEventListener('error', (e) => {
+    console.error('Uncaught error:', e.message, e.filename, e.lineno);
+    try {
+        const toast = document.querySelector('.toast-notification');
+        if (!toast) showToast('An error occurred. Check logs for details.', 4000);
+    } catch (_) {}
+    return true;
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+    console.error('Unhandled promise rejection:', e.reason);
+    e.preventDefault();
+});
 
 function showToast(message, duration = 2000) {
     const existing = document.querySelector('.toast-notification');
@@ -37,6 +64,8 @@ function refreshAllData() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    ImageCache.init();
+    SyncManager.init();
     loadState();
     initTheme();
 
@@ -47,9 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupResizeObservers();
     updateStats();
-    renderWeeklySchedule();
-    renderHeroBanner();
-    renderShowsGrid();
+    _debouncedRenderSchedule();
+    _debouncedRenderBanner();
+    _debouncedRenderGrid();
     resumeTimers();
 
     document.getElementById('btn-export-data')?.addEventListener('click', exportData);
@@ -92,10 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkConnectivity() {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        fetch('https://1.1.1.1', { signal: controller.signal, mode: 'no-cors' })
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        fetch('https://httpbin.org/anything', { signal: controller.signal, mode: 'no-cors' })
             .then(() => { clearTimeout(timeout); setOfflineState(false); })
-            .catch(() => { clearTimeout(timeout); setOfflineState(true); });
+            .catch(() => {
+                fetch('https://www.google.com/generate_204', { signal: controller.signal, mode: 'no-cors' })
+                    .then(() => { clearTimeout(timeout); setOfflineState(false); })
+                    .catch(() => { clearTimeout(timeout); setOfflineState(true); });
+            });
     }
 
     if (!navigator.onLine) setOfflineState(true);
@@ -219,6 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 300000);
 
     setInterval(updateLastSyncDisplay, 10000);
+
+    window.addEventListener('beforeunload', () => {
+        pauseTimers();
+        _cleanupAllPosterCallbacks();
+        if (syncInterval) clearInterval(syncInterval);
+    });
 
     resetPtr();
 });

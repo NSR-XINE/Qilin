@@ -29,6 +29,10 @@ const DB = {
         return this._call('dbInsertShow', json);
     },
 
+    bulkInsert(json) {
+        return this._call('dbBulkInsert', json);
+    },
+
     updateShow(json) {
         return this._call('dbUpdateShow', json);
     },

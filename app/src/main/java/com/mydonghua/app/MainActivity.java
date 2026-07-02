@@ -9,6 +9,12 @@ import android.webkit.WebView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,7 +53,27 @@ public class MainActivity extends AppCompatActivity {
 
         WebViewSetup.setupWebView(this, webView, dbHelper, insetsHelper);
 
+        setupBackgroundSync();
+
         requestPermissionsOnStart();
+    }
+
+    private void setupBackgroundSync() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+                .build();
+
+        PeriodicWorkRequest syncRequest = new PeriodicWorkRequest.Builder(
+                SyncWorker.class, 4, TimeUnit.HOURS)
+                .setConstraints(constraints)
+                .addTag("donghua_sync")
+                .build();
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "donghua_background_sync",
+                ExistingPeriodicWorkPolicy.KEEP,
+                syncRequest);
     }
 
     private void requestPermissionsOnStart() {

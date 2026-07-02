@@ -256,22 +256,33 @@ function setupSearch() {
 
     searchInput.addEventListener('keydown', function(e) {
         const container = document.getElementById('search-suggestions');
-        if (!container || container.style.display === 'none') return;
-        const items = container.querySelectorAll('.search-suggestion-item');
-        if (items.length === 0) return;
+        const isVisible = container && container.style.display !== 'none' && suggestionsVisible;
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
+            if (!isVisible) {
+                const suggestions = getSearchSuggestions(searchInput.value);
+                updateSearchSuggestions(suggestions);
+                return;
+            }
+            const items = container.querySelectorAll('.search-suggestion-item');
+            if (items.length === 0) return;
             selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
             updateSelection(container, items);
         } else if (e.key === 'ArrowUp') {
+            if (!isVisible) return;
             e.preventDefault();
+            const items = container.querySelectorAll('.search-suggestion-item');
+            if (items.length === 0) return;
             selectedIndex = Math.max(selectedIndex - 1, -1);
             updateSelection(container, items);
         } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (selectedIndex >= 0) selectSuggestion(selectedIndex);
+            if (isVisible && selectedIndex >= 0) {
+                e.preventDefault();
+                selectSuggestion(selectedIndex);
+            }
         } else if (e.key === 'Escape') {
+            if (!isVisible) return;
             container.style.display = 'none';
             suggestionsVisible = false;
             selectedIndex = -1;

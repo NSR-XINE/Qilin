@@ -29,17 +29,67 @@ function retryOperation(fn, retries = 3, delay = 200) {
     return false;
 }
 
+const _batchOps = [];
+let _batchTimer = null;
+
+function _enqueueDbOp(type, data) {
+    _batchOps.push({ type, data });
+    if (!_batchTimer) {
+        _batchTimer = setTimeout(() => _flushBatchOps(), 50);
+    }
+}
+
+function _flushBatchOps() {
+    _batchTimer = null;
+    if (_batchOps.length === 0) return;
+    const ops = _batchOps.splice(0);
+    if (!DB._available) return;
+    const updates = [];
+    const inserts = [];
+    const deletes = [];
+    for (const op of ops) {
+        if (op.type === 'updateShow' && op.data) {
+            updates.push(op.data);
+        } else if (op.type === 'insertShow' && op.data) {
+            inserts.push(op.data);
+        } else if (op.type === 'deleteShow' && op.id != null) {
+            deletes.push(op.id);
+        }
+    }
+    if (inserts.length > 0) {
+        try { DB.bulkInsert(JSON.stringify(inserts)); } catch (e) { console.error('Batch insert failed', e); }
+    }
+    if (updates.length > 0) {
+        for (const item of updates) {
+            try { retryOperation(() => DB.updateShow(JSON.stringify(item))); } catch (e) { console.error('Batch update failed', e); }
+        }
+    }
+    if (deletes.length > 0) {
+        for (const id of deletes) {
+            try { retryOperation(() => DB.deleteShow(id)); } catch (e) { console.error('Batch delete failed', e); }
+        }
+    }
+}
+
 function _queueOperation(op) {
-    try {
-        const queue = JSON.parse(DB.getLocal(_QUEUE_KEY) || '[]');
-        queue.push(op);
-        DB.setLocal(_QUEUE_KEY, JSON.stringify(queue));
-    } catch (e) {
-        console.error('Failed to queue operation', e);
+    if (typeof SyncManager !== 'undefined' && SyncManager.enqueue) {
+        SyncManager.enqueue(op.type, op.data || op);
+    } else {
+        try {
+            const queue = JSON.parse(DB.getLocal(_QUEUE_KEY) || '[]');
+            queue.push(op);
+            DB.setLocal(_QUEUE_KEY, JSON.stringify(queue));
+        } catch (e) {
+            console.error('Failed to queue operation', e);
+        }
     }
 }
 
 function _flushQueue() {
+    if (typeof SyncManager !== 'undefined' && SyncManager.processQueue) {
+        SyncManager.processQueue();
+        return;
+    }
     try {
         const raw = DB.getLocal(_QUEUE_KEY);
         if (!raw) return;
@@ -118,45 +168,46 @@ function applyStatusMigrations() {
     }
 }
 
+let _persistPending = false;
 function persistState(fullRender = true) {
-    let sqliteOk = true;
-    let alarmFieldsChanged = !_alarmsInitialized;
+    if (_persistPending) return;
+    _persistPending = true;
+
     if (DB._available) {
+        const toInsert = [];
+        const toUpdate = [];
         shows.forEach(show => {
-            const json = JSON.stringify(show);
             if (existingShowIds.has(show.id)) {
-                try {
-                    const ok = retryOperation(() => DB.updateShow(json));
-                    if (!ok) {
-                        sqliteOk = false;
-                        _queueOperation({ type: 'updateShow', data: JSON.parse(json) });
-                    }
-                } catch (e) {
-                    console.error('Failed to update show', show.id, e);
-                    sqliteOk = false;
-                    _queueOperation({ type: 'updateShow', data: JSON.parse(json) });
-                }
+                toUpdate.push(show);
             } else {
-                try {
-                    const ok = retryOperation(() => DB.insertShow(json));
-                    if (ok) {
-                        existingShowIds.add(show.id);
-                    } else {
-                        sqliteOk = false;
-                        _queueOperation({ type: 'insertShow', data: JSON.parse(json) });
-                    }
-                } catch (e) {
-                    console.error('Failed to insert show', show.id, e);
-                    sqliteOk = false;
-                    _queueOperation({ type: 'insertShow', data: JSON.parse(json) });
-                }
+                toInsert.push(show);
             }
             const newHash = _getAlarmHash(show);
             const oldHash = _alarmHashes.get(show.id);
-            if (oldHash === undefined || newHash !== oldHash) alarmFieldsChanged = true;
+            if (oldHash === undefined || newHash !== oldHash) {
+                if (!_alarmsInitialized) return;
+                try { DB.syncAllAlarms(); _alarmsInitialized = true; } catch (e) { console.error('Alarm sync failed', e); }
+            }
             _alarmHashes.set(show.id, newHash);
         });
-        if (alarmFieldsChanged) {
+        if (toInsert.length > 0) {
+            try {
+                const ok = retryOperation(() => DB.bulkInsert(JSON.stringify(toInsert)));
+                if (ok) toInsert.forEach(s => existingShowIds.add(s.id));
+                else toInsert.forEach(s => _queueOperation({ type: 'insertShow', data: s }));
+            } catch (e) {
+                toInsert.forEach(s => _queueOperation({ type: 'insertShow', data: s }));
+            }
+        }
+        for (const show of toUpdate) {
+            try {
+                const ok = retryOperation(() => DB.updateShow(JSON.stringify(show)));
+                if (!ok) _queueOperation({ type: 'updateShow', data: show });
+            } catch (e) {
+                _queueOperation({ type: 'updateShow', data: show });
+            }
+        }
+        if (!_alarmsInitialized) {
             try {
                 DB.syncAllAlarms();
                 _alarmsInitialized = true;
@@ -164,19 +215,18 @@ function persistState(fullRender = true) {
                 console.error('Alarm sync failed', e);
             }
         }
-    }
-    if (!sqliteOk || !DB._available) {
+    } else {
         DB.setLocal(LS_KEYS.SHOWS, JSON.stringify(shows));
     }
+
+    _persistPending = false;
     if (fullRender) {
-        try {
+        _debouncedRender(() => {
             updateStats();
-            renderWeeklySchedule();
-            renderHeroBanner();
-            renderShowsGrid();
-        } catch (e) {
-            console.error('Render failed in persistState', e);
-        }
+            _debouncedRenderSchedule();
+            _debouncedRenderBanner();
+            _debouncedRenderGrid();
+        });
     }
 }
 
@@ -195,6 +245,7 @@ function deleteShow(showId) {
         const show = shows[idx];
         shows.splice(idx, 1);
         existingShowIds.delete(showId);
+        setNotifyPref(showId, false);
         if (DB._available) {
             try {
                 retryOperation(() => DB.deleteShow(showId));

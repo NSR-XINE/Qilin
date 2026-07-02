@@ -86,7 +86,11 @@ function renderCard(show, todayName) {
 
     let posterHtml = '';
     if (safePoster) {
-        posterHtml = `<div class="card-poster-wrapper"><img class="card-poster" src="${safePoster}" alt="${show.title}" loading="lazy" onerror="var w=this.closest('.card-poster-wrapper');var h=this.closest('.card-header');if(w&&h){w.style.display='none';h.querySelector('.poster-placeholder').style.display='flex'}"></div>`;
+        const cached = ImageCache.has(safePoster);
+        posterHtml = `<div class="card-poster-wrapper${cached ? '' : ' poster-loading'}"><img class="card-poster" src="${safePoster}" alt="${show.title}" loading="lazy"></div>`;
+        if (!cached) {
+            ImageCache.loadImage(safePoster).catch(() => {}); // cache for future
+        }
     }
 
     const placeholderHtml = `<div class="poster-placeholder" style="background: ${gradientBg}">
@@ -140,6 +144,7 @@ function renderCard(show, todayName) {
                     <i class="fa-solid fa-hourglass-half"></i> Countdown
                 </a>
                 <div class="card-ctrls">
+                    <button class="ctrl-btn notify-btn" data-notify="${getNotifyPref(show.id)}" title="${getNotifyPref(show.id) ? 'Notifications On' : 'Notifications Off'}"><i class="${getNotifyPref(show.id) ? 'fa-solid fa-bell' : 'fa-regular fa-bell'}"></i></button>
                     <button class="ctrl-btn edit-btn" title="Edit show"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button class="ctrl-btn favorite-btn" data-fav="${show.isFavorite}" title="${show.isFavorite ? 'Unfavorite' : 'Favorite'}"><i class="${show.isFavorite ? 'fa-solid' : 'fa-regular'} fa-heart"></i></button>
                     <button class="ctrl-btn delete-btn" title="Delete show"><i class="fa-solid fa-trash"></i></button>
@@ -244,6 +249,7 @@ function setupCardActions() {
         const isEdit = e.target.closest('.edit-btn');
         const isDelete = e.target.closest('.delete-btn');
         const isFavorite = e.target.closest('.favorite-btn');
+        const isNotify = e.target.closest('.notify-btn');
         const isStream = e.target.closest('.watch-btn');
         const isCountdown = e.target.closest('.countdown-link');
 
@@ -259,6 +265,20 @@ function setupCardActions() {
             renderShowsGrid();
             const btn = document.querySelector(`.show-card[data-id="${showId}"] .favorite-btn`);
             if (btn) { btn.classList.add('animate'); setTimeout(() => btn.classList.remove('animate'), 500); }
+        }
+        else if (isNotify) {
+            const enabled = toggleNotifyForShow(showId);
+            const btn = card.querySelector('.notify-btn');
+            if (btn) {
+                btn.dataset.notify = enabled;
+                btn.title = enabled ? 'Notifications On' : 'Notifications Off';
+                btn.innerHTML = `<i class="${enabled ? 'fa-solid' : 'fa-regular'} fa-bell"></i>`;
+            }
+            if (enabled && STATUS.isAiring(show)) {
+                scheduleReminderForShow(show);
+            } else if (!enabled) {
+                try { DB.cancelReminder(showId, show.alarmRequestCode || hashCode(showId)); } catch (_) {}
+            }
         }
         else if (isDelete) {
             if (confirm(`Are you sure you want to remove "${show.title}" from your list?`)) {

@@ -1,4 +1,5 @@
 let timerInterval = null;
+let _timerVisibilityAttached = false;
 const cardElements = new Map();
 
 function pauseTimers() {
@@ -6,16 +7,18 @@ function pauseTimers() {
 }
 
 function resumeTimers() {
-    if (!timerInterval) {
-        buildCardElementMap();
-        timerInterval = setInterval(updateTimers, 1000);
-    }
+    if (timerInterval) return;
+    buildCardElementMap();
+    timerInterval = setInterval(updateTimers, 1000);
 }
 
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) pauseTimers();
-    else resumeTimers();
-});
+if (!_timerVisibilityAttached) {
+    _timerVisibilityAttached = true;
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) pauseTimers();
+        else resumeTimers();
+    });
+}
 
 function buildCardElementMap() {
     cardElements.clear();
@@ -31,7 +34,8 @@ function buildCardElementMap() {
 }
 
 function rebuildCardElementMap() {
-    buildCardElementMap();
+    cardElements.clear();
+    resumeTimers();
 }
 
 function updateTimers() {
