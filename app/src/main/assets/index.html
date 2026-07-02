@@ -26,11 +26,15 @@
     <div class="loading-overlay" id="app-loading-screen">
         <div class="loading-ambient-glow"></div>
         <div class="loading-content">
+            <div class="loading-icon"><i class="fa-solid fa-dragon"></i></div>
             <h1 class="loading-title">东画 <span>My Donghua</span></h1>
             <div class="loading-bar-container">
                 <div class="loading-bar-fill"></div>
             </div>
             <div class="loading-text" id="loading-status-text">Booting engine...</div>
+            <div class="loading-offline" id="loading-offline-msg" style="display:none">
+                <i class="fa-solid fa-wifi-slash"></i> No internet connection
+            </div>
         </div>
     </div>
 
@@ -46,10 +50,12 @@
                     <h1>东画 <span>My Donghua</span></h1>
                 </div>
             </div>
-            
             <button id="btn-open-drawer" class="dev-header-btn" title="Menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
+        </div>
+        <div class="offline-banner" id="offline-banner" style="display:none">
+            <i class="fa-solid fa-wifi-slash"></i> You are offline
         </div>
     </header>
 

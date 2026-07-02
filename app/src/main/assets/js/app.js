@@ -79,6 +79,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1600);
 
+    function updateOfflineStatus() {
+        const offline = !navigator.onLine;
+        const banner = document.getElementById('offline-banner');
+        if (banner) banner.style.display = offline ? 'flex' : 'none';
+    }
+
+    function checkOfflineOnLoad() {
+        if (!navigator.onLine) {
+            const msg = document.getElementById('loading-offline-msg');
+            if (msg) msg.style.display = 'flex';
+        }
+    }
+
+    checkOfflineOnLoad();
+    window.addEventListener('online', updateOfflineStatus);
+    window.addEventListener('offline', () => {
+        updateOfflineStatus();
+        const loader = document.getElementById('app-loading-screen');
+        if (loader) {
+            const msg = document.getElementById('loading-offline-msg');
+            if (msg) msg.style.display = 'flex';
+        }
+    });
+    updateOfflineStatus();
+
     addSwipeToDismiss('settings-modal', closeSettingsModal);
     addSwipeToDismiss('donghua-modal', closeModal);
     addSwipeToDismiss('import-modal', closeImportModal);
