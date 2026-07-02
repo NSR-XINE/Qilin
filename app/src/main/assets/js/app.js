@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             const el = document.getElementById('loading-status-text');
             if (el) el.innerText = msg;
-        }, idx * 300);
+        }, idx * 500);
     });
 
     setTimeout(() => {
@@ -77,7 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.remove('loading-active');
             setTimeout(() => loader.remove(), 600);
         }
-    }, 1600);
+    }, 3500);
+
+    function showLoadingOffline() {
+        const msg = document.getElementById('loading-offline-msg');
+        if (msg) msg.style.display = 'flex';
+    }
 
     function updateOfflineStatus() {
         const offline = !navigator.onLine;
@@ -85,22 +90,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (banner) banner.style.display = offline ? 'flex' : 'none';
     }
 
-    function checkOfflineOnLoad() {
-        if (!navigator.onLine) {
-            const msg = document.getElementById('loading-offline-msg');
-            if (msg) msg.style.display = 'flex';
-        }
-    }
+    if (!navigator.onLine) showLoadingOffline();
+    setTimeout(() => { if (!navigator.onLine) showLoadingOffline(); }, 1500);
 
-    checkOfflineOnLoad();
     window.addEventListener('online', updateOfflineStatus);
     window.addEventListener('offline', () => {
         updateOfflineStatus();
-        const loader = document.getElementById('app-loading-screen');
-        if (loader) {
-            const msg = document.getElementById('loading-offline-msg');
-            if (msg) msg.style.display = 'flex';
-        }
+        showLoadingOffline();
     });
     updateOfflineStatus();
 
