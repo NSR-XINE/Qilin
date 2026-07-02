@@ -711,7 +711,7 @@ body.tab-home #next-up-banner {
 
 .pull-to-refresh-indicator {
     position: fixed;
-    top: var(--header-height, 56px);
+    top: var(--ptr-top, 0px);
     left: 0;
     right: 0;
     z-index: 9999;

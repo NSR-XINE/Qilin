@@ -106,10 +106,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('resize', () => switchTab(activeTab));
 
+    function updatePtrTop() {
+        const header = document.querySelector('.app-header');
+        const top = header ? header.getBoundingClientRect().bottom : 0;
+        ptrIndicator.style.setProperty('--ptr-top', top + 'px');
+    }
+
     const ptrIndicator = document.createElement('div');
     ptrIndicator.className = 'pull-to-refresh-indicator';
-    ptrIndicator.innerHTML = '<i class="fa-solid fa-arrow-down"></i><span>Pull to refresh</span>';
+    ptrIndicator.innerHTML = '<i class="fa-solid fa-spinner"></i><span>Pull to refresh</span>';
     document.body.appendChild(ptrIndicator);
+    updatePtrTop();
+    window.addEventListener('resize', updatePtrTop);
 
     let touchStartY = 0;
     let touchMoveY = 0;
@@ -178,6 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 300000);
 
     setInterval(updateLastSyncDisplay, 10000);
+
+    ptrIndicator.classList.remove('visible');
+    resetPtr();
 });
 
 window.pauseTimers = pauseTimers;
