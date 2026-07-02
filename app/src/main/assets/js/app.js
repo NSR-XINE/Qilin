@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ptrIndicator.classList.remove('visible');
         ptrIndicator.style.transform = '';
         const icon = ptrIndicator.querySelector('i');
-        if (icon) { icon.className = 'fa-solid fa-arrow-down'; icon.style.transform = ''; }
+        if (icon) { icon.className = 'fa-solid fa-spinner'; icon.style.transform = ''; }
         const span = ptrIndicator.querySelector('span');
         if (span) span.textContent = 'Pull to refresh';
         touchStartY = 0;
@@ -143,11 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const pullDist = touchMoveY - touchStartY;
         if (pullDist > 0) {
             ptrIndicator.classList.add('visible');
+            const progress = Math.min(pullDist / 80, 1);
             ptrIndicator.style.transform = 'translateY(' + Math.min(pullDist * 0.4, 40) + 'px)';
             const icon = ptrIndicator.querySelector('i');
-            if (icon) {
-                icon.className = pullDist > 60 ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down';
-            }
+            if (icon) icon.style.transform = 'rotate(' + (progress * 360) + 'deg)';
             const span = ptrIndicator.querySelector('span');
             if (span) span.textContent = pullDist > 60 ? 'Release to refresh' : 'Pull to refresh';
         }
