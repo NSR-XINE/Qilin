@@ -112,12 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ptrIndicator.innerHTML = '<i class="fa-solid fa-spinner"></i><span>Pull to refresh</span>';
     document.body.appendChild(ptrIndicator);
 
-    const lastSyncEl = document.createElement('div');
-    lastSyncEl.id = 'last-sync-time';
-    lastSyncEl.className = 'last-sync-time';
-    lastSyncEl.textContent = 'Last sync: just now';
-    document.querySelector('.header-content-wrapper')?.appendChild(lastSyncEl);
-
     let touchStartY = 0;
     let touchMoveY = 0;
     let isPulling = false;
