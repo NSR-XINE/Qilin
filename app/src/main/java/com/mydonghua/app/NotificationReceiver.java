@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 
@@ -66,6 +67,13 @@ public class NotificationReceiver extends BroadcastReceiver {
                 .setAutoCancel(true)
                 .setContentIntent(pi)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (PackageManager.PERMISSION_GRANTED !=
+                    context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)) {
+                return;
+            }
+        }
 
         int notifyId = (showId + ":" + currentEp).hashCode() & Integer.MAX_VALUE;
         nm.notify(notifyId, builder.build());

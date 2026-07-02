@@ -319,6 +319,7 @@ class AndroidBridge {
             try {
                 MainActivity a = getActivity();
                 if (a == null) return;
+                a.requestNotificationPermission();
                 AlarmScheduler.schedule(a, id, title, releaseDay, releaseTime, alarmCode);
             } catch (Throwable t) { t.printStackTrace(); }
         });
@@ -354,6 +355,7 @@ class AndroidBridge {
                         MainActivity a = getActivity();
                         if (a == null) return;
                         if ("ongoing".equals(status)) {
+                            a.requestNotificationPermission();
                             AlarmScheduler.schedule(a, id, title, day, time, alarmCode);
                         } else {
                             AlarmScheduler.cancel(a, id, alarmCode);
@@ -362,5 +364,50 @@ class AndroidBridge {
                 }
             } catch (Throwable t) { t.printStackTrace(); }
         }).start();
+    }
+
+    @JavascriptInterface
+    public void requestNotificationPermission() {
+        runOnUi(() -> {
+            MainActivity a = getActivity();
+            if (a != null) a.requestNotificationPermission();
+        });
+    }
+
+    @JavascriptInterface
+    public boolean hasNotificationPermission() {
+        MainActivity a = getActivity();
+        if (a != null) return a.hasNotificationPermission();
+        return false;
+    }
+
+    @JavascriptInterface
+    public void requestExactAlarmPermission() {
+        runOnUi(() -> {
+            MainActivity a = getActivity();
+            if (a == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                android.app.AlarmManager am = (android.app.AlarmManager) a.getSystemService(android.content.Context.ALARM_SERVICE);
+                if (am != null && !am.canScheduleExactAlarms()) {
+                    android.content.Intent intent = new android.content.Intent(
+                            android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(android.net.Uri.parse("package:" + a.getPackageName()));
+                    a.startActivity(intent);
+                }
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public boolean hasExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MainActivity a = getActivity();
+            if (a != null) {
+                android.app.AlarmManager am = (android.app.AlarmManager) a.getSystemService(android.content.Context.ALARM_SERVICE);
+                return am != null && am.canScheduleExactAlarms();
+            }
+            return false;
+        }
+        return true;
     }
 }
