@@ -44,6 +44,37 @@ public class MainActivity extends AppCompatActivity {
         WebViewSetup.setupWebView(this, webView, dbHelper, insetsHelper);
     }
 
+    static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+    private android.webkit.ValueCallback<android.net.Uri[]> fileChooserCallback;
+
+    void setFileChooserCallback(android.webkit.ValueCallback<android.net.Uri[]> callback) {
+        fileChooserCallback = callback;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+            if (fileChooserCallback != null) {
+                android.net.Uri[] results = null;
+                if (resultCode == RESULT_OK && data != null) {
+                    if (data.getData() != null) {
+                        results = new android.net.Uri[]{data.getData()};
+                    } else if (data.getClipData() != null) {
+                        int count = data.getClipData().getItemCount();
+                        results = new android.net.Uri[count];
+                        for (int i = 0; i < count; i++) {
+                            results[i] = data.getClipData().getItemAt(i).getUri();
+                        }
+                    }
+                }
+                fileChooserCallback.onReceiveValue(results);
+                fileChooserCallback = null;
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     @Override
     public void onBackPressed() {
         if (webView == null) {

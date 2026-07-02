@@ -2,6 +2,7 @@ package com.mydonghua.app;
 
 import android.annotation.SuppressLint;
 import android.webkit.JsResult;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -71,6 +72,13 @@ public class WebViewSetup {
                     .setPositiveButton("OK", (d, w) -> result.confirm())
                     .setCancelable(false)
                     .show();
+                return true;
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView view, android.webkit.ValueCallback<android.net.Uri[]> filePathCallback, android.webkit.WebChromeClient.FileChooserParams params) {
+                activity.setFileChooserCallback(filePathCallback);
+                activity.startActivityForResult(params.createIntent(), MainActivity.FILE_CHOOSER_REQUEST_CODE);
                 return true;
             }
         });
