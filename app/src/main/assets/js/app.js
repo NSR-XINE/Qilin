@@ -107,6 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', () => switchTab(activeTab));
 
     let touchStartY = 0;
+    let touchStartX = 0;
+    let touchMoveY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+
+    function isDrawerOpen() {
+        return document.getElementById('right-drawer')?.classList.contains('open') ?? false;
+    }
 
     function updatePtrTop() {
         const header = document.querySelector('.app-header');
@@ -121,11 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePtrTop();
     window.addEventListener('resize', updatePtrTop);
 
-    let touchStartY = 0;
-    let touchMoveY = 0;
-    let isPulling = false;
-    let isRefreshing = false;
-
     function resetPtr() {
         isPulling = false;
         ptrIndicator.classList.remove('visible');
@@ -138,9 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.body.addEventListener('touchstart', (e) => {
-        if (isRefreshing) return;
+        if (isRefreshing || isDrawerOpen()) return;
         if (document.documentElement.scrollTop <= 0) {
             touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
             touchMoveY = touchStartY;
             isPulling = true;
         }
@@ -150,6 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isPulling || isRefreshing) return;
         touchMoveY = e.touches[0].clientY;
         const pullDist = touchMoveY - touchStartY;
+        const moveX = e.touches[0].clientX - touchStartX;
+        if (Math.abs(moveX) > Math.abs(pullDist)) { resetPtr(); return; }
         if (pullDist > 0) {
             ptrIndicator.classList.add('visible');
             const icon = ptrIndicator.querySelector('i');
