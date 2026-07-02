@@ -106,10 +106,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('resize', () => switchTab(activeTab));
 
+    let ptrTop = 0;
+
     function updatePtrTop() {
         const header = document.querySelector('.app-header');
-        const top = header ? header.getBoundingClientRect().bottom : 0;
-        ptrIndicator.style.setProperty('--ptr-top', top + 'px');
+        ptrTop = header ? header.getBoundingClientRect().bottom : 0;
     }
 
     const ptrIndicator = document.createElement('div');
@@ -126,10 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetPtr() {
         isPulling = false;
-        ptrIndicator.classList.remove('visible');
+        ptrIndicator.style.transition = '';
         ptrIndicator.style.transform = '';
         const icon = ptrIndicator.querySelector('i');
-        if (icon) { icon.className = 'fa-solid fa-spinner'; icon.style.transform = ''; }
+        if (icon) icon.className = 'fa-solid fa-spinner';
         const span = ptrIndicator.querySelector('span');
         if (span) span.textContent = 'Pull to refresh';
         touchStartY = 0;
@@ -150,7 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         touchMoveY = e.touches[0].clientY;
         const pullDist = touchMoveY - touchStartY;
         if (pullDist > 0) {
-            ptrIndicator.classList.add('visible');
+            ptrIndicator.style.transition = 'none';
+            ptrIndicator.style.transform = 'translateY(' + (ptrTop + Math.min(pullDist * 0.4, 40)) + 'px)';
             const icon = ptrIndicator.querySelector('i');
             if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
             const span = ptrIndicator.querySelector('span');
@@ -159,20 +161,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     function onTouchEnd() {
-        if (!isPulling || isRefreshing) return;
+        if (!isPulling) return;
         const pullDist = touchMoveY - touchStartY;
+        if (isRefreshing) return;
         if (pullDist > 60) {
             isRefreshing = true;
             const icon = ptrIndicator.querySelector('i');
             if (icon) icon.className = 'fa-solid fa-spinner fa-spin';
             const span = ptrIndicator.querySelector('span');
             if (span) span.textContent = 'Refreshing...';
-            ptrIndicator.style.transform = '';
+            ptrIndicator.style.transition = '';
+            ptrIndicator.style.transform = 'translateY(' + ptrTop + 'px)';
             refreshAllData();
             setTimeout(() => {
-                ptrIndicator.classList.remove('visible');
                 isRefreshing = false;
+                resetPtr();
             }, 1200);
+            return;
         }
         resetPtr();
     }
@@ -187,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setInterval(updateLastSyncDisplay, 10000);
 
-    ptrIndicator.classList.remove('visible');
     resetPtr();
 });
 

@@ -711,7 +711,7 @@ body.tab-home #next-up-banner {
 
 .pull-to-refresh-indicator {
     position: fixed;
-    top: var(--ptr-top, 0px);
+    top: 0;
     left: 0;
     right: 0;
     z-index: 9999;
@@ -725,19 +725,14 @@ body.tab-home #next-up-banner {
     font-weight: 500;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    transform: translateY(-100%);
-    transition: transform 0.3s ease;
+    transform: translateY(calc(-100vh - 20px));
+    transition: transform 0.35s ease;
     pointer-events: none;
-}
-
-.pull-to-refresh-indicator.visible {
-    transform: translateY(0);
 }
 
 .pull-to-refresh-indicator i {
     font-size: 0.9rem;
     color: var(--accent-cyan);
-    transition: transform 0.2s ease;
 }
 
 .last-sync-time {
