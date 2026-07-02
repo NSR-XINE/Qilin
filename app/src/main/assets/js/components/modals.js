@@ -187,6 +187,7 @@ function closeExitModal() {
 }
 
 function confirmExitApp() {
+    pauseTimers();
     if (DB._available && typeof AndroidApp.exitApp === 'function') {
         AndroidApp.exitApp();
     } else {

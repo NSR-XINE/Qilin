@@ -35,7 +35,10 @@ function buildCardElementMap() {
 
 function rebuildCardElementMap() {
     cardElements.clear();
-    resumeTimers();
+    buildCardElementMap();
+    if (!timerInterval) {
+        timerInterval = setInterval(updateTimers, 1000);
+    }
 }
 
 function updateTimers() {

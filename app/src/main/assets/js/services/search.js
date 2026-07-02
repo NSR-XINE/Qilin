@@ -184,8 +184,23 @@ function updateSearchSuggestions(suggestions) {
         } else {
             displayHtml = escapeHtml(item.displayText || item.text);
         }
-        return '<div class="search-suggestion-item' + (index === selectedIndex ? ' selected' : '') + '" data-index="' + index + '"' + (isShow ? ' data-show-id="' + item.show.id + '"' : '') + ' style="padding:0.5rem 0.8rem;cursor:pointer;font-size:0.85rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'transparent\'" onclick="selectSuggestion(' + index + ')">' + icon + displayHtml + '</div>';
+        return '<div class="search-suggestion-item' + (index === selectedIndex ? ' selected' : '') + '" data-index="' + index + '"' + (isShow ? ' data-show-id="' + item.show.id + '"' : '') + ' style="padding:0.5rem 0.8rem;cursor:pointer;font-size:0.85rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.2s">' + icon + displayHtml + '</div>';
     }).join('');
+    container.addEventListener('mouseover', (ev) => {
+        const div = ev.target.closest('.search-suggestion-item');
+        if (div) div.style.background = 'rgba(255,255,255,0.05)';
+    });
+    container.addEventListener('mouseout', (ev) => {
+        const div = ev.target.closest('.search-suggestion-item');
+        if (div) div.style.background = 'transparent';
+    });
+    container.addEventListener('click', (ev) => {
+        const div = ev.target.closest('.search-suggestion-item');
+        if (div) {
+            const idx = parseInt(div.dataset.index, 10);
+            if (!isNaN(idx)) selectSuggestion(idx);
+        }
+    });
 }
 
 function selectSuggestion(index) {

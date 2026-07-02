@@ -118,8 +118,25 @@ function _flushQueue() {
     }
 }
 
+function _migrateLegacyQueue() {
+    if (typeof SyncManager === 'undefined' || !SyncManager.enqueue) return;
+    try {
+        const raw = DB.getLocal(_QUEUE_KEY);
+        if (!raw) return;
+        const queue = JSON.parse(raw);
+        if (!Array.isArray(queue) || queue.length === 0) return;
+        for (const op of queue) {
+            SyncManager.enqueue(op.type, op.data || op);
+        }
+        DB.setLocal(_QUEUE_KEY, '[]');
+    } catch (e) {
+        console.error('Legacy queue migration failed', e);
+    }
+}
+
 function loadState() {
     try {
+        _migrateLegacyQueue();
         _flushQueue();
         if (DB._available) {
             const dbData = DB.getAllShows();
@@ -176,19 +193,21 @@ function persistState(fullRender = true) {
     if (DB._available) {
         const toInsert = [];
         const toUpdate = [];
+        let alarmFieldsChanged = false;
         shows.forEach(show => {
             if (existingShowIds.has(show.id)) {
                 toUpdate.push(show);
             } else {
                 toInsert.push(show);
             }
-            const newHash = _getAlarmHash(show);
-            const oldHash = _alarmHashes.get(show.id);
-            if (oldHash === undefined || newHash !== oldHash) {
-                if (!_alarmsInitialized) return;
-                try { DB.syncAllAlarms(); _alarmsInitialized = true; } catch (e) { console.error('Alarm sync failed', e); }
+            if (!alarmFieldsChanged) {
+                const newHash = _getAlarmHash(show);
+                const oldHash = _alarmHashes.get(show.id);
+                if (oldHash === undefined || newHash !== oldHash) {
+                    alarmFieldsChanged = true;
+                }
+                _alarmHashes.set(show.id, newHash);
             }
-            _alarmHashes.set(show.id, newHash);
         });
         if (toInsert.length > 0) {
             try {
@@ -207,7 +226,7 @@ function persistState(fullRender = true) {
                 _queueOperation({ type: 'updateShow', data: show });
             }
         }
-        if (!_alarmsInitialized) {
+        if (!_alarmsInitialized || alarmFieldsChanged) {
             try {
                 DB.syncAllAlarms();
                 _alarmsInitialized = true;
@@ -215,7 +234,6 @@ function persistState(fullRender = true) {
                 console.error('Alarm sync failed', e);
             }
         }
-    } else {
         DB.setLocal(LS_KEYS.SHOWS, JSON.stringify(shows));
     }
 

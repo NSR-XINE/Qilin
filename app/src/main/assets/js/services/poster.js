@@ -23,11 +23,13 @@ function fetchShowBanner(showId, countdownUrl) {
     if (!countdownUrl || !countdownUrl.startsWith('http')) return;
     if (_pendingFetches.has(showId + '_banner')) return;
 
-    _pendingFetches.set(showId + '_banner', true);
+    const pendingKey = showId + '_banner';
+    _pendingFetches.set(pendingKey, true);
+    setTimeout(() => _pendingFetches.delete(pendingKey), 30000);
     const callbackName = 'cb_banner_' + showId.replace(/[^a-zA-Z0-9]/g, '') + '_' + Date.now();
 
     _registerPosterCallback(callbackName, function(html) {
-        _pendingFetches.delete(showId + '_banner');
+        _pendingFetches.delete(pendingKey);
         if (!html) return;
         try {
             const parser = new DOMParser();
@@ -73,13 +75,15 @@ function fetchPosterFromJikan(showId, title) {
         return;
     }
 
-    _pendingFetches.set(showId + '_jikan', true);
+    const jikanKey = showId + '_jikan';
+    _pendingFetches.set(jikanKey, true);
+    setTimeout(() => _pendingFetches.delete(jikanKey), 30000);
     const query = encodeURIComponent(title);
     const url = 'https://api.jikan.moe/v4/anime?q=' + query + '&limit=1';
     const callbackName = 'cb_jikan_' + showId.replace(/[^a-zA-Z0-9]/g, '') + '_' + Date.now();
 
     _registerPosterCallback(callbackName, function(json) {
-        _pendingFetches.delete(showId + '_jikan');
+        _pendingFetches.delete(jikanKey);
         if (!json) return;
         try {
             const data = JSON.parse(json);
