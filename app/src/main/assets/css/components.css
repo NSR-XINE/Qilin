@@ -711,7 +711,7 @@ body.tab-home #next-up-banner {
 
 .pull-to-refresh-indicator {
     position: fixed;
-    top: 0;
+    top: var(--safe-area-top, 0px);
     left: 0;
     right: 0;
     z-index: 9999;
@@ -719,7 +719,7 @@ body.tab-home #next-up-banner {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.8rem;
+    padding: 0.6rem 0.8rem;
     color: var(--text-secondary);
     font-size: 0.8rem;
     font-weight: 500;
