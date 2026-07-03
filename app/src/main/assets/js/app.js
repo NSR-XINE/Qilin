@@ -13,6 +13,7 @@ function _debouncedRender(fn) {
 const _debouncedRenderSchedule = () => _debouncedRender(renderWeeklySchedule);
 const _debouncedRenderBanner = () => _debouncedRender(renderHeroBanner);
 const _debouncedRenderGrid = () => _debouncedRender(renderShowsGrid);
+const _debouncedRenderContinueWatching = () => _debouncedRender(renderContinueWatching);
 
 window.addEventListener('error', (e) => {
     console.error('Uncaught error:', e.message, e.filename, e.lineno);
@@ -61,6 +62,37 @@ function refreshAllData() {
     resumeTimers();
     lastSyncTime = Date.now();
     updateLastSyncDisplay();
+    pushWidgetUpdate();
+}
+
+function pushWidgetUpdate() {
+    if (!DB._available || typeof AndroidApp.updateWidget !== 'function') return;
+    try {
+        const nextShow = getContinueWatchingShow() || getNextUpShow();
+        if (!nextShow) {
+            AndroidApp.updateWidget('No shows', '--d --h --m', 'Add a show to get started');
+            return;
+        }
+        const countdownInfo = getNextReleaseDate(nextShow.releaseDay, nextShow.releaseTime);
+        let countdownStr = '--d --h --m';
+        if (countdownInfo.airingNow) {
+            countdownStr = 'AIRING NOW';
+        } else if (countdownInfo.targetDate) {
+            const diff = countdownInfo.targetDate - Date.now();
+            if (diff > 0) {
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                countdownStr = d + 'd ' + h + 'h ' + m + 'm';
+            }
+        }
+        const epStr = nextShow.totalEp > 0
+            ? 'Ep ' + (nextShow.currentEp + 1) + ' / ' + nextShow.totalEp
+            : 'Ep ' + (nextShow.currentEp + 1);
+        AndroidApp.updateWidget(nextShow.title, countdownStr, epStr);
+    } catch (e) {
+        console.error('Widget push failed', e);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -78,8 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStats();
     _debouncedRenderSchedule();
     _debouncedRenderBanner();
+    _debouncedRenderContinueWatching();
     _debouncedRenderGrid();
     resumeTimers();
+    pushWidgetUpdate();
 
     document.getElementById('btn-export-data')?.addEventListener('click', exportData);
 
@@ -90,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearch();
     setupScheduleTabs();
     setupCardActions();
+    setupContinueWatching();
     setupPosterFetch();
 
     LOADING_MESSAGES.forEach((msg, idx) => {
@@ -265,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     syncInterval = setInterval(() => {
         autoFetchPosters();
+        pushWidgetUpdate();
         updateLastSyncDisplay();
     }, 300000);
 
@@ -308,8 +344,12 @@ window.triggerAddModal = triggerAddModal;
 window.renderShowsGrid = renderShowsGrid;
 window.renderHeroBanner = renderHeroBanner;
 window.renderWeeklySchedule = renderWeeklySchedule;
+window.renderContinueWatching = renderContinueWatching;
 window.refreshAllData = refreshAllData;
 window.getContinueWatchingShow = getContinueWatchingShow;
 window.getRecentlyUpdated = getRecentlyUpdated;
 window.getAiringToday = getAiringToday;
 window.updateShowField = updateShowField;
+window.setAccentColor = setAccentColor;
+window.applyAccentColor = applyAccentColor;
+window.pushWidgetUpdate = pushWidgetUpdate;

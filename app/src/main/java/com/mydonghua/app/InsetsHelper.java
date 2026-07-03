@@ -97,10 +97,22 @@ public class InsetsHelper {
     public void setOnApplyWindowInsetsListener() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             activity.getWindow().getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
-                int topInset = insets.getSystemWindowInsetTop();
-                int bottomInset = insets.getSystemWindowInsetBottom();
-                int leftInset = insets.getSystemWindowInsetLeft();
-                int rightInset = insets.getSystemWindowInsetRight();
+                int topInset, bottomInset, leftInset, rightInset;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    android.graphics.Insets systemBars = insets.getInsets(
+                        android.view.WindowInsets.Type.systemBars());
+                    android.graphics.Insets tappable = insets.getInsets(
+                        android.view.WindowInsets.Type.tappableElement());
+                    topInset = systemBars.top;
+                    bottomInset = Math.max(systemBars.bottom, tappable.bottom);
+                    leftInset = systemBars.left;
+                    rightInset = systemBars.right;
+                } else {
+                    topInset = insets.getSystemWindowInsetTop();
+                    bottomInset = insets.getSystemWindowInsetBottom();
+                    leftInset = insets.getSystemWindowInsetLeft();
+                    rightInset = insets.getSystemWindowInsetRight();
+                }
 
                 float density = activity.getResources().getDisplayMetrics().density;
                 statusBarHeightDp = topInset / density;

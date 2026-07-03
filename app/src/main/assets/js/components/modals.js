@@ -381,6 +381,42 @@ function setupSettingsModal() {
         el.addEventListener('click', () => setThemeMode(el.dataset.theme));
     });
 
+    const accentPicker = document.getElementById('accent-picker');
+    if (accentPicker) {
+        const defaultBtn = accentPicker.querySelector('.accent-btn[data-accent="default"]');
+        const presets = Object.entries(ACCENT_PRESETS);
+        for (const [key, preset] of presets) {
+            const hex = currentTheme === 'light' ? preset.light : preset.dark;
+            const btn = document.createElement('button');
+            btn.className = 'accent-btn';
+            btn.dataset.accent = hex;
+            btn.title = preset.name;
+            btn.style.cssText = 'width:32px;height:32px;border-radius:50%;border:2px solid var(--border-color);cursor:pointer;background:' + hex + ';transition:transform 0.15s, border-color 0.15s;position:relative;';
+            accentPicker.appendChild(btn);
+        }
+        if (DB._available && typeof AndroidApp.getDynamicColors === 'function') {
+            const dynBtn = document.createElement('button');
+            dynBtn.className = 'accent-btn';
+            dynBtn.dataset.accent = 'dynamic';
+            dynBtn.title = 'Material You (auto)';
+            dynBtn.style.cssText = 'width:32px;height:32px;border-radius:50%;border:2px solid var(--border-color);cursor:pointer;background:linear-gradient(135deg,#00f2fe,#9d4edd);transition:transform 0.15s, border-color 0.15s;position:relative;font-size:0.7rem;display:flex;align-items:center;justify-content:center;color:#fff;';
+            dynBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+            accentPicker.appendChild(dynBtn);
+        }
+        accentPicker.addEventListener('click', (e) => {
+            const btn = e.target.closest('.accent-btn');
+            if (!btn) return;
+            const val = btn.dataset.accent;
+            if (val === 'dynamic') {
+                setAccentColor('dynamic');
+            } else if (val) {
+                setAccentColor(val);
+            } else {
+                setAccentColor('default');
+            }
+        });
+    }
+
     document.getElementById('btn-clear-image-cache')?.addEventListener('click', () => {
         if (typeof ImageCache !== 'undefined' && ImageCache.clear) {
             ImageCache.clear();

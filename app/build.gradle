@@ -10,8 +10,8 @@ android {
         applicationId "com.mydonghua.app"
         minSdk 29
         targetSdk 35
-        versionCode 56
-        versionName "6.6"
+        versionCode 58
+        versionName "6.8"
 
     }
 

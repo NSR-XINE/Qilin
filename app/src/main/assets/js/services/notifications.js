@@ -42,16 +42,18 @@ function scheduleReminderForShow(show) {
 }
 
 function exportData() {
-    let json = null;
+    let showsJson = null;
     if (DB._available) {
-        json = DB.getAllShows();
+        showsJson = DB.getAllShows();
     } else {
-        json = DB.getLocal('donghua_shows');
+        showsJson = DB.getLocal('donghua_shows');
     }
-    if (!json) { alert('No data to export.'); return; }
+    if (!showsJson) { alert('No data to export.'); return; }
+
+    let showsArr;
     try {
-        const parsed = JSON.parse(json);
-        if (!Array.isArray(parsed) || parsed.length === 0) {
+        showsArr = JSON.parse(showsJson);
+        if (!Array.isArray(showsArr) || showsArr.length === 0) {
             alert('No data to export.');
             return;
         }
@@ -59,6 +61,36 @@ function exportData() {
         alert('Export failed: stored data is corrupted.');
         return;
     }
+
+    let watchHistory = [];
+    if (DB._available) {
+        try { watchHistory = JSON.parse(DB.getWatchHistory() || '[]'); } catch (_) {}
+    } else {
+        try { watchHistory = JSON.parse(DB.getLocal('donghua_watch_history') || '[]'); } catch (_) {}
+    }
+
+    let settings = {};
+    try {
+        if (DB._available) {
+            const keys = ['app_theme', 'pref_streaming_source', 'sqlite_migrated', 'donghua_last_sync'];
+            for (const key of keys) settings[key] = DB.getSetting(key, '');
+        } else {
+            settings = { app_theme: localStorage.getItem('app_theme') || '' };
+        }
+    } catch (_) {}
+
+    const backup = {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        appVersion: 'v6.8',
+        shows: showsArr,
+        watchHistory: watchHistory,
+        settings: settings,
+        notifyPrefs: localStorage.getItem('notification_prefs') || '{}'
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+
     if (DB._available && DB.shareJsonFile) {
         try {
             DB.shareJsonFile(json);
@@ -94,23 +126,65 @@ function importData(jsonString) {
     if (!json) return false;
     try {
         const parsed = JSON.parse(json);
-        if (!Array.isArray(parsed)) throw new Error('Invalid format: root must be a JSON array');
-        for (const item of parsed) {
+
+        let showsArr, watchHistory, settings, notifyPrefs;
+
+        if (parsed.version === 2 || (parsed.shows && Array.isArray(parsed.shows))) {
+            showsArr = parsed.shows || [];
+            watchHistory = parsed.watchHistory || [];
+            settings = parsed.settings || {};
+            notifyPrefs = parsed.notifyPrefs;
+        } else if (Array.isArray(parsed)) {
+            showsArr = parsed;
+            watchHistory = [];
+            settings = {};
+            notifyPrefs = null;
+        } else {
+            throw new Error('Invalid format: expected a JSON array or version-2 backup object');
+        }
+
+        for (const item of showsArr) {
             if (!item.title || !item.id) {
                 throw new Error("Missing 'title' or 'id' fields in backup item");
             }
         }
+
         if (DB._available) {
             const currentDbData = JSON.parse(DB.getAllShows() || '[]');
-            const importedIds = new Set(parsed.map(s => s.id));
+            const importedIds = new Set(showsArr.map(s => s.id));
             currentDbData.forEach(s => { if (!importedIds.has(s.id)) DB.deleteShow(String(s.id)); });
         }
-        shows = parsed;
+
+        shows = showsArr;
         existingShowIds.clear();
         shows.forEach(s => existingShowIds.add(s.id));
         DB.setLocal('donghua_shows', JSON.stringify(shows));
+
+        if (watchHistory.length > 0 && DB._available) {
+            for (const entry of watchHistory) {
+                try { DB.addWatchHistory(entry.showId, entry.episodeNum); } catch (_) {}
+            }
+        }
+
+        if (notifyPrefs) {
+            try { localStorage.setItem('notification_prefs', notifyPrefs); } catch (_) {}
+        }
+
+        if (settings) {
+            if (DB._available) {
+                for (const [key, val] of Object.entries(settings)) {
+                    if (val) try { DB.saveSetting(key, String(val)); } catch (_) {}
+                }
+            }
+            if (settings.app_theme) {
+                localStorage.setItem('app_theme', settings.app_theme);
+            }
+        }
+
         persistState();
-        alert('Import successful! ' + shows.length + ' shows loaded.');
+        alert('Import successful! ' + showsArr.length + ' shows' +
+            (watchHistory.length > 0 ? ', ' + watchHistory.length + ' history entries' : '') +
+            ' loaded.');
         return true;
     } catch(e) {
         alert('Failed to import backup: ' + e.message);

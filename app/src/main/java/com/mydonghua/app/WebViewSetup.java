@@ -108,6 +108,12 @@ public class WebViewSetup {
 
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            webSettings.setForceDark(android.webkit.WebSettings.FORCE_DARK_AUTO);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+        }
 
         webView.setOnLongClickListener(v -> true);
         webView.setLongClickable(false);

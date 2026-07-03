@@ -17,14 +17,14 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/base.css?v=6.6">
-    <link rel="stylesheet" href="css/layout.css?v=6.6">
-    <link rel="stylesheet" href="css/components.css?v=6.7">
-    <link rel="stylesheet" href="css/themes.css?v=6.6">
-    <link rel="stylesheet" href="css/navigation.css?v=6.6">
-    <link rel="stylesheet" href="css/banner.css?v=6.6">
-    <link rel="stylesheet" href="css/modals.css?v=6.6">
-    <link rel="stylesheet" href="css/animations.css?v=6.6">
+    <link rel="stylesheet" href="css/base.css?v=6.8">
+    <link rel="stylesheet" href="css/layout.css?v=6.8">
+    <link rel="stylesheet" href="css/components.css?v=6.8">
+    <link rel="stylesheet" href="css/themes.css?v=6.8">
+    <link rel="stylesheet" href="css/navigation.css?v=6.8">
+    <link rel="stylesheet" href="css/banner.css?v=6.8">
+    <link rel="stylesheet" href="css/modals.css?v=6.8">
+    <link rel="stylesheet" href="css/animations.css?v=6.8">
 </head>
 <body class="loading-active">
     <script>try{var t=localStorage.getItem('app_theme');if(t==='light'||t==='amoled')document.body.classList.add(t)}catch(e){}</script>
@@ -102,6 +102,17 @@
         <!-- Current Focus / Next Releasing Banner -->
         <section class="banner-section" id="next-up-banner" style="display: none;">
             <!-- Rendered dynamically in JS -->
+        </section>
+
+        <!-- Continue Watching Section -->
+        <section class="continue-watching-section" id="continue-watching-section" style="display: none;">
+            <div class="section-title-row">
+                <h2><i class="fa-solid fa-play" style="color: var(--accent-cyan);"></i> Continue Watching</h2>
+                <span class="count-tag" id="continue-count"></span>
+            </div>
+            <div class="continue-watching-scroll" id="continue-watching-scroll">
+                <!-- Rendered dynamically in JS -->
+            </div>
         </section>
 
         <!-- Main Workspace -->
@@ -237,6 +248,17 @@
                     </div>
                 </div>
 
+                <!-- Section: Accent Color -->
+                <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 1.2rem;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-paintbrush" style="color: var(--accent-cyan);"></i> Accent Color
+                    </h3>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Choose a highlight color for buttons and accents</p>
+                    <div class="accent-picker" id="accent-picker" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        <button class="accent-btn active" data-accent="default" title="Default" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color); cursor: pointer; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); transition: transform 0.15s; position: relative;"></button>
+                    </div>
+                </div>
+
                 <!-- Section: Backup & Restore -->
                 <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 1.2rem;">
                     <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
@@ -293,7 +315,7 @@
                             <i class="fa-solid fa-code-branch" style="color: var(--accent-rose); width: 18px; text-align: center;"></i>
                             <div>
                                 <div style="color: var(--text-muted); font-size: 0.6rem; text-transform: uppercase;">App Version</div>
-                                <div style="font-weight: 600; color: var(--text-primary);">v6.7 (Build 57)</div>
+                                <div style="font-weight: 600; color: var(--text-primary);">v6.8 (Build 58)</div>
                             </div>
                         </div>
                         <div class="dev-info-item" style="display: flex; align-items: center; gap: 0.6rem;">
@@ -557,30 +579,30 @@
     </nav>
 
     <!-- Custom Scripts -->
-    <script src="js/services/imageCache.js?v=6.7"></script>
-    <script src="js/services/offline.js?v=6.7"></script>
-    <script src="js/utils/constants.js?v=6.7"></script>
-    <script src="js/services/status.js?v=6.7"></script>
-    <script src="js/utils/helpers.js?v=6.7"></script>
-    <script src="js/database/bridge.js?v=6.6"></script>
-    <script src="js/services/state.js?v=6.6"></script>
-    <script src="js/services/countdown.js?v=6.6"></script>
-    <script src="js/services/theme.js?v=6.6"></script>
-    <script src="js/services/search.js?v=6.6"></script>
-    <script src="js/services/poster.js?v=6.6"></script>
-    <script src="js/services/notifications.js?v=6.6"></script>
-    <script src="js/services/stats.js?v=6.6"></script>
-    <script src="js/services/timers.js?v=6.6"></script>
-    <script src="js/components/cards.js?v=6.6"></script>
-    <script src="js/components/banner.js?v=6.6"></script>
-    <script src="js/components/schedule.js?v=6.6"></script>
-    <script src="js/components/modals.js?v=6.6"></script>
-    <script src="js/components/nav.js?v=6.6"></script>
-    <script src="js/pages/history.js?v=6.6"></script>
-    <script src="js/pages/stats.js?v=6.6"></script>
-    <script src="js/pages/calendar.js?v=6.6"></script>
-    <script src="js/pages/collections.js?v=6.6"></script>
-    <script src="js/pages/seasonal.js?v=6.6"></script>
-    <script src="js/app.js?v=6.6"></script>
+    <script src="js/services/imageCache.js?v=6.8"></script>
+    <script src="js/services/offline.js?v=6.8"></script>
+    <script src="js/utils/constants.js?v=6.8"></script>
+    <script src="js/services/status.js?v=6.8"></script>
+    <script src="js/utils/helpers.js?v=6.8"></script>
+    <script src="js/database/bridge.js?v=6.8"></script>
+    <script src="js/services/state.js?v=6.8"></script>
+    <script src="js/services/countdown.js?v=6.8"></script>
+    <script src="js/services/theme.js?v=6.8"></script>
+    <script src="js/services/search.js?v=6.8"></script>
+    <script src="js/services/poster.js?v=6.8"></script>
+    <script src="js/services/notifications.js?v=6.8"></script>
+    <script src="js/services/stats.js?v=6.8"></script>
+    <script src="js/services/timers.js?v=6.8"></script>
+    <script src="js/components/cards.js?v=6.8"></script>
+    <script src="js/components/banner.js?v=6.8"></script>
+    <script src="js/components/schedule.js?v=6.8"></script>
+    <script src="js/components/modals.js?v=6.8"></script>
+    <script src="js/components/nav.js?v=6.8"></script>
+    <script src="js/pages/history.js?v=6.8"></script>
+    <script src="js/pages/stats.js?v=6.8"></script>
+    <script src="js/pages/calendar.js?v=6.8"></script>
+    <script src="js/pages/collections.js?v=6.8"></script>
+    <script src="js/pages/seasonal.js?v=6.8"></script>
+    <script src="js/app.js?v=6.8"></script>
 </body>
 </html>

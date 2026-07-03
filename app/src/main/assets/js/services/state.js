@@ -191,6 +191,7 @@ function persistState(fullRender = true) {
             updateStats();
             _debouncedRenderSchedule();
             _debouncedRenderBanner();
+            _debouncedRenderContinueWatching();
             _debouncedRenderGrid();
         });
     }
@@ -311,4 +312,10 @@ function getRecentlyUpdated(limit = 10) {
 function getAiringToday() {
     const todayName = DAYS_ARRAY[new Date().getDay()];
     return STATUS.allAiring().filter(s => s.releaseDay === todayName);
+}
+
+function getContinueWatchingShows() {
+    return shows
+        .filter(s => s.currentEp > 0 && (s.totalEp === 0 || s.currentEp < s.totalEp))
+        .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
 }

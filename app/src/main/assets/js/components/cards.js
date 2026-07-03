@@ -291,3 +291,69 @@ function setupCardActions() {
         _plusLongPress = false;
     });
 }
+
+function renderContinueWatching() {
+    const section = document.getElementById('continue-watching-section');
+    const scroll = document.getElementById('continue-watching-scroll');
+    const count = document.getElementById('continue-count');
+    if (!section || !scroll) return;
+
+    const shows = getContinueWatchingShows();
+    if (shows.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = '';
+    if (count) count.textContent = `${shows.length} show${shows.length === 1 ? '' : 's'}`;
+
+    let html = '';
+    for (const show of shows) {
+        const safePoster = safePosterUrl(show.poster);
+        const watchUrl = getWatchUrl(show);
+        const progress = show.totalEp > 0 ? Math.min(100, Math.round((show.currentEp / show.totalEp) * 100)) : 0;
+        const progressLabel = show.totalEp > 0 ? `${show.currentEp}/${show.totalEp}` : `${show.currentEp} ep`;
+
+        let posterHtml = '';
+        if (safePoster) {
+            const cached = ImageCache.has(safePoster);
+            posterHtml = `<div class="cw-poster${cached ? '' : ' poster-loading'}"><img class="cw-poster-img" src="${safePoster}" alt="${show.title}" loading="lazy"></div>`;
+            if (!cached) ImageCache.loadImage(safePoster).catch(() => {});
+        } else {
+            posterHtml = `<div class="cw-poster cw-poster-placeholder" style="background:${getPosterGradient(show.title)}"><span>${getInitials(show.title)}</span></div>`;
+        }
+
+        html += `<div class="cw-item" data-id="${show.id}">
+            ${posterHtml}
+            <div class="cw-body">
+                <div class="cw-title" title="${escapeHtml(show.title)}">${escapeHtml(show.title)}</div>
+                <div class="cw-progress-row">
+                    <span class="cw-progress-label">${progressLabel}</span>
+                    ${show.totalEp > 0 ? `<div class="cw-progress-bar"><div class="cw-progress-fill" style="width:${progress}%"></div></div>` : ''}
+                </div>
+                <button class="cw-watch-btn" data-watch-url="${watchUrl}" title="Watch ${escapeHtml(show.title)}">
+                    <i class="fa-solid fa-circle-play"></i> <span>Continue</span>
+                </button>
+            </div>
+        </div>`;
+    }
+    scroll.innerHTML = html;
+}
+
+function setupContinueWatching() {
+    const scroll = document.getElementById('continue-watching-scroll');
+    if (!scroll) return;
+
+    scroll.addEventListener('click', (e) => {
+        const item = e.target.closest('.cw-item');
+        if (!item) return;
+        const showId = item.dataset.id;
+        const watchBtn = e.target.closest('.cw-watch-btn');
+        if (watchBtn) {
+            const url = watchBtn.dataset.watchUrl;
+            if (url) { openWatchScreen(url); return; }
+        }
+        const show = getShowById(showId);
+        if (show) openDetailsModal(show);
+    });
+}

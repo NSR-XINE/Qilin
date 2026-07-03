@@ -72,10 +72,44 @@ body.amoled {
     --loading-shimmer: rgba(255, 255, 255, 0.03);
 }
 
-/* Material You dynamic color support via media query */
-@media (dynamic-range: high) {
-    :root {
-        --accent-cyan: color(display-p3 0 0.95 0.996);
-        --accent-purple: color(display-p3 0.616 0.306 0.867);
-    }
+/* Dynamic accent color override via data-accent attribute on body */
+body[data-accent] {
+    --accent-cyan: var(--accent-override, #00f2fe);
+    --accent-cyan-rgb: var(--accent-override-rgb, 0, 242, 254);
+    --accent-purple: var(--accent-override, #9d4edd);
+    --accent-purple-rgb: var(--accent-override-rgb, 157, 78, 221);
+    --accent-rose: var(--accent-override, #ff2a5f);
+    --accent-rose-rgb: var(--accent-override-rgb, 255, 42, 95);
+    --accent-green: var(--accent-override, #3fb950);
+    --accent-green-rgb: var(--accent-override-rgb, 63, 185, 80);
+    --accent-orange: var(--accent-override, #f0883e);
+    --accent-orange-rgb: var(--accent-override-rgb, 240, 136, 62);
+    --accent-blue: var(--accent-override, #58a6ff);
+    --accent-blue-rgb: var(--accent-override-rgb, 88, 166, 255);
+}
+
+body[data-accent].light-theme {
+    --accent-cyan: var(--accent-override, #009aa6);
+    --accent-cyan-rgb: var(--accent-override-rgb, 0, 154, 166);
+    --accent-purple: var(--accent-override, #7b2cbf);
+    --accent-purple-rgb: var(--accent-override-rgb, 123, 44, 191);
+    --accent-rose: var(--accent-override, #d90429);
+    --accent-rose-rgb: var(--accent-override-rgb, 217, 4, 41);
+    --accent-green: var(--accent-override, #2ea043);
+    --accent-green-rgb: var(--accent-override-rgb, 46, 160, 67);
+    --accent-orange: var(--accent-override, #d97706);
+    --accent-orange-rgb: var(--accent-override-rgb, 217, 119, 6);
+    --accent-blue: var(--accent-override, #2563eb);
+    --accent-blue-rgb: var(--accent-override-rgb, 37, 99, 235);
+}
+
+.accent-btn.active {
+    border-color: var(--accent-cyan) !important;
+    box-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.5);
+    transform: scale(1.15);
+}
+
+.accent-btn:hover {
+    transform: scale(1.1);
+    border-color: rgba(255,255,255,0.3);
 }

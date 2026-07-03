@@ -19,10 +19,11 @@ function switchTab(tabName) {
     const controlPanel = document.querySelector('.control-panel');
     const contentArea = document.querySelector('.content-area');
     const emptyStateEl = document.getElementById('empty-state');
+    const continueWatching = document.getElementById('continue-watching-section');
 
     const isMobile = window.innerWidth <= 1024;
     if (isMobile) {
-        [searchPanel, scheduleContainer, heroBanner, sectionsContainer, emptyStateEl].forEach(el => {
+        [searchPanel, scheduleContainer, heroBanner, sectionsContainer, emptyStateEl, continueWatching].forEach(el => {
             if (el) el.style.setProperty('display', 'none', 'important');
         });
         if (controlPanel) controlPanel.style.setProperty('display', 'none', 'important');
@@ -32,6 +33,7 @@ function switchTab(tabName) {
             if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
             if (scheduleContainer) scheduleContainer.style.setProperty('display', 'block', 'important');
             if (heroBanner) { heroBanner.style.removeProperty('display'); renderHeroBanner(); }
+            if (continueWatching) { continueWatching.style.removeProperty('display'); renderContinueWatching(); }
             if (emptyStateEl && shows.length === 0) emptyStateEl.style.setProperty('display', 'flex', 'important');
         } else if (tabName === 'airing' || tabName === 'complete' || tabName === 'stopped') {
             if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
@@ -49,6 +51,7 @@ function switchTab(tabName) {
             if (el) el.style.display = '';
         });
         renderHeroBanner();
+        renderContinueWatching();
         const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
         const genreBar = document.getElementById('genre-filter-bar');
         if (genreBar) {

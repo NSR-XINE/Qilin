@@ -437,4 +437,53 @@ class AndroidBridge {
         if (a != null) return a.hasStoragePermission();
         return false;
     }
+
+    @JavascriptInterface
+    public void updateWidget(final String title, final String countdown, final String episode) {
+        runOnUi(() -> {
+            try {
+                MainActivity a = getActivity();
+                if (a == null) return;
+                android.content.Intent intent = new android.content.Intent(a, CountdownWidget.class);
+                intent.setAction("com.mydonghua.app.UPDATE_WIDGET");
+                intent.putExtra("widget_title", title);
+                intent.putExtra("widget_countdown", countdown);
+                intent.putExtra("widget_episode", episode);
+                a.sendBroadcast(intent);
+            } catch (Throwable t) {
+                android.util.Log.e("DonghuaTracker", "Widget update failed", t);
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public String getDynamicColors() {
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                return "null";
+            }
+            android.app.WallpaperManager wm = android.app.WallpaperManager.getInstance(
+                (android.content.Context) activityRef.get());
+            if (wm == null) return "null";
+            android.app.WallpaperColors colors = wm.getWallpaperColors(
+                android.app.WallpaperManager.FLAG_SYSTEM);
+            if (colors == null) {
+                colors = wm.getWallpaperColors(
+                    android.app.WallpaperManager.FLAG_PRIMARY);
+            }
+            if (colors == null) return "null";
+            int primaryColor = colors.getPrimaryColor().toArgb();
+            int secondaryColor = colors.getSecondaryColor() != null ? colors.getSecondaryColor().toArgb() : primaryColor;
+            int tertiaryColor = colors.getTertiaryColor() != null ? colors.getTertiaryColor().toArgb() : secondaryColor;
+            org.json.JSONObject result = new org.json.JSONObject();
+            result.put("primary", String.format("#%06X", (0xFFFFFF & primaryColor)));
+            result.put("secondary", String.format("#%06X", (0xFFFFFF & secondaryColor)));
+            result.put("tertiary", String.format("#%06X", (0xFFFFFF & tertiaryColor)));
+            result.put("isDark", (android.graphics.Color.luminance(primaryColor) < 0.5));
+            return result.toString();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return "null";
+        }
+    }
 }
