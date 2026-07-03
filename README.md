@@ -73,19 +73,27 @@ donghua-tracker-repo/
 - **Calendar view** — monthly grid with release-day dots, week preview
 - **Favorites** — heart-toggle on any show, dedicated Favorites tab
 - **Watch History** — chronological log of episode progress changes
-- **Statistics dashboard** — totals, airing/completed/stopped counts, episodes, hours watched
+- **Statistics dashboard** — totals, airing/completed/stopped counts, episodes, hours watched, completion rate, day streak, weekly/monthly activity, top genres & studios, average rating, longest series
+- **Continue Watching** — horizontal scroll section showing in-progress shows with progress bars and "Continue" button; sorted by most recently opened
+- **Recently Updated** — horizontal scroll section showing the 10 most recently modified shows with time-ago labels
 - **Collections** — group related shows by collection name
-- **Native push notifications** via Android AlarmManager (DST-aware)
+- **Native push notifications** via Android AlarmManager (DST-aware); configurable quiet hours
 - **Poster auto-fetch** from Jikan (MyAnimeList), AniList GraphQL, DonghuaStream, AnimeCountdown
 - **Auto-fill** Chinese title, synopsis, poster, total episodes from API
 - **Export/Import** watchlist as JSON backup (native share intent or file picker)
 - **Streaming links** — configurable default source (DonghuaStream / LuciferDonghua)
 - **Auto-rotate** toggle with manual rotation button fallback
-- **Multiple themes**: Dark, AMOLED (true black), Light
+- **Multiple themes**: Dark, AMOLED (true black), Light; dynamic accent colors
+- **Advanced filtering** — filter by genre, studio, year, rating, max episodes, sort by countdown/alphabetical/progress/last-updated
+- **Advanced search** — recent searches, trending suggestions, fuzzy matching, keyboard navigation, highlighted matches
+- **Smart Home Dashboard** — toggle visibility of countdown banner, continue watching, recently updated, and weekly schedule sections
+- **Cache management** — image cache stored in localStorage with automatic TTL cleanup; clear from settings
+- **Material You dynamic colors** — accent color auto-selected from system wallpaper on Android 12+
+- **Image optimization** — memory + disk cache with TTL, preloading, lazy loading
 - **Bottom navigation**: Home, Airing, Add, Complete, Stopped, Favorites
 - **Swipe-to-dismiss** modals (settings, add/edit, details, history, etc.)
 - **Safe area insets** — notch/punch-hole and navigation bar aware (env + JS-injected)
-- **SQLite storage** with LocalStorage fallback
+- **SQLite storage** with LocalStorage fallback; localStorage is authoritative on startup
 
 ---
 
@@ -161,7 +169,7 @@ Capped at 500 entries (oldest removed). Foreign key cascades on show delete.
 ./gradlew assembleRelease
 ```
 
-Output at `app/build/outputs/apk/debug/app-debug.apk` or `release/app-release-unsigned.apk`.
+Output at `app/build/outputs/apk/debug/app-debug.apk` or `release/app-release.apk` (signed with debug keystore).
 
 ---
 
@@ -171,4 +179,5 @@ Output at `app/build/outputs/apk/debug/app-debug.apk` or `release/app-release-un
 - **JavaScript** — Entire UI is a single-page application rendered in a WebView. Modularized into `utils/`, `services/`, `components/`, `pages/` for maintainability.
 - **CSS** — Modular files organized by concern. Uses CSS custom properties for theming. `themes.css` contains only override variables — no hardcoded dark colors in light/amoled overrides.
 - **Backward compatibility** — All `@JavascriptInterface` method signatures preserved. LocalStorage fallback when native bridge is unavailable. v1→v2 schema migration on first launch.
+- **LocalStorage-first startup** — `loadState()` prefers the in-memory/localStorage shows array over SQLite, ensuring data survives even if the native database insert fails or the WebView URL origin changes.
 - **Status migration** — `upcoming` → `stopped` migrated automatically. Shows auto-complete when `currentEp >= totalEp > 0`.
