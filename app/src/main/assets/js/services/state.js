@@ -13,64 +13,6 @@ function _getAlarmHash(show) {
     return `${show.status}|${show.releaseDay}|${show.releaseTime}|${show.alarmRequestCode}`;
 }
 
-function retryOperation(fn, retries = 3, delay = 200) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const result = fn();
-            if (result !== false && result !== undefined) return result;
-        } catch (e) {
-            if (i === retries - 1) throw e;
-        }
-        if (i < retries - 1) {
-            const start = Date.now();
-            while (Date.now() - start < delay) {}
-        }
-    }
-    return false;
-}
-
-const _batchOps = [];
-let _batchTimer = null;
-
-function _enqueueDbOp(type, data) {
-    _batchOps.push({ type, data });
-    if (!_batchTimer) {
-        _batchTimer = setTimeout(() => _flushBatchOps(), 50);
-    }
-}
-
-function _flushBatchOps() {
-    _batchTimer = null;
-    if (_batchOps.length === 0) return;
-    const ops = _batchOps.splice(0);
-    if (!DB._available) return;
-    const updates = [];
-    const inserts = [];
-    const deletes = [];
-    for (const op of ops) {
-        if (op.type === 'updateShow' && op.data) {
-            updates.push(op.data);
-        } else if (op.type === 'insertShow' && op.data) {
-            inserts.push(op.data);
-        } else if (op.type === 'deleteShow' && op.id != null) {
-            deletes.push(op.id);
-        }
-    }
-    if (inserts.length > 0) {
-        try { DB.bulkInsert(JSON.stringify(inserts)); } catch (e) { console.error('Batch insert failed', e); }
-    }
-    if (updates.length > 0) {
-        for (const item of updates) {
-            try { retryOperation(() => DB.updateShow(JSON.stringify(item))); } catch (e) { console.error('Batch update failed', e); }
-        }
-    }
-    if (deletes.length > 0) {
-        for (const id of deletes) {
-            try { retryOperation(() => DB.deleteShow(id)); } catch (e) { console.error('Batch delete failed', e); }
-        }
-    }
-}
-
 function _queueOperation(op) {
     if (typeof SyncManager !== 'undefined' && SyncManager.enqueue) {
         SyncManager.enqueue(op.type, op.data || op);
@@ -100,13 +42,13 @@ function _flushQueue() {
         for (const op of queue) {
             try {
                 if (op.type === 'updateShow' && op.data) {
-                    retryOperation(() => DB.updateShow(JSON.stringify(op.data)));
+                    DB.updateShow(JSON.stringify(op.data));
                 } else if (op.type === 'insertShow' && op.data) {
-                    retryOperation(() => DB.insertShow(JSON.stringify(op.data)));
+                    DB.insertShow(JSON.stringify(op.data));
                 } else if (op.type === 'deleteShow' && op.id != null) {
-                    retryOperation(() => DB.deleteShow(op.id));
+                    DB.deleteShow(op.id);
                 } else if (op.type === 'addWatchHistory' && op.showId != null) {
-                    retryOperation(() => DB.addWatchHistory(op.showId, op.episodeNum));
+                    DB.addWatchHistory(op.showId, op.episodeNum);
                 }
             } catch (e) {
                 remaining.push(op);
@@ -185,59 +127,65 @@ function applyStatusMigrations() {
     }
 }
 
-let _persistPending = false;
+let _persistCount = 0;
 function persistState(fullRender = true) {
-    if (_persistPending) return;
-    _persistPending = true;
+    _persistCount++;
+    const seq = _persistCount;
 
-    if (DB._available) {
-        const toInsert = [];
-        const toUpdate = [];
-        let alarmFieldsChanged = false;
-        shows.forEach(show => {
-            if (existingShowIds.has(show.id)) {
-                toUpdate.push(show);
-            } else {
-                toInsert.push(show);
-            }
-            if (!alarmFieldsChanged) {
-                const newHash = _getAlarmHash(show);
-                const oldHash = _alarmHashes.get(show.id);
-                if (oldHash === undefined || newHash !== oldHash) {
-                    alarmFieldsChanged = true;
+    try {
+        if (DB._available) {
+            const toInsert = [];
+            const toUpdate = [];
+            let alarmFieldsChanged = false;
+            shows.forEach(show => {
+                if (existingShowIds.has(show.id)) {
+                    toUpdate.push(show);
+                } else {
+                    toInsert.push(show);
                 }
-                _alarmHashes.set(show.id, newHash);
+                if (!alarmFieldsChanged) {
+                    const newHash = _getAlarmHash(show);
+                    const oldHash = _alarmHashes.get(show.id);
+                    if (oldHash === undefined || newHash !== oldHash) {
+                        alarmFieldsChanged = true;
+                    }
+                    _alarmHashes.set(show.id, newHash);
+                }
+            });
+            if (toInsert.length > 0) {
+                try {
+                    const ok = DB.bulkInsert(JSON.stringify(toInsert));
+                    if (ok) toInsert.forEach(s => existingShowIds.add(s.id));
+                    else toInsert.forEach(s => _queueOperation({ type: 'insertShow', data: s }));
+                } catch (e) {
+                    toInsert.forEach(s => _queueOperation({ type: 'insertShow', data: s }));
+                }
             }
-        });
-        if (toInsert.length > 0) {
-            try {
-                const ok = retryOperation(() => DB.bulkInsert(JSON.stringify(toInsert)));
-                if (ok) toInsert.forEach(s => existingShowIds.add(s.id));
-                else toInsert.forEach(s => _queueOperation({ type: 'insertShow', data: s }));
-            } catch (e) {
-                toInsert.forEach(s => _queueOperation({ type: 'insertShow', data: s }));
+            for (const show of toUpdate) {
+                try {
+                    const ok = DB.updateShow(JSON.stringify(show));
+                    if (!ok) _queueOperation({ type: 'updateShow', data: show });
+                } catch (e) {
+                    _queueOperation({ type: 'updateShow', data: show });
+                }
+            }
+            if (!_alarmsInitialized || alarmFieldsChanged) {
+                try {
+                    DB.syncAllAlarms();
+                    _alarmsInitialized = true;
+                } catch (e) {
+                    console.error('Alarm sync failed', e);
+                }
             }
         }
-        for (const show of toUpdate) {
-            try {
-                const ok = retryOperation(() => DB.updateShow(JSON.stringify(show)));
-                if (!ok) _queueOperation({ type: 'updateShow', data: show });
-            } catch (e) {
-                _queueOperation({ type: 'updateShow', data: show });
-            }
-        }
-        if (!_alarmsInitialized || alarmFieldsChanged) {
-            try {
-                DB.syncAllAlarms();
-                _alarmsInitialized = true;
-            } catch (e) {
-                console.error('Alarm sync failed', e);
-            }
-        }
+
         DB.setLocal(LS_KEYS.SHOWS, JSON.stringify(shows));
+    } catch (e) {
+        console.error('persistState error', e);
     }
 
-    _persistPending = false;
+    if (seq !== _persistCount) return;
+
     if (fullRender) {
         _debouncedRender(() => {
             updateStats();
@@ -266,10 +214,9 @@ function deleteShow(showId) {
         setNotifyPref(showId, false);
         if (DB._available) {
             try {
-                retryOperation(() => DB.deleteShow(showId));
+                DB.deleteShow(showId);
             } catch (e) {
                 _queueOperation({ type: 'deleteShow', id: showId });
-                console.error('Failed to delete show from DB', showId, e);
             }
             try {
                 DB.cancelReminder(showId, show.alarmRequestCode || hashCode(showId));
@@ -293,10 +240,9 @@ function incrementEpisode(showId, count = 1) {
         show.lastUpdated = Date.now();
         if (DB._available) {
             try {
-                retryOperation(() => DB.addWatchHistory(showId, show.currentEp));
+                DB.addWatchHistory(showId, show.currentEp);
             } catch (e) {
                 _queueOperation({ type: 'addWatchHistory', showId, episodeNum: show.currentEp });
-                console.error('Failed to add watch history', showId, e);
             }
         }
         if (STATUS.shouldAutoComplete(show)) {
