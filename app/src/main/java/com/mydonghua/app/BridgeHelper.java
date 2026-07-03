@@ -469,7 +469,7 @@ class AndroidBridge {
                 android.app.WallpaperManager.FLAG_SYSTEM);
             if (colors == null) {
                 colors = wm.getWallpaperColors(
-                    android.app.WallpaperManager.FLAG_PRIMARY);
+                    android.app.WallpaperManager.FLAG_LOCK);
             }
             if (colors == null) return "null";
             int primaryColor = colors.getPrimaryColor().toArgb();
