@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     WebView webView;
     private DatabaseHelper dbHelper;
+    private InsetsHelper insetsHelper;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         webView = findViewById(R.id.webview);
 
-        InsetsHelper insetsHelper = new InsetsHelper(this, webView);
+        insetsHelper = new InsetsHelper(this, webView);
         insetsHelper.setupSystemUi();
         insetsHelper.enableMaxRefreshRate();
         insetsHelper.setOnApplyWindowInsetsListener();
@@ -226,5 +227,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        insetsHelper.onOrientationChanged(newConfig.orientation);
     }
 }

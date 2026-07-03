@@ -74,6 +74,23 @@
     }
 }
 
+@media (orientation: landscape) and (max-height: 500px) {
+    .app-container {
+        padding-top: calc(var(--safe-area-top, 0px) + var(--header-height, 50px));
+    }
+
+    .header-content-wrapper {
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+    }
+
+    .logo-icon { width: 28px; height: 28px; font-size: 0.85rem; }
+    .logo-text h1 { font-size: 1rem; }
+    .header-logo { gap: 0.4rem; }
+
+    .search-box .search-input { height: 34px; font-size: 0.78rem; }
+}
+
 .glass-card {
     background: var(--bg-card);
     backdrop-filter: blur(12px);

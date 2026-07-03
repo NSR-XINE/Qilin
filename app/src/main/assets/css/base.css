@@ -19,7 +19,11 @@ body {
     line-height: 1.5;
     -webkit-user-select: none;
     user-select: none;
-    padding-bottom: 70px;
+    padding-bottom: 80px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    body { padding-bottom: 60px; }
 }
 
 input, textarea {

@@ -755,3 +755,19 @@ body.tab-home #next-up-banner {
     body.tab-home .app-container { padding-top: calc(var(--safe-area-top, 0px) + var(--header-height, 136px)) !important; }
     .schedule-container.schedule-container { margin-top: 2.5rem !important; }
 }
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .banner-poster { max-height: 140px !important; }
+    .banner-info-section { padding: 0.6rem !important; }
+    .banner-title { font-size: 1rem !important; }
+    .schedule-card { padding: 0.5rem 0.6rem !important; }
+    .show-card .card-body { padding: 0.5rem !important; }
+    .show-card .card-header { height: 90px !important; }
+    .shows-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important; gap: 0.6rem !important; }
+    .card-actions { flex-direction: row !important; flex-wrap: wrap !important; }
+    .card-notes { display: none !important; }
+    .card-title { font-size: 0.8rem !important; }
+    .modal-content { max-height: 85vh !important; }
+    .banner-meta { font-size: 0.72rem !important; }
+    .banner-meta span { white-space: nowrap !important; }
+}

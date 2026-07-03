@@ -186,6 +186,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(ptrIndicator);
     updatePtrTop();
     window.addEventListener('resize', updatePtrTop);
+    try {
+        if (screen.orientation) {
+            screen.orientation.addEventListener('change', () => {
+                switchTab(activeTab);
+                _debouncedRenderBanner();
+                _debouncedRenderGrid();
+            });
+        }
+    } catch (e) {}
 
     function resetPtr() {
         isPulling = false;

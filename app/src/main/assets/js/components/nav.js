@@ -31,7 +31,7 @@ function switchTab(tabName) {
         if (tabName === 'home') {
             if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
             if (scheduleContainer) scheduleContainer.style.setProperty('display', 'block', 'important');
-            if (heroBanner) { heroBanner.style.display = ''; renderHeroBanner(); }
+            if (heroBanner) { heroBanner.style.removeProperty('display'); renderHeroBanner(); }
             if (emptyStateEl && shows.length === 0) emptyStateEl.style.setProperty('display', 'flex', 'important');
         } else if (tabName === 'airing' || tabName === 'complete' || tabName === 'stopped') {
             if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
