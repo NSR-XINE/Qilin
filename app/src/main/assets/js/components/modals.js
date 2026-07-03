@@ -413,20 +413,11 @@ function setupFormSubmission() {
     const titleInput = document.getElementById('show-title');
 
     if (titleInput) {
-        const container = document.createElement('div');
-        container.id = 'title-suggestions';
-        container.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;z-index:2000;max-height:180px;overflow-y:auto;margin-top:2px;display:none;';
-        titleInput.parentElement.style.position = 'relative';
-        titleInput.parentElement.appendChild(container);
-
-        const debouncedSuggest = debounce(() => {
-            const q = titleInput.value.trim().toLowerCase();
-            if (!q || q.length < 2) { container.style.display = 'none'; return; }
-            const matches = shows.filter(s => s.title.toLowerCase().includes(q)).slice(0, 6);
-            if (matches.length === 0) { container.style.display = 'none'; return; }
-            container.innerHTML = matches.map((s, i) =>
-                `<div data-suggestion-idx="${i}" style="padding:0.4rem 0.6rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.15s">${escapeHtml(s.title)}${s.titleZh ? ' <span style="color:var(--text-muted)">· ' + escapeHtml(s.titleZh) + '</span>' : ''}</div>`
-            ).join('');
+        let container = document.getElementById('title-suggestions');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'title-suggestions';
+            container.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;z-index:2000;max-height:180px;overflow-y:auto;margin-top:2px;display:none;';
             container.addEventListener('mouseover', (ev) => {
                 const div = ev.target.closest('[data-suggestion-idx]');
                 if (div) div.style.background = 'rgba(255,255,255,0.05)';
@@ -435,15 +426,30 @@ function setupFormSubmission() {
                 const div = ev.target.closest('[data-suggestion-idx]');
                 if (div) div.style.background = 'transparent';
             });
-            container.style.display = 'block';
-            Array.from(container.children).forEach((el, i) => {
-                el.addEventListener('click', () => {
-                    const show = matches[i];
-                    if (!show) return;
-                    openModal(show);
-                    container.style.display = 'none';
-                });
+            container.addEventListener('click', (ev) => {
+                const div = ev.target.closest('[data-suggestion-idx]');
+                if (div) {
+                    const idx = parseInt(div.dataset.suggestionIdx, 10);
+                    if (!isNaN(idx) && matches && matches[idx]) {
+                        openModal(matches[idx]);
+                        container.style.display = 'none';
+                    }
+                }
             });
+            titleInput.parentElement.style.position = 'relative';
+            titleInput.parentElement.appendChild(container);
+        }
+
+        let matches = [];
+        const debouncedSuggest = debounce(() => {
+            const q = titleInput.value.trim().toLowerCase();
+            if (!q || q.length < 2) { container.style.display = 'none'; return; }
+            matches = shows.filter(s => s.title.toLowerCase().includes(q)).slice(0, 6);
+            if (matches.length === 0) { container.style.display = 'none'; return; }
+            container.innerHTML = matches.map((s, i) =>
+                `<div data-suggestion-idx="${i}" style="padding:0.4rem 0.6rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.15s">${escapeHtml(s.title)}${s.titleZh ? ' <span style="color:var(--text-muted)">· ' + escapeHtml(s.titleZh) + '</span>' : ''}</div>`
+            ).join('');
+            container.style.display = 'block';
         }, 200);
 
         titleInput.addEventListener('input', debouncedSuggest);

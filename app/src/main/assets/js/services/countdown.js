@@ -1,4 +1,5 @@
 function getNextReleaseDate(releaseDay, releaseTime) {
+    if (!releaseTime || typeof releaseTime !== 'string' || !releaseTime.includes(':')) return null;
     const now = new Date();
     const [hours, minutes] = releaseTime.split(':').map(Number);
     const targetDayNum = DAYS_MAP[releaseDay];

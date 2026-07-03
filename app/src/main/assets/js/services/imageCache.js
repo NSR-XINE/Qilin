@@ -70,7 +70,7 @@ const ImageCache = {
 
     _toDisk(url, data) {
         try {
-            const key = this._cachePrefix + btoa(url).slice(0, 64);
+            const key = this._cachePrefix + url.length + '_' + hashCode(url) + '_' + btoa(url).replace(/[/+=]/g, '_');
             const item = JSON.stringify({ data, ts: Date.now() });
             localStorage.setItem(key, item);
         } catch (e) {}
@@ -78,7 +78,7 @@ const ImageCache = {
 
     _fromDisk(url) {
         try {
-            const key = this._cachePrefix + btoa(url).slice(0, 64);
+            const key = this._cachePrefix + url.length + '_' + hashCode(url) + '_' + btoa(url).replace(/[/+=]/g, '_');
             const raw = localStorage.getItem(key);
             if (!raw) return null;
             const item = JSON.parse(raw);

@@ -26,8 +26,9 @@ public class SyncWorker extends Worker {
                 pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyDonghua:SyncWorker") : null;
         if (wakeLock != null) wakeLock.acquire(30000L);
 
+        DatabaseHelper db = null;
         try {
-            DatabaseHelper db = new DatabaseHelper(context);
+            db = new DatabaseHelper(context);
             String showsJson = db.getAllShows();
 
             SharedPreferences prefs = context.getSharedPreferences(PREFS_SYNC, Context.MODE_PRIVATE);
@@ -38,6 +39,9 @@ public class SyncWorker extends Worker {
             android.util.Log.e("DonghuaTracker", "SyncWorker failed", e);
             return Result.retry();
         } finally {
+            if (db != null) {
+                try { db.close(); } catch (Exception ignored) {}
+            }
             if (wakeLock != null && wakeLock.isHeld()) {
                 try { wakeLock.release(); } catch (Exception ignored) {}
             }

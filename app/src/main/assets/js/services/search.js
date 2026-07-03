@@ -160,6 +160,21 @@ function updateSearchSuggestions(suggestions) {
         container = document.createElement('div');
         container.id = 'search-suggestions';
         container.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;z-index:1000;max-height:300px;overflow-y:auto;margin-top:4px;';
+        container.addEventListener('mouseover', (ev) => {
+            const div = ev.target.closest('.search-suggestion-item');
+            if (div) div.style.background = 'rgba(255,255,255,0.05)';
+        });
+        container.addEventListener('mouseout', (ev) => {
+            const div = ev.target.closest('.search-suggestion-item');
+            if (div) div.style.background = 'transparent';
+        });
+        container.addEventListener('click', (ev) => {
+            const div = ev.target.closest('.search-suggestion-item');
+            if (div) {
+                const idx = parseInt(div.dataset.index, 10);
+                if (!isNaN(idx)) selectSuggestion(idx);
+            }
+        });
         document.querySelector('.search-box')?.appendChild(container);
     }
     if (!suggestions || suggestions.length === 0) {
@@ -186,21 +201,6 @@ function updateSearchSuggestions(suggestions) {
         }
         return '<div class="search-suggestion-item' + (index === selectedIndex ? ' selected' : '') + '" data-index="' + index + '"' + (isShow ? ' data-show-id="' + item.show.id + '"' : '') + ' style="padding:0.5rem 0.8rem;cursor:pointer;font-size:0.85rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color);transition:background 0.2s">' + icon + displayHtml + '</div>';
     }).join('');
-    container.addEventListener('mouseover', (ev) => {
-        const div = ev.target.closest('.search-suggestion-item');
-        if (div) div.style.background = 'rgba(255,255,255,0.05)';
-    });
-    container.addEventListener('mouseout', (ev) => {
-        const div = ev.target.closest('.search-suggestion-item');
-        if (div) div.style.background = 'transparent';
-    });
-    container.addEventListener('click', (ev) => {
-        const div = ev.target.closest('.search-suggestion-item');
-        if (div) {
-            const idx = parseInt(div.dataset.index, 10);
-            if (!isNaN(idx)) selectSuggestion(idx);
-        }
-    });
 }
 
 function selectSuggestion(index) {

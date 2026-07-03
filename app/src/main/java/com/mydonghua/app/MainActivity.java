@@ -222,6 +222,11 @@ public class MainActivity extends AppCompatActivity {
         if (dbHelper != null) {
             dbHelper.close();
         }
+        if (webView != null) {
+            webView.removeAllViews();
+            webView.destroy();
+            webView = null;
+        }
     }
 
     @Override

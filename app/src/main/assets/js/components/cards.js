@@ -285,8 +285,8 @@ function setupCardActions() {
                 deleteShow(showId);
             }
         }
-        else if (isStream) { openWatchScreen(isStream.dataset.watchUrl); return; }
-        else if (isCountdown) { return; }
+        else if (isStream) { _plusLongPress = false; openWatchScreen(isStream.dataset.watchUrl); return; }
+        else if (isCountdown) { _plusLongPress = false; return; }
         else { openDetailsModal(show); }
         _plusLongPress = false;
     });

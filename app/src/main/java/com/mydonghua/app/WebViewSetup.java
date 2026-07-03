@@ -56,6 +56,10 @@ public class WebViewSetup {
             @Override
             public boolean onJsConfirm(WebView view, String url, String message,
                                         final JsResult result) {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    result.cancel();
+                    return true;
+                }
                 new android.app.AlertDialog.Builder(activity)
                     .setMessage(message)
                     .setPositiveButton("OK", (d, w) -> result.confirm())
@@ -67,6 +71,10 @@ public class WebViewSetup {
             @Override
             public boolean onJsAlert(WebView view, String url, String message,
                                       final JsResult result) {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    result.cancel();
+                    return true;
+                }
                 new android.app.AlertDialog.Builder(activity)
                     .setMessage(message)
                     .setPositiveButton("OK", (d, w) -> result.confirm())

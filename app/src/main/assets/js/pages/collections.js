@@ -1,7 +1,7 @@
 function getCollections() {
     const cols = new Set();
     shows.forEach(s => {
-        if (s.collection) cols.add(s.collection);
+        if (s.collection && s.collection.trim()) cols.add(s.collection.trim());
     });
     return Array.from(cols).sort();
 }

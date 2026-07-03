@@ -2,7 +2,7 @@
     <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="theme-color" content="#05060a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -204,7 +204,7 @@
                                 <i class="fa-solid fa-circle-play" style="color: var(--accent-cyan); font-size: 1.1rem;"></i>
                                 <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">Donghua Stream</span>
                             </div>
-                            <span class="active-badge" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 254, 0.3); display: none;">Selected</span>
+                            <span class="active-badge" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(var(--accent-cyan-rgb), 0.15); color: var(--accent-cyan); border: 1px solid rgba(var(--accent-cyan-rgb), 0.3); display: none;">Selected</span>
                         </div>
 
                         <!-- Lucifer Donghua Selectable Card -->
@@ -213,7 +213,7 @@
                                 <i class="fa-solid fa-dragon" style="color: var(--accent-purple); font-size: 1.1rem;"></i>
                                 <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">Lucifer Donghua</span>
                             </div>
-                            <span class="active-badge" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(157, 78, 221, 0.15); color: var(--accent-purple); border: 1px solid rgba(157, 78, 221, 0.3); display: none;">Selected</span>
+                            <span class="active-badge" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(var(--accent-purple-rgb), 0.15); color: var(--accent-purple); border: 1px solid rgba(var(--accent-purple-rgb), 0.3); display: none;">Selected</span>
                         </div>
                     </div>
                 </div>
@@ -244,7 +244,7 @@
                     </h3>
                     <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Export your watchlist data to a JSON backup string, or import a previously saved backup.</p>
                     <div style="display: flex; gap: 0.8rem;">
-                        <button id="btn-export-data" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <button id="btn-export-data" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); border: none; border-radius: 8px; color: var(--text-on-accent); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
                             <i class="fa-solid fa-file-export"></i> Export JSON
                         </button>
                         <button id="btn-trigger-import" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
@@ -263,7 +263,7 @@
                         <button id="btn-clear-image-cache" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
                             <i class="fa-solid fa-image"></i> Clear Image Cache
                         </button>
-                        <button id="btn-clear-local-data" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 80, 80, 0.3); border-radius: 8px; color: var(--accent-rose); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <button id="btn-clear-local-data" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(var(--accent-rose-rgb), 0.1); border: 1px solid rgba(var(--accent-rose-rgb), 0.3); border-radius: 8px; color: var(--accent-rose); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
                             <i class="fa-solid fa-trash"></i> Clear Local Data
                         </button>
                     </div>

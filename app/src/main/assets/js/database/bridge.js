@@ -1,5 +1,7 @@
 const DB = {
-    _available: typeof AndroidApp !== 'undefined' && AndroidApp !== null,
+    get _available() {
+        return typeof AndroidApp !== 'undefined' && AndroidApp !== null;
+    },
     _localStorageAvailable: (() => { try { return typeof localStorage !== 'undefined'; } catch(e) { return false; } })(),
 
     _call(method, ...args) {
