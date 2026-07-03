@@ -131,6 +131,7 @@ body[data-accent].light-theme {
     height: 34px;
     border-radius: 50%;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 
