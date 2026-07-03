@@ -177,17 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('online', () => setOfflineState(false));
     window.addEventListener('offline', () => setOfflineState(true));
 
-    addSwipeToDismiss('settings-modal', closeSettingsModal);
-    addSwipeToDismiss('donghua-modal', closeModal);
-    addSwipeToDismiss('import-modal', closeImportModal);
-    addSwipeToDismiss('details-modal', closeDetailsModal);
-    addSwipeToDismiss('exit-modal', closeExitModal);
-    addSwipeToDismiss('history-modal', closeHistoryModal);
-    addSwipeToDismiss('stats-modal', closeStatsModal);
-    addSwipeToDismiss('calendar-modal', closeCalendarModal);
-    addSwipeToDismiss('collections-modal', closeCollectionsModal);
-    addSwipeToDismiss('seasonal-modal', closeSeasonalModal);
-
     document.getElementById('btn-open-drawer')?.addEventListener('click', openDrawer);
     document.getElementById('btn-close-drawer')?.addEventListener('click', closeDrawer);
     document.getElementById('drawer-overlay')?.addEventListener('click', closeDrawer);
