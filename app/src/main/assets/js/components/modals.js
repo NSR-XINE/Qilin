@@ -29,7 +29,7 @@ function openDetailsModal(show) {
     for (let i = 1; i <= maxEps; i++) {
         const isWatched = i <= show.currentEp;
         const activeStyle = isWatched ? 'background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); border: none; color: #fff; font-weight: bold;' : 'background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-secondary);';
-        epPills += `<button class="ep-pill-btn" data-ep="${i}" style="padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; ${activeStyle}">${i}</button>`;
+        epPills += `<button class="ep-pill-btn" data-ep="${i}" aria-label="Episode ${i}" style="padding: 0.5rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; ${activeStyle}">${i}</button>`;
     }
 
     const statusText = STATUS.getDisplayName(show.status).toUpperCase();
@@ -469,15 +469,17 @@ function applyDashboardToggles() {
     const continueWatching = document.getElementById('continue-watching-section');
     const recentlyUpdated = document.getElementById('recently-updated-section');
     const schedule = document.getElementById('schedule-container');
+    const recommendations = document.getElementById('recommendations-section');
     if (banner && toggles.countdown === false) banner.style.display = 'none';
     if (continueWatching && toggles.continue === false) continueWatching.style.display = 'none';
     if (recentlyUpdated && toggles.recently === false) recentlyUpdated.style.display = 'none';
     if (schedule && toggles.schedule === false) schedule.style.display = 'none';
+    if (recommendations && toggles.recommendations === false) recommendations.style.display = 'none';
 }
 
 function initDashboardToggles() {
     const toggles = getDashboardToggles();
-    const ids = ['countdown', 'continue', 'recently', 'schedule'];
+    const ids = ['countdown', 'continue', 'recently', 'schedule', 'recommendations'];
     ids.forEach(id => {
         const el = document.getElementById('dash-toggle-' + id);
         if (el) {

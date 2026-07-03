@@ -15,6 +15,7 @@ const _debouncedRenderBanner = () => _debouncedRender(renderHeroBanner);
 const _debouncedRenderGrid = () => _debouncedRender(renderShowsGrid);
 const _debouncedRenderContinueWatching = () => _debouncedRender(renderContinueWatching);
 const _debouncedRenderRecentlyUpdated = () => _debouncedRender(renderRecentlyUpdated);
+const _debouncedRenderRecommendations = () => _debouncedRender(renderRecommendations);
 
 window.addEventListener('error', (e) => {
     console.error('Uncaught error:', e.message, e.filename, e.lineno);
@@ -113,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     _debouncedRenderBanner();
     _debouncedRenderContinueWatching();
     _debouncedRenderRecentlyUpdated();
+    _debouncedRenderRecommendations();
     _debouncedRenderGrid();
     resumeTimers();
     pushWidgetUpdate();
@@ -127,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScheduleTabs();
     setupCardActions();
     setupContinueWatching();
+    setupHorizontalScrollClicks();
     setupPosterFetch();
 
     LOADING_MESSAGES.forEach((msg, idx) => {
@@ -348,6 +351,7 @@ window.renderHeroBanner = renderHeroBanner;
 window.renderWeeklySchedule = renderWeeklySchedule;
 window.renderContinueWatching = renderContinueWatching;
 window.renderRecentlyUpdated = renderRecentlyUpdated;
+window.renderRecommendations = renderRecommendations;
 window.refreshAllData = refreshAllData;
 window.getContinueWatchingShow = getContinueWatchingShow;
 window.getRecentlyUpdated = getRecentlyUpdated;

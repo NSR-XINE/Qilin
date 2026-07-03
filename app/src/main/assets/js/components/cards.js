@@ -135,8 +135,8 @@ function renderCard(show, todayName) {
                 <div class="progress-header">
                     <div class="ep-counter">Watched: <span>${show.currentEp} episodes</span></div>
                     <div class="ep-buttons">
-                        <button class="ep-btn btn-minus" title="Decrease episode"><i class="fa-solid fa-minus"></i></button>
-                        <button class="ep-btn btn-plus" title="Increase episode"><i class="fa-solid fa-plus"></i></button>
+                        <button class="ep-btn btn-minus" title="Decrease episode" aria-label="Decrease episode"><i class="fa-solid fa-minus"></i></button>
+                        <button class="ep-btn btn-plus" title="Increase episode" aria-label="Increase episode"><i class="fa-solid fa-plus"></i></button>
                     </div>
                 </div>
                 ${show.totalEp > 0 ? `<div class="progress-bar-container"><div class="progress-bar-fill" style="width:${Math.min(100, (show.currentEp / show.totalEp) * 100)}%"></div></div>` : ''}
@@ -152,10 +152,10 @@ function renderCard(show, todayName) {
                     <i class="fa-solid fa-hourglass-half"></i> Countdown
                 </a>
                 <div class="card-ctrls">
-                    <button class="ctrl-btn notify-btn" data-notify="${getNotifyPref(show.id)}" title="${getNotifyPref(show.id) ? 'Notifications On' : 'Notifications Off'}"><i class="${getNotifyPref(show.id) ? 'fa-solid fa-bell' : 'fa-regular fa-bell'}"></i></button>
-                    <button class="ctrl-btn edit-btn" title="Edit show"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button class="ctrl-btn favorite-btn" data-fav="${show.isFavorite}" title="${show.isFavorite ? 'Unfavorite' : 'Favorite'}"><i class="${show.isFavorite ? 'fa-solid' : 'fa-regular'} fa-heart"></i></button>
-                    <button class="ctrl-btn delete-btn" title="Delete show"><i class="fa-solid fa-trash"></i></button>
+                    <button class="ctrl-btn notify-btn" data-notify="${getNotifyPref(show.id)}" title="${getNotifyPref(show.id) ? 'Notifications On' : 'Notifications Off'}" aria-label="${getNotifyPref(show.id) ? 'Notifications On' : 'Notifications Off'}"><i class="${getNotifyPref(show.id) ? 'fa-solid fa-bell' : 'fa-regular fa-bell'}"></i></button>
+                    <button class="ctrl-btn edit-btn" title="Edit show" aria-label="Edit show"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="ctrl-btn favorite-btn" data-fav="${show.isFavorite}" title="${show.isFavorite ? 'Unfavorite' : 'Favorite'}" aria-label="${show.isFavorite ? 'Unfavorite' : 'Favorite'}"><i class="${show.isFavorite ? 'fa-solid' : 'fa-regular'} fa-heart"></i></button>
+                    <button class="ctrl-btn delete-btn" title="Delete show" aria-label="Delete show"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         </div>
@@ -339,7 +339,7 @@ function renderContinueWatching() {
                     <span class="cw-progress-label">${progressLabel}</span>
                     ${show.totalEp > 0 ? `<div class="cw-progress-bar"><div class="cw-progress-fill" style="width:${progress}%"></div></div>` : ''}
                 </div>
-                <button class="cw-watch-btn" data-watch-url="${watchUrl}" title="Watch ${escapeHtml(show.title)}">
+                <button class="cw-watch-btn" data-watch-url="${watchUrl}" title="Watch ${escapeHtml(show.title)}" aria-label="Watch ${escapeHtml(show.title)}">
                     <i class="fa-solid fa-circle-play"></i> <span>Continue</span>
                 </button>
             </div>
@@ -394,6 +394,48 @@ function renderRecentlyUpdated() {
     scroll.innerHTML = html;
 }
 
+function renderRecommendations() {
+    const section = document.getElementById('recommendations-section');
+    const scroll = document.getElementById('recommendations-scroll');
+    const count = document.getElementById('recommendations-count');
+    if (!section || !scroll) return;
+
+    const recs = window.getRecommendations ? window.getRecommendations() : [];
+    if (recs.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = '';
+    if (count) count.textContent = `${recs.length} show${recs.length === 1 ? '' : 's'}`;
+
+    let html = '';
+    for (const show of recs) {
+        const safePoster = safePosterUrl(show.poster);
+        const genres = (show.genres || '').split(',').map(g => g.trim()).filter(Boolean);
+        const genreTags = genres.slice(0, 3).map(g => `<span class="rec-genre-tag">${escapeHtml(g)}</span>`).join('');
+
+        let posterHtml = '';
+        if (safePoster) {
+            posterHtml = `<img class="rec-poster" src="${safePoster}" alt="${show.title}" loading="lazy">`;
+        } else {
+            posterHtml = `<div class="rec-poster-placeholder" style="background:${getPosterGradient(show.title)}"><span>${getInitials(show.title)}</span></div>`;
+        }
+
+        html += `<div class="rec-item" data-id="${show.id}" tabindex="0" role="button" aria-label="Recommendation: ${escapeHtml(show.title)}">
+            ${posterHtml}
+            <div class="rec-body">
+                <div class="rec-title" title="${escapeHtml(show.title)}">${escapeHtml(show.title)}</div>
+                <div class="rec-meta">
+                    <span>${show.currentEp}/${show.totalEp || '?'} eps</span>
+                    ${genreTags ? `<span class="rec-genre-tags">${genreTags}</span>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }
+    scroll.innerHTML = html;
+}
+
 function getTimeAgo(timestamp) {
     if (!timestamp) return '';
     const diff = Date.now() - timestamp;
@@ -424,6 +466,35 @@ function setupContinueWatching() {
         }
         const show = getShowById(showId);
         if (show) openDetailsModal(show);
+    });
+}
+
+function setupHorizontalScrollClicks() {
+    document.addEventListener('click', (e) => {
+        const ruItem = e.target.closest('.ru-item');
+        if (ruItem) {
+            const showId = ruItem.dataset.id;
+            const show = getShowById(showId);
+            if (show) openDetailsModal(show);
+            return;
+        }
+        const recItem = e.target.closest('.rec-item');
+        if (recItem) {
+            const showId = recItem.dataset.id;
+            const show = getShowById(showId);
+            if (show) openDetailsModal(show);
+            return;
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        const recItem = e.target.closest('.rec-item');
+        if (!recItem) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const showId = recItem.dataset.id;
+            const show = getShowById(showId);
+            if (show) openDetailsModal(show);
+        }
     });
 }
 
