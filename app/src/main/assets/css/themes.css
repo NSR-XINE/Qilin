@@ -103,6 +103,28 @@ body[data-accent].light-theme {
     --accent-blue-rgb: var(--accent-override-rgb, 37, 99, 235);
 }
 
+.accent-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50% !important;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    position: relative;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    outline: none;
+}
+
+.accent-btn i {
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
 .accent-btn.active {
     border-color: var(--accent-cyan) !important;
     box-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.5);

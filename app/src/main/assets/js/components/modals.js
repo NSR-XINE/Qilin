@@ -391,7 +391,7 @@ function setupSettingsModal() {
             btn.className = 'accent-btn';
             btn.dataset.accent = hex;
             btn.title = preset.name;
-            btn.style.cssText = 'width:32px;height:32px;border-radius:50%;border:2px solid var(--border-color);cursor:pointer;background:' + hex + ';transition:transform 0.15s, border-color 0.15s;position:relative;';
+            btn.style.background = hex;
             accentPicker.appendChild(btn);
         }
         if (DB._available && typeof AndroidApp.getDynamicColors === 'function') {
@@ -399,7 +399,7 @@ function setupSettingsModal() {
             dynBtn.className = 'accent-btn';
             dynBtn.dataset.accent = 'dynamic';
             dynBtn.title = 'Material You (auto)';
-            dynBtn.style.cssText = 'width:32px;height:32px;border-radius:50%;border:2px solid var(--border-color);cursor:pointer;background:linear-gradient(135deg,#00f2fe,#9d4edd);transition:transform 0.15s, border-color 0.15s;position:relative;font-size:0.7rem;display:flex;align-items:center;justify-content:center;color:#fff;';
+            dynBtn.style.background = 'linear-gradient(135deg,#00f2fe,#9d4edd)';
             dynBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
             accentPicker.appendChild(dynBtn);
         }
