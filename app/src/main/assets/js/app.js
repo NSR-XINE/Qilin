@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.body.addEventListener('touchstart', (e) => {
-        if (isRefreshing || isDrawerOpen()) return;
+        if (isRefreshing || isDrawerOpen() || !navigator.onLine) return;
         if (document.documentElement.scrollTop <= 0) {
             touchStartY = e.touches[0].clientY;
             touchStartX = e.touches[0].clientX;
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     function onTouchEnd() {
-        if (!isPulling) return;
+        if (!isPulling || !navigator.onLine) { resetPtr(); return; }
         const pullDist = touchMoveY - touchStartY;
         if (isRefreshing) return;
         if (pullDist > 60) {
