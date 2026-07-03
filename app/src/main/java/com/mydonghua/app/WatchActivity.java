@@ -26,9 +26,14 @@ public class WatchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         try {
             try {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                boolean autoRotate = getIntent().getBooleanExtra("auto_rotate", true);
+                if (autoRotate) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                } else {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                }
             } catch (Throwable t) {
-                android.util.Log.w("DonghuaTracker", "Could not configure sensor rotation: " + t.getMessage());
+                android.util.Log.w("DonghuaTracker", "Could not configure rotation: " + t.getMessage());
             }
 
             FrameLayout rootLayout = new FrameLayout(this);

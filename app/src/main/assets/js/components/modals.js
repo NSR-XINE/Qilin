@@ -403,6 +403,20 @@ function setupSettingsModal() {
     initDashboardToggles();
     initCacheInfo();
     initQuietHours();
+    initAutoRotateToggle();
+}
+
+function initAutoRotateToggle() {
+    const toggle = document.getElementById('auto-rotate-toggle');
+    if (!toggle) return;
+    if (DB._available && typeof AndroidApp.getAutoRotateWebView === 'function') {
+        try { toggle.checked = AndroidApp.getAutoRotateWebView(); } catch (_) {}
+    }
+    toggle.addEventListener('change', () => {
+        if (DB._available && typeof AndroidApp.setAutoRotateWebView === 'function') {
+            try { AndroidApp.setAutoRotateWebView(toggle.checked); } catch (_) {}
+        }
+    });
 }
 
 const DASHBOARD_TOGGLES_KEY = 'dashboard_toggles';

@@ -182,6 +182,30 @@ class AndroidBridge {
     }
 
     @JavascriptInterface
+    public void setAutoRotateWebView(final boolean enabled) {
+        try {
+            MainActivity a = getActivity();
+            if (a == null) return;
+            a.getSharedPreferences("donghua_prefs", android.content.Context.MODE_PRIVATE)
+                .edit().putBoolean("auto_rotate_webview", enabled).apply();
+        } catch (Throwable t) {
+            android.util.Log.w("DonghuaTracker", "Failed to save auto-rotate pref", t);
+        }
+    }
+
+    @JavascriptInterface
+    public boolean getAutoRotateWebView() {
+        try {
+            MainActivity a = getActivity();
+            if (a == null) return true;
+            return a.getSharedPreferences("donghua_prefs", android.content.Context.MODE_PRIVATE)
+                .getBoolean("auto_rotate_webview", true);
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
+    @JavascriptInterface
     public void openWatchScreen(final String url) {
         runOnUi(() -> {
             try {
@@ -189,6 +213,7 @@ class AndroidBridge {
                 if (a == null) return;
                 android.content.Intent intent = new android.content.Intent(a, WatchActivity.class);
                 intent.putExtra("watch_url", url);
+                intent.putExtra("auto_rotate", getAutoRotateWebView());
                 a.startActivity(intent);
             } catch (Throwable t) {
                 android.util.Log.e("DonghuaTracker", "Failed to start WatchActivity", t);
