@@ -400,6 +400,7 @@ function setupSettingsModal() {
             dynBtn.dataset.accent = 'dynamic';
             dynBtn.title = 'Material You (auto)';
             dynBtn.style.background = 'linear-gradient(135deg,#00f2fe,#9d4edd)';
+            dynBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:1.2rem;color:#fff;"></i>';
             accentPicker.appendChild(dynBtn);
         }
         accentPicker.addEventListener('click', (e) => {

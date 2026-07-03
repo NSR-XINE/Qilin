@@ -118,21 +118,21 @@ body[data-accent].light-theme {
     flex-shrink: 0;
     background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
     outline: none;
+    overflow: hidden;
 }
 
 .accent-btn i {
     font-size: 0.9rem;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
 }
 
-.accent-btn[data-accent="dynamic"]::after {
-    content: '';
-    position: absolute;
-    inset: 4px;
-    border: 1.5px dashed rgba(255,255,255,0.7);
-    border-radius: 50%;
-    pointer-events: none;
-}
+
 
 .accent-btn.active {
     border-color: var(--accent-cyan) !important;
