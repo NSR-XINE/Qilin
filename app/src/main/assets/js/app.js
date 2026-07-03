@@ -14,6 +14,7 @@ const _debouncedRenderSchedule = () => _debouncedRender(renderWeeklySchedule);
 const _debouncedRenderBanner = () => _debouncedRender(renderHeroBanner);
 const _debouncedRenderGrid = () => _debouncedRender(renderShowsGrid);
 const _debouncedRenderContinueWatching = () => _debouncedRender(renderContinueWatching);
+const _debouncedRenderRecentlyUpdated = () => _debouncedRender(renderRecentlyUpdated);
 
 window.addEventListener('error', (e) => {
     console.error('Uncaught error:', e.message, e.filename, e.lineno);
@@ -111,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     _debouncedRenderSchedule();
     _debouncedRenderBanner();
     _debouncedRenderContinueWatching();
+    _debouncedRenderRecentlyUpdated();
     _debouncedRenderGrid();
     resumeTimers();
     pushWidgetUpdate();
@@ -345,6 +347,7 @@ window.renderShowsGrid = renderShowsGrid;
 window.renderHeroBanner = renderHeroBanner;
 window.renderWeeklySchedule = renderWeeklySchedule;
 window.renderContinueWatching = renderContinueWatching;
+window.renderRecentlyUpdated = renderRecentlyUpdated;
 window.refreshAllData = refreshAllData;
 window.getContinueWatchingShow = getContinueWatchingShow;
 window.getRecentlyUpdated = getRecentlyUpdated;

@@ -11,6 +11,10 @@ function renderShowsGrid() {
     else { containerEl.innerHTML = ''; return; }
 
     const genreFilter = filters.genre ? filters.genre.toLowerCase() : '';
+    const studioFilter = filters.studio ? filters.studio.toLowerCase() : '';
+    const yearFilter = filters.year ? parseInt(filters.year, 10) : 0;
+    const minRating = filters.minRating ? parseInt(filters.minRating, 10) : 0;
+    const maxEp = filters.maxEpisodes ? parseInt(filters.maxEpisodes, 10) : 0;
 
     let filteredShows = shows.filter(show => {
         const matchesSearch = (() => {
@@ -21,7 +25,11 @@ function renderShowsGrid() {
                    fuzzyMatch(show.notes, q);
         })();
         const matchesGenre = !genreFilter || (show.genres && show.genres.toLowerCase().includes(genreFilter));
-        return matchesSearch && matchesGenre && statusFilters.includes(show.status);
+        const matchesStudio = !studioFilter || (show.studio && show.studio.toLowerCase().includes(studioFilter));
+        const matchesYear = !yearFilter || (show.releaseYear && show.releaseYear === yearFilter);
+        const matchesRating = !minRating || (show.rating && show.rating >= minRating);
+        const matchesMaxEp = !maxEp || (show.totalEp > 0 && show.totalEp <= maxEp);
+        return matchesSearch && matchesGenre && matchesStudio && matchesYear && matchesRating && matchesMaxEp && statusFilters.includes(show.status);
     });
 
     filteredShows.sort((a, b) => {
@@ -340,6 +348,67 @@ function renderContinueWatching() {
     scroll.innerHTML = html;
 }
 
+function renderRecentlyUpdated() {
+    const section = document.getElementById('recently-updated-section');
+    const scroll = document.getElementById('recently-updated-scroll');
+    const count = document.getElementById('recently-updated-count');
+    if (!section || !scroll) return;
+
+    const showsList = getRecentlyUpdatedShows();
+    if (showsList.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = '';
+    if (count) count.textContent = `${showsList.length} show${showsList.length === 1 ? '' : 's'}`;
+
+    let html = '';
+    for (const show of showsList) {
+        const safePoster = safePosterUrl(show.poster);
+        const timeAgo = getTimeAgo(show.lastUpdated);
+
+        let posterHtml = '';
+        if (safePoster) {
+            const cached = ImageCache.has(safePoster);
+            posterHtml = `<div class="ru-poster${cached ? '' : ' poster-loading'}"><img class="ru-poster-img" src="${safePoster}" alt="${show.title}" loading="lazy"></div>`;
+            if (!cached) ImageCache.loadImage(safePoster).catch(() => {});
+        } else {
+            posterHtml = `<div class="ru-poster ru-poster-placeholder" style="background:${getPosterGradient(show.title)}"><span>${getInitials(show.title)}</span></div>`;
+        }
+
+        const statusIcon = STATUS.isCompleted(show) ? 'circle-check' : (STATUS.isStopped(show) ? 'pause' : 'tv');
+        const statusColor = STATUS.isCompleted(show) ? 'var(--accent-green)' : (STATUS.isStopped(show) ? 'var(--text-muted)' : 'var(--accent-cyan)');
+
+        html += `<div class="ru-item" data-id="${show.id}">
+            ${posterHtml}
+            <div class="ru-body">
+                <div class="ru-title" title="${escapeHtml(show.title)}">${escapeHtml(show.title)}</div>
+                <div class="ru-meta">
+                    <span><i class="fa-solid fa-${statusIcon}" style="color:${statusColor}"></i> ${show.currentEp}/${show.totalEp || '?'} eps</span>
+                    <span class="ru-ep-badge"><i class="fa-solid fa-clock"></i> ${timeAgo}</span>
+                </div>
+            </div>
+        </div>`;
+    }
+    scroll.innerHTML = html;
+}
+
+function getTimeAgo(timestamp) {
+    if (!timestamp) return '';
+    const diff = Date.now() - timestamp;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return `${weeks}w ago`;
+    return `${Math.floor(days / 30)}mo ago`;
+}
+
 function setupContinueWatching() {
     const scroll = document.getElementById('continue-watching-scroll');
     if (!scroll) return;
@@ -356,4 +425,62 @@ function setupContinueWatching() {
         const show = getShowById(showId);
         if (show) openDetailsModal(show);
     });
+}
+
+function initAdvancedFilters() {
+    const studioEl = document.getElementById('filter-studio');
+    const yearEl = document.getElementById('filter-year');
+    if (!studioEl || studioEl.dataset.initialized) return;
+    studioEl.dataset.initialized = 'true';
+
+    const studios = new Set();
+    const years = new Set();
+    shows.forEach(s => {
+        if (s.studio) studios.add(s.studio);
+        if (s.releaseYear) years.add(String(s.releaseYear));
+    });
+    [...studios].sort().forEach(s => {
+        studioEl.innerHTML += `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
+    });
+    [...years].sort().reverse().forEach(y => {
+        yearEl.innerHTML += `<option value="${y}">${y}</option>`;
+    });
+
+    const applyFilter = () => {
+        filters.studio = studioEl.value;
+        filters.year = yearEl.value;
+        filters.minRating = document.getElementById('filter-min-rating')?.value || '';
+        filters.maxEpisodes = document.getElementById('filter-max-episodes')?.value || '';
+        filters.sortBy = document.getElementById('filter-sort')?.value || 'countdown';
+        renderShowsGrid();
+    };
+
+    [studioEl, yearEl,
+      document.getElementById('filter-min-rating'),
+      document.getElementById('filter-max-episodes'),
+      document.getElementById('filter-sort')
+    ].forEach(el => {
+        if (el) el.addEventListener('change', applyFilter);
+    });
+
+    const clearBtn = document.getElementById('btn-clear-filters');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            filters.studio = '';
+            filters.year = '';
+            filters.minRating = '';
+            filters.maxEpisodes = '';
+            filters.sortBy = 'countdown';
+            filters.genre = '';
+            filters.search = '';
+            document.getElementById('search-input').value = '';
+            document.getElementById('genre-filter-bar').querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
+            studioEl.value = '';
+            yearEl.value = '';
+            if (document.getElementById('filter-min-rating')) document.getElementById('filter-min-rating').value = '';
+            if (document.getElementById('filter-max-episodes')) document.getElementById('filter-max-episodes').value = '';
+            if (document.getElementById('filter-sort')) document.getElementById('filter-sort').value = 'countdown';
+            renderShowsGrid();
+        });
+    }
 }

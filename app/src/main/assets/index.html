@@ -115,6 +115,16 @@
             </div>
         </section>
 
+        <!-- Recently Updated Section -->
+        <section class="recently-updated-section" id="recently-updated-section" style="display: none;">
+            <div class="section-title-row">
+                <h2><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-purple);"></i> Recently Updated</h2>
+                <span class="count-tag" id="recently-updated-count"></span>
+            </div>
+            <div class="recently-updated-scroll" id="recently-updated-scroll">
+            </div>
+        </section>
+
         <!-- Main Workspace -->
         <main class="main-content">
             <!-- Sidebar / Control Panel -->
@@ -126,6 +136,34 @@
                     </div>
                 </div>
                 <div class="genre-filter-bar" id="genre-filter-bar" style="display:none;margin-top:0.5rem;padding:0 0.5rem;flex-wrap:wrap;gap:0.3rem;"></div>
+                <div class="advanced-filter-bar" id="advanced-filter-bar" style="display:none;margin-top:0.4rem;padding:0 0.5rem;flex-wrap:wrap;gap:0.3rem;align-items:center;">
+                    <select id="filter-studio" style="padding:0.25rem 0.4rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;max-width:120px;">
+                        <option value="">Studio</option>
+                    </select>
+                    <select id="filter-year" style="padding:0.25rem 0.4rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;max-width:80px;">
+                        <option value="">Year</option>
+                    </select>
+                    <select id="filter-min-rating" style="padding:0.25rem 0.4rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;max-width:80px;">
+                        <option value="">Rating ≥</option>
+                        <option value="1">1+</option><option value="2">2+</option><option value="3">3+</option>
+                        <option value="4">4+</option><option value="5">5+</option><option value="6">6+</option>
+                        <option value="7">7+</option><option value="8">8+</option><option value="9">9+</option>
+                        <option value="10">10</option>
+                    </select>
+                    <select id="filter-max-episodes" style="padding:0.25rem 0.4rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;max-width:100px;">
+                        <option value="">Max Eps</option>
+                        <option value="12">≤ 12</option><option value="24">≤ 24</option>
+                        <option value="52">≤ 52</option><option value="100">≤ 100</option>
+                        <option value="500">≤ 500</option>
+                    </select>
+                    <select id="filter-sort" style="padding:0.25rem 0.4rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;max-width:100px;">
+                        <option value="countdown">Sort: Countdown</option>
+                        <option value="alphabetical">Sort: A-Z</option>
+                        <option value="progress">Sort: Progress</option>
+                        <option value="last-updated">Sort: Updated</option>
+                    </select>
+                    <button id="btn-clear-filters" style="padding:0.25rem 0.4rem;font-size:0.65rem;background:transparent;color:var(--accent-rose);border:1px solid rgba(var(--accent-rose-rgb),0.3);border-radius:4px;cursor:pointer;">Clear</button>
+                </div>
             </section>
 
 
@@ -275,12 +313,54 @@
                     </div>
                 </div>
 
+                <!-- Section: Dashboard Sections -->
+                <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 1.2rem;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-layer-group" style="color: var(--accent-purple);"></i> Dashboard Sections
+                    </h3>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Toggle which sections appear on the Home screen</p>
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem;" id="dashboard-toggles">
+                        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-primary);cursor:pointer;">
+                            <input type="checkbox" id="dash-toggle-countdown" checked><span>Countdown Banner</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-primary);cursor:pointer;">
+                            <input type="checkbox" id="dash-toggle-continue" checked><span>Continue Watching</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-primary);cursor:pointer;">
+                            <input type="checkbox" id="dash-toggle-recently" checked><span>Recently Updated</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-primary);cursor:pointer;">
+                            <input type="checkbox" id="dash-toggle-schedule" checked><span>Weekly Schedule</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Section: Notifications -->
+                <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 1.2rem;">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-bell" style="color: var(--accent-rose);"></i> Notifications
+                    </h3>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Quiet hours prevent notification sounds during selected times</p>
+                    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-primary);cursor:pointer;margin-bottom:0.4rem;">
+                        <input type="checkbox" id="quiet-hours-toggle"> <span>Quiet Hours</span>
+                    </label>
+                    <div id="quiet-hours-config" style="display:none;flex-direction:column;gap:0.3rem;">
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <span style="font-size:0.7rem;color:var(--text-muted);">From</span>
+                            <input type="time" id="quiet-start" value="22:00" style="padding:0.25rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
+                            <span style="font-size:0.7rem;color:var(--text-muted);">To</span>
+                            <input type="time" id="quiet-end" value="08:00" style="padding:0.25rem;font-size:0.7rem;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Section: Cache & Data -->
                 <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 1.2rem;">
                     <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-broom" style="color: var(--accent-cyan);"></i> Cache & Data
                     </h3>
                     <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.8rem 0;">Manage local cached data and preferences</p>
+                    <div id="cache-info" style="font-size:0.68rem;color:var(--text-muted);margin-bottom:0.5rem;"></div>
                     <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
                         <button id="btn-clear-image-cache" class="btn" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
                             <i class="fa-solid fa-image"></i> Clear Image Cache

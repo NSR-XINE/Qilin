@@ -939,4 +939,127 @@ body.tab-home #next-up-banner {
     .continue-watching-section .section-title-row h2 {
         font-size: 0.9rem;
     }
+    .ru-item {
+        flex: 0 0 200px;
+        padding: 0.4rem;
+        min-height: 64px;
+    }
+}
+
+.recently-updated-section {
+    margin-bottom: 0.5rem;
+}
+
+.recently-updated-scroll {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.5rem 0.25rem 1rem 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--white-rgb), 0.15) transparent;
+}
+
+.recently-updated-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.recently-updated-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.recently-updated-scroll::-webkit-scrollbar-thumb {
+    background: rgba(var(--white-rgb), 0.15);
+    border-radius: 4px;
+}
+
+.ru-item {
+    flex: 0 0 260px;
+    scroll-snap-align: start;
+    display: flex;
+    gap: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.65rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    min-height: 80px;
+}
+
+.ru-item:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(var(--accent-purple-rgb), 0.35);
+    transform: translateY(-2px);
+}
+
+.ru-poster {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ru-poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.ru-poster-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.ru-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+    justify-content: center;
+}
+
+.ru-title {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ru-meta {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.ru-ep-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    background: rgba(var(--accent-cyan-rgb), 0.1);
+    border-radius: 4px;
+}
+
+@media (max-width: 576px) {
+    .ru-item {
+        flex: 0 0 220px;
+    }
 }
