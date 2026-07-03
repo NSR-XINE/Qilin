@@ -125,6 +125,15 @@ body[data-accent].light-theme {
     line-height: 1;
 }
 
+.accent-btn[data-accent="dynamic"]::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1.5px dashed rgba(255,255,255,0.7);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
 .accent-btn.active {
     border-color: var(--accent-cyan) !important;
     box-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.5);
