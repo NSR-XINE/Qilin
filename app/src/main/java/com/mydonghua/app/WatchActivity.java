@@ -2,7 +2,6 @@ package com.mydonghua.app;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -25,12 +24,6 @@ public class WatchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            try {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
-            } catch (Throwable t) {
-                android.util.Log.w("DonghuaTracker", "Could not configure sensor rotation: " + t.getMessage());
-            }
-
             FrameLayout rootLayout = new FrameLayout(this);
             rootLayout.setLayoutParams(new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
