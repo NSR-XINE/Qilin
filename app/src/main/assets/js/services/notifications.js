@@ -157,7 +157,6 @@ function importData(jsonString) {
 
         shows = showsArr;
         existingShowIds.clear();
-        shows.forEach(s => existingShowIds.add(s.id));
         DB.setLocal('donghua_shows', JSON.stringify(shows));
 
         if (watchHistory.length > 0 && DB._available) {

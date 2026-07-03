@@ -81,8 +81,20 @@ function loadState() {
         _migrateLegacyQueue();
         _flushQueue();
         if (DB._available) {
-            const dbData = DB.getAllShows();
-            shows = JSON.parse(dbData) || [];
+            let dbData = DB.getAllShows();
+            let parsed = dbData ? JSON.parse(dbData) : null;
+            if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+                const localBackup = DB.getLocal(LS_KEYS.SHOWS);
+                if (localBackup) {
+                    parsed = JSON.parse(localBackup);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        for (const s of parsed) {
+                            try { DB.insertShow(JSON.stringify(s)); } catch (_) {}
+                        }
+                    }
+                }
+            }
+            shows = Array.isArray(parsed) ? parsed : [];
             const hasMigrated = DB.getSetting('sqlite_migrated', 'false');
             if (hasMigrated === 'false') {
                 const legacyData = DB.getLocal(LS_KEYS.SHOWS);
