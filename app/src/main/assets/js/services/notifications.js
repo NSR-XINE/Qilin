@@ -42,23 +42,9 @@ function scheduleReminderForShow(show) {
 }
 
 function exportData() {
-    let showsJson = null;
-    if (DB._available) {
-        showsJson = DB.getAllShows();
-    } else {
-        showsJson = DB.getLocal('donghua_shows');
-    }
-    if (!showsJson) { alert('No data to export.'); return; }
-
-    let showsArr;
-    try {
-        showsArr = JSON.parse(showsJson);
-        if (!Array.isArray(showsArr) || showsArr.length === 0) {
-            alert('No data to export.');
-            return;
-        }
-    } catch (e) {
-        alert('Export failed: stored data is corrupted.');
+    const showsArr = window.shows;
+    if (!Array.isArray(showsArr) || showsArr.length === 0) {
+        alert('No data to export.');
         return;
     }
 
