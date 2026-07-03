@@ -37,7 +37,7 @@ function renderCollectionsView() {
             </div>
             <div style="display:flex;flex-direction:column;gap:0.2rem;">
                 ${colShows.map(s => `
-                    <div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.4rem;border-radius:4px;cursor:pointer;transition:background 0.2s;" onclick="openDetailsById('${s.id}')" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+                    <div class="collection-item" data-show-id="${escapeHtml(String(s.id))}" style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.4rem;border-radius:4px;cursor:pointer;transition:background 0.2s;">
                         <div style="width:28px;height:28px;border-radius:4px;background:${getPosterGradient(s.title)};display:flex;align-items:center;justify-content:center;font-size:0.5rem;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;">
                             ${(() => { const p = safePosterUrl(s.poster); return p ? `<img src="${p}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : getInitials(s.title); })()}
                         </div>
@@ -80,5 +80,12 @@ if (typeof document !== 'undefined') {
                 if (e.target.id === 'collections-modal') closeCollectionsModal();
             });
         }
+
+        document.getElementById('collections-content')?.addEventListener('click', (e) => {
+            const item = e.target.closest('.collection-item');
+            if (item && item.dataset.showId) {
+                openDetailsById(item.dataset.showId);
+            }
+        });
     });
 }

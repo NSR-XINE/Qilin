@@ -527,30 +527,30 @@
                 <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 0.5rem;">Exit Application</h3>
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.4;">Are you sure you want to close My Donghua?</p>
                 <div style="display: flex; gap: 0.8rem; justify-content: center;">
-                    <button class="btn btn-secondary" onclick="closeExitModal()" style="flex: 1;">Cancel</button>
-                    <button class="btn btn-primary" onclick="confirmExitApp()" style="flex: 1;">Exit</button>
+                    <button class="btn btn-secondary" id="btn-exit-cancel" style="flex: 1;">Cancel</button>
+                    <button class="btn btn-primary" id="btn-exit-confirm" style="flex: 1;">Exit</button>
                 </div>
             </div>
         </div>
     </div>
 
     <nav class="bottom-nav">
-        <button class="nav-item active" id="nav-btn-home" onclick="switchTab('home')">
+        <button class="nav-item active" id="nav-btn-home">
             <i class="fa-solid fa-house"></i>
             <span>Home</span>
         </button>
-        <button class="nav-item" id="nav-btn-airing" onclick="switchTab('airing')">
+        <button class="nav-item" id="nav-btn-airing">
             <i class="fa-solid fa-satellite-dish"></i>
             <span>Airing</span>
         </button>
-        <button class="nav-item nav-btn-add-shortcut" id="nav-btn-add" onclick="triggerAddModal()">
+        <button class="nav-item nav-btn-add-shortcut" id="nav-btn-add">
             <div class="nav-add-icon"><i class="fa-solid fa-plus"></i></div>
         </button>
-        <button class="nav-item" id="nav-btn-complete" onclick="switchTab('complete')">
+        <button class="nav-item" id="nav-btn-complete">
             <i class="fa-solid fa-circle-check"></i>
             <span>Complete</span>
         </button>
-        <button class="nav-item" id="nav-btn-stopped" onclick="switchTab('stopped')">
+        <button class="nav-item" id="nav-btn-stopped">
             <i class="fa-solid fa-rocket"></i>
             <span>Stopped</span>
         </button>

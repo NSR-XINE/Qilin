@@ -152,6 +152,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-close-drawer')?.addEventListener('click', closeDrawer);
     document.getElementById('drawer-overlay')?.addEventListener('click', closeDrawer);
 
+    document.getElementById('nav-btn-home')?.addEventListener('click', () => switchTab('home'));
+    document.getElementById('nav-btn-airing')?.addEventListener('click', () => switchTab('airing'));
+    document.getElementById('nav-btn-add')?.addEventListener('click', triggerAddModal);
+    document.getElementById('nav-btn-complete')?.addEventListener('click', () => switchTab('complete'));
+    document.getElementById('nav-btn-stopped')?.addEventListener('click', () => switchTab('stopped'));
+    document.getElementById('btn-exit-cancel')?.addEventListener('click', closeExitModal);
+    document.getElementById('btn-exit-confirm')?.addEventListener('click', confirmExitApp);
+
     switchTab('home');
 
     document.getElementById('btn-close-modal')?.addEventListener('click', closeModal);

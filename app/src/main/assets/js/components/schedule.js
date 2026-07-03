@@ -40,7 +40,7 @@ function renderWeeklySchedule() {
             <div class="day-schedule-list">`;
 
         html += dayShows.map(show => {
-            return `<div class="schedule-item" onclick="openDetailsById('${String(show.id).replace(/'/g, "\\'")}')" style="cursor: pointer; ${isToday ? 'border-color: rgba(157, 78, 221, 0.3); background: rgba(157,78,221,0.02)' : ''}">
+            return `<div class="schedule-item" data-show-id="${escapeHtml(String(show.id))}" style="cursor: pointer; ${isToday ? 'border-color: rgba(157, 78, 221, 0.3); background: rgba(157,78,221,0.02)' : ''}">
                 <div class="schedule-item-name">
                     ${isToday ? '<i class="fa-solid fa-circle-play" style="color: var(--accent-purple); font-size: 0.75rem; animation: pulse 1.5s infinite"></i>' : ''}
                     <span>${escapeHtml(show.title)}</span>
@@ -64,6 +64,13 @@ function setupScheduleTabs() {
             e.target.classList.add('active');
             scheduleDayFilter = e.target.dataset.day;
             renderWeeklySchedule();
+        }
+    });
+
+    document.getElementById('schedule-list')?.addEventListener('click', (e) => {
+        const item = e.target.closest('.schedule-item');
+        if (item && item.dataset.showId) {
+            openDetailsById(item.dataset.showId);
         }
     });
 }

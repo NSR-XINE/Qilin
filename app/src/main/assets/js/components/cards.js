@@ -137,7 +137,7 @@ function renderCard(show, todayName) {
                 ${show.notes ? escapeHtml(show.notes) : '<span style="color: var(--text-muted); font-style: italic;">No synopsis added.</span>'}
             </p>
             <div class="card-actions">
-                <button class="watch-link watch-btn" data-watch-url="${watchUrl}" onclick="openWatchScreen(this.getAttribute('data-watch-url'))">
+                <button class="watch-link watch-btn" data-watch-url="${watchUrl}">
                     <i class="fa-solid fa-circle-play"></i> Stream
                 </button>
                 <a class="countdown-link" href="${/^https?:\/\//i.test(show.countdownUrl || '') ? show.countdownUrl : 'https://www.google.com/search?q=site:animecountdown.com+' + encodeURIComponent(show.title)}" target="_blank" rel="noopener noreferrer">
@@ -285,7 +285,8 @@ function setupCardActions() {
                 deleteShow(showId);
             }
         }
-        else if (isStream || isCountdown) { return; }
+        else if (isStream) { openWatchScreen(isStream.dataset.watchUrl); return; }
+        else if (isCountdown) { return; }
         else { openDetailsModal(show); }
         _plusLongPress = false;
     });

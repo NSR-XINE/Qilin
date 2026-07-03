@@ -36,7 +36,7 @@ function renderCalendarView() {
         const dayShows = ongoing.filter(s => s.releaseDay === dayName);
         const isToday = day === today;
 
-        html += `<div style="aspect-ratio:1;padding:0.2rem;border-radius:6px;background:${isToday ? 'rgba(157,78,221,0.15)' : 'rgba(255,255,255,0.02)'};border:1px solid ${isToday ? 'var(--accent-purple)' : 'transparent'};display:flex;flex-direction:column;align-items:center;overflow:hidden;cursor:pointer;" onclick="filterScheduleByDay('${dayName}')">
+        html += `<div data-cal-day="${dayName}" style="aspect-ratio:1;padding:0.2rem;border-radius:6px;background:${isToday ? 'rgba(157,78,221,0.15)' : 'rgba(255,255,255,0.02)'};border:1px solid ${isToday ? 'var(--accent-purple)' : 'transparent'};display:flex;flex-direction:column;align-items:center;overflow:hidden;cursor:pointer;">
             <span style="font-size:0.65rem;font-weight:${isToday ? '800' : '500'};color:${isToday ? 'var(--accent-purple)' : 'var(--text-secondary)'};">${day}</span>
             ${dayShows.length > 0 ? `<div style="display:flex;gap:2px;margin-top:auto;flex-wrap:wrap;justify-content:center;">
                 ${dayShows.slice(0, 3).map(() => `<div style="width:4px;height:4px;border-radius:50%;background:var(--accent-cyan);"></div>`).join('')}
@@ -114,5 +114,12 @@ if (typeof document !== 'undefined') {
                 if (e.target.id === 'calendar-modal') closeCalendarModal();
             });
         }
+
+        document.getElementById('calendar-content')?.addEventListener('click', (e) => {
+            const dayCell = e.target.closest('[data-cal-day]');
+            if (dayCell) {
+                filterScheduleByDay(dayCell.dataset.calDay);
+            }
+        });
     });
 }

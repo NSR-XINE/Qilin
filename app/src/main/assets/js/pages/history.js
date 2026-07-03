@@ -33,7 +33,7 @@ function renderWatchHistory() {
             <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.4rem;letter-spacing:0.5px;">${date}</div>`;
         grouped[date].forEach(entry => {
             const time = new Date(entry.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-            html += `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.5rem;border-radius:6px;background:rgba(255,255,255,0.02);margin-bottom:0.2rem;cursor:pointer;" onclick="openDetailsById('${entry.showId}')">
+            html += `<div class="history-item" data-show-id="${escapeHtml(String(entry.showId))}" style="display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.5rem;border-radius:6px;background:rgba(255,255,255,0.02);margin-bottom:0.2rem;cursor:pointer;">
                 <div style="width:32px;height:32px;border-radius:4px;background:var(--bg-card);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:var(--text-secondary);">
                     ${(() => { const p = safePosterUrl(entry.poster); return p ? `<img src="${p}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : `<i class="fa-solid fa-film"></i>`; })()}
                 </div>
@@ -78,5 +78,12 @@ if (typeof document !== 'undefined') {
                 if (e.target.id === 'history-modal') closeHistoryModal();
             });
         }
+
+        document.getElementById('history-content')?.addEventListener('click', (e) => {
+            const item = e.target.closest('.history-item');
+            if (item && item.dataset.showId) {
+                openDetailsById(item.dataset.showId);
+            }
+        });
     });
 }

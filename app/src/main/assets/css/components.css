@@ -771,3 +771,6 @@ body.tab-home #next-up-banner {
     .banner-meta { font-size: 0.72rem !important; }
     .banner-meta span { white-space: nowrap !important; }
 }
+
+.collection-item:hover,
+.history-item:hover { background: rgba(255,255,255,0.04); }
