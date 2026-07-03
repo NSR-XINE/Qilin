@@ -83,37 +83,27 @@ function loadState() {
         if (DB._available) {
             let dbData = DB.getAllShows();
             let parsed = dbData ? JSON.parse(dbData) : null;
-            if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
-                const localBackup = DB.getLocal(LS_KEYS.SHOWS);
-                if (localBackup) {
-                    parsed = JSON.parse(localBackup);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        for (const s of parsed) {
-                            try { DB.insertShow(JSON.stringify(s)); } catch (_) {}
-                        }
-                    }
+            const localBackup = DB.getLocal(LS_KEYS.SHOWS);
+            if (localBackup) {
+                const localParsed = JSON.parse(localBackup);
+                if (Array.isArray(localParsed) && localParsed.length > 0) {
+                    parsed = localParsed;
                 }
             }
             shows = Array.isArray(parsed) ? parsed : [];
-            const hasMigrated = DB.getSetting('sqlite_migrated', 'false');
-            if (hasMigrated === 'false') {
-                const legacyData = DB.getLocal(LS_KEYS.SHOWS);
-                if (legacyData) {
-                    const legacyShows = JSON.parse(legacyData);
-                    if (Array.isArray(legacyShows) && legacyShows.length > 0) {
-                        legacyShows.forEach(s => {
-                            DB.insertShow(JSON.stringify(s));
-                        });
-                        shows = JSON.parse(DB.getAllShows()) || [];
-                    }
-                }
-                DB.saveSetting('sqlite_migrated', 'true');
-            }
         } else {
             const saved = DB.getLocal(LS_KEYS.SHOWS);
             shows = saved ? JSON.parse(saved) : [];
         }
         if (!Array.isArray(shows)) shows = [];
+        if (shows.length > 0 && DB._available) {
+            const dbData = DB.getAllShows();
+            if (!dbData || JSON.parse(dbData).length === 0) {
+                for (const s of shows) {
+                    try { DB.insertShow(JSON.stringify(s)); } catch (_) {}
+                }
+            }
+        }
     } catch (e) {
         console.error("Database load error", e);
         shows = [];

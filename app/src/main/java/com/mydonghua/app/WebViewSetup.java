@@ -121,6 +121,6 @@ public class WebViewSetup {
 
         webView.addJavascriptInterface(new AndroidBridge(activity, dbHelper, webView), "AndroidApp");
 
-        webView.loadUrl("file:///android_asset/index.html?v=" + System.currentTimeMillis());
+        webView.loadUrl("file:///android_asset/index.html");
     }
 }
