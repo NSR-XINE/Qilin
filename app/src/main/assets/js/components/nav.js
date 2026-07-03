@@ -20,10 +20,11 @@ function switchTab(tabName) {
     const contentArea = document.querySelector('.content-area');
     const emptyStateEl = document.getElementById('empty-state');
     const continueWatching = document.getElementById('continue-watching-section');
+    const recentlyUpdated = document.getElementById('recently-updated-section');
 
     const isMobile = window.innerWidth <= 1024;
     if (isMobile) {
-        [searchPanel, scheduleContainer, heroBanner, sectionsContainer, emptyStateEl, continueWatching].forEach(el => {
+        [searchPanel, scheduleContainer, heroBanner, sectionsContainer, emptyStateEl, continueWatching, recentlyUpdated].forEach(el => {
             if (el) el.style.setProperty('display', 'none', 'important');
         });
         if (controlPanel) controlPanel.style.setProperty('display', 'none', 'important');
@@ -34,17 +35,24 @@ function switchTab(tabName) {
             if (scheduleContainer) scheduleContainer.style.setProperty('display', 'block', 'important');
             if (heroBanner) { heroBanner.style.removeProperty('display'); renderHeroBanner(); }
             if (continueWatching) { continueWatching.style.removeProperty('display'); renderContinueWatching(); }
+            if (recentlyUpdated) { recentlyUpdated.style.removeProperty('display'); renderRecentlyUpdated(); }
+            applyDashboardToggles();
             if (emptyStateEl && shows.length === 0) emptyStateEl.style.setProperty('display', 'flex', 'important');
         } else if (tabName === 'airing' || tabName === 'complete' || tabName === 'stopped') {
             if (contentArea) contentArea.style.setProperty('display', 'block', 'important');
             if (sectionsContainer) sectionsContainer.style.setProperty('display', 'block', 'important');
             renderShowsGrid();
         }
-        const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
+        const showFilterBars = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
         const genreBar = document.getElementById('genre-filter-bar');
+        const advFilterBar = document.getElementById('advanced-filter-bar');
         if (genreBar) {
-            genreBar.style.setProperty('display', showGenreBar ? 'flex' : 'none', 'important');
-            if (showGenreBar) populateGenreFilter();
+            genreBar.style.setProperty('display', showFilterBars ? 'flex' : 'none', 'important');
+            if (showFilterBars) populateGenreFilter();
+        }
+        if (advFilterBar) {
+            advFilterBar.style.setProperty('display', showFilterBars ? 'flex' : 'none', 'important');
+            if (showFilterBars) initAdvancedFilters();
         }
     } else {
         [searchPanel, scheduleContainer, sectionsContainer, controlPanel, contentArea].forEach(el => {
@@ -52,11 +60,17 @@ function switchTab(tabName) {
         });
         renderHeroBanner();
         renderContinueWatching();
-        const showGenreBar = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
+        renderRecentlyUpdated();
+        const showFilterBars = tabName === 'airing' || tabName === 'complete' || tabName === 'stopped';
         const genreBar = document.getElementById('genre-filter-bar');
+        const advFilterBar = document.getElementById('advanced-filter-bar');
         if (genreBar) {
-            genreBar.style.display = showGenreBar ? 'flex' : 'none';
-            if (showGenreBar) populateGenreFilter();
+            genreBar.style.display = showFilterBars ? 'flex' : 'none';
+            if (showFilterBars) populateGenreFilter();
+        }
+        if (advFilterBar) {
+            advFilterBar.style.display = showFilterBars ? 'flex' : 'none';
+            if (showFilterBars) initAdvancedFilters();
         }
     }
 

@@ -25,7 +25,47 @@ function renderDetailedStats() {
         <div class="stat-card-mini"><div class="stat-val">${stats.favorites}</div><div class="stat-lbl">Favorites</div></div>
         <div class="stat-card-mini"><div class="stat-val">${todayShows.length}</div><div class="stat-lbl">Airing Today</div></div>
     </div>
-    <div style="border-top:1px solid var(--border-color);padding-top:0.8rem;margin-top:0.4rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1rem;">
+        <div class="stat-card-mini"><div class="stat-val">${stats.completionRate}%</div><div class="stat-lbl">Completion Rate</div></div>
+        <div class="stat-card-mini"><div class="stat-val">${stats.streak}</div><div class="stat-lbl">Day Streak</div></div>
+        <div class="stat-card-mini"><div class="stat-val">${stats.weeklyActivity}</div><div class="stat-lbl">Active This Week</div></div>
+        <div class="stat-card-mini"><div class="stat-val">${stats.monthlyActivity}</div><div class="stat-lbl">Active This Month</div></div>
+        <div class="stat-card-mini"><div class="stat-val">${stats.avgRating}</div><div class="stat-lbl">Avg Rating</div></div>
+        <div class="stat-card-mini"><div class="stat-val">${stats.longestSeries ? escapeHtml(stats.longestSeries.title) : '—'}</div><div class="stat-lbl">Longest Series (${stats.longestEpCount} eps)</div></div>
+    </div>`;
+
+    if (stats.topGenres.length > 0) {
+        const maxGenreCount = stats.topGenres[0][1];
+        html += `<div style="border-top:1px solid var(--border-color);padding-top:0.8rem;margin-top:0.4rem;">
+            <h4 style="font-size:0.8rem;color:var(--text-primary);margin:0 0 0.5rem 0;font-weight:600;">
+                <i class="fa-solid fa-tags" style="color:var(--accent-purple);margin-right:0.4rem;"></i>Top Genres
+            </h4>
+            <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+                ${stats.topGenres.map(([genre, count]) => `
+                    <span style="padding:0.2rem 0.5rem;font-size:0.65rem;color:var(--accent-cyan);background:rgba(var(--accent-cyan-rgb),0.1);border-radius:4px;">
+                        ${escapeHtml(genre)} <span style="color:var(--text-muted);">${count}</span>
+                    </span>
+                `).join('')}
+            </div>
+        </div>`;
+    }
+
+    if (stats.topStudios.length > 0) {
+        html += `<div style="border-top:1px solid var(--border-color);padding-top:0.8rem;margin-top:0.4rem;">
+            <h4 style="font-size:0.8rem;color:var(--text-primary);margin:0 0 0.5rem 0;font-weight:600;">
+                <i class="fa-solid fa-building" style="color:var(--accent-rose);margin-right:0.4rem;"></i>Top Studios
+            </h4>
+            <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+                ${stats.topStudios.map(([studio, count]) => `
+                    <span style="padding:0.2rem 0.5rem;font-size:0.65rem;color:var(--accent-rose);background:rgba(var(--accent-rose-rgb),0.1);border-radius:4px;">
+                        ${escapeHtml(studio)} <span style="color:var(--text-muted);">${count}</span>
+                    </span>
+                `).join('')}
+            </div>
+        </div>`;
+    }
+
+    html += `<div style="border-top:1px solid var(--border-color);padding-top:0.8rem;margin-top:0.4rem;">
         <h4 style="font-size:0.8rem;color:var(--text-primary);margin:0 0 0.5rem 0;font-weight:600;">
             <i class="fa-regular fa-calendar" style="color:var(--accent-cyan);margin-right:0.4rem;"></i>This Week's Releases
         </h4>

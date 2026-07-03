@@ -4,6 +4,8 @@ function openDetailsModal(show) {
     const detailsContent = document.getElementById('details-modal-content');
     if (!detailsModal || !detailsContent) return;
 
+    show.lastOpened = Date.now();
+
     detailsTitle.innerText = show.title;
     const maxEps = show.totalEp > 0 ? show.totalEp : Math.max(12, show.currentEp + 10);
 
@@ -442,6 +444,126 @@ function setupSettingsModal() {
                 console.error('Failed to clear local data', e);
             }
         }
+    });
+
+    initDashboardToggles();
+    initCacheInfo();
+    initQuietHours();
+}
+
+const DASHBOARD_TOGGLES_KEY = 'dashboard_toggles';
+
+function getDashboardToggles() {
+    try {
+        return JSON.parse(localStorage.getItem(DASHBOARD_TOGGLES_KEY)) || {};
+    } catch (e) { return {}; }
+}
+
+function saveDashboardToggles(toggles) {
+    try { localStorage.setItem(DASHBOARD_TOGGLES_KEY, JSON.stringify(toggles)); } catch (e) {}
+}
+
+function applyDashboardToggles() {
+    const toggles = getDashboardToggles();
+    const banner = document.getElementById('hero-banner');
+    const continueWatching = document.getElementById('continue-watching-section');
+    const recentlyUpdated = document.getElementById('recently-updated-section');
+    const schedule = document.getElementById('schedule-container');
+    if (banner && toggles.countdown === false) banner.style.display = 'none';
+    if (continueWatching && toggles.continue === false) continueWatching.style.display = 'none';
+    if (recentlyUpdated && toggles.recently === false) recentlyUpdated.style.display = 'none';
+    if (schedule && toggles.schedule === false) schedule.style.display = 'none';
+}
+
+function initDashboardToggles() {
+    const toggles = getDashboardToggles();
+    const ids = ['countdown', 'continue', 'recently', 'schedule'];
+    ids.forEach(id => {
+        const el = document.getElementById('dash-toggle-' + id);
+        if (el) {
+            el.checked = toggles[id] !== false;
+            el.addEventListener('change', () => {
+                toggles[id] = el.checked;
+                saveDashboardToggles(toggles);
+                if (el.checked) location.reload();
+                else applyDashboardToggles();
+            });
+        }
+    });
+}
+
+function initCacheInfo() {
+    const info = document.getElementById('cache-info');
+    if (!info) return;
+    let size = 0;
+    let count = 0;
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('img_cache_')) {
+                count++;
+                size += (localStorage.getItem(k) || '').length;
+            }
+        }
+    } catch (e) {}
+    const sizeKB = Math.round(size / 1024);
+    info.textContent = `Image cache: ${count} items, ${sizeKB} KB`;
+}
+
+const QUIET_HOURS_KEY = 'quiet_hours';
+
+function getQuietHours() {
+    try {
+        return JSON.parse(localStorage.getItem(QUIET_HOURS_KEY)) || {};
+    } catch (e) { return {}; }
+}
+
+function saveQuietHours(config) {
+    try { localStorage.setItem(QUIET_HOURS_KEY, JSON.stringify(config)); } catch (e) {}
+}
+
+function isQuietHours() {
+    const qh = getQuietHours();
+    if (!qh.enabled) return false;
+    const now = new Date();
+    const hm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    const start = qh.start || '22:00';
+    const end = qh.end || '08:00';
+    if (start <= end) return hm >= start && hm <= end;
+    return hm >= start || hm <= end;
+}
+
+function initQuietHours() {
+    const toggle = document.getElementById('quiet-hours-toggle');
+    const config = document.getElementById('quiet-hours-config');
+    const start = document.getElementById('quiet-start');
+    const end = document.getElementById('quiet-end');
+    if (!toggle) return;
+    const qh = getQuietHours();
+    toggle.checked = qh.enabled || false;
+    if (start) start.value = qh.start || '22:00';
+    if (end) end.value = qh.end || '08:00';
+    if (config) config.style.display = toggle.checked ? 'flex' : 'none';
+
+    toggle.addEventListener('change', () => {
+        if (config) config.style.display = toggle.checked ? 'flex' : 'none';
+        const qh = getQuietHours();
+        qh.enabled = toggle.checked;
+        qh.start = start ? start.value : '22:00';
+        qh.end = end ? end.value : '08:00';
+        saveQuietHours(qh);
+    });
+
+    if (start) start.addEventListener('change', () => {
+        const qh = getQuietHours();
+        qh.start = start.value;
+        saveQuietHours(qh);
+    });
+
+    if (end) end.addEventListener('change', () => {
+        const qh = getQuietHours();
+        qh.end = end.value;
+        saveQuietHours(qh);
     });
 }
 

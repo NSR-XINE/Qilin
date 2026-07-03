@@ -1,6 +1,6 @@
 let shows = [];
 const existingShowIds = new Set();
-const filters = { search: '', genre: '', status: 'all', scheduleDay: 'all', sortBy: 'countdown' };
+const filters = { search: '', genre: '', studio: '', year: '', minRating: '', maxEpisodes: '', status: 'all', scheduleDay: 'all', sortBy: 'countdown' };
 Object.defineProperty(window, 'shows', { get() { return shows; }, set(v) { shows = v; } });
 Object.defineProperty(window, 'existingShowIds', { get() { return existingShowIds; } });
 Object.defineProperty(window, 'filters', { get() { return filters; } });
@@ -194,6 +194,7 @@ function persistState(fullRender = true) {
             _debouncedRenderSchedule();
             _debouncedRenderBanner();
             _debouncedRenderContinueWatching();
+            _debouncedRenderRecentlyUpdated();
             _debouncedRenderGrid();
         });
     }
@@ -319,5 +320,12 @@ function getAiringToday() {
 function getContinueWatchingShows() {
     return shows
         .filter(s => s.currentEp > 0 && (s.totalEp === 0 || s.currentEp < s.totalEp))
-        .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+        .sort((a, b) => (b.lastOpened || b.lastUpdated || 0) - (a.lastOpened || a.lastUpdated || 0));
+}
+
+function getRecentlyUpdatedShows() {
+    return [...shows]
+        .filter(s => s.lastUpdated)
+        .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0))
+        .slice(0, 10);
 }
