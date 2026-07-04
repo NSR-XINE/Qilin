@@ -107,7 +107,7 @@ function renderCard(show, todayName) {
         ${firstChineseChar ? `<div class="placeholder-zh">${firstChineseChar}</div>` : ''}
     </div>`;
 
-    const genreTags = show.genre ? show.genre.split(',').map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`).join('') : '';
+    const genreTags = show.genres ? show.genres.split(',').map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`).join('') : '';
 
     return `<article class="show-card ${isReleasingToday ? 'releasing-today' : ''}" data-id="${show.id}">
         <div class="card-header">
@@ -171,7 +171,7 @@ function renderFavoritesGrid() {
     const filteredShows = shows.filter(s => {
         if (!s.isFavorite) return false;
         if (filters.search && !fuzzyMatch(s.title, filters.search) && !fuzzyMatch(s.titleZh, filters.search)) return false;
-        if (genreFilter && !(s.genre && s.genre.toLowerCase().includes(genreFilter))) return false;
+        if (genreFilter && !(s.genres && s.genres.toLowerCase().includes(genreFilter))) return false;
         return true;
     });
     filteredShows.sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
