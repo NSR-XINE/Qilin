@@ -245,7 +245,7 @@ function handleBackPress() {
         const el = document.getElementById(modalIds[i]);
         if (el && el.style.display === 'flex') {
             if (modalIds[i] === 'exit-modal') {
-                confirmExitApp();
+                closeExitModal();
             } else {
                 closeTopModal();
             }
