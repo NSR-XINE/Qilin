@@ -23,7 +23,7 @@ function renderSeasonalView() {
     }
 
     const genreFilter = filters.genre ? filters.genre.toLowerCase() : '';
-    const filteredShows = genreFilter ? shows.filter(s => s.genre && s.genre.toLowerCase().includes(genreFilter)) : shows;
+    const filteredShows = genreFilter ? shows.filter(s => s.genres && s.genres.toLowerCase().includes(genreFilter)) : shows;
 
     if (filteredShows.length === 0) {
         container.innerHTML = '<div class="empty-state" style="display:flex;"><i class="fa-solid fa-filter"></i><h3>No Matches</h3><p>No shows match the selected genre filter.</p></div>';
