@@ -47,7 +47,7 @@ public class WatchActivity extends AppCompatActivity {
 
             setContentView(rootLayout);
 
-            applyImmersiveMode();
+            setFullscreen(false);
 
             WebSettings s = playerView.getSettings();
             s.setJavaScriptEnabled(true);
@@ -116,6 +116,7 @@ public class WatchActivity extends AppCompatActivity {
                             playerView.setVisibility(View.GONE);
                         }
                     }
+                    setFullscreen(true);
                 }
 
                 @Override
@@ -132,6 +133,7 @@ public class WatchActivity extends AppCompatActivity {
                         customViewCallback = null;
                     }
                     customView = null;
+                    setFullscreen(false);
                 }
             });
 
@@ -163,6 +165,7 @@ public class WatchActivity extends AppCompatActivity {
                             customViewCallback = null;
                         }
                         customView = null;
+                        setFullscreen(false);
                     } else if (playerView != null && playerView.canGoBack()) {
                         playerView.goBack();
                     } else {
@@ -177,7 +180,7 @@ public class WatchActivity extends AppCompatActivity {
         }
     }
 
-    private void applyImmersiveMode() {
+    private void setFullscreen(boolean fullscreen) {
         try {
             android.view.Window window = getWindow();
             if (window == null) return;
@@ -186,23 +189,44 @@ public class WatchActivity extends AppCompatActivity {
             window.setNavigationBarColor(android.graphics.Color.BLACK);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(false);
+                window.setDecorFitsSystemWindows(!fullscreen);
                 WindowInsetsController ctrl = window.getInsetsController();
                 if (ctrl != null) {
-                    ctrl.show(WindowInsets.Type.systemBars());
+                    if (fullscreen) {
+                        ctrl.hide(WindowInsets.Type.systemBars());
+                        ctrl.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    } else {
+                        ctrl.show(WindowInsets.Type.systemBars());
+                    }
                 }
             } else {
                 View decorView = window.getDecorView();
                 if (decorView != null) {
-                    decorView.setSystemUiVisibility(
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    );
+                    int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+                    if (fullscreen) {
+                        flags |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                               | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                               | View.SYSTEM_UI_FLAG_FULLSCREEN
+                               | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                               | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                    } else {
+                        flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+                    }
+                    decorView.setSystemUiVisibility(flags);
                 }
             }
         } catch (Throwable t) {
-            android.util.Log.w("DonghuaTracker", "Failed to apply immersive mode: " + t.getMessage());
+            android.util.Log.w("DonghuaTracker", "Failed to set fullscreen mode: " + t.getMessage());
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (playerView != null) {
+            playerView.removeAllViews();
+            playerView.destroy();
+            playerView = null;
+        }
+        super.onDestroy();
     }
 }
