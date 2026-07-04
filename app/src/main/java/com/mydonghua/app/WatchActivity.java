@@ -9,6 +9,7 @@ import android.webkit.*;
 import android.os.Build;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,6 +19,8 @@ public class WatchActivity extends AppCompatActivity {
     private FrameLayout fullscreenContainer;
     private WebChromeClient.CustomViewCallback customViewCallback;
     private View customView;
+    private View statusBarSpacer;
+    private View divider;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -29,13 +32,38 @@ public class WatchActivity extends AppCompatActivity {
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT));
 
-            playerView = new WebView(this);
-            playerView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            playerView.setLayoutParams(new FrameLayout.LayoutParams(
+            LinearLayout webLayout = new LinearLayout(this);
+            webLayout.setOrientation(LinearLayout.VERTICAL);
+            webLayout.setLayoutParams(new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT));
+
+            statusBarSpacer = new View(this);
+            int statusBarHeight = getStatusBarHeight();
+            statusBarSpacer.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    statusBarHeight));
+            statusBarSpacer.setBackgroundColor(android.graphics.Color.parseColor("#0a0c14"));
+
+            divider = new View(this);
+            divider.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    (int) (1 * getResources().getDisplayMetrics().density)));
+            divider.setBackgroundColor(android.graphics.Color.parseColor("#1f2438"));
+
+            playerView = new WebView(this);
+            playerView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            playerView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1.0f));
             playerView.setBackgroundColor(android.graphics.Color.BLACK);
-            rootLayout.addView(playerView);
+
+            webLayout.addView(statusBarSpacer);
+            webLayout.addView(divider);
+            webLayout.addView(playerView);
+
+            rootLayout.addView(webLayout);
 
             fullscreenContainer = new FrameLayout(this);
             fullscreenContainer.setLayoutParams(new FrameLayout.LayoutParams(
@@ -188,6 +216,13 @@ public class WatchActivity extends AppCompatActivity {
             window.setStatusBarColor(android.graphics.Color.BLACK);
             window.setNavigationBarColor(android.graphics.Color.BLACK);
 
+            if (statusBarSpacer != null) {
+                statusBarSpacer.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+            }
+            if (divider != null) {
+                divider.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 window.setDecorFitsSystemWindows(!fullscreen);
                 WindowInsetsController ctrl = window.getInsetsController();
@@ -218,6 +253,15 @@ public class WatchActivity extends AppCompatActivity {
         } catch (Throwable t) {
             android.util.Log.w("DonghuaTracker", "Failed to set fullscreen mode: " + t.getMessage());
         }
+    }
+
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 
     @Override
