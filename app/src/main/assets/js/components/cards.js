@@ -107,7 +107,7 @@ function renderCard(show, todayName) {
         ${firstChineseChar ? `<div class="placeholder-zh">${firstChineseChar}</div>` : ''}
     </div>`;
 
-    const genreTags = show.genres ? show.genres.split(',').map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`).join('') : '';
+    const genreTags = show.genres ? show.genres.split(',').slice(0, 2).map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`).join('') : '';
 
     return `<article class="show-card ${isReleasingToday ? 'releasing-today' : ''}" data-id="${show.id}">
         <div class="card-header">
