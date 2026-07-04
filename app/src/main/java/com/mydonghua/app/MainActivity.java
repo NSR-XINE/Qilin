@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebView;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -57,6 +58,21 @@ public class MainActivity extends AppCompatActivity {
         setupBackgroundSync();
 
         requestPermissionsOnStart();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (webView == null) {
+                    finish();
+                    return;
+                }
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    webView.evaluateJavascript("handleBackPress();", null);
+                }
+            }
+        });
     }
 
     private void setupBackgroundSync() {
@@ -187,18 +203,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView == null) {
-            finish();
-            return;
-        }
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            webView.evaluateJavascript("handleBackPress();", null);
-        }
-    }
+
 
     @Override
     protected void onPause() {
