@@ -180,85 +180,69 @@ fun HeroBanner(
             )
         }
 
-        // Details Block with borderless backdrop blur
-        Box(
+        // Details Block
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(16.dp)
-                .fillMaxWidth(0.85f)
-                .clip(RoundedCornerShape(12.dp))
         ) {
-            // 1. Blurred Backdrop Crop
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(show.poster)
-                    .crossfade(true)
-                    .diskCachePolicy(CachePolicy.ENABLED)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier
-                    .matchParentSize()
-                    .blur(20.dp),
-                contentScale = ContentScale.Crop
+            Text(
+                text = show.title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = androidx.compose.ui.text.TextStyle(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = Color.Black.copy(alpha = 0.8f),
+                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        blurRadius = 4f
+                    )
+                )
+            )
+            Text(
+                text = "Episode ${show.currentEp + 1} releasing on ${show.releaseDay} at ${show.releaseTime}",
+                fontSize = 12.sp,
+                color = Color.LightGray,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp),
+                style = androidx.compose.ui.text.TextStyle(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = Color.Black.copy(alpha = 0.8f),
+                        offset = androidx.compose.ui.geometry.Offset(1.5f, 1.5f),
+                        blurRadius = 3f
+                    )
+                )
             )
 
-            // 2. Soft Dark Tint Overlay
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(Color.Black.copy(alpha = 0.35f))
-            )
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // 3. Sharp Text Content
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = show.title,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "Episode ${show.currentEp + 1} releasing on ${show.releaseDay} at ${show.releaseTime}",
-                    fontSize = 12.sp,
-                    color = Color.LightGray,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Time Display Grid
-                if (remainingTime.airingNow) {
-                    Box(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "📡 AIRING NOW / JUST RELEASED",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else if (!remainingTime.elapsed) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        BannerTimeBox(value = remainingTime.days, label = "Days")
-                        BannerTimeBox(value = remainingTime.hours, label = "Hours")
-                        BannerTimeBox(value = remainingTime.minutes, label = "Mins")
-                        BannerTimeBox(value = remainingTime.seconds, label = "Secs")
-                    }
+            // Time Display Grid
+            if (remainingTime.airingNow) {
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "📡 AIRING NOW / JUST RELEASED",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else if (!remainingTime.elapsed) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BannerTimeBox(value = remainingTime.days, label = "Days")
+                    BannerTimeBox(value = remainingTime.hours, label = "Hours")
+                    BannerTimeBox(value = remainingTime.minutes, label = "Mins")
+                    BannerTimeBox(value = remainingTime.seconds, label = "Secs")
                 }
             }
         }
