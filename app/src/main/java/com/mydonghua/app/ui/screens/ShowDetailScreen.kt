@@ -157,7 +157,7 @@ fun ShowDetailScreen(
                             Text("Next Episode Release", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(6.dp))
                             if (countdownTime.airingNow) {
-                                Text("📡 AIRING NOW / JUST RELEASED", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF00F2FE))
+                                Text("📡 AIRING NOW / JUST RELEASED", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                             } else if (!countdownTime.elapsed) {
                                 Text(
                                     text = "${countdownTime.days}d ${countdownTime.hours}h ${countdownTime.minutes}m ${countdownTime.seconds}s remaining",

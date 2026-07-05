@@ -177,7 +177,7 @@ fun HeroBanner(
                 .padding(12.dp)
                 .align(Alignment.TopEnd)
                 .background(
-                    Brush.linearGradient(colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))),
+                    Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF9D4EDD))),
                     RoundedCornerShape(8.dp)
                 )
                 .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -219,15 +219,15 @@ fun HeroBanner(
             if (remainingTime.airingNow) {
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFF00F2FE).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                        .border(1.dp, Color(0xFF00F2FE).copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = "📡 AIRING NOW / JUST RELEASED",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF00F2FE)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             } else if (!remainingTime.elapsed) {
@@ -259,7 +259,7 @@ private fun BannerTimeBox(value: Long, label: String) {
             text = String.format("%02d", value),
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF00F2FE)
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
             text = label,

@@ -121,7 +121,7 @@ fun ShowCard(
                                     Text(
                                         text = genre,
                                         fontSize = 10.sp,
-                                        color = Color(0xFF00F2FE),
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -138,7 +138,7 @@ fun ShowCard(
                         val statusBg = when (show.status) {
                             "completed" -> Color(0xFF2EA043).copy(alpha = 0.8f)
                             "stopped" -> Color(0xFFD32F2F).copy(alpha = 0.8f)
-                            else -> Color(0xFF00F2FE).copy(alpha = 0.8f)
+                            else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                         }
                         Box(
                             modifier = Modifier
@@ -225,8 +225,8 @@ fun ShowCard(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0x1100F2FE), RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFF00F2FE).copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -236,7 +236,7 @@ fun ShowCard(
                             text = btnText,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00F2FE)
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

@@ -108,7 +108,9 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        StarsBackground()
+                        if (settingsState.themeMode.lowercase() != "light") {
+                            StarsBackground()
+                        }
                         Scaffold(
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
