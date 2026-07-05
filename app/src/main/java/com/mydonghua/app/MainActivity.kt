@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .statusBarsPadding()
-                                            .padding(horizontal = 16.dp, vertical = 2.dp),
+                                            .padding(horizontal = 16.dp, vertical = 5.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -129,7 +129,7 @@ class MainActivity : ComponentActivity() {
                                                 painter = painterResource(id = R.mipmap.ic_launcher),
                                                 contentDescription = "App Icon",
                                                 modifier = Modifier
-                                                    .size(24.dp)
+                                                    .size(26.dp)
                                                     .clip(RoundedCornerShape(6.dp))
                                             )
 
@@ -138,13 +138,13 @@ class MainActivity : ComponentActivity() {
                                             Row {
                                                 Text(
                                                     text = "东画 ",
-                                                    fontSize = 15.sp,
+                                                    fontSize = 16.sp,
                                                     fontWeight = FontWeight.ExtraBold,
                                                     color = MaterialTheme.colorScheme.onBackground
                                                 )
                                                 Text(
                                                     text = "My Donghua",
-                                                    fontSize = 15.sp,
+                                                    fontSize = 16.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     style = androidx.compose.ui.text.TextStyle(
                                                         brush = Brush.linearGradient(
@@ -170,7 +170,7 @@ class MainActivity : ComponentActivity() {
                                                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
                                                     shape = RoundedCornerShape(6.dp)
                                                 )
-                                                .size(28.dp)
+                                                .size(30.dp)
                                         ) {
                                             Text(
                                                 text = "☰",
