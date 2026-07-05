@@ -255,10 +255,10 @@ private fun BannerTimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .width(46.dp)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .width(46.dp)
+            .padding(vertical = 6.dp)
     ) {
         Text(
             text = String.format("%02d", value),
