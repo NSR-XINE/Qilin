@@ -254,14 +254,14 @@ private fun BannerTimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp)
-            .width(42.dp)
+            .width(46.dp)
     ) {
         Text(
             text = String.format("%02d", value),
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.primary
         )
@@ -269,7 +269,7 @@ private fun BannerTimeBox(value: Long, label: String) {
             text = label,
             fontSize = 8.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
     }
 }
