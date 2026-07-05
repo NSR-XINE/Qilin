@@ -240,7 +240,7 @@ private fun BannerTimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(8.dp))
+            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
             .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp)
             .width(42.dp)
