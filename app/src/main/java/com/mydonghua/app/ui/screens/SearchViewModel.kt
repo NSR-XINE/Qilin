@@ -150,14 +150,14 @@ class SearchViewModel @Inject constructor(
         val q = query.trim()
         if (q.isEmpty()) return
         viewModelScope.launch {
-            val recentJson = settingsRepository.getSetting("recent_searches") ?: "[]"
+            val recentJson = settingsRepository.getSetting("recent_searches", "[]")
             val list = getRecentSearches(recentJson).toMutableList()
             list.removeIf { it.equals(q, ignoreCase = true) }
             list.add(0, q)
             val updated = list.take(10)
             val arr = JSONArray()
             updated.forEach { arr.put(it) }
-            settingsRepository.saveSetting("recent_searches", arr.toString())
+            settingsRepository.putSetting("recent_searches", arr.toString())
         }
     }
 
@@ -165,11 +165,11 @@ class SearchViewModel @Inject constructor(
         val q = query.trim().lowercase()
         if (q.isEmpty()) return
         viewModelScope.launch {
-            val freqJson = settingsRepository.getSetting("search_frequency") ?: "{}"
+            val freqJson = settingsRepository.getSetting("search_frequency", "{}")
             val obj = JSONObject(freqJson)
             val count = obj.optInt(q, 0)
             obj.put(q, count + 1)
-            settingsRepository.saveSetting("search_frequency", obj.toString())
+            settingsRepository.putSetting("search_frequency", obj.toString())
         }
     }
 

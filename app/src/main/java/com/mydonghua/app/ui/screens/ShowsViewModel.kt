@@ -38,7 +38,7 @@ class ShowsViewModel @Inject constructor(
                 showTitle = show?.title ?: "Unknown Show",
                 poster = show?.poster,
                 episodeNum = h.episodeNum,
-                watchedAt = h.watchedAt
+                watchedAt = h.watchedTimestamp
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

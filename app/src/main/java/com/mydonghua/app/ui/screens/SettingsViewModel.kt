@@ -39,18 +39,22 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         themePreference.themeModeFlow,
         themePreference.accentColorFlow,
-        themePreference.showBannerFlow,
-        themePreference.showContinueFlow,
-        themePreference.showRecentFlow,
-        themePreference.showScheduleFlow
-    ) { theme, accent, banner, cont, recent, schedule ->
+        combine(
+            themePreference.showBannerFlow,
+            themePreference.showContinueFlow,
+            themePreference.showRecentFlow,
+            themePreference.showScheduleFlow
+        ) { banner, cont, recent, schedule ->
+            Quadruple(banner, cont, recent, schedule)
+        }
+    ) { theme, accent, quad ->
         SettingsUiState(
             themeMode = theme,
             accentColor = accent,
-            showBanner = banner,
-            showContinue = cont,
-            showRecent = recent,
-            showSchedule = schedule
+            showBanner = quad.first,
+            showContinue = quad.second,
+            showRecent = quad.third,
+            showSchedule = quad.fourth
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -78,8 +82,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { themePreference.setShowSchedule(show) }
     }
 
-    fun exportBackup(context: Context): File? {
-        return try {
+    fun exportBackup(context: Context): File? = kotlinx.coroutines.runBlocking {
+        try {
             val showsList = showRepository.getAllShowsList()
             val watchHistory = watchHistoryRepository.getWatchHistoryList()
 
@@ -117,7 +121,7 @@ class SettingsViewModel @Inject constructor(
                 val obj = JSONObject().apply {
                     put("showId", h.showId)
                     put("episodeNum", h.episodeNum)
-                    put("watchedAt", h.watchedAt)
+                    put("watchedAt", h.watchedTimestamp)
                 }
                 historyArr.put(obj)
             }
@@ -223,7 +227,7 @@ class SettingsViewModel @Inject constructor(
                 }
                 editor.apply()
 
-                com.mydonghua.app.AlarmScheduler.rescheduleAlarms(context)
+                com.mydonghua.app.AlarmScheduler.rescheduleAllAfterBoot(context)
 
                 onSuccess("${importedShowsList.size} shows and ${watchHistory.length()} history logs imported successfully!")
             } catch (e: Exception) {
@@ -233,3 +237,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 }
+
+data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)
