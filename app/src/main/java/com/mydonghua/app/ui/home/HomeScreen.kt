@@ -1,0 +1,600 @@
+package com.mydonghua.app.ui.home
+
+import android.text.format.DateUtils
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import com.mydonghua.app.domain.model.CountdownCalculator
+import com.mydonghua.app.domain.model.CountdownTime
+import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.common.ShowCard
+import com.mydonghua.app.ui.screens.HomeViewModel
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.*
+
+@Composable
+fun HomeScreen(
+    viewModel: HomeViewModel,
+    onSearchClick: () -> Unit,
+    onShowClick: (String) -> Unit,
+    onWatchClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    var ticks by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            ticks++
+        }
+    }
+
+    var currentTimeString by remember { mutableStateOf("") }
+    LaunchedEffect(ticks) {
+        val sdf = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
+        val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
+        val now = Date()
+        currentTimeString = "${sdf.format(now)} (${dayFormat.format(now)})"
+    }
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(bottom = 80.dp)
+    ) {
+        // Logo Header
+        item(span = { GridItemSpan(2) }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(
+                                                Color(0xFF00F2FE),
+                                                Color(0xFF9D4EDD)
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "🐉",
+                                    fontSize = 16.sp,
+                                    color = Color.White
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Row {
+                                Text(
+                                    text = "东画 ",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = "My Donghua",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    style = androidx.compose.ui.text.TextStyle(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color(0xFF00F2FE),
+                                                Color(0xFF9D4EDD)
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = currentTimeString,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(start = 46.dp, top = 2.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clickable { onSearchClick() }
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🔍",
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // Hero Countdown Banner
+        if (state.showCountdownBanner && state.nextUpShow != null) {
+            item(span = { GridItemSpan(2) }) {
+                HeroBanner(
+                    show = state.nextUpShow!!,
+                    ticks = ticks,
+                    onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") },
+                    onBannerClick = { onShowClick(state.nextUpShow!!.id) }
+                )
+            }
+        }
+
+        // Continue Watching Section
+        if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
+            item(span = { GridItemSpan(2) }) {
+                SectionHeader(title = "⏳ Continue Watching")
+            }
+            item(span = { GridItemSpan(2) }) {
+                ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick)
+            }
+        }
+
+        // Recently Updated Section
+        if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
+            item(span = { GridItemSpan(2) }) {
+                SectionHeader(title = "🚀 Recently Updated")
+            }
+            item(span = { GridItemSpan(2) }) {
+                RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick)
+            }
+        }
+
+        // Weekly Schedule Section
+        if (state.showWeeklySchedule) {
+            item(span = { GridItemSpan(2) }) {
+                SectionHeader(title = "📅 Weekly Schedule")
+            }
+            item(span = { GridItemSpan(2) }) {
+                WeeklyScheduleSection(
+                    shows = state.allShows,
+                    onShowClick = onShowClick,
+                    onWatchClick = onWatchClick,
+                    viewModel = viewModel
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun HeroBanner(
+    show: Show,
+    ticks: Int,
+    onWatchClick: () -> Unit,
+    onBannerClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val targetMs = remember(show.id) { CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime) }
+    var remainingTime by remember(show.id) { mutableStateOf(CountdownCalculator.calculateTimeRemaining(targetMs)) }
+
+    LaunchedEffect(ticks) {
+        remainingTime = CountdownCalculator.calculateTimeRemaining(targetMs)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .height(200.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onBannerClick() }
+    ) {
+        // Poster Background
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(show.poster)
+                .crossfade(true)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .build(),
+            contentDescription = "Hero Banner",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        // Gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.95f))
+                    )
+                )
+        )
+
+        // Badge showing status
+        Box(
+            modifier = Modifier
+                .padding(12.dp)
+                .align(Alignment.TopEnd)
+                .background(
+                    Brush.linearGradient(colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))),
+                    RoundedCornerShape(8.dp)
+                )
+                .padding(horizontal = 10.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = "NEXT UP RELEASE",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        // Details Block
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = show.title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "Episode ${show.currentEp + 1} releasing on ${show.releaseDay} at ${show.releaseTime}",
+                fontSize = 12.sp,
+                color = Color.LightGray,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Time Display Grid
+            if (remainingTime.airingNow) {
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF00F2FE).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .border(1.dp, Color(0xFF00F2FE).copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "📡 AIRING NOW / JUST RELEASED",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF00F2FE)
+                    )
+                }
+            } else if (!remainingTime.elapsed) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BannerTimeBox(value = remainingTime.days, label = "Days")
+                    BannerTimeBox(value = remainingTime.hours, label = "Hours")
+                    BannerTimeBox(value = remainingTime.minutes, label = "Mins")
+                    BannerTimeBox(value = remainingTime.seconds, label = "Secs")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BannerTimeBox(value: Long, label: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .width(42.dp)
+    ) {
+        Text(
+            text = String.format("%02d", value),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFF00F2FE)
+        )
+        Text(
+            text = label,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White.copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 10.dp)
+    )
+}
+
+@Composable
+fun ContinueWatchingRow(
+    shows: List<Show>,
+    onShowClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(shows, key = { it.id }) { show ->
+            Card(
+                modifier = Modifier
+                    .width(140.dp)
+                    .clickable { onShowClick(show.id) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(show.poster)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = show.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Text(
+                            text = show.title,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Ep ${show.currentEp}",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                        if (show.totalEp > 0) {
+                            val ratio = show.currentEp.toFloat() / show.totalEp.toFloat()
+                            LinearProgressIndicator(
+                                progress = ratio.coerceIn(0f, 1f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp)
+                                    .height(3.dp)
+                                    .clip(RoundedCornerShape(1.5.dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecentlyUpdatedRow(
+    shows: List<Show>,
+    onShowClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(shows, key = { it.id }) { show ->
+            Card(
+                modifier = Modifier
+                    .width(110.dp)
+                    .clickable { onShowClick(show.id) },
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(130.dp)
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(show.poster)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = show.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Column(modifier = Modifier.padding(6.dp)) {
+                        Text(
+                            text = show.title,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val relativeTime = if (show.lastUpdated != null) {
+                            DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
+                        } else {
+                            ""
+                        }
+                        Text(
+                            text = relativeTime,
+                            fontSize = 8.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyScheduleSection(
+    shows: List<Show>,
+    onShowClick: (String) -> Unit,
+    onWatchClick: (String) -> Unit,
+    viewModel: HomeViewModel,
+    modifier: Modifier = Modifier
+) {
+    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+    val calendar = Calendar.getInstance()
+    val todayNum = calendar.get(Calendar.DAY_OF_WEEK)
+    val todayName = when (todayNum) {
+        Calendar.MONDAY -> "Monday"
+        Calendar.TUESDAY -> "Tuesday"
+        Calendar.WEDNESDAY -> "Wednesday"
+        Calendar.THURSDAY -> "Thursday"
+        Calendar.FRIDAY -> "Friday"
+        Calendar.SATURDAY -> "Saturday"
+        else -> "Sunday"
+    }
+
+    var selectedDay by remember { mutableStateOf(todayName) }
+
+    val filteredShows = remember(shows, selectedDay) {
+        shows.filter { it.status == "ongoing" && it.releaseDay == selectedDay }
+            .sortedWith(compareBy { it.releaseTime ?: "" })
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Day selector tabs
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(days) { day ->
+                val isSelected = day == selectedDay
+                val isToday = day == todayName
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary
+                            else if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.surface
+                        )
+                        .clickable { selectedDay = day }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = day.substring(0, 3) + if (isToday) " •" else "",
+                        fontSize = 12.sp,
+                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Schedule list
+        if (filteredShows.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No shows releasing on this day",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                filteredShows.forEach { show ->
+                    ShowCard(
+                        show = show,
+                        onWatchClick = onWatchClick,
+                        onEditClick = {},
+                        onDeleteClick = {},
+                        onFavoriteToggle = { viewModel.toggleFavorite(it) },
+                        onNotifyToggle = {},
+                        onEpIncrement = { viewModel.incrementEpisode(it) },
+                        onEpDecrement = { viewModel.decrementEpisode(it) }
+                    )
+                }
+            }
+        }
+    }
+}
