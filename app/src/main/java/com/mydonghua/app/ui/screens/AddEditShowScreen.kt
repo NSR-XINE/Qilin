@@ -364,7 +364,7 @@ fun AddEditShowScreen(
                         alarmRequestCode = editingShow?.alarmRequestCode ?: Math.abs(UUID.randomUUID().toString().hashCode()),
                         genres = genres.takeIf { it.isNotEmpty() },
                         studio = studio.takeIf { it.isNotEmpty() },
-                        releaseYear = releaseYear.toIntOrNull(),
+                        releaseYear = releaseYear.toIntOrNull() ?: 0,
                         language = language.takeIf { it.isNotEmpty() },
                         collectionId = collectionId.takeIf { it.isNotEmpty() }
                     )

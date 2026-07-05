@@ -56,7 +56,7 @@ object PosterFetchService {
                 AutoFillDetails(
                     titleZh = titleZh.takeIf { it.isNotEmpty() && it != "null" },
                     synopsis = synopsis.takeIf { it.isNotEmpty() && it != "null" },
-                    poster = imageUrl.takeIf { it.isNotEmpty() && it != "null" },
+                    poster = imageUrl?.takeIf { it.isNotEmpty() && it != "null" },
                     totalEp = episodes,
                     status = status
                 )

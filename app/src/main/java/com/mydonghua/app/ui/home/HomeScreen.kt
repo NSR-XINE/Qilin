@@ -586,12 +586,13 @@ fun WeeklyScheduleSection(
                     ShowCard(
                         show = show,
                         onWatchClick = onWatchClick,
-                        onEditClick = {},
+                        onEditClick = { onShowClick(it.id) },
                         onDeleteClick = {},
                         onFavoriteToggle = { viewModel.toggleFavorite(it) },
                         onNotifyToggle = {},
                         onEpIncrement = { viewModel.incrementEpisode(it) },
-                        onEpDecrement = { viewModel.decrementEpisode(it) }
+                        onEpDecrement = { viewModel.decrementEpisode(it) },
+                        onCardClick = { onShowClick(it.id) }
                     )
                 }
             }
