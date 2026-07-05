@@ -52,8 +52,44 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
+            var showExitDialog by remember { mutableStateOf(false) }
+
+            androidx.activity.compose.BackHandler(enabled = true) {
+                if (currentRoute != "home") {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                } else {
+                    showExitDialog = true
+                }
+            }
 
             MyDonghuaTheme(themeMode = state.themeMode) {
+                if (showExitDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showExitDialog = false },
+                        title = { Text("Exit App") },
+                        text = { Text("Are you sure you want to exit?") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showExitDialog = false
+                                    finish()
+                                }
+                            ) {
+                                Text("Yes")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showExitDialog = false }
+                            ) {
+                                Text("No")
+                            }
+                        }
+                    )
+                }
                 Scaffold(
                     bottomBar = {
                         NavigationBar(
