@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels()
     private val showsViewModel: ShowsViewModel by viewModels()
     private val searchViewModel: SearchViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +73,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val state by homeViewModel.uiState.collectAsState()
+            val settingsState by settingsViewModel.uiState.collectAsState()
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
@@ -88,7 +90,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MyDonghuaTheme(themeMode = state.themeMode) {
+            MyDonghuaTheme(themeMode = settingsState.themeMode, accentColor = settingsState.accentColor) {
                 if (showExitDialog) {
                     AlertDialog(
                         onDismissRequest = { showExitDialog = false },
@@ -195,6 +197,9 @@ class MainActivity : ComponentActivity() {
                                 viewModel = homeViewModel,
                                 onSearchClick = {
                                     navController.navigate("search")
+                                },
+                                onSettingsClick = {
+                                    navController.navigate("settings")
                                 },
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
@@ -322,6 +327,12 @@ class MainActivity : ComponentActivity() {
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                viewModel = settingsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }

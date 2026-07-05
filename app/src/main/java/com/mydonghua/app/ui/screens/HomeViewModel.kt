@@ -27,12 +27,15 @@ data class HomeUiState(
     val isLoading: Boolean = false
 )
 
+import com.mydonghua.app.data.pref.ThemePreference
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val showRepository: ShowRepository,
     private val settingsRepository: SettingsRepository,
     private val watchHistoryRepository: WatchHistoryRepository,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val themePreference: ThemePreference
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
@@ -52,17 +55,17 @@ class HomeViewModel @Inject constructor(
 
     private fun loadHomeData() {
         val settingsFlow = combine(
-            settingsRepository.getSettingFlow("show_countdown_banner", "true"),
-            settingsRepository.getSettingFlow("show_continue_watching", "true"),
-            settingsRepository.getSettingFlow("show_recently_updated", "true"),
-            settingsRepository.getSettingFlow("show_weekly_schedule", "true"),
-            settingsRepository.getSettingFlow("app_theme", "dark")
+            themePreference.showBannerFlow,
+            themePreference.showContinueFlow,
+            themePreference.showRecentFlow,
+            themePreference.showScheduleFlow,
+            themePreference.themeModeFlow
         ) { banner, cont, recent, schedule, theme ->
             DashboardSettings(
-                showBanner = banner.toBoolean(),
-                showContinue = cont.toBoolean(),
-                showRecent = recent.toBoolean(),
-                showSchedule = schedule.toBoolean(),
+                showBanner = banner,
+                showContinue = cont,
+                showRecent = recent,
+                showSchedule = schedule,
                 theme = theme
             )
         }
@@ -142,5 +145,21 @@ class HomeViewModel @Inject constructor(
             )
             showRepository.insertOrUpdateShow(updated)
         }
+    }
+
+    fun setShowBanner(show: Boolean) {
+        viewModelScope.launch { themePreference.setShowBanner(show) }
+    }
+
+    fun setShowContinue(show: Boolean) {
+        viewModelScope.launch { themePreference.setShowContinue(show) }
+    }
+
+    fun setShowRecent(show: Boolean) {
+        viewModelScope.launch { themePreference.setShowRecent(show) }
+    }
+
+    fun setShowSchedule(show: Boolean) {
+        viewModelScope.launch { themePreference.setShowSchedule(show) }
     }
 }

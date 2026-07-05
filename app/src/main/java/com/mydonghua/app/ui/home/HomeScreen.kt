@@ -42,6 +42,7 @@ import java.util.*
 fun HomeScreen(
     viewModel: HomeViewModel,
     onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onShowClick: (String) -> Unit,
     onWatchClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -139,19 +140,36 @@ fun HomeScreen(
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .clickable { onSearchClick() }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "🔍",
-                            fontSize = 18.sp
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clickable { onSearchClick() }
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "🔍",
+                                fontSize = 18.sp
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clickable { onSettingsClick() }
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "⚙️",
+                                fontSize = 18.sp
+                            )
+                        }
                     }
                 }
             }
