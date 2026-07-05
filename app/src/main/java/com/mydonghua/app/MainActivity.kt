@@ -448,125 +448,125 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                    }
+                }
 
-                        // Right Drawer Menu
-                        if (isDrawerOpen) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.5f))
-                                    .clickable { isDrawerOpen = false }
+                // Right Drawer Menu
+                if (isDrawerOpen) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .clickable { isDrawerOpen = false }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .fillMaxHeight()
+                                .width(280.dp)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clickable(enabled = false) {}
+                                .statusBarsPadding()
+                                .navigationBarsPadding()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .align(Alignment.CenterEnd)
-                                        .fillMaxHeight()
-                                        .width(280.dp)
-                                        .background(MaterialTheme.colorScheme.surface)
-                                        .clickable(enabled = false) {}
-                                        .statusBarsPadding()
-                                        .navigationBarsPadding()
-                                        .padding(20.dp),
-                                    verticalArrangement = Arrangement.SpaceBetween
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = "🐉",
-                                                    fontSize = 20.sp,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Text(
-                                                    text = "Menu",
-                                                    fontSize = 18.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                            }
-
-                                            IconButton(onClick = { isDrawerOpen = false }) {
-                                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurface)
-                                            }
-                                        }
-
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        DrawerItem(
-                                            icon = Icons.Default.BarChart,
-                                            label = "Statistics",
-                                            iconColor = MaterialTheme.colorScheme.primary,
-                                            onClick = {
-                                                isDrawerOpen = false
-                                                navController.navigate("stats")
-                                            }
+                                        Text(
+                                            text = "🐉",
+                                            fontSize = 20.sp,
+                                            color = MaterialTheme.colorScheme.primary
                                         )
-                                        DrawerItem(
-                                            icon = Icons.Default.CalendarMonth,
-                                            label = "Calendar",
-                                            iconColor = Color(0xFF9D4EDD),
-                                            onClick = {
-                                                isDrawerOpen = false
-                                                navController.navigate("calendar")
-                                            }
-                                        )
-                                        DrawerItem(
-                                            icon = Icons.Default.Layers,
-                                            label = "Collections",
-                                            iconColor = MaterialTheme.colorScheme.primary,
-                                            onClick = {
-                                                isDrawerOpen = false
-                                                navController.navigate("collections")
-                                            }
-                                        )
-                                        DrawerItem(
-                                            icon = Icons.Default.History,
-                                            label = "Watch History",
-                                            iconColor = Color(0xFF9D4EDD),
-                                            onClick = {
-                                                isDrawerOpen = false
-                                                navController.navigate("history")
-                                            }
-                                        )
-                                        DrawerItem(
-                                            icon = Icons.Default.Forest,
-                                            label = "Seasonal View",
-                                            iconColor = MaterialTheme.colorScheme.primary,
-                                            onClick = {
-                                                isDrawerOpen = false
-                                            }
-                                        )
-
-                                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-
-                                        DrawerItem(
-                                            icon = Icons.Default.Settings,
-                                            label = "Settings",
-                                            iconColor = MaterialTheme.colorScheme.primary,
-                                            onClick = {
-                                                isDrawerOpen = false
-                                                navController.navigate("settings")
-                                            }
+                                        Text(
+                                            text = "Menu",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
 
-                                    Text(
-                                        text = "Last sync: just now",
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                                    )
+                                    IconButton(onClick = { isDrawerOpen = false }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurface)
+                                    }
                                 }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                DrawerItem(
+                                    icon = Icons.Default.BarChart,
+                                    label = "Statistics",
+                                    iconColor = MaterialTheme.colorScheme.primary,
+                                    onClick = {
+                                        isDrawerOpen = false
+                                        navController.navigate("stats")
+                                    }
+                                )
+                                DrawerItem(
+                                    icon = Icons.Default.CalendarMonth,
+                                    label = "Calendar",
+                                    iconColor = Color(0xFF9D4EDD),
+                                    onClick = {
+                                        isDrawerOpen = false
+                                        navController.navigate("calendar")
+                                    }
+                                )
+                                DrawerItem(
+                                    icon = Icons.Default.Layers,
+                                    label = "Collections",
+                                    iconColor = MaterialTheme.colorScheme.primary,
+                                    onClick = {
+                                        isDrawerOpen = false
+                                        navController.navigate("collections")
+                                    }
+                                )
+                                DrawerItem(
+                                    icon = Icons.Default.History,
+                                    label = "Watch History",
+                                    iconColor = Color(0xFF9D4EDD),
+                                    onClick = {
+                                        isDrawerOpen = false
+                                        navController.navigate("history")
+                                    }
+                                )
+                                DrawerItem(
+                                    icon = Icons.Default.Forest,
+                                    label = "Seasonal View",
+                                    iconColor = MaterialTheme.colorScheme.primary,
+                                    onClick = {
+                                        isDrawerOpen = false
+                                    }
+                                )
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
+                                DrawerItem(
+                                    icon = Icons.Default.Settings,
+                                    label = "Settings",
+                                    iconColor = MaterialTheme.colorScheme.primary,
+                                    onClick = {
+                                        isDrawerOpen = false
+                                        navController.navigate("settings")
+                                    }
+                                )
                             }
+
+                            Text(
+                                text = "Last sync: just now",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
                         }
                     }
                 }
