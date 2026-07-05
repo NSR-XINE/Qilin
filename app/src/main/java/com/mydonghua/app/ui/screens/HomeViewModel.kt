@@ -39,17 +39,36 @@ class HomeViewModel @Inject constructor(
         loadHomeData()
     }
 
+    private data class DashboardSettings(
+        val showBanner: Boolean,
+        val showContinue: Boolean,
+        val showRecent: Boolean,
+        val showSchedule: Boolean,
+        val theme: String
+    )
+
     private fun loadHomeData() {
-        combine(
-            showRepository.getAllShows(),
+        val settingsFlow = combine(
             settingsRepository.getSettingFlow("show_countdown_banner", "true"),
             settingsRepository.getSettingFlow("show_continue_watching", "true"),
             settingsRepository.getSettingFlow("show_recently_updated", "true"),
             settingsRepository.getSettingFlow("show_weekly_schedule", "true"),
-            settingsRepository.getSettingFlow("app_theme", "dark"),
-            watchHistoryRepository.getWatchHistory()
-        ) { shows, banner, cont, recent, schedule, theme, history ->
-            
+            settingsRepository.getSettingFlow("app_theme", "dark")
+        ) { banner, cont, recent, schedule, theme ->
+            DashboardSettings(
+                showBanner = banner.toBoolean(),
+                showContinue = cont.toBoolean(),
+                showRecent = recent.toBoolean(),
+                showSchedule = schedule.toBoolean(),
+                theme = theme
+            )
+        }
+
+        combine(
+            showRepository.getAllShows(),
+            watchHistoryRepository.getWatchHistory(),
+            settingsFlow
+        ) { shows, history, settings ->
             val nextUp = CountdownCalculator.getNextUpShow(shows)
 
             val continueWatchingList = history
@@ -67,11 +86,11 @@ class HomeViewModel @Inject constructor(
                 continueWatching = continueWatchingList,
                 recentlyUpdated = recentlyUpdatedList,
                 allShows = shows,
-                showCountdownBanner = banner.toBoolean(),
-                showContinueWatching = cont.toBoolean(),
-                showRecentlyUpdated = recent.toBoolean(),
-                showWeeklySchedule = schedule.toBoolean(),
-                themeMode = theme,
+                showCountdownBanner = settings.showBanner,
+                showContinueWatching = settings.showContinue,
+                showRecentlyUpdated = settings.showRecent,
+                showWeeklySchedule = settings.showSchedule,
+                themeMode = settings.theme,
                 isLoading = false
             )
         }.onEach { state ->
