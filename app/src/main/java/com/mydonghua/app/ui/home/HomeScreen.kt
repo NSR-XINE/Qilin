@@ -143,7 +143,7 @@ fun HeroBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .height(230.dp)
+            .height(260.dp)
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBannerClick() }
     ) {
