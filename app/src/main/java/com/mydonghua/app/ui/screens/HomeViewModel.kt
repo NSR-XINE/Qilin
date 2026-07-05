@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.mydonghua.app.data.pref.ThemePreference
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -26,8 +27,6 @@ data class HomeUiState(
     val themeMode: String = "dark",
     val isLoading: Boolean = false
 )
-
-import com.mydonghua.app.data.pref.ThemePreference
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
