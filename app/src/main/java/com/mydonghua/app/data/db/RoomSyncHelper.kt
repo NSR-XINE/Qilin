@@ -87,7 +87,7 @@ object RoomSyncHelper {
 
     @JvmStatic
     fun addWatchHistory(context: Context, showId: String, episodeNum: Int) = runBlocking {
-        getDb(context).showDao().insertHistory(
+        getDb(context).watchHistoryDao().insertHistory(
             WatchHistoryEntity(
                 showId = showId,
                 episodeNum = episodeNum,
@@ -98,7 +98,7 @@ object RoomSyncHelper {
 
     @JvmStatic
     fun getWatchHistory(context: Context, limit: Int): String = runBlocking {
-        val list = getDb(context).showDao().getWatchHistoryLimited(limit)
+        val list = getDb(context).watchHistoryDao().getWatchHistoryLimited(limit)
         val shows = getDb(context).showDao().getAllShowsList()
         val arr = JSONArray()
         list.forEach { hist ->
@@ -120,7 +120,7 @@ object RoomSyncHelper {
     fun getStats(context: Context): String = runBlocking {
         val db = getDb(context)
         val shows = db.showDao().getAllShowsList()
-        val history = db.showDao().getWatchHistoryList()
+        val history = db.watchHistoryDao().getWatchHistoryList()
 
         val total = shows.size
         val airing = shows.count { it.status == "ongoing" }
@@ -153,12 +153,12 @@ object RoomSyncHelper {
 
     @JvmStatic
     fun saveSetting(context: Context, key: String, value: String) = runBlocking {
-        getDb(context).showDao().insertSetting(SettingEntity(key, value))
+        getDb(context).settingsDao().insertSetting(SettingEntity(key, value))
     }
 
     @JvmStatic
     fun getSetting(context: Context, key: String, defaultValue: String): String = runBlocking {
-        getDb(context).showDao().getSetting(key)?.value ?: defaultValue
+        getDb(context).settingsDao().getSetting(key)?.value ?: defaultValue
     }
 
     private fun jsonToShowEntity(json: JSONObject): ShowEntity {
