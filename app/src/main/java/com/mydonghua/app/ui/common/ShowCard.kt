@@ -86,7 +86,9 @@ fun ShowCard(
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .build(),
                     contentDescription = show.title,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(50.dp),
                     contentScale = ContentScale.Crop
                 )
 
