@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -146,7 +147,7 @@ fun HeroBanner(
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBannerClick() }
     ) {
-        // Poster Background
+        // Poster Background with Blur Effect
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(show.poster)
@@ -154,7 +155,9 @@ fun HeroBanner(
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build(),
             contentDescription = "Hero Banner",
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(20.dp),
             contentScale = ContentScale.Crop
         )
 

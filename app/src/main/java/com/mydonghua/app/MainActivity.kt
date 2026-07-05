@@ -34,6 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.work.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.blur
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.mydonghua.app.ui.home.HomeScreen
@@ -110,7 +111,7 @@ class MainActivity : ComponentActivity() {
                         StarsBackground()
                         Scaffold(
                             containerColor = Color.Transparent,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().blur(if (isDrawerOpen) 12.dp else 0.dp),
                             topBar = {
                                 if (showGlobalHeader) {
                                     Row(
