@@ -10,6 +10,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class WatchHistoryItem(
+    val showId: String,
+    val showTitle: String,
+    val poster: String?,
+    val episodeNum: Int,
+    val watchedAt: Long
+)
+
 @HiltViewModel
 class ShowsViewModel @Inject constructor(
     private val showRepository: ShowRepository,
@@ -18,6 +26,29 @@ class ShowsViewModel @Inject constructor(
 
     val allShows: StateFlow<List<Show>> = showRepository.getAllShows()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val history: StateFlow<List<WatchHistoryItem>> = combine(
+        watchHistoryRepository.getWatchHistory(),
+        allShows
+    ) { historyList, showsList ->
+        historyList.map { h ->
+            val show = showsList.find { it.id == h.showId }
+            WatchHistoryItem(
+                showId = h.showId,
+                showTitle = show?.title ?: "Unknown Show",
+                poster = show?.poster,
+                episodeNum = h.episodeNum,
+                watchedAt = h.watchedAt
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val collections: StateFlow<Map<String, List<Show>>> = allShows
+        .map { shows ->
+            shows.filter { !it.collectionId.isNullOrBlank() }
+                .groupBy { it.collectionId!! }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val airingShows: StateFlow<List<Show>> = allShows
         .map { list -> list.filter { it.status == "ongoing" } }

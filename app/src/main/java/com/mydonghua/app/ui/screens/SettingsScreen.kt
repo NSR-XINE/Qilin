@@ -29,6 +29,10 @@ import androidx.core.content.FileProvider
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToStats: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToCollections: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -184,6 +188,25 @@ fun SettingsScreen(
                 )
             }
 
+            // App Tools & Features
+            SectionHeader("App Tools & Features")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                SettingsActionItem("📊 Detailed Stats & Analytics", onClick = onNavigateToStats)
+                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                SettingsActionItem("📅 Scheduled Releases Calendar", onClick = onNavigateToCalendar)
+                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                SettingsActionItem("🕒 Date-Grouped Watch History", onClick = onNavigateToHistory)
+                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                SettingsActionItem("📂 Grouped Show Collections", onClick = onNavigateToCollections)
+            }
+
             // Backup & Import/Export
             SectionHeader("Data Backups Management")
             Row(
@@ -259,5 +282,23 @@ private fun TogglePreferenceItem(
                 checkedTrackColor = MaterialTheme.colorScheme.primary
             )
         )
+    }
+}
+
+@Composable
+private fun SettingsActionItem(
+    title: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text("→", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
     }
 }

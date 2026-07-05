@@ -333,6 +333,40 @@ class MainActivity : ComponentActivity() {
                         composable("settings") {
                             SettingsScreen(
                                 viewModel = settingsViewModel,
+                                onNavigateBack = { navController.popBackStack() },
+                                onNavigateToStats = { navController.navigate("stats") },
+                                onNavigateToCalendar = { navController.navigate("calendar") },
+                                onNavigateToHistory = { navController.navigate("history") },
+                                onNavigateToCollections = { navController.navigate("collections") }
+                            )
+                        }
+                        composable("stats") {
+                            StatsScreen(
+                                showsViewModel = showsViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("calendar") {
+                            CalendarScreen(
+                                showsViewModel = showsViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("history") {
+                            HistoryScreen(
+                                showsViewModel = showsViewModel,
+                                onShowClick = { showId ->
+                                    navController.navigate("show_detail/$showId")
+                                },
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("collections") {
+                            CollectionsScreen(
+                                showsViewModel = showsViewModel,
+                                onShowClick = { showId ->
+                                    navController.navigate("show_detail/$showId")
+                                },
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
