@@ -5,7 +5,6 @@ import androidx.room.Room
 import com.mydonghua.app.data.db.AppDatabase
 import com.mydonghua.app.data.db.ShowDao
 import dagger.Module
-import dagger.annotation.Beta
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
