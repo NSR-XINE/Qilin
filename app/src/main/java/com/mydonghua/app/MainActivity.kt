@@ -58,6 +58,8 @@ class MainActivity : ComponentActivity() {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
             var showExitDialog by remember { mutableStateOf(false) }
+            var isDrawerOpen by remember { mutableStateOf(false) }
+            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -104,6 +106,85 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
+                            topBar = {
+                                if (showGlobalHeader) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .statusBarsPadding()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(
+                                                        brush = Brush.linearGradient(
+                                                            colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
+                                                        ),
+                                                        shape = RoundedCornerShape(8.dp)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = "🐉",
+                                                    fontSize = 18.sp,
+                                                    color = Color.White
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.width(10.dp))
+
+                                            Row {
+                                                Text(
+                                                    text = "东画 ",
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = MaterialTheme.colorScheme.onBackground
+                                                )
+                                                Text(
+                                                    text = "My Donghua",
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = androidx.compose.ui.text.TextStyle(
+                                                        brush = Brush.linearGradient(
+                                                            colors = listOf(
+                                                                Color(0xFF00F2FE),
+                                                                Color(0xFF9D4EDD)
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            }
+                                        }
+
+                                        IconButton(
+                                            onClick = { isDrawerOpen = true },
+                                            modifier = Modifier
+                                                .background(
+                                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                                .border(
+                                                    width = 1.dp,
+                                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                                .size(40.dp)
+                                        ) {
+                                            Text(
+                                                text = "☰",
+                                                fontSize = 20.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
+                            },
                             bottomBar = {
                                 Box(
                                     modifier = Modifier
@@ -359,6 +440,126 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+
+                        // Right Drawer Menu
+                        if (isDrawerOpen) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.5f))
+                                    .clickable { isDrawerOpen = false }
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .fillMaxHeight()
+                                        .width(280.dp)
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .clickable(enabled = false) {}
+                                        .statusBarsPadding()
+                                        .navigationBarsPadding()
+                                        .padding(20.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Text(
+                                                    text = "🐉",
+                                                    fontSize = 20.sp,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Text(
+                                                    text = "Menu",
+                                                    fontSize = 18.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+
+                                            IconButton(onClick = { isDrawerOpen = false }) {
+                                                Text("✕", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        DrawerItem(
+                                            icon = "📊",
+                                            label = "Statistics",
+                                            iconColor = MaterialTheme.colorScheme.primary,
+                                            onClick = {
+                                                isDrawerOpen = false
+                                                navController.navigate("stats")
+                                            }
+                                        )
+                                        DrawerItem(
+                                            icon = "📅",
+                                            label = "Calendar",
+                                            iconColor = Color(0xFF9D4EDD),
+                                            onClick = {
+                                                isDrawerOpen = false
+                                                navController.navigate("calendar")
+                                            }
+                                        )
+                                        DrawerItem(
+                                            icon = "📚",
+                                            label = "Collections",
+                                            iconColor = MaterialTheme.colorScheme.primary,
+                                            onClick = {
+                                                isDrawerOpen = false
+                                                navController.navigate("collections")
+                                            }
+                                        )
+                                        DrawerItem(
+                                            icon = "⏱️",
+                                            label = "Watch History",
+                                            iconColor = Color(0xFF9D4EDD),
+                                            onClick = {
+                                                isDrawerOpen = false
+                                                navController.navigate("history")
+                                            }
+                                        )
+                                        DrawerItem(
+                                            icon = "🌲",
+                                            label = "Seasonal View",
+                                            iconColor = MaterialTheme.colorScheme.primary,
+                                            onClick = {
+                                                isDrawerOpen = false
+                                            }
+                                        )
+
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
+                                        DrawerItem(
+                                            icon = "⚙️",
+                                            label = "Settings",
+                                            iconColor = MaterialTheme.colorScheme.primary,
+                                            onClick = {
+                                                isDrawerOpen = false
+                                                navController.navigate("settings")
+                                            }
+                                        )
+                                    }
+
+                                    Text(
+                                        text = "Last sync: just now",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -487,6 +688,31 @@ private fun RowScope.BottomNavItem(
             fontSize = 9.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+private fun DrawerItem(
+    icon: String,
+    label: String,
+    iconColor: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(text = icon, fontSize = 18.sp, color = iconColor)
+        Text(
+            text = label,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

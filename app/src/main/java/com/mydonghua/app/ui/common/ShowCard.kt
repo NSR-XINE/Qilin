@@ -16,8 +16,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -57,24 +60,20 @@ fun ShowCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable { onCardClick(show) },
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
         ),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            // Poster Image
+        Column {
+            // 1. Banner Header (180.dp tall)
             Box(
                 modifier = Modifier
-                    .size(width = 90.dp, height = 135.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .fillMaxWidth()
+                    .height(180.dp)
                     .background(Color.Black.copy(alpha = 0.2f))
             ) {
                 AsyncImage(
@@ -88,95 +87,207 @@ fun ShowCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+
+                // Dark gradient overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
+                            )
+                        )
+                )
+
+                // Badges & Genres on top left
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (!show.genres.isNullOrEmpty()) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            show.genres.split(",").map { it.trim() }.filter { it.isNotEmpty() }.take(3).forEach { genre ->
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = genre,
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF00F2FE),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        val statusText = when (show.status) {
+                            "completed" -> "COMPLETED"
+                            "stopped" -> "HIATUS"
+                            else -> "AIRING"
+                        }
+                        val statusBg = when (show.status) {
+                            "completed" -> Color(0xFF2EA043).copy(alpha = 0.8f)
+                            "stopped" -> Color(0xFFD32F2F).copy(alpha = 0.8f)
+                            else -> Color(0xFF00F2FE).copy(alpha = 0.8f)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .background(statusBg, RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = statusText,
+                                fontSize = 10.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        val todayName = remember {
+                            java.text.SimpleDateFormat("EEEE", java.util.Locale.getDefault()).format(java.util.Date())
+                        }
+                        if (show.status == "ongoing" && show.releaseDay == todayName) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFF9D4EDD).copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "AIRS TODAY",
+                                    fontSize = 10.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Details Column
+            // 2. Card Body
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                // Title and Chinese Title
                 Text(
                     text = show.title,
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = MaterialTheme.colorScheme.onBackground
                 )
+
                 if (!show.titleZh.isNullOrEmpty()) {
                     Text(
                         text = show.titleZh,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Schedule release text or Complete State
+                // Airing now / status button
                 if (show.status == "completed") {
-                    Text(
-                        text = "✅ Completed Series",
-                        fontSize = 11.sp,
-                        color = Color(0xFF2EA043),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0x112EA043), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF2EA043).copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text("✅", fontSize = 12.sp)
+                            Text(
+                                text = "Series Completed",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2EA043)
+                            )
+                        }
+                    }
                 } else {
-                    val timeStr = if (!show.releaseTime.isNullOrEmpty()) " at ${show.releaseTime}" else ""
-                    Text(
-                        text = "📅 ${show.releaseDay ?: "Sunday"}$timeStr",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0x1100F2FE), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF00F2FE).copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val isAiringNow = countdownTime.airingNow
+                        val btnText = if (isAiringNow) "AIRING NOW / RELEASED" else "AIRING NOW"
+                        Text(
+                            text = btnText,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF00F2FE)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Progress Indicator & Episode controller
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Column {
-                        val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
-                        Text(
-                            text = "Episode: ${show.currentEp}$totalStr",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        if (show.totalEp > 0) {
-                            val ratio = show.currentEp.toFloat() / show.totalEp.toFloat()
-                            LinearProgressIndicator(
-                                progress = ratio.coerceIn(0f, 1f),
-                                modifier = Modifier
-                                    .width(80.dp)
-                                    .padding(top = 4.dp)
-                                    .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                            )
-                        }
+                    Text("📅", fontSize = 12.sp)
+                    val scheduleText = if (show.status == "completed") {
+                        "Series Complete"
+                    } else {
+                        "${show.releaseDay ?: "Sunday"}s at ${show.releaseTime ?: "10:00"}"
                     }
+                    Text(
+                        text = scheduleText,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
 
-                    // Increment & Decrement Buttons
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Watched Progress controller box
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            append("Watched: ")
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                                append("${show.currentEp}")
+                            }
+                            append(" episodes")
+                        },
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         IconButton(
                             onClick = { onEpDecrement(show) },
                             modifier = Modifier
                                 .size(28.dp)
-                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
                         ) {
                             Text("-", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                         }
@@ -185,114 +296,91 @@ fun ShowCard(
                             onClick = { onEpIncrement(show) },
                             modifier = Modifier
                                 .size(28.dp)
-                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
                         ) {
                             Text("+", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Countdown Ticker
-                if (show.status == "ongoing") {
-                    if (countdownTime.airingNow) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0x1A00F2FE), RoundedCornerShape(6.dp))
-                                .padding(vertical = 4.dp, horizontal = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "🚀 AIRING NOW / RELEASED",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF00F2FE)
-                            )
-                        }
-                    } else if (!countdownTime.elapsed) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            CountdownBox(value = countdownTime.days, label = "D")
-                            CountdownBox(value = countdownTime.hours, label = "H")
-                            CountdownBox(value = countdownTime.minutes, label = "M")
-                            CountdownBox(value = countdownTime.seconds, label = "S")
-                        }
-                    }
+                if (!show.notes.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = show.notes,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-            }
-        }
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f))
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f))
+                Spacer(modifier = Modifier.height(8.dp))
 
-        // Toolbars and Watch Actions
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(
-                    onClick = { onWatchClick(show.watchUrl ?: "") },
-                    contentPadding = PaddingValues(0.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("▶️", fontSize = 12.sp)
-                        Text("Stream", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-
-                TextButton(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            val url = show.countdownUrl
-                            val searchUrl = if (!url.isNullOrEmpty() && (url.startsWith("http://") || url.startsWith("https://"))) {
-                                url
-                            } else {
-                                "https://www.google.com/search?q=site:animecountdown.com+" + java.net.URLEncoder.encode(show.title, "UTF-8")
+                        TextButton(
+                            onClick = { onWatchClick(show.watchUrl ?: "") },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text("▶️", fontSize = 12.sp)
+                                Text("Stream", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            data = Uri.parse(searchUrl)
                         }
-                        context.startActivity(intent)
-                    },
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text("⏳", fontSize = 12.sp)
-                        Text("Countdown", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9D4EDD))
-                    }
-                }
-            }
 
-            // Toolbar Controls
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                IconButton(onClick = { onNotifyToggle(show) }, modifier = Modifier.size(32.dp)) {
-                    Text(if (show.alarmRequestCode != null && show.alarmRequestCode!! > 0) "🔔" else "🔕", fontSize = 14.sp)
-                }
-                IconButton(onClick = { onEditClick(show) }, modifier = Modifier.size(32.dp)) {
-                    Text("✏️", fontSize = 14.sp)
-                }
-                IconButton(onClick = { onFavoriteToggle(show) }, modifier = Modifier.size(32.dp)) {
-                    Text(if (show.isFavorite == 1) "❤️" else "🖤", fontSize = 14.sp)
-                }
-                IconButton(onClick = { onDeleteClick(show) }, modifier = Modifier.size(32.dp)) {
-                    Text("🗑️", fontSize = 14.sp)
+                        TextButton(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    val url = show.countdownUrl
+                                    val searchUrl = if (!url.isNullOrEmpty() && (url.startsWith("http://") || url.startsWith("https://"))) {
+                                        url
+                                    } else {
+                                        "https://www.google.com/search?q=site:animecountdown.com+" + java.net.URLEncoder.encode(show.title, "UTF-8")
+                                    }
+                                    data = Uri.parse(searchUrl)
+                                }
+                                context.startActivity(intent)
+                            },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text("⏳", fontSize = 12.sp)
+                                Text("Countdown", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9D4EDD))
+                            }
+                        }
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        IconButton(onClick = { onNotifyToggle(show) }, modifier = Modifier.size(32.dp)) {
+                            Text(if (show.alarmRequestCode != null && show.alarmRequestCode!! > 0) "🔔" else "🔕", fontSize = 14.sp)
+                        }
+                        IconButton(onClick = { onEditClick(show) }, modifier = Modifier.size(32.dp)) {
+                            Text("✏️", fontSize = 14.sp)
+                        }
+                        IconButton(onClick = { onFavoriteToggle(show) }, modifier = Modifier.size(32.dp)) {
+                            Text(if (show.isFavorite == 1) "❤️" else "🖤", fontSize = 14.sp)
+                        }
+                        IconButton(onClick = { onDeleteClick(show) }, modifier = Modifier.size(32.dp)) {
+                            Text("🗑️", fontSize = 14.sp)
+                        }
+                    }
                 }
             }
         }

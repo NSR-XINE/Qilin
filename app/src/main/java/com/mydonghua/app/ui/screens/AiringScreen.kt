@@ -17,7 +17,8 @@ import com.mydonghua.app.ui.common.ShowCard
 
 import androidx.compose.ui.graphics.Color
 
-@OptIn(ExperimentalMaterial3Api::class)
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 @Composable
 fun AiringScreen(
     viewModel: ShowsViewModel,
@@ -30,17 +31,6 @@ fun AiringScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Ongoing Broadcasts",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                }
-            )
-        },
         modifier = modifier
     ) { paddingValues ->
         if (shows.isEmpty()) {
@@ -62,6 +52,38 @@ fun AiringScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Airing",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        val showCountText = if (shows.size == 1) "1 show" else "${shows.size} shows"
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = showCountText,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+
                 items(shows, key = { it.id }) { show ->
                     ShowCard(
                         show = show,
