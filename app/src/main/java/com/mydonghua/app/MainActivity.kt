@@ -37,28 +37,6 @@ import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @JvmField
-    var webView: android.webkit.WebView? = null
-
-    private var fileChooserCallback: android.webkit.ValueCallback<Array<android.net.Uri>>? = null
-
-    fun setFileChooserCallback(callback: android.webkit.ValueCallback<Array<android.net.Uri>>?) {
-        fileChooserCallback = callback
-    }
-
-    fun hasNotificationPermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        }
-        return true
-    }
-
-    fun hasStoragePermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
-        }
-        return ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-    }
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val showsViewModel: ShowsViewModel by viewModels()
