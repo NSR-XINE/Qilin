@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = homeViewModel,
                                 onSearchClick = {},
                                 onShowClick = { showId ->
-                                    navController.navigate("add_edit_show?showId=$showId")
+                                    navController.navigate("show_detail/$showId")
                                 },
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
@@ -193,6 +193,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
+                                },
+                                onCardClick = { show ->
+                                    navController.navigate("show_detail/${show.id}")
                                 }
                             )
                         }
@@ -207,6 +210,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
+                                },
+                                onCardClick = { show ->
+                                    navController.navigate("show_detail/${show.id}")
                                 }
                             )
                         }
@@ -221,6 +227,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
+                                },
+                                onCardClick = { show ->
+                                    navController.navigate("show_detail/${show.id}")
                                 }
                             )
                         }
@@ -235,6 +244,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
+                                },
+                                onCardClick = { show ->
+                                    navController.navigate("show_detail/${show.id}")
                                 }
                             )
                         }
@@ -252,6 +264,23 @@ class MainActivity : ComponentActivity() {
                             AddEditShowScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("show_detail/{showId}") { backStackEntry ->
+                            val showIdArg = backStackEntry.arguments?.getString("showId") ?: ""
+                            ShowDetailScreen(
+                                showId = showIdArg,
+                                viewModel = showsViewModel,
+                                onWatchClick = { url ->
+                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                                        putExtra("watch_url", url)
+                                    }
+                                    startActivity(intent)
+                                },
+                                onEditClick = { show ->
+                                    navController.navigate("add_edit_show?showId=${show.id}")
+                                },
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }

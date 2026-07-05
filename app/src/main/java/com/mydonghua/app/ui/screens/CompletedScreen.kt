@@ -21,6 +21,7 @@ fun CompletedScreen(
     viewModel: ShowsViewModel,
     onWatchClick: (String) -> Unit,
     onEditClick: (com.mydonghua.app.domain.model.Show) -> Unit,
+    onCardClick: (com.mydonghua.app.domain.model.Show) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val shows by viewModel.completedShows.collectAsState()
@@ -67,7 +68,8 @@ fun CompletedScreen(
                         onFavoriteToggle = { viewModel.toggleFavorite(it) },
                         onNotifyToggle = {},
                         onEpIncrement = { viewModel.incrementEpisode(it) },
-                        onEpDecrement = { viewModel.decrementEpisode(it) }
+                        onEpDecrement = { viewModel.decrementEpisode(it) },
+                        onCardClick = onCardClick
                     )
                 }
             }

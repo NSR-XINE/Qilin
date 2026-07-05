@@ -36,6 +36,7 @@ fun ShowCard(
     onNotifyToggle: (Show) -> Unit,
     onEpIncrement: (Show) -> Unit,
     onEpDecrement: (Show) -> Unit,
+    onCardClick: (Show) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -54,7 +55,8 @@ fun ShowCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .clickable { onCardClick(show) },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
