@@ -94,6 +94,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Scaffold(
+                    modifier = Modifier.fillMaxSize(),
                     bottomBar = {
                         NavigationBar(
                             containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f)
