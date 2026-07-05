@@ -57,6 +57,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("App Settings", fontWeight = FontWeight.Bold) },

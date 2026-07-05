@@ -70,6 +70,7 @@ fun CalendarScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("$monthName $yearName", fontWeight = FontWeight.Bold) },

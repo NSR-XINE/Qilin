@@ -20,6 +20,8 @@ import coil.compose.AsyncImage
 import java.text.SimpleDateFormat
 import java.util.*
 
+import androidx.compose.ui.graphics.Color
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
@@ -38,6 +40,7 @@ fun HistoryScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Watch History Log", fontWeight = FontWeight.Bold) },

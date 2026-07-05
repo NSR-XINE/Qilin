@@ -59,6 +59,7 @@ fun ShowDetailScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text(show.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },

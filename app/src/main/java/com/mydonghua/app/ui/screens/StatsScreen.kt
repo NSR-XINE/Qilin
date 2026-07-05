@@ -45,6 +45,7 @@ fun StatsScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Detailed Statistics", fontWeight = FontWeight.Bold) },

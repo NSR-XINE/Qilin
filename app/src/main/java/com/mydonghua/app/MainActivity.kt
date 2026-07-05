@@ -93,84 +93,98 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-                Scaffold(
+                Surface(
                     modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f)
-                        ) {
-                            // Home Tab
-                            NavigationBarItem(
-                                selected = currentRoute == "home",
-                                onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } },
-                                icon = { Text("🏠", fontSize = 20.sp) },
-                                label = { Text("Home", fontSize = 10.sp) }
-                            )
-
-                            // Airing Tab
-                            NavigationBarItem(
-                                selected = currentRoute == "airing",
-                                onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                icon = { Text("📡", fontSize = 20.sp) },
-                                label = { Text("Airing", fontSize = 10.sp) }
-                            )
-
-                            // Add FAB Button
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                contentAlignment = Alignment.Center
-                            ) {
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        StarsBackground()
+                        Scaffold(
+                            containerColor = Color.Transparent,
+                            modifier = Modifier.fillMaxSize(),
+                            bottomBar = {
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            Brush.linearGradient(
-                                                colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
-                                            )
-                                        )
-                                        .clickable {
-                                            navController.navigate("add_edit_show")
-                                        },
-                                    contentAlignment = Alignment.Center
+                                        .fillMaxWidth()
+                                        .navigationBarsPadding()
+                                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                                    contentAlignment = Alignment.BottomCenter
                                 ) {
-                                    Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                    Row(
+                                        modifier = Modifier
+                                            .widthIn(max = 500.dp)
+                                            .fillMaxWidth()
+                                            .height(65.dp)
+                                            .background(
+                                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+                                                shape = RoundedCornerShape(20.dp)
+                                            )
+                                            .border(
+                                                width = 1.dp,
+                                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                                shape = RoundedCornerShape(20.dp)
+                                            )
+                                            .padding(horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceAround
+                                    ) {
+                                        BottomNavItem(
+                                            icon = "🏠",
+                                            label = "Home",
+                                            selected = currentRoute == "home",
+                                            onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
+                                        )
+                                        BottomNavItem(
+                                            icon = "📡",
+                                            label = "Airing",
+                                            selected = currentRoute == "airing",
+                                            onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    Brush.linearGradient(
+                                                        colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
+                                                    )
+                                                )
+                                                .clickable {
+                                                    navController.navigate("add_edit_show")
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                        BottomNavItem(
+                                            icon = "✅",
+                                            label = "Complete",
+                                            selected = currentRoute == "complete",
+                                            onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                        )
+                                        BottomNavItem(
+                                            icon = "🚀",
+                                            label = "Stopped",
+                                            selected = currentRoute == "stopped",
+                                            onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                        )
+                                        BottomNavItem(
+                                            icon = "❤️",
+                                            label = "Favorites",
+                                            selected = currentRoute == "favorites",
+                                            onClick = { navController.navigate("favorites") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                        )
+                                    }
                                 }
                             }
-
-                            // Complete Tab
-                            NavigationBarItem(
-                                selected = currentRoute == "complete",
-                                onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                icon = { Text("✅", fontSize = 20.sp) },
-                                label = { Text("Complete", fontSize = 10.sp) }
-                            )
-
-                            // Stopped Tab
-                            NavigationBarItem(
-                                selected = currentRoute == "stopped",
-                                onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                icon = { Text("🚀", fontSize = 20.sp) },
-                                label = { Text("Stopped", fontSize = 10.sp) }
-                            )
-
-                            // Favorites Tab
-                            NavigationBarItem(
-                                selected = currentRoute == "favorites",
-                                onClick = { navController.navigate("favorites") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                icon = { Text("❤️", fontSize = 20.sp) },
-                                label = { Text("Favorites", fontSize = 10.sp) }
-                            )
-                        }
-                    }
-                ) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "home",
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
+                        ) { innerPadding ->
+                            NavHost(
+                                navController = navController,
+                                startDestination = "home",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            ) {
                         composable("home") {
                             HomeScreen(
                                 viewModel = homeViewModel,
@@ -423,5 +437,58 @@ class MainActivity : ComponentActivity() {
         const val FILE_CHOOSER_REQUEST_CODE = 1001
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
+    }
+}
+
+@Composable
+private fun StarsBackground(modifier: Modifier = Modifier) {
+    val starsColor = MaterialTheme.colorScheme.onBackground
+    androidx.compose.foundation.Canvas(modifier = modifier.fillMaxSize()) {
+        val random = java.util.Random(12345L)
+        val width = size.width
+        val height = size.height
+        if (width > 0 && height > 0) {
+            for (i in 0 until 120) {
+                val x = random.nextFloat() * width
+                val y = random.nextFloat() * height
+                val radius = random.nextFloat() * 1.5f + 0.5f
+                val alpha = random.nextFloat() * 0.4f + 0.1f
+                drawCircle(
+                    color = starsColor,
+                    radius = radius,
+                    center = androidx.compose.ui.geometry.Offset(x, y),
+                    alpha = alpha
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.BottomNavItem(
+    icon: String,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = icon,
+            fontSize = 18.sp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
     }
 }

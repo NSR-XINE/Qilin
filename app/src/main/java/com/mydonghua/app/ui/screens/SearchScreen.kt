@@ -41,6 +41,7 @@ fun SearchScreen(
     var isSearchActive by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {

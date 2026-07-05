@@ -33,6 +33,7 @@ fun CollectionsScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Collections folders", fontWeight = FontWeight.Bold) },

@@ -69,7 +69,7 @@ fun HomeScreen(
         columns = GridCells.Fixed(2),
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(Color.Transparent),
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         // Logo Header
@@ -395,16 +395,22 @@ fun ContinueWatchingRow(
         items(shows, key = { it.id }) { show ->
             Card(
                 modifier = Modifier
-                    .width(140.dp)
+                    .width(260.dp)
                     .clickable { onShowClick(show.id) },
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
             ) {
-                Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp)
+                            .size(width = 56.dp, height = 80.dp)
+                            .clip(RoundedCornerShape(8.dp))
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
@@ -417,18 +423,25 @@ fun ContinueWatchingRow(
                         )
                     }
 
-                    Column(modifier = Modifier.padding(8.dp)) {
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center
+                    ) {
                         Text(
                             text = show.title,
-                            fontSize = 12.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                        val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
                         Text(
-                            text = "Ep ${show.currentEp}",
+                            text = "Ep ${show.currentEp}$totalStr",
                             fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier.padding(top = 2.dp)
                         )
                         if (show.totalEp > 0) {
@@ -438,8 +451,8 @@ fun ContinueWatchingRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 6.dp)
-                                    .height(3.dp)
-                                    .clip(RoundedCornerShape(1.5.dp)),
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                             )
@@ -466,16 +479,22 @@ fun RecentlyUpdatedRow(
         items(shows, key = { it.id }) { show ->
             Card(
                 modifier = Modifier
-                    .width(110.dp)
+                    .width(260.dp)
                     .clickable { onShowClick(show.id) },
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
             ) {
-                Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
+                            .size(width = 56.dp, height = 80.dp)
+                            .clip(RoundedCornerShape(8.dp))
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
@@ -488,11 +507,17 @@ fun RecentlyUpdatedRow(
                         )
                     }
 
-                    Column(modifier = Modifier.padding(6.dp)) {
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center
+                    ) {
                         Text(
                             text = show.title,
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -503,11 +528,11 @@ fun RecentlyUpdatedRow(
                         }
                         Text(
                             text = relativeTime,
-                            fontSize = 8.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 4.dp),
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 2.dp)
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

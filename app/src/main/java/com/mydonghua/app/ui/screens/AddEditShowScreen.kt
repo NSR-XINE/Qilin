@@ -83,6 +83,7 @@ fun AddEditShowScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text(if (editingShow != null) "Edit Show" else "Add New Show", fontWeight = FontWeight.Bold) },
