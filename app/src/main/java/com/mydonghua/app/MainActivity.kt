@@ -31,6 +31,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.work.*
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
@@ -212,13 +215,13 @@ class MainActivity : ComponentActivity() {
                                         horizontalArrangement = Arrangement.SpaceAround
                                     ) {
                                         BottomNavItem(
-                                            icon = "🏠",
+                                            icon = Icons.Default.Home,
                                             label = "Home",
                                             selected = currentRoute == "home",
                                             onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
                                         )
                                         BottomNavItem(
-                                            icon = "📡",
+                                            icon = Icons.Default.Podcasts,
                                             label = "Airing",
                                             selected = currentRoute == "airing",
                                             onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
@@ -237,16 +240,21 @@ class MainActivity : ComponentActivity() {
                                                 },
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                            Icon(
+                                                imageVector = Icons.Default.Add,
+                                                contentDescription = "Add",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp)
+                                            )
                                         }
                                         BottomNavItem(
-                                            icon = "✅",
+                                            icon = Icons.Default.CheckCircle,
                                             label = "Complete",
                                             selected = currentRoute == "complete",
                                             onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                         )
                                         BottomNavItem(
-                                            icon = "🚀",
+                                            icon = Icons.Default.RocketLaunch,
                                             label = "Stopped",
                                             selected = currentRoute == "stopped",
                                             onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
@@ -487,14 +495,14 @@ class MainActivity : ComponentActivity() {
                                             }
 
                                             IconButton(onClick = { isDrawerOpen = false }) {
-                                                Text("✕", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                                                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurface)
                                             }
                                         }
 
                                         Spacer(modifier = Modifier.height(10.dp))
 
                                         DrawerItem(
-                                            icon = "📊",
+                                            icon = Icons.Default.BarChart,
                                             label = "Statistics",
                                             iconColor = MaterialTheme.colorScheme.primary,
                                             onClick = {
@@ -503,7 +511,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                         DrawerItem(
-                                            icon = "📅",
+                                            icon = Icons.Default.CalendarMonth,
                                             label = "Calendar",
                                             iconColor = Color(0xFF9D4EDD),
                                             onClick = {
@@ -512,7 +520,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                         DrawerItem(
-                                            icon = "📚",
+                                            icon = Icons.Default.Layers,
                                             label = "Collections",
                                             iconColor = MaterialTheme.colorScheme.primary,
                                             onClick = {
@@ -521,7 +529,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                         DrawerItem(
-                                            icon = "⏱️",
+                                            icon = Icons.Default.History,
                                             label = "Watch History",
                                             iconColor = Color(0xFF9D4EDD),
                                             onClick = {
@@ -530,7 +538,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                         DrawerItem(
-                                            icon = "🌲",
+                                            icon = Icons.Default.Forest,
                                             label = "Seasonal View",
                                             iconColor = MaterialTheme.colorScheme.primary,
                                             onClick = {
@@ -541,7 +549,7 @@ class MainActivity : ComponentActivity() {
                                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
                                         DrawerItem(
-                                            icon = "⚙️",
+                                            icon = Icons.Default.Settings,
                                             label = "Settings",
                                             iconColor = MaterialTheme.colorScheme.primary,
                                             onClick = {
@@ -665,7 +673,7 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
 
 @Composable
 private fun RowScope.BottomNavItem(
-    icon: String,
+    icon: ImageVector,
     label: String,
     selected: Boolean,
     onClick: () -> Unit
@@ -678,11 +686,13 @@ private fun RowScope.BottomNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = icon,
-            fontSize = 18.sp,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(22.dp),
+            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
             fontSize = 9.sp,
@@ -694,7 +704,7 @@ private fun RowScope.BottomNavItem(
 
 @Composable
 private fun DrawerItem(
-    icon: String,
+    icon: ImageVector,
     label: String,
     iconColor: Color,
     onClick: () -> Unit
@@ -707,7 +717,12 @@ private fun DrawerItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(text = icon, fontSize = 18.sp, color = iconColor)
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = iconColor,
+            modifier = Modifier.size(22.dp)
+        )
         Text(
             text = label,
             fontSize = 15.sp,
