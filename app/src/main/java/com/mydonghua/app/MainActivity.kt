@@ -170,12 +170,6 @@ class MainActivity : ComponentActivity() {
                                             selected = currentRoute == "stopped",
                                             onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                         )
-                                        BottomNavItem(
-                                            icon = "❤️",
-                                            label = "Favorites",
-                                            selected = currentRoute == "favorites",
-                                            onClick = { navController.navigate("favorites") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                        )
                                     }
                                 }
                             }

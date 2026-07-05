@@ -1,5 +1,7 @@
 package com.mydonghua.app.ui.common
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -234,19 +236,45 @@ fun ShowCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Watch Button
-            Button(
-                onClick = { onWatchClick(show.watchUrl ?: "") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                modifier = Modifier.height(32.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("📺 Watch", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                TextButton(
+                    onClick = { onWatchClick(show.watchUrl ?: "") },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text("▶️", fontSize = 12.sp)
+                        Text("Stream", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+
+                TextButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            val url = show.countdownUrl
+                            val searchUrl = if (!url.isNullOrEmpty() && (url.startsWith("http://") || url.startsWith("https://"))) {
+                                url
+                            } else {
+                                "https://www.google.com/search?q=site:animecountdown.com+" + java.net.URLEncoder.encode(show.title, "UTF-8")
+                            }
+                            data = Uri.parse(searchUrl)
+                        }
+                        context.startActivity(intent)
+                    },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text("⏳", fontSize = 12.sp)
+                        Text("Countdown", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9D4EDD))
+                    }
                 }
             }
 
