@@ -76,6 +76,7 @@ fun ShowCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color.Black.copy(alpha = 0.2f))
             ) {
                 AsyncImage(
@@ -86,9 +87,7 @@ fun ShowCard(
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .build(),
                     contentDescription = show.title,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(50.dp),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
 
