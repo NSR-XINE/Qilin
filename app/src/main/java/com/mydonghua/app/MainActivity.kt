@@ -215,13 +215,13 @@ class MainActivity : ComponentActivity() {
                                         horizontalArrangement = Arrangement.SpaceAround
                                     ) {
                                         BottomNavItem(
-                                            icon = Icons.Default.Home,
+                                            icon = "🏠",
                                             label = "Home",
                                             selected = currentRoute == "home",
                                             onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
                                         )
                                         BottomNavItem(
-                                            icon = Icons.Default.Podcasts,
+                                            icon = "📡",
                                             label = "Airing",
                                             selected = currentRoute == "airing",
                                             onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
@@ -240,21 +240,16 @@ class MainActivity : ComponentActivity() {
                                                 },
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Add,
-                                                contentDescription = "Add",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(24.dp)
-                                            )
+                                            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                                         }
                                         BottomNavItem(
-                                            icon = Icons.Default.CheckCircle,
+                                            icon = "✅",
                                             label = "Complete",
                                             selected = currentRoute == "complete",
                                             onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                         )
                                         BottomNavItem(
-                                            icon = Icons.Default.RocketLaunch,
+                                            icon = "🚀",
                                             label = "Stopped",
                                             selected = currentRoute == "stopped",
                                             onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
@@ -497,14 +492,14 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     IconButton(onClick = { isDrawerOpen = false }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurface)
+                                        Text("✕", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 DrawerItem(
-                                    icon = Icons.Default.BarChart,
+                                    icon = "📊",
                                     label = "Statistics",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -513,7 +508,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    icon = Icons.Default.CalendarMonth,
+                                    icon = "📅",
                                     label = "Calendar",
                                     iconColor = Color(0xFF9D4EDD),
                                     onClick = {
@@ -522,7 +517,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    icon = Icons.Default.Layers,
+                                    icon = "🥞",
                                     label = "Collections",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -531,7 +526,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    icon = Icons.Default.History,
+                                    icon = "⏱️",
                                     label = "Watch History",
                                     iconColor = Color(0xFF9D4EDD),
                                     onClick = {
@@ -540,7 +535,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    icon = Icons.Default.Forest,
+                                    icon = "🌲",
                                     label = "Seasonal View",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -551,7 +546,7 @@ class MainActivity : ComponentActivity() {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
                                 DrawerItem(
-                                    icon = Icons.Default.Settings,
+                                    icon = "⚙️",
                                     label = "Settings",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -673,7 +668,7 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
 
 @Composable
 private fun RowScope.BottomNavItem(
-    icon: ImageVector,
+    icon: String,
     label: String,
     selected: Boolean,
     onClick: () -> Unit
@@ -686,11 +681,10 @@ private fun RowScope.BottomNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier.size(22.dp),
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        Text(
+            text = icon,
+            fontSize = 18.sp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -704,7 +698,7 @@ private fun RowScope.BottomNavItem(
 
 @Composable
 private fun DrawerItem(
-    icon: ImageVector,
+    icon: String,
     label: String,
     iconColor: Color,
     onClick: () -> Unit
@@ -717,12 +711,7 @@ private fun DrawerItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = iconColor,
-            modifier = Modifier.size(22.dp)
-        )
+        Text(text = icon, fontSize = 18.sp, color = iconColor)
         Text(
             text = label,
             fontSize = 15.sp,
