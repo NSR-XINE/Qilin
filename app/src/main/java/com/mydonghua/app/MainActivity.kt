@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         )
                                         .clickable {
-                                            // Handle add click
+                                            navController.navigate("add_edit_show")
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -171,7 +171,9 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 viewModel = homeViewModel,
                                 onSearchClick = {},
-                                onShowClick = {},
+                                onShowClick = { showId ->
+                                    navController.navigate("add_edit_show?showId=$showId")
+                                },
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)
@@ -189,7 +191,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                     startActivity(intent)
                                 },
-                                onEditClick = {}
+                                onEditClick = { show ->
+                                    navController.navigate("add_edit_show?showId=${show.id}")
+                                }
                             )
                         }
                         composable("complete") {
@@ -201,7 +205,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                     startActivity(intent)
                                 },
-                                onEditClick = {}
+                                onEditClick = { show ->
+                                    navController.navigate("add_edit_show?showId=${show.id}")
+                                }
                             )
                         }
                         composable("stopped") {
@@ -213,7 +219,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                     startActivity(intent)
                                 },
-                                onEditClick = {}
+                                onEditClick = { show ->
+                                    navController.navigate("add_edit_show?showId=${show.id}")
+                                }
                             )
                         }
                         composable("favorites") {
@@ -225,7 +233,26 @@ class MainActivity : ComponentActivity() {
                                     }
                                     startActivity(intent)
                                 },
-                                onEditClick = {}
+                                onEditClick = { show ->
+                                    navController.navigate("add_edit_show?showId=${show.id}")
+                                }
+                            )
+                        }
+                        composable(
+                            "add_edit_show?showId={showId}",
+                            arguments = listOf(
+                                androidx.navigation.navArgument("showId") {
+                                    type = androidx.navigation.NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                }
+                            )
+                        ) { backStackEntry ->
+                            val showIdArg = backStackEntry.arguments?.getString("showId")
+                            AddEditShowScreen(
+                                showId = showIdArg,
+                                viewModel = showsViewModel,
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                     }
