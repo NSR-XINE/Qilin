@@ -368,6 +368,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+}
 
     private fun setupBackgroundSync() {
         val constraints = Constraints.Builder()
