@@ -159,17 +159,7 @@ fun HeroBanner(
             contentScale = ContentScale.Crop
         )
 
-        // Bottom 30% fade gradient overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0.7f to Color.Transparent,
-                        1.0f to MaterialTheme.colorScheme.surface
-                    )
-                )
-        )
+
 
         // Badge showing status
         Box(
@@ -250,7 +240,7 @@ private fun BannerTimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(8.dp))
+            .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(8.dp))
             .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp)
             .width(42.dp)
