@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -263,13 +264,17 @@ private fun BannerTimeBox(value: Long, label: String) {
             text = String.format("%02d", value),
             fontSize = 16.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
         Text(
             text = label,
             fontSize = 8.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
