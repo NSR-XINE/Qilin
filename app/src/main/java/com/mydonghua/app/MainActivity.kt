@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .statusBarsPadding()
-                                            .padding(horizontal = 16.dp, vertical = 5.dp),
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -129,22 +129,22 @@ class MainActivity : ComponentActivity() {
                                                 painter = painterResource(id = R.mipmap.ic_launcher),
                                                 contentDescription = "App Icon",
                                                 modifier = Modifier
-                                                    .size(26.dp)
+                                                    .size(30.dp)
                                                     .clip(RoundedCornerShape(6.dp))
                                             )
 
-                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Spacer(modifier = Modifier.width(10.dp))
 
                                             Row {
                                                 Text(
                                                     text = "东画 ",
-                                                    fontSize = 16.sp,
+                                                    fontSize = 18.sp,
                                                     fontWeight = FontWeight.ExtraBold,
                                                     color = MaterialTheme.colorScheme.onBackground
                                                 )
                                                 Text(
                                                     text = "My Donghua",
-                                                    fontSize = 16.sp,
+                                                    fontSize = 18.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     style = androidx.compose.ui.text.TextStyle(
                                                         brush = Brush.linearGradient(
@@ -163,18 +163,18 @@ class MainActivity : ComponentActivity() {
                                             modifier = Modifier
                                                 .background(
                                                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                                                    shape = RoundedCornerShape(6.dp)
+                                                    shape = RoundedCornerShape(8.dp)
                                                 )
                                                 .border(
                                                     width = 1.dp,
                                                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                                                    shape = RoundedCornerShape(6.dp)
+                                                    shape = RoundedCornerShape(8.dp)
                                                 )
-                                                .size(30.dp)
+                                                .size(36.dp)
                                         ) {
                                             Text(
                                                 text = "☰",
-                                                fontSize = 14.sp,
+                                                fontSize = 18.sp,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
                                         }
