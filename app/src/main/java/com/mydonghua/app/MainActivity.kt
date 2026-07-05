@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val showsViewModel: ShowsViewModel by viewModels()
+    private val searchViewModel: SearchViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -192,7 +193,9 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(
                                 viewModel = homeViewModel,
-                                onSearchClick = {},
+                                onSearchClick = {
+                                    navController.navigate("search")
+                                },
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
@@ -302,6 +305,22 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
+                                },
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("search") {
+                            SearchScreen(
+                                viewModel = searchViewModel,
+                                showsViewModel = showsViewModel,
+                                onWatchClick = { url ->
+                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                                        putExtra("watch_url", url)
+                                    }
+                                    startActivity(intent)
+                                },
+                                onShowClick = { showId ->
+                                    navController.navigate("show_detail/$showId")
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
