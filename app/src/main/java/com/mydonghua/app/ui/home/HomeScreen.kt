@@ -147,7 +147,7 @@ fun HeroBanner(
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBannerClick() }
     ) {
-        // Poster Background with Blur Effect
+        // Poster Background
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(show.poster)
@@ -155,19 +155,18 @@ fun HeroBanner(
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build(),
             contentDescription = "Hero Banner",
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(20.dp),
+            modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Gradient overlay
+        // Bottom 30% fade gradient overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.95f))
+                        0.7f to Color.Transparent,
+                        1.0f to MaterialTheme.colorScheme.surface
                     )
                 )
         )

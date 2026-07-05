@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
                         StarsBackground()
                         Scaffold(
                             containerColor = Color.Transparent,
-                            modifier = Modifier.fillMaxSize().blur(if (isDrawerOpen) 12.dp else 0.dp),
+                            modifier = Modifier.fillMaxSize(),
                             topBar = {
                                 if (showGlobalHeader) {
                                     Row(

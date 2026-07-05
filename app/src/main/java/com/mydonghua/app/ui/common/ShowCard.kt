@@ -86,19 +86,18 @@ fun ShowCard(
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .build(),
                     contentDescription = show.title,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(14.dp),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
 
-                // Dark gradient overlay
+                // Bottom 30% fade gradient overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f))
+                                0.7f to Color.Transparent,
+                                1.0f to MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
                             )
                         )
                 )
