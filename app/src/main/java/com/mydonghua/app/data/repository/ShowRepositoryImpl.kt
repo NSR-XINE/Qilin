@@ -18,7 +18,46 @@ class ShowRepositoryImpl @Inject constructor(
     override suspend fun searchShows(query: String): List<ShowEntity> = showDao.searchShows(query)
     override suspend fun getRecentlyUpdatedShows(limit: Int): List<ShowEntity> = showDao.getRecentlyUpdatedShows(limit)
     override suspend fun getMaxAlarmRequestCode(): Int = showDao.getMaxAlarmRequestCode()
-    override suspend fun insertOrUpdateShow(show: ShowEntity) = showDao.insertOrUpdateShow(show)
+    override suspend fun insertOrUpdateShow(show: ShowEntity) {
+        var status = show.status
+        if (status == "upcoming") {
+            status = "stopped"
+        }
+        if (status !in listOf("ongoing", "completed", "stopped")) {
+            status = "ongoing"
+        }
+
+        // Auto-complete rules
+        if (status == "ongoing" && show.totalEp > 0 && show.currentEp >= show.totalEp) {
+            status = "completed"
+        } else if (status == "completed" && (show.totalEp == 0 || show.currentEp < show.totalEp)) {
+            status = "ongoing"
+        }
+
+        val migratedShow = show.copy(status = status, lastUpdated = System.currentTimeMillis())
+        showDao.insertOrUpdateShow(migratedShow)
+    }
+
     override suspend fun deleteShow(showId: String): Boolean = showDao.deleteShow(showId) > 0
-    override suspend fun bulkInsert(shows: List<ShowEntity>) = showDao.bulkInsert(shows)
+
+    override suspend fun bulkInsert(shows: List<ShowEntity>) {
+        val migratedList = shows.map { show ->
+            var status = show.status
+            if (status == "upcoming") {
+                status = "stopped"
+            }
+            if (status !in listOf("ongoing", "completed", "stopped")) {
+                status = "ongoing"
+            }
+
+            // Auto-complete rules
+            if (status == "ongoing" && show.totalEp > 0 && show.currentEp >= show.totalEp) {
+                status = "completed"
+            } else if (status == "completed" && (show.totalEp == 0 || show.currentEp < show.totalEp)) {
+                status = "ongoing"
+            }
+            show.copy(status = status, lastUpdated = System.currentTimeMillis())
+        }
+        showDao.bulkInsert(migratedList)
+    }
 }

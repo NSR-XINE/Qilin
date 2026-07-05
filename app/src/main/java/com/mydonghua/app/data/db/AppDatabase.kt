@@ -10,4 +10,6 @@ import androidx.room.RoomDatabase
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun showDao(): ShowDao
+    abstract fun settingsDao(): SettingsDao
+    abstract fun watchHistoryDao(): WatchHistoryDao
 }

@@ -32,4 +32,16 @@ object DatabaseModule {
     fun provideShowDao(database: AppDatabase): ShowDao {
         return database.showDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideSettingsDao(database: AppDatabase): com.mydonghua.app.data.db.SettingsDao {
+        return database.settingsDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWatchHistoryDao(database: AppDatabase): com.mydonghua.app.data.db.WatchHistoryDao {
+        return database.watchHistoryDao()
+    }
 }

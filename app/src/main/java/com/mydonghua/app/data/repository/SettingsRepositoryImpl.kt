@@ -1,28 +1,28 @@
 package com.mydonghua.app.data.repository
 
 import com.mydonghua.app.data.db.SettingEntity
-import com.mydonghua.app.data.db.ShowDao
+import com.mydonghua.app.data.db.SettingsDao
 import com.mydonghua.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class SettingsRepositoryImpl @Inject constructor(
-    private val showDao: ShowDao
+    private val settingsDao: SettingsDao
 ) : SettingsRepository {
     override suspend fun getSetting(key: String, defaultValue: String): String {
-        return showDao.getSetting(key)?.value ?: defaultValue
+        return settingsDao.getSetting(key)?.value ?: defaultValue
     }
 
     override fun getSettingFlow(key: String, defaultValue: String): Flow<String> {
-        return showDao.getSettingFlow(key).map { it?.value ?: defaultValue }
+        return settingsDao.getSettingFlow(key).map { it?.value ?: defaultValue }
     }
 
     override suspend fun putSetting(key: String, value: String) {
-        showDao.insertSetting(SettingEntity(key, value))
+        settingsDao.insertSetting(SettingEntity(key, value))
     }
 
     override suspend fun removeSetting(key: String) {
-        showDao.deleteSetting(key)
+        settingsDao.deleteSetting(key)
     }
 }
