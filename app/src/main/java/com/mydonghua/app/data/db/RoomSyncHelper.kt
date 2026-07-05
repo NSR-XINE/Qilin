@@ -7,20 +7,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 object RoomSyncHelper {
-    private var dbInstance: AppDatabase? = null
-
-    @Synchronized
     private fun getDb(context: Context): AppDatabase {
-        if (dbInstance == null) {
-            dbInstance = Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "mydonghua.db"
-            )
-            .fallbackToDestructiveMigration()
-            .build()
-        }
-        return dbInstance!!
+        return AppDatabase.getDatabase(context)
     }
 
     @JvmStatic

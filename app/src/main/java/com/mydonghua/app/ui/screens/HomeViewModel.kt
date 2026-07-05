@@ -1,5 +1,6 @@
 package com.mydonghua.app.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mydonghua.app.domain.model.CountdownCalculator
@@ -8,6 +9,7 @@ import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.repository.WatchHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,7 +31,8 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val showRepository: ShowRepository,
     private val settingsRepository: SettingsRepository,
-    private val watchHistoryRepository: WatchHistoryRepository
+    private val watchHistoryRepository: WatchHistoryRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
@@ -95,6 +98,20 @@ class HomeViewModel @Inject constructor(
             )
         }.onEach { state ->
             _uiState.value = state
+            val nextUp = state.nextUpShow
+            if (nextUp != null) {
+                val targetMs = CountdownCalculator.getNextReleaseDateMs(nextUp.releaseDay, nextUp.releaseTime)
+                val remaining = CountdownCalculator.calculateTimeRemaining(targetMs)
+                val countdownStr = if (remaining.airingNow) {
+                    "AIRING NOW"
+                } else {
+                    "${remaining.days}d ${remaining.hours}h ${remaining.minutes}m"
+                }
+                val epStr = "Episode ${nextUp.currentEp + 1} releasing ${nextUp.releaseDay}"
+                CountdownWidget.pushWidgetData(context, nextUp.title, countdownStr, epStr)
+            } else {
+                CountdownWidget.pushWidgetData(context, "No shows yet", "--d --h --m", "")
+            }
         }.launchIn(viewModelScope)
     }
 
