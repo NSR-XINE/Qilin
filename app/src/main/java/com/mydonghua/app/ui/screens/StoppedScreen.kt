@@ -52,7 +52,7 @@ fun StoppedScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
                 item {
                     Row(

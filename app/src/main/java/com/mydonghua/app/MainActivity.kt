@@ -182,75 +182,6 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
-                            },
-                            bottomBar = {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .navigationBarsPadding()
-                                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
-                                    contentAlignment = Alignment.BottomCenter
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .widthIn(max = 500.dp)
-                                            .fillMaxWidth()
-                                            .height(65.dp)
-                                            .background(
-                                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
-                                                shape = RoundedCornerShape(20.dp)
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                                shape = RoundedCornerShape(20.dp)
-                                            )
-                                            .padding(horizontal = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceAround
-                                    ) {
-                                        BottomNavItem(
-                                            iconRes = R.drawable.ic_home,
-                                            label = "Home",
-                                            selected = currentRoute == "home",
-                                            onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
-                                        )
-                                        BottomNavItem(
-                                            iconRes = R.drawable.ic_airing,
-                                            label = "Airing",
-                                            selected = currentRoute == "airing",
-                                            onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    Brush.linearGradient(
-                                                        colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
-                                                    )
-                                                )
-                                                .clickable {
-                                                    navController.navigate("add_edit_show")
-                                                },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                        BottomNavItem(
-                                            iconRes = R.drawable.ic_complete,
-                                            label = "Complete",
-                                            selected = currentRoute == "complete",
-                                            onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                        )
-                                        BottomNavItem(
-                                            iconRes = R.drawable.ic_stopped,
-                                            label = "Stopped",
-                                            selected = currentRoute == "stopped",
-                                            onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                        )
-                                    }
-                                }
                             }
                         ) { innerPadding ->
                             NavHost(
@@ -258,7 +189,7 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(innerPadding)
+                                    .padding(top = innerPadding.calculateTopPadding())
                             ) {
                         composable("home") {
                             HomeScreen(
@@ -436,6 +367,77 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("show_detail/$showId")
                                 },
                                 onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                    }
+                }
+
+                if (showGlobalHeader) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .widthIn(max = 500.dp)
+                                .fillMaxWidth()
+                                .height(65.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+                                    shape = RoundedCornerShape(20.dp)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(20.dp)
+                                )
+                                .padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            BottomNavItem(
+                                iconRes = R.drawable.ic_home,
+                                label = "Home",
+                                selected = currentRoute == "home",
+                                onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
+                            )
+                            BottomNavItem(
+                                iconRes = R.drawable.ic_airing,
+                                label = "Airing",
+                                selected = currentRoute == "airing",
+                                onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
+                                        )
+                                    )
+                                    .clickable {
+                                        navController.navigate("add_edit_show")
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            }
+                            BottomNavItem(
+                                iconRes = R.drawable.ic_complete,
+                                label = "Complete",
+                                selected = currentRoute == "complete",
+                                onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                            )
+                            BottomNavItem(
+                                iconRes = R.drawable.ic_stopped,
+                                label = "Stopped",
+                                selected = currentRoute == "stopped",
+                                onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                             )
                         }
                     }

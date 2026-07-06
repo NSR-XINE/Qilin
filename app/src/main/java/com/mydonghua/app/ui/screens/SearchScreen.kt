@@ -157,7 +157,7 @@ fun SearchScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
 
                     items(results, key = { it.id }) { show ->

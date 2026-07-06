@@ -73,7 +73,7 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Transparent),
-        contentPadding = PaddingValues(bottom = 80.dp)
+        contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         // Hero Countdown Banner
         if (state.showCountdownBanner && state.nextUpShow != null) {
