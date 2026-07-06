@@ -35,6 +35,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.work.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.draw.blur
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur as backdropBlur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.mydonghua.app.ui.home.HomeScreen
@@ -108,6 +115,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
+                        val backdrop = rememberLayerBackdrop {
+                            drawRect(Color.Black)
+                            drawContent()
+                        }
                         if (settingsState.themeMode.lowercase() != "light") {
                             StarsBackground()
                         }
@@ -189,6 +200,7 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier
                                     .fillMaxSize()
+                                    .layerBackdrop(backdrop)
                                     .padding(top = innerPadding.calculateTopPadding())
                             ) {
                         composable("home") {
@@ -388,20 +400,29 @@ class MainActivity : ComponentActivity() {
                                 .height(65.dp)
                                 .clip(RoundedCornerShape(32.dp))
                         ) {
-                            // Blurred liquid-glass backdrop
+                            // Real-time liquid-glass backdrop
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .blur(25.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.White.copy(alpha = 0.25f),
-                                                Color.White.copy(alpha = 0.05f),
-                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                    .drawBackdrop(
+                                        backdrop = backdrop,
+                                        shape = { RoundedCornerShape(32.dp) },
+                                        effects = {
+                                            vibrancy()
+                                            colorControls(
+                                                brightness = 0.05f,
+                                                contrast = 1f,
+                                                saturation = 1.5f,
                                             )
-                                        ),
-                                        shape = RoundedCornerShape(32.dp)
+                                            backdropBlur(20f.dp.toPx())
+                                            lens(24f.dp.toPx(), size.minDimension / 2f, true)
+                                        },
+                                        onDrawBackdrop = { drawBackdrop ->
+                                            drawBackdrop()
+                                        },
+                                        onDrawSurface = {
+                                            drawRect(Color.Black.copy(alpha = 0.22f))
+                                        }
                                     )
                             )
 
