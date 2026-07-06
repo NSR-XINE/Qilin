@@ -209,18 +209,18 @@ class MainActivity : ComponentActivity() {
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceAround
                                     ) {
-                                         BottomNavItem(
-                                             iconRes = R.drawable.ic_home,
-                                             label = "Home",
-                                             selected = currentRoute == "home",
-                                             onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
-                                         )
-                                         BottomNavItem(
-                                             iconRes = R.drawable.ic_tv,
-                                             label = "Airing",
-                                             selected = currentRoute == "airing",
-                                             onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                         )
+                                        BottomNavItem(
+                                            icon = "🏠",
+                                            label = "Home",
+                                            selected = currentRoute == "home",
+                                            onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
+                                        )
+                                        BottomNavItem(
+                                            icon = "📡",
+                                            label = "Airing",
+                                            selected = currentRoute == "airing",
+                                            onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                        )
                                         Box(
                                             modifier = Modifier
                                                 .size(48.dp)
@@ -238,13 +238,13 @@ class MainActivity : ComponentActivity() {
                                             Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                                         }
                                         BottomNavItem(
-                                            iconRes = R.drawable.ic_play_circle,
+                                            icon = "✅",
                                             label = "Complete",
                                             selected = currentRoute == "complete",
                                             onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                         )
                                         BottomNavItem(
-                                            iconRes = R.drawable.ic_stop_circle,
+                                            icon = "🚀",
                                             label = "Stopped",
                                             selected = currentRoute == "stopped",
                                             onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
@@ -494,7 +494,7 @@ class MainActivity : ComponentActivity() {
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 DrawerItem(
-                                    iconRes = R.drawable.ic_tv,
+                                    icon = "📊",
                                     label = "Statistics",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -503,7 +503,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    iconRes = R.drawable.ic_clock,
+                                    icon = "📅",
                                     label = "Calendar",
                                     iconColor = Color(0xFF9D4EDD),
                                     onClick = {
@@ -512,7 +512,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    iconRes = R.drawable.ic_heart,
+                                    icon = "🥞",
                                     label = "Collections",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -521,7 +521,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    iconRes = R.drawable.ic_play,
+                                    icon = "⏱️",
                                     label = "Watch History",
                                     iconColor = Color(0xFF9D4EDD),
                                     onClick = {
@@ -530,7 +530,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 DrawerItem(
-                                    iconRes = R.drawable.ic_airplay,
+                                    icon = "🌲",
                                     label = "Seasonal View",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -541,7 +541,7 @@ class MainActivity : ComponentActivity() {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
                                 DrawerItem(
-                                    iconRes = R.drawable.ic_settings,
+                                    icon = "⚙️",
                                     label = "Settings",
                                     iconColor = MaterialTheme.colorScheme.primary,
                                     onClick = {
@@ -663,7 +663,7 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
 
 @Composable
 private fun RowScope.BottomNavItem(
-    iconRes: Int,
+    icon: String,
     label: String,
     selected: Boolean,
     onClick: () -> Unit
@@ -676,11 +676,10 @@ private fun RowScope.BottomNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            modifier = Modifier.size(20.dp),
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        Text(
+            text = icon,
+            fontSize = 18.sp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -694,7 +693,7 @@ private fun RowScope.BottomNavItem(
 
 @Composable
 private fun DrawerItem(
-    iconRes: Int,
+    icon: String,
     label: String,
     iconColor: Color,
     onClick: () -> Unit
@@ -707,12 +706,7 @@ private fun DrawerItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            modifier = Modifier.size(20.dp),
-            tint = iconColor
-        )
+        Text(text = icon, fontSize = 18.sp, color = iconColor)
         Text(
             text = label,
             fontSize = 15.sp,

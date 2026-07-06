@@ -2,8 +2,6 @@ package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -56,12 +54,7 @@ fun SearchScreen(
                 },
                 actions = {
                     IconButton(onClick = { showFiltersSheet = true }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_settings),
-                            contentDescription = "Show Filters",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                        Text("⚙️", fontSize = 20.sp) // Filter panel trigger
                     }
                 }
             )

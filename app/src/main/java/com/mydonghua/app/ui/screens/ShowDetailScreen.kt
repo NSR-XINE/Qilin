@@ -2,8 +2,6 @@ package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -72,12 +70,7 @@ fun ShowDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = { onEditClick(show) }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_edit_2),
-                            contentDescription = "Edit Show",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                        Text("✏️", fontSize = 18.sp)
                     }
                 }
             )
@@ -164,18 +157,7 @@ fun ShowDetailScreen(
                             Text("Next Episode Release", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(6.dp))
                             if (countdownTime.airingNow) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_tv),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text("AIRING NOW / JUST RELEASED", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                                }
+                                Text("📡 AIRING NOW / JUST RELEASED", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                             } else if (!countdownTime.elapsed) {
                                 Text(
                                     text = "${countdownTime.days}d ${countdownTime.hours}h ${countdownTime.minutes}m ${countdownTime.seconds}s remaining",
@@ -267,18 +249,7 @@ fun ShowDetailScreen(
                         .height(48.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_airplay),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Text("Watch Online", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
+                    Text("📺 Watch Online", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
