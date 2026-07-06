@@ -285,16 +285,7 @@ fun AddEditShowScreen(
                 maxLines = 4
             )
 
-            // Rating
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("User Rating: ${rating.toInt()} / 10", fontSize = 14.sp)
-                Slider(
-                    value = rating,
-                    onValueChange = { rating = it },
-                    valueRange = 0f..10f,
-                    steps = 9
-                )
-            }
+
 
             OutlinedTextField(
                 value = genres,

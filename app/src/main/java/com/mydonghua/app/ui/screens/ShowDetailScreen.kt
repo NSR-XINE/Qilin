@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -103,7 +104,7 @@ fun ShowDetailScreen(
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .build(),
                     contentDescription = show.title,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().blur(10.dp),
                     contentScale = ContentScale.Crop
                 )
                 Box(
@@ -150,7 +151,6 @@ fun ShowDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     InfoCard(label = "Status", value = show.status.uppercase(), modifier = Modifier.weight(1f))
-                    InfoCard(label = "Rating", value = if (show.rating > 0) "${show.rating}/10" else "—", modifier = Modifier.weight(1f))
                     InfoCard(label = "Language", value = show.language ?: "CN", modifier = Modifier.weight(1f))
                 }
 

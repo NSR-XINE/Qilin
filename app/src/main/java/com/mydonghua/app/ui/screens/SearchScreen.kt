@@ -309,16 +309,7 @@ fun FilterBottomSheet(
                 )
             }
 
-            // Minimum Rating slider
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Minimum Rating Score: ${minRating.toInt()} / 10", fontSize = 14.sp)
-                Slider(
-                    value = minRating,
-                    onValueChange = { minRating = it },
-                    valueRange = 0f..10f,
-                    steps = 9
-                )
-            }
+
 
             // Sorting Selection row
             Column(modifier = Modifier.fillMaxWidth()) {

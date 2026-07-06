@@ -156,7 +156,7 @@ fun HeroBanner(
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build(),
             contentDescription = "Hero Banner",
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().blur(10.dp),
             contentScale = ContentScale.Crop
         )
 

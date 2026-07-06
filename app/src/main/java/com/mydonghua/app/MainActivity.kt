@@ -131,8 +131,8 @@ class MainActivity : ComponentActivity() {
                                                 painter = painterResource(id = R.mipmap.ic_launcher),
                                                 contentDescription = "App Icon",
                                                 modifier = Modifier
-                                                    .size(32.dp)
-                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .size(42.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
                                             )
 
                                             Spacer(modifier = Modifier.width(12.dp))
