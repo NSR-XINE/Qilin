@@ -551,7 +551,7 @@ class MainActivity : ComponentActivity() {
                             // Center search button with liquid glass
                             Box(
                                 modifier = Modifier
-                                    .size(54.dp)
+                                    .size(64.dp)
                                     .clip(CircleShape)
                                     .hazeChild(state = hazeState, shape = CircleShape)
                                     .background(
@@ -582,7 +582,7 @@ class MainActivity : ComponentActivity() {
                                 Icon(
                                     imageVector = Icons.Rounded.Search,
                                     contentDescription = "Search",
-                                    modifier = Modifier.size(32.dp),
+                                    modifier = Modifier.size(38.dp),
                                     tint = Color.White
                                 )
                             }
