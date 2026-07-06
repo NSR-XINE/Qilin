@@ -18,6 +18,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -378,6 +382,30 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (showGlobalHeader) {
+                    val selectedIndex = when (currentRoute) {
+                        "home" -> 0
+                        "airing" -> 1
+                        "complete" -> 3
+                        "stopped" -> 4
+                        else -> -1
+                    }
+                    val indicatorOffset by animateFloatAsState(
+                        targetValue = when (selectedIndex) {
+                            0 -> 0.0f
+                            1 -> 1.0f
+                            3 -> 3.0f
+                            4 -> 4.0f
+                            else -> 0.0f
+                        },
+                        animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
+                        label = "indicatorOffset"
+                    )
+                    val indicatorAlpha by animateFloatAsState(
+                        targetValue = if (selectedIndex >= 0) 1.0f else 0.0f,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "indicatorAlpha"
+                    )
+
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
@@ -411,7 +439,46 @@ class MainActivity : ComponentActivity() {
                                         ),
                                         shape = RoundedCornerShape(32.dp)
                                     )
-                            )
+
+                            // Sliding liquid-glass active selection indicator pill
+                            BoxWithConstraints(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer { alpha = indicatorAlpha }
+                            ) {
+                                val totalWidth = maxWidth
+                                val tabWidth = totalWidth / 5
+                                val pillWidth = tabWidth * 0.72f
+                                val pillHeight = 44.dp
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(width = pillWidth, height = pillHeight)
+                                        .offset(
+                                            x = tabWidth * indicatorOffset + (tabWidth - pillWidth) / 2,
+                                            y = (65.dp - pillHeight) / 2
+                                        )
+                                        .background(
+                                            brush = Brush.verticalGradient(
+                                                colors = listOf(
+                                                    Color.White.copy(alpha = 0.28f),
+                                                    Color.White.copy(alpha = 0.08f)
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(22.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(
+                                                    Color.White.copy(alpha = 0.45f),
+                                                    Color.Transparent
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(22.dp)
+                                        )
+                                )
+                            }
 
                             // Normal sharp container and icons
                             Row(
