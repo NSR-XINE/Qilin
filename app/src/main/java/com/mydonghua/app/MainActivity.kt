@@ -48,6 +48,7 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.Search
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
@@ -547,24 +548,40 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            // Center donguha button
+                            // Center search button with liquid glass
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
+                                    .hazeChild(state = hazeState, shape = CircleShape)
                                     .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
-                                        )
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.White.copy(alpha = 0.25f),
+                                                Color.White.copy(alpha = 0.05f),
+                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                            )
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color.White.copy(alpha = 0.45f),
+                                                Color.Transparent
+                                            )
+                                        ),
+                                        shape = CircleShape
                                     )
                                     .clickable {
-                                        navController.navigate("add_edit_show")
+                                        navController.navigate("search")
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    painter = painterResource(id = R.mipmap.ic_launcher),
-                                    contentDescription = "Donguha",
+                                    imageVector = Icons.Rounded.Search,
+                                    contentDescription = "Search",
                                     modifier = Modifier.size(28.dp),
                                     tint = Color.White
                                 )
