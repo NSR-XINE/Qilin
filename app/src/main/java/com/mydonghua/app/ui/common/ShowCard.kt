@@ -404,10 +404,10 @@ fun ShowCard(
                         IconButton(onClick = { onFavoriteToggle(show) }, modifier = Modifier.size(32.dp)) {
                             val isFav = show.isFavorite == 1
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_heart),
+                                painter = painterResource(id = if (isFav) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline),
                                 contentDescription = "Toggle Favorite",
                                 modifier = Modifier.size(16.dp),
-                                tint = if (isFav) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                tint = if (isFav) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                         }
                         IconButton(onClick = { onDeleteClick(show) }, modifier = Modifier.size(32.dp)) {
