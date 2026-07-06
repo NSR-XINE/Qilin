@@ -399,7 +399,7 @@ fun ShowCard(
                             Icon(
                                 painter = painterResource(id = if (isAlarmSet) R.drawable.ic_bell else R.drawable.ic_bell_off),
                                 contentDescription = "Toggle Notification",
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(19.dp),
                                 tint = if (isAlarmSet) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                         }
