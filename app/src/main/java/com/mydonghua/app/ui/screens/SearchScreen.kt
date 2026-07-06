@@ -157,6 +157,7 @@ fun SearchScreen(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
+                    val context = LocalContext.current
                     items(results, key = { it.id }) { show ->
                         ShowCard(
                             show = show,
@@ -164,7 +165,7 @@ fun SearchScreen(
                             onEditClick = { onShowClick(it.id) },
                             onDeleteClick = { showsViewModel.deleteShow(it.id) },
                             onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
-                            onNotifyToggle = {},
+                            onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
                             onEpIncrement = { showsViewModel.incrementEpisode(it) },
                             onEpDecrement = { showsViewModel.decrementEpisode(it) },
                             onCardClick = { onShowClick(it.id) }

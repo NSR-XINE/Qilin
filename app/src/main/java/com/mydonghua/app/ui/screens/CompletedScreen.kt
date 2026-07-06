@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.ui.common.ShowCard
 
 import androidx.compose.ui.graphics.Color
@@ -84,6 +85,7 @@ fun CompletedScreen(
                     }
                 }
 
+                val context = LocalContext.current
                 items(shows, key = { it.id }) { show ->
                     ShowCard(
                         show = show,
@@ -91,7 +93,7 @@ fun CompletedScreen(
                         onEditClick = onEditClick,
                         onDeleteClick = { viewModel.deleteShow(it.id) },
                         onFavoriteToggle = { viewModel.toggleFavorite(it) },
-                        onNotifyToggle = {},
+                        onNotifyToggle = { viewModel.toggleNotification(context, it) },
                         onEpIncrement = { viewModel.incrementEpisode(it) },
                         onEpDecrement = { viewModel.decrementEpisode(it) },
                         onCardClick = onCardClick

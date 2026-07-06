@@ -540,6 +540,7 @@ fun WeeklyScheduleSection(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
+                val context = LocalContext.current
                 filteredShows.forEach { show ->
                     ShowCard(
                         show = show,
@@ -547,7 +548,7 @@ fun WeeklyScheduleSection(
                         onEditClick = { onShowClick(it.id) },
                         onDeleteClick = {},
                         onFavoriteToggle = { viewModel.toggleFavorite(it) },
-                        onNotifyToggle = {},
+                        onNotifyToggle = { viewModel.toggleNotification(context, it) },
                         onEpIncrement = { viewModel.incrementEpisode(it) },
                         onEpDecrement = { viewModel.decrementEpisode(it) },
                         onCardClick = { onShowClick(it.id) }

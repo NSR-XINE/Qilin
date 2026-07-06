@@ -106,4 +106,23 @@ class ShowsViewModel @Inject constructor(
             showRepository.insertOrUpdateShow(updated)
         }
     }
+
+    fun toggleNotification(context: android.content.Context, show: Show) {
+        viewModelScope.launch {
+            val isAlarmSet = show.alarmRequestCode != null && show.alarmRequestCode!! > 0
+            val updatedShow = if (isAlarmSet) {
+                com.mydonghua.app.AlarmScheduler.cancel(context, show.id, show.alarmRequestCode ?: 0)
+                android.widget.Toast.makeText(context, "${show.title} Notifications: Silent", android.widget.Toast.LENGTH_SHORT).show()
+                show.copy(alarmRequestCode = null, lastUpdated = System.currentTimeMillis())
+            } else {
+                val code = Math.abs((show.id + System.currentTimeMillis()).hashCode())
+                if (show.status == "ongoing" && !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()) {
+                    com.mydonghua.app.AlarmScheduler.schedule(context, show.id, show.title, show.releaseDay, show.releaseTime, code, show.currentEp)
+                }
+                android.widget.Toast.makeText(context, "${show.title} Notifications: Normal", android.widget.Toast.LENGTH_SHORT).show()
+                show.copy(alarmRequestCode = code, lastUpdated = System.currentTimeMillis())
+            }
+            showRepository.insertOrUpdateShow(updatedShow)
+        }
+    }
 }

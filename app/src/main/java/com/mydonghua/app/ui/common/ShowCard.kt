@@ -341,7 +341,12 @@ fun ShowCard(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Text("▶️", fontSize = 12.sp)
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_circle_play),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                                 Text("Stream", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
                         }
@@ -365,7 +370,12 @@ fun ShowCard(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Text("⏳", fontSize = 12.sp)
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_hourglass_half),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = Color(0xFF9D4EDD)
+                                )
                                 Text("Countdown", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9D4EDD))
                             }
                         }
