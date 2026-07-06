@@ -502,34 +502,40 @@ class MainActivity : ComponentActivity() {
                                         ),
                                         shape = RoundedCornerShape(32.dp)
                                     )
-                                    .padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceAround
+                                    .padding(horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_home,
-                                    label = "Home",
-                                    selected = currentRoute == "home",
-                                    onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[0] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_home,
+                                        label = "Home",
+                                        selected = currentRoute == "home",
+                                        onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val capsule = capsuleCoordinates
+                                            if (capsule != null) {
+                                                tabCenters[0] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
                                         }
-                                    }
-                                )
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_airing,
-                                    label = "Airing",
-                                    selected = currentRoute == "airing",
-                                    onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[1] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                    )
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_airing,
+                                        label = "Airing",
+                                        selected = currentRoute == "airing",
+                                        onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val capsule = capsuleCoordinates
+                                            if (capsule != null) {
+                                                tabCenters[1] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
+
                                 Box(
                                     modifier = Modifier
                                         .size(48.dp)
@@ -544,32 +550,44 @@ class MainActivity : ComponentActivity() {
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                    Icon(
+                                        painter = painterResource(id = R.mipmap.ic_launcher),
+                                        contentDescription = "Donguha",
+                                        modifier = Modifier.size(28.dp),
+                                        tint = Color.White
+                                    )
                                 }
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_complete,
-                                    label = "Complete",
-                                    selected = currentRoute == "complete",
-                                    onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[2] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_complete,
+                                        label = "Complete",
+                                        selected = currentRoute == "complete",
+                                        onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val capsule = capsuleCoordinates
+                                            if (capsule != null) {
+                                                tabCenters[2] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
                                         }
-                                    }
-                                )
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_stopped,
-                                    label = "Stopped",
-                                    selected = currentRoute == "stopped",
-                                    onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[3] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                    )
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_stopped,
+                                        label = "Upcoming",
+                                        selected = currentRoute == "stopped",
+                                        onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val capsule = capsuleCoordinates
+                                            if (capsule != null) {
+                                                tabCenters[3] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
                     }
