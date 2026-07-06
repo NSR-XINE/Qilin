@@ -680,18 +680,9 @@ private fun RowScope.BottomNavItem(
             painter = painterResource(id = iconRes),
             contentDescription = label,
             modifier = Modifier
-                .size(20.dp)
+                .size(24.dp)
                 .align(Alignment.CenterHorizontally),
             tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            fontSize = 9.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
 }
