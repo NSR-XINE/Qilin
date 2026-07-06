@@ -65,17 +65,28 @@ fun ShowCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.22f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable { onCardClick(show) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)
+            containerColor = Color.Transparent
         ),
         border = BorderStroke(
             width = 1.dp,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.15f),
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    Color.White.copy(alpha = 0.45f),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    Color.White.copy(alpha = 0.05f),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                 )
             )
         )
