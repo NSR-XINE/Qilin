@@ -430,6 +430,8 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
                         contentAlignment = Alignment.BottomCenter
                     ) {
+                        val density = LocalDensity.current
+                        val pillHeight = 44.dp
                         Row(
                             modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -459,8 +461,6 @@ class MainActivity : ComponentActivity() {
                                         )
                                 )
 
-                                val density = LocalDensity.current
-                                val pillHeight = 44.dp
                                 val leftColW = if (leftTabCenters[1] > 0f) leftTabCenters[1] - leftTabCenters[0] else 0f
                                 val leftPillW = if (leftColW > 0f) leftColW * 0.72f else with(density) { 44.dp.toPx() }
 
