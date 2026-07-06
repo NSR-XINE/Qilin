@@ -1,4 +1,3 @@
--keepclassmembers class com.mydonghua.app.MainActivity$AndroidBridge {
-    @android.webkit.JavascriptInterface <methods>;
-}
--keep class com.mydonghua.app.* { *; }
+-keep class com.mydonghua.app.domain.model.** { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase { *; }
+-keep class * extends com.google.gson.** { *; }

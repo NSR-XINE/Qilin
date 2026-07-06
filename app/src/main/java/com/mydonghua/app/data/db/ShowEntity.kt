@@ -53,4 +53,56 @@ data class ShowEntity(
     val language: String? = "Chinese",
     @ColumnInfo(name = "collection_id")
     val collectionId: String?
-)
+) {
+    fun toDomain(): com.mydonghua.app.domain.model.Show = com.mydonghua.app.domain.model.Show(
+        id = id,
+        title = title,
+        titleZh = titleZh,
+        status = status,
+        releaseDay = releaseDay,
+        releaseTime = releaseTime,
+        currentEp = currentEp,
+        totalEp = totalEp,
+        poster = poster,
+        watchUrl = watchUrl,
+        countdownUrl = countdownUrl,
+        notes = notes,
+        isFavorite = isFavorite,
+        rating = rating,
+        lastUpdated = lastUpdated,
+        dateAdded = dateAdded,
+        alarmRequestCode = alarmRequestCode,
+        genres = genres,
+        studio = studio,
+        releaseYear = releaseYear,
+        language = language,
+        collectionId = collectionId
+    )
+
+    companion object {
+        fun fromDomain(show: com.mydonghua.app.domain.model.Show): ShowEntity = ShowEntity(
+            id = show.id,
+            title = show.title,
+            titleZh = show.titleZh,
+            status = show.status,
+            releaseDay = show.releaseDay,
+            releaseTime = show.releaseTime,
+            currentEp = show.currentEp,
+            totalEp = show.totalEp,
+            poster = show.poster,
+            watchUrl = show.watchUrl,
+            countdownUrl = show.countdownUrl,
+            notes = show.notes,
+            isFavorite = show.isFavorite,
+            rating = show.rating,
+            lastUpdated = show.lastUpdated,
+            dateAdded = show.dateAdded,
+            alarmRequestCode = show.alarmRequestCode,
+            genres = show.genres,
+            studio = show.studio,
+            releaseYear = show.releaseYear,
+            language = show.language,
+            collectionId = show.collectionId
+        )
+    }
+}

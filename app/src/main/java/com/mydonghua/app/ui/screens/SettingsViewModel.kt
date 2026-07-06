@@ -28,6 +28,13 @@ data class SettingsUiState(
     val showSchedule: Boolean = true
 )
 
+data class DashboardPrefs(
+    val showBanner: Boolean,
+    val showContinue: Boolean,
+    val showRecent: Boolean,
+    val showSchedule: Boolean
+)
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val themePreference: ThemePreference,
@@ -45,16 +52,16 @@ class SettingsViewModel @Inject constructor(
             themePreference.showRecentFlow,
             themePreference.showScheduleFlow
         ) { banner, cont, recent, schedule ->
-            Quadruple(banner, cont, recent, schedule)
+            DashboardPrefs(banner, cont, recent, schedule)
         }
-    ) { theme, accent, quad ->
+    ) { theme, accent, prefs ->
         SettingsUiState(
             themeMode = theme,
             accentColor = accent,
-            showBanner = quad.first,
-            showContinue = quad.second,
-            showRecent = quad.third,
-            showSchedule = quad.fourth
+            showBanner = prefs.showBanner,
+            showContinue = prefs.showContinue,
+            showRecent = prefs.showRecent,
+            showSchedule = prefs.showSchedule
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -82,8 +89,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { themePreference.setShowSchedule(show) }
     }
 
-    fun exportBackup(context: Context): File? = kotlinx.coroutines.runBlocking {
-        try {
+    suspend fun exportBackup(context: Context): File? {
+        return try {
             val showsList = showRepository.getAllShowsList()
             val watchHistory = watchHistoryRepository.getWatchHistoryList()
 
@@ -192,10 +199,7 @@ class SettingsViewModel @Inject constructor(
                     importedShowsList.add(show)
                 }
 
-                val currentDbList = showRepository.getAllShowsList()
-                currentDbList.forEach { s ->
-                    showRepository.deleteShow(s.id)
-                }
+                showRepository.clearAllShows()
                 importedShowsList.forEach { s ->
                     showRepository.insertOrUpdateShow(s)
                 }
@@ -238,9 +242,4 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-data class Quadruple<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
-)
+

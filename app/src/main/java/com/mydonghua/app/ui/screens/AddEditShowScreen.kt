@@ -16,8 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.AlarmScheduler
-import com.mydonghua.app.data.db.ShowEntity
 import com.mydonghua.app.data.service.PosterFetchService
+import com.mydonghua.app.domain.model.Show
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -148,7 +148,7 @@ fun AddEditShowScreen(
                     enabled = !isAutoFilling,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(if (isAutoFilling) "..." else "Fill ✨")
+                    Text(if (isAutoFilling) "..." else "Auto-Fill")
                 }
             }
 
@@ -259,7 +259,7 @@ fun AddEditShowScreen(
                     },
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Scrape 🕷️")
+                    Text("Scrape")
                 }
             }
 
@@ -336,7 +336,7 @@ fun AddEditShowScreen(
                         return@Button
                     }
 
-                    val show = ShowEntity(
+                    val show = Show(
                         id = editingShow?.id ?: UUID.randomUUID().toString(),
                         title = title,
                         titleZh = titleZh.takeIf { it.isNotEmpty() },

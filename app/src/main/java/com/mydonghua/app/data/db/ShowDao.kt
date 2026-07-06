@@ -38,6 +38,9 @@ interface ShowDao {
     @Query("DELETE FROM shows WHERE id = :showId")
     suspend fun deleteShow(showId: String): Int
 
+    @Query("DELETE FROM shows")
+    suspend fun deleteAllShows()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun bulkInsert(shows: List<ShowEntity>)
 }

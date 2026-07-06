@@ -61,6 +61,29 @@ fun ShowCard(
         }
     }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Show") },
+            text = { Text("Are you sure you want to delete \"${show.title}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDeleteClick(show)
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -234,7 +257,6 @@ fun ShowCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text("✅", fontSize = 12.sp)
                             Text(
                                 text = "Series Completed",
                                 fontSize = 12.sp,
@@ -269,7 +291,6 @@ fun ShowCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text("📅", fontSize = 12.sp)
                     val scheduleText = if (show.status == "completed") {
                         "Series Complete"
                     } else {
@@ -430,7 +451,7 @@ fun ShowCard(
                                 tint = if (isFav) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                         }
-                        IconButton(onClick = { onDeleteClick(show) }, modifier = Modifier.size(32.dp)) {
+                        IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(32.dp)) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_trash),
                                 contentDescription = "Delete Show",

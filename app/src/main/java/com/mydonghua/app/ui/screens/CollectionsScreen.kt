@@ -57,7 +57,7 @@ fun CollectionsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("📂", fontSize = 48.sp)
+                    Text("No collections", fontSize = 48.sp)
                     Text(
                         text = "No collections created yet",
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -99,7 +99,7 @@ fun CollectionsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("📁", fontSize = 16.sp)
+                                Text("▸", fontSize = 16.sp)
                                 Text(
                                     text = collectionName,
                                     fontSize = 14.sp,

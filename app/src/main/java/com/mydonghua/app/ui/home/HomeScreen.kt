@@ -90,7 +90,7 @@ fun HomeScreen(
         // Continue Watching Section
         if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
             item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "⏳ Continue Watching")
+                SectionHeader(title = "Continue Watching")
             }
             item(span = { GridItemSpan(2) }) {
                 ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick)
@@ -100,7 +100,7 @@ fun HomeScreen(
         // Recently Updated Section
         if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
             item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "🚀 Recently Updated")
+                SectionHeader(title = "Recently Updated")
             }
             item(span = { GridItemSpan(2) }) {
                 RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick)
@@ -110,7 +110,7 @@ fun HomeScreen(
         // Weekly Schedule Section
         if (state.showWeeklySchedule) {
             item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "📅 Weekly Schedule")
+                SectionHeader(title = "Weekly Schedule")
             }
             item(span = { GridItemSpan(2) }) {
                 WeeklyScheduleSection(

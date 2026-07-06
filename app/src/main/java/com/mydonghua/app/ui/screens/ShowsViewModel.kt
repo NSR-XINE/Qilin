@@ -79,50 +79,18 @@ class ShowsViewModel @Inject constructor(
     }
 
     fun incrementEpisode(show: Show) {
-        viewModelScope.launch {
-            val nextEp = show.currentEp + 1
-            val updated = show.copy(currentEp = nextEp, lastUpdated = System.currentTimeMillis())
-            showRepository.insertOrUpdateShow(updated)
-            watchHistoryRepository.addWatchHistory(show.id, nextEp)
-        }
+        viewModelScope.launch { ShowActions.incrementEpisode(show, showRepository, watchHistoryRepository) }
     }
 
     fun decrementEpisode(show: Show) {
-        viewModelScope.launch {
-            if (show.currentEp > 0) {
-                val prevEp = show.currentEp - 1
-                val updated = show.copy(currentEp = prevEp, lastUpdated = System.currentTimeMillis())
-                showRepository.insertOrUpdateShow(updated)
-            }
-        }
+        viewModelScope.launch { ShowActions.decrementEpisode(show, showRepository) }
     }
 
     fun toggleFavorite(show: Show) {
-        viewModelScope.launch {
-            val updated = show.copy(
-                isFavorite = if (show.isFavorite == 1) 0 else 1,
-                lastUpdated = System.currentTimeMillis()
-            )
-            showRepository.insertOrUpdateShow(updated)
-        }
+        viewModelScope.launch { ShowActions.toggleFavorite(show, showRepository) }
     }
 
     fun toggleNotification(context: android.content.Context, show: Show) {
-        viewModelScope.launch {
-            val isAlarmSet = show.alarmRequestCode != null && show.alarmRequestCode!! > 0
-            val updatedShow = if (isAlarmSet) {
-                com.mydonghua.app.AlarmScheduler.cancel(context, show.id, show.alarmRequestCode ?: 0)
-                android.widget.Toast.makeText(context, "${show.title} Notifications: Silent", android.widget.Toast.LENGTH_SHORT).show()
-                show.copy(alarmRequestCode = null, lastUpdated = System.currentTimeMillis())
-            } else {
-                val code = Math.abs((show.id + System.currentTimeMillis()).hashCode())
-                if (show.status == "ongoing" && !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()) {
-                    com.mydonghua.app.AlarmScheduler.schedule(context, show.id, show.title, show.releaseDay, show.releaseTime, code, show.currentEp)
-                }
-                android.widget.Toast.makeText(context, "${show.title} Notifications: Normal", android.widget.Toast.LENGTH_SHORT).show()
-                show.copy(alarmRequestCode = code, lastUpdated = System.currentTimeMillis())
-            }
-            showRepository.insertOrUpdateShow(updatedShow)
-        }
+        viewModelScope.launch { ShowActions.toggleNotification(context, show, showRepository) }
     }
 }
