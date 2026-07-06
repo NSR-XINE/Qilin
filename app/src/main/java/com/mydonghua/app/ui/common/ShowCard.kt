@@ -8,6 +8,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -373,16 +375,38 @@ fun ShowCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         IconButton(onClick = { onNotifyToggle(show) }, modifier = Modifier.size(32.dp)) {
-                            Text(if (show.alarmRequestCode != null && show.alarmRequestCode!! > 0) "🔔" else "🔕", fontSize = 14.sp)
+                            val isAlarmSet = show.alarmRequestCode != null && show.alarmRequestCode!! > 0
+                            Icon(
+                                painter = painterResource(id = if (isAlarmSet) R.drawable.ic_bell else R.drawable.ic_bell_off),
+                                contentDescription = "Toggle Notification",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (isAlarmSet) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
                         }
                         IconButton(onClick = { onEditClick(show) }, modifier = Modifier.size(32.dp)) {
-                            Text("✏️", fontSize = 14.sp)
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_edit_2),
+                                contentDescription = "Edit Show",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            )
                         }
                         IconButton(onClick = { onFavoriteToggle(show) }, modifier = Modifier.size(32.dp)) {
-                            Text(if (show.isFavorite == 1) "❤️" else "🖤", fontSize = 14.sp)
+                            val isFav = show.isFavorite == 1
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_heart),
+                                contentDescription = "Toggle Favorite",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (isFav) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
                         }
                         IconButton(onClick = { onDeleteClick(show) }, modifier = Modifier.size(32.dp)) {
-                            Text("🗑️", fontSize = 14.sp)
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_trash_2),
+                                contentDescription = "Delete Show",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                            )
                         }
                     }
                 }
