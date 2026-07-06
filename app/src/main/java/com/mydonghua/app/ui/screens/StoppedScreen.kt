@@ -17,7 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.ui.common.ShowCard
 
 import androidx.compose.ui.graphics.Color
-
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
