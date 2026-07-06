@@ -25,9 +25,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.LocalDensity
+import kotlin.math.roundToInt
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -381,20 +387,18 @@ class MainActivity : ComponentActivity() {
                     val selectedIndex = when (currentRoute) {
                         "home" -> 0
                         "airing" -> 1
-                        "complete" -> 3
-                        "stopped" -> 4
+                        "complete" -> 2
+                        "stopped" -> 3
                         else -> -1
                     }
-                    val indicatorOffset by animateFloatAsState(
-                        targetValue = when (selectedIndex) {
-                            0 -> 0.0f
-                            1 -> 1.0f
-                            3 -> 3.0f
-                            4 -> 4.0f
-                            else -> 0.0f
-                        },
+                    val tabCenters = remember { mutableFloatStateListOf(0f, 0f, 0f, 0f) }
+                    var capsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+
+                    val targetCenterX = if (selectedIndex >= 0) tabCenters[selectedIndex] else 0f
+                    val pillOffsetX by animateFloatAsState(
+                        targetValue = targetCenterX,
                         animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
-                        label = "indicatorOffset"
+                        label = "pillOffsetX"
                     )
                     val indicatorAlpha by animateFloatAsState(
                         targetValue = if (selectedIndex >= 0) 1.0f else 0.0f,
@@ -416,6 +420,7 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxWidth()
                                 .height(65.dp)
                                 .clip(RoundedCornerShape(32.dp))
+                                .onGloballyPositioned { capsuleCoordinates = it }
                         ) {
                             // Blurred liquid-glass backdrop using Haze
                             Box(
@@ -438,23 +443,23 @@ class MainActivity : ComponentActivity() {
 
                             )
                             // Sliding liquid-glass active selection indicator pill
-                            BoxWithConstraints(
+                            val density = LocalDensity.current
+                            val pillHeight = 44.dp
+                            val pillWidth = 44.dp
+
+                            Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .graphicsLayer { alpha = indicatorAlpha }
                             ) {
-                                val totalWidth = maxWidth
-                                val tabWidth = totalWidth / 5
-                                val pillWidth = tabWidth * 0.72f
-                                val pillHeight = 44.dp
-
                                 Box(
                                     modifier = Modifier
                                         .size(width = pillWidth, height = pillHeight)
-                                        .offset(
-                                            x = tabWidth * indicatorOffset + (tabWidth - pillWidth) / 2,
-                                            y = (65.dp - pillHeight) / 2
-                                        )
+                                        .offset {
+                                            val xOffset = with(density) { (pillOffsetX - pillWidth.toPx() / 2f).roundToInt() }
+                                            val yOffset = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
+                                            IntOffset(xOffset, yOffset)
+                                        }
                                         .background(
                                             brush = Brush.verticalGradient(
                                                 colors = listOf(
@@ -501,13 +506,25 @@ class MainActivity : ComponentActivity() {
                                     iconRes = R.drawable.ic_home,
                                     label = "Home",
                                     selected = currentRoute == "home",
-                                    onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } }
+                                    onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
+                                    modifier = Modifier.onGloballyPositioned { coords ->
+                                        val capsule = capsuleCoordinates
+                                        if (capsule != null) {
+                                            tabCenters[0] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                        }
+                                    }
                                 )
                                 BottomNavItem(
                                     iconRes = R.drawable.ic_airing,
                                     label = "Airing",
                                     selected = currentRoute == "airing",
-                                    onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                    onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                    modifier = Modifier.onGloballyPositioned { coords ->
+                                        val capsule = capsuleCoordinates
+                                        if (capsule != null) {
+                                            tabCenters[1] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                        }
+                                    }
                                 )
                                 Box(
                                     modifier = Modifier
@@ -529,13 +546,25 @@ class MainActivity : ComponentActivity() {
                                     iconRes = R.drawable.ic_complete,
                                     label = "Complete",
                                     selected = currentRoute == "complete",
-                                    onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                    onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                    modifier = Modifier.onGloballyPositioned { coords ->
+                                        val capsule = capsuleCoordinates
+                                        if (capsule != null) {
+                                            tabCenters[2] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                        }
+                                    }
                                 )
                                 BottomNavItem(
                                     iconRes = R.drawable.ic_stopped,
                                     label = "Stopped",
                                     selected = currentRoute == "stopped",
-                                    onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
+                                    onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                    modifier = Modifier.onGloballyPositioned { coords ->
+                                        val capsule = capsuleCoordinates
+                                        if (capsule != null) {
+                                            tabCenters[3] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -748,10 +777,11 @@ private fun RowScope.BottomNavItem(
     iconRes: Int,
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .weight(1f)
             .fillMaxHeight()
             .clickable(
