@@ -69,7 +69,8 @@ fun ShowCard(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         Color.White.copy(alpha = 0.22f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)
+                        Color.White.copy(alpha = 0.05f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
                     )
                 ),
                 shape = RoundedCornerShape(16.dp)
@@ -80,12 +81,12 @@ fun ShowCard(
             containerColor = Color.Transparent
         ),
         border = BorderStroke(
-            width = 1.dp,
+            width = 1.2.dp,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.45f),
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    Color.White.copy(alpha = 0.05f),
+                    Color.White.copy(alpha = 0.55f),
+                    Color.White.copy(alpha = 0.15f),
+                    Color.Transparent,
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                 )
             )

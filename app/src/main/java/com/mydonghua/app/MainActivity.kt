@@ -396,8 +396,9 @@ class MainActivity : ComponentActivity() {
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
-                                                Color.White.copy(alpha = 0.28f),
-                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+                                                Color.White.copy(alpha = 0.25f),
+                                                Color.White.copy(alpha = 0.05f),
+                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
                                             )
                                         ),
                                         shape = RoundedCornerShape(32.dp)
@@ -409,13 +410,13 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .border(
-                                        width = 1.dp,
+                                        width = 1.2.dp,
                                         brush = Brush.linearGradient(
                                             colors = listOf(
-                                                Color.White.copy(alpha = 0.45f),
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                                Color.White.copy(alpha = 0.05f),
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                                Color.White.copy(alpha = 0.65f),
+                                                Color.White.copy(alpha = 0.2f),
+                                                Color.Transparent,
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                                             )
                                         ),
                                         shape = RoundedCornerShape(32.dp)
