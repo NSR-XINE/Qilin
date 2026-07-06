@@ -108,7 +108,5 @@ dependencies {
     testImplementation 'androidx.test.ext:junit-ktx:1.1.5'
     testImplementation 'kotlinx.coroutines:kotlinx-coroutines-test:1.7.3'
 
-    // Liquid Glass / Backdrop Blur
-    implementation 'io.github.kyant0:backdrop:1.0.6'
-    implementation 'io.github.kyant0:shapes:1.1.2'
+
 }
