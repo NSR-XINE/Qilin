@@ -35,6 +35,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.work.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.draw.blur
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.mydonghua.app.ui.home.HomeScreen
@@ -108,6 +111,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
+                        val hazeState = remember { HazeState() }
                         if (settingsState.themeMode.lowercase() != "light") {
                             StarsBackground()
                         }
@@ -189,6 +193,7 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier
                                     .fillMaxSize()
+                                    .haze(hazeState)
                                     .padding(top = innerPadding.calculateTopPadding())
                             ) {
                         composable("home") {
@@ -388,11 +393,14 @@ class MainActivity : ComponentActivity() {
                                 .height(65.dp)
                                 .clip(RoundedCornerShape(32.dp))
                         ) {
-                            // Pure Compose liquid-glass backdrop
+                            // Blurred liquid-glass backdrop using Haze
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .blur(25.dp)
+                                    .hazeChild(
+                                        state = hazeState,
+                                        shape = RoundedCornerShape(32.dp)
+                                    )
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
