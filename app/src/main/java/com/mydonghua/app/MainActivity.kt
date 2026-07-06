@@ -30,7 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.LocalDensity
+import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.roundToInt
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -391,7 +391,7 @@ class MainActivity : ComponentActivity() {
                         "stopped" -> 3
                         else -> -1
                     }
-                    val tabCenters = remember { mutableFloatStateListOf(0f, 0f, 0f, 0f) }
+                    val tabCenters = remember { mutableStateListOf(0f, 0f, 0f, 0f) }
                     var capsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
 
                     val targetCenterX = if (selectedIndex >= 0) tabCenters[selectedIndex] else 0f
