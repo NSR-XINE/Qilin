@@ -9,6 +9,39 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Typography
+import com.mydonghua.app.R
+
+val JustSansFamily = FontFamily(
+    Font(R.font.just_sans_regular, FontWeight.Normal),
+    Font(R.font.just_sans_exbold, FontWeight.Bold),
+    Font(R.font.just_sans_exbold, FontWeight.ExtraBold),
+    Font(R.font.just_sans_regular, FontWeight.Medium),
+    Font(R.font.just_sans_regular, FontWeight.SemiBold)
+)
+
+private val defaultTypography = Typography()
+val JustSansTypography = Typography(
+    displayLarge = defaultTypography.displayLarge.copy(fontFamily = JustSansFamily),
+    displayMedium = defaultTypography.displayMedium.copy(fontFamily = JustSansFamily),
+    displaySmall = defaultTypography.displaySmall.copy(fontFamily = JustSansFamily),
+    headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = JustSansFamily),
+    headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = JustSansFamily),
+    headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = JustSansFamily),
+    titleLarge = defaultTypography.titleLarge.copy(fontFamily = JustSansFamily),
+    titleMedium = defaultTypography.titleMedium.copy(fontFamily = JustSansFamily),
+    titleSmall = defaultTypography.titleSmall.copy(fontFamily = JustSansFamily),
+    bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = JustSansFamily),
+    bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = JustSansFamily),
+    bodySmall = defaultTypography.bodySmall.copy(fontFamily = JustSansFamily),
+    labelLarge = defaultTypography.labelLarge.copy(fontFamily = JustSansFamily),
+    labelMedium = defaultTypography.labelMedium.copy(fontFamily = JustSansFamily),
+    labelSmall = defaultTypography.labelSmall.copy(fontFamily = JustSansFamily)
+)
+
 
 private val DarkColorScheme = darkColorScheme(
     primary = AccentCyan,
@@ -91,6 +124,7 @@ fun MyDonghuaTheme(
 
     MaterialTheme(
         colorScheme = finalScheme,
+        typography = JustSansTypography,
         content = content
     )
 }
