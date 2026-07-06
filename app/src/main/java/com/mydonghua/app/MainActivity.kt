@@ -652,12 +652,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-            Text(
-                text = "My Donghua v6.8",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+                            Text(
+                                text = "My Donghua v6.8",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
                         }
                     }
                 }
