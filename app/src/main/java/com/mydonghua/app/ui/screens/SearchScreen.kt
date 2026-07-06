@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -38,6 +39,7 @@ fun SearchScreen(
     val suggestions by viewModel.suggestions.collectAsState()
     val results by viewModel.filteredShows.collectAsState()
     val filters by viewModel.activeFilters.collectAsState()
+    val context = LocalContext.current
 
     var showFiltersSheet by remember { mutableStateOf(false) }
     var isSearchActive by remember { mutableStateOf(false) }
@@ -157,7 +159,7 @@ fun SearchScreen(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
-                    val context = LocalContext.current
+
                     items(results, key = { it.id }) { show ->
                         ShowCard(
                             show = show,

@@ -28,6 +28,7 @@ fun FavoritesScreen(
     modifier: Modifier = Modifier
 ) {
     val shows by viewModel.favoriteShows.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -63,7 +64,7 @@ fun FavoritesScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                val context = LocalContext.current
+
                 items(shows, key = { it.id }) { show ->
                     ShowCard(
                         show = show,

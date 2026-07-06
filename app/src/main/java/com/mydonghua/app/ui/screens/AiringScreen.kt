@@ -29,6 +29,7 @@ fun AiringScreen(
     modifier: Modifier = Modifier
 ) {
     val shows by viewModel.airingShows.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -85,7 +86,7 @@ fun AiringScreen(
                     }
                 }
 
-                val context = LocalContext.current
+
                 items(shows, key = { it.id }) { show ->
                     ShowCard(
                         show = show,
