@@ -445,7 +445,8 @@ class MainActivity : ComponentActivity() {
                             // Sliding liquid-glass active selection indicator pill
                             val density = LocalDensity.current
                             val pillHeight = 44.dp
-                            val pillWidth = 44.dp
+                            val measuredColumnWidth = if (tabCenters[1] > 0f) tabCenters[1] - tabCenters[0] else 0f
+                            val pillWidthPx = if (measuredColumnWidth > 0f) measuredColumnWidth * 0.72f else with(density) { 44.dp.toPx() }
 
                             Box(
                                 modifier = Modifier
@@ -454,9 +455,12 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(width = pillWidth, height = pillHeight)
+                                        .size(
+                                            width = with(density) { pillWidthPx.toDp() },
+                                            height = pillHeight
+                                        )
                                         .offset {
-                                            val xOffset = with(density) { (pillOffsetX - pillWidth.toPx() / 2f).roundToInt() }
+                                            val xOffset = (pillOffsetX - pillWidthPx / 2f).roundToInt()
                                             val yOffset = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
                                             IntOffset(xOffset, yOffset)
                                         }
