@@ -279,7 +279,8 @@ private fun BannerTimeBox(value: Long, label: String) {
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(10.dp)
+                .height(14.dp)
+                .offset(y = (-4).dp)
                 .wrapContentHeight(Alignment.CenterVertically)
         )
     }
