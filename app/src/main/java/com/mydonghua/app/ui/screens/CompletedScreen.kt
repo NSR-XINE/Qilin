@@ -72,7 +72,24 @@ fun CompletedScreen(
                         Box(
                             modifier = Modifier
                                 .background(
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.22f),
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.45f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            Color.White.copy(alpha = 0.05f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                        )
+                                    ),
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)

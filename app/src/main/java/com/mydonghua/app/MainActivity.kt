@@ -387,14 +387,19 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxWidth()
                                 .height(65.dp)
                         ) {
-                            // Blurred frosted-glass backdrop
+                            // Blurred liquid-glass backdrop
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .blur(20.dp)
+                                    .blur(25.dp)
                                     .background(
-                                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.45f),
-                                        shape = RoundedCornerShape(20.dp)
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.White.copy(alpha = 0.28f),
+                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(22.dp)
                                     )
                             )
 
@@ -406,11 +411,13 @@ class MainActivity : ComponentActivity() {
                                         width = 1.dp,
                                         brush = Brush.linearGradient(
                                             colors = listOf(
-                                                Color.White.copy(alpha = 0.25f),
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                                                Color.White.copy(alpha = 0.45f),
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                Color.White.copy(alpha = 0.05f),
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                             )
                                         ),
-                                        shape = RoundedCornerShape(20.dp)
+                                        shape = RoundedCornerShape(22.dp)
                                     )
                                     .padding(horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
