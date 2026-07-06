@@ -386,6 +386,7 @@ class MainActivity : ComponentActivity() {
                                 .widthIn(max = 500.dp)
                                 .fillMaxWidth()
                                 .height(65.dp)
+                                .clip(RoundedCornerShape(32.dp))
                         ) {
                             // Blurred liquid-glass backdrop
                             Box(
@@ -399,7 +400,7 @@ class MainActivity : ComponentActivity() {
                                                 MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
                                             )
                                         ),
-                                        shape = RoundedCornerShape(22.dp)
+                                        shape = RoundedCornerShape(32.dp)
                                     )
                             )
 
@@ -417,7 +418,7 @@ class MainActivity : ComponentActivity() {
                                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                             )
                                         ),
-                                        shape = RoundedCornerShape(22.dp)
+                                        shape = RoundedCornerShape(32.dp)
                                     )
                                     .padding(horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
