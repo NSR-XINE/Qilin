@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace 'com.mydonghua.app'
-    compileSdk 37
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.mydonghua.app"
@@ -109,6 +109,6 @@ dependencies {
     testImplementation 'kotlinx.coroutines:kotlinx-coroutines-test:1.7.3'
 
     // Liquid Glass / Backdrop Blur
-    implementation 'io.github.kyant0:backdrop:2.0.0'
-    implementation 'io.github.kyant0:shapes:1.2.0'
+    implementation 'io.github.kyant0:backdrop:1.0.6'
+    implementation 'io.github.kyant0:shapes:1.1.2'
 }
