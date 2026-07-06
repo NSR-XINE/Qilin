@@ -436,6 +436,7 @@ class MainActivity : ComponentActivity() {
                                         shape = RoundedCornerShape(32.dp)
                                     )
 
+                            )
                             // Sliding liquid-glass active selection indicator pill
                             BoxWithConstraints(
                                 modifier = Modifier
