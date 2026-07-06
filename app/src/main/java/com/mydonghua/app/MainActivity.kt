@@ -36,9 +36,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.work.*
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.draw.blur
+
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -48,7 +46,6 @@ import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -61,7 +58,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setupBackgroundSync()
         requestPermissionsOnStart()
 
         setContent {
@@ -577,10 +573,11 @@ class MainActivity : ComponentActivity() {
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Text(
-                                            text = "🐉",
-                                            fontSize = 20.sp,
-                                            color = MaterialTheme.colorScheme.primary
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_menu),
+                                            contentDescription = "Menu",
+                                            modifier = Modifier.size(24.dp),
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                         Text(
                                             text = "Menu",
@@ -655,12 +652,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-                            Text(
-                                text = "Last sync: just now",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
+            Text(
+                text = "My Donghua v6.8",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
                         }
                     }
                 }
@@ -669,26 +666,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 }
-
-    private fun setupBackgroundSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresBatteryNotLow(true)
-            .build()
-
-        val syncRequest = PeriodicWorkRequest.Builder(
-            SyncWorker::class.java, 4, TimeUnit.HOURS
-        )
-            .setConstraints(constraints)
-            .addTag("donghua_sync")
-            .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "donghua_background_sync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            syncRequest
-        )
-    }
 
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return

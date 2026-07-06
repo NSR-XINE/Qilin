@@ -1,19 +1,20 @@
 package com.mydonghua.app.domain.repository
 
-import com.mydonghua.app.data.db.ShowEntity
+import com.mydonghua.app.domain.model.Show
 import kotlinx.coroutines.flow.Flow
 
 interface ShowRepository {
-    fun getAllShows(): Flow<List<ShowEntity>>
-    suspend fun getAllShowsList(): List<ShowEntity>
-    suspend fun getShowsByStatus(status: String): List<ShowEntity>
-    suspend fun getFavoriteShows(): List<ShowEntity>
-    suspend fun getShowById(id: String): ShowEntity?
-    fun getShowByIdFlow(id: String): Flow<ShowEntity?>
-    suspend fun searchShows(query: String): List<ShowEntity>
-    suspend fun getRecentlyUpdatedShows(limit: Int): List<ShowEntity>
+    fun getAllShows(): Flow<List<Show>>
+    suspend fun getAllShowsList(): List<Show>
+    suspend fun getShowsByStatus(status: String): List<Show>
+    suspend fun getFavoriteShows(): List<Show>
+    suspend fun getShowById(id: String): Show?
+    fun getShowByIdFlow(id: String): Flow<Show?>
+    suspend fun searchShows(query: String): List<Show>
+    suspend fun getRecentlyUpdatedShows(limit: Int): List<Show>
     suspend fun getMaxAlarmRequestCode(): Int
-    suspend fun insertOrUpdateShow(show: ShowEntity)
+    suspend fun insertOrUpdateShow(show: Show)
     suspend fun deleteShow(showId: String): Boolean
-    suspend fun bulkInsert(shows: List<ShowEntity>)
+    suspend fun clearAllShows()
+    suspend fun bulkInsert(shows: List<Show>)
 }

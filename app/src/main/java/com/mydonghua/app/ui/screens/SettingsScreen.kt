@@ -8,6 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +41,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -84,7 +88,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("light" to "☀️ Light Mode", "dark" to "🌙 Dark Mode", "amoled" to "🌌 AMOLED Black").forEach { (modeKey, modeName) ->
+                listOf("light" to "Light Mode", "dark" to "Dark Mode", "amoled" to "AMOLED Black").forEach { (modeKey, modeName) ->
                     val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
                     Row(
                         modifier = Modifier
@@ -199,13 +203,13 @@ fun SettingsScreen(
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                SettingsActionItem("📊 Detailed Stats & Analytics", onClick = onNavigateToStats)
+                SettingsActionItem("Detailed Stats & Analytics", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
                 Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                SettingsActionItem("📅 Scheduled Releases Calendar", onClick = onNavigateToCalendar)
+                SettingsActionItem("Scheduled Releases Calendar", iconRes = R.drawable.ic_calendar, onClick = onNavigateToCalendar)
                 Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                SettingsActionItem("🕒 Date-Grouped Watch History", onClick = onNavigateToHistory)
+                SettingsActionItem("Date-Grouped Watch History", iconRes = R.drawable.ic_history, onClick = onNavigateToHistory)
                 Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                SettingsActionItem("📂 Grouped Show Collections", onClick = onNavigateToCollections)
+                SettingsActionItem("Grouped Show Collections", iconRes = R.drawable.ic_collections, onClick = onNavigateToCollections)
             }
 
             // Backup & Import/Export
@@ -216,6 +220,7 @@ fun SettingsScreen(
             ) {
                 Button(
                     onClick = {
+                        coroutineScope.launch {
                         val file = viewModel.exportBackup(context)
                         if (file != null) {
                             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
@@ -227,6 +232,7 @@ fun SettingsScreen(
                             context.startActivity(Intent.createChooser(shareIntent, "Share Backup JSON"))
                         } else {
                             Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
+                        }
                         }
                     },
                     modifier = Modifier.weight(1f).height(48.dp),
@@ -289,6 +295,7 @@ private fun TogglePreferenceItem(
 @Composable
 private fun SettingsActionItem(
     title: String,
+    iconRes: Int? = null,
     onClick: () -> Unit
 ) {
     Row(
@@ -299,7 +306,20 @@ private fun SettingsActionItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
+            Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        }
         Text("→", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
     }
 }

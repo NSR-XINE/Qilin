@@ -6,6 +6,8 @@ import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -86,7 +88,7 @@ fun SearchScreen(
                 active = isSearchActive,
                 onActiveChange = { isSearchActive = it },
                 placeholder = { Text("Search show titles, synopsis...") },
-                leadingIcon = { Text("🔍", modifier = Modifier.padding(start = 8.dp)) },
+                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(start = 8.dp).size(20.dp)) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearQuery() }) {
@@ -104,7 +106,6 @@ fun SearchScreen(
                         when (suggestion) {
                             is SearchSuggestion.Popular -> {
                                 SuggestionItem(
-                                    icon = "🔥",
                                     text = suggestion.text,
                                     onClick = {
                                         viewModel.selectQuery(suggestion.text)
@@ -114,7 +115,6 @@ fun SearchScreen(
                             }
                             is SearchSuggestion.Recent -> {
                                 SuggestionItem(
-                                    icon = "🕒",
                                     text = suggestion.text,
                                     onClick = {
                                         viewModel.selectQuery(suggestion.text)
@@ -124,7 +124,6 @@ fun SearchScreen(
                             }
                             is SearchSuggestion.ShowMatch -> {
                                 SuggestionItem(
-                                    icon = "🎬",
                                     text = suggestion.displayText,
                                     onClick = {
                                         viewModel.selectQuery(suggestion.displayText)
@@ -192,7 +191,7 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SuggestionItem(icon: String, text: String, onClick: () -> Unit) {
+private fun SuggestionItem(text: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,7 +200,6 @@ private fun SuggestionItem(icon: String, text: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(icon, fontSize = 16.sp)
         Text(text, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }

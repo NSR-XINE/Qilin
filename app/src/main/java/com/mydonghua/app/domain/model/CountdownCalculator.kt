@@ -45,7 +45,7 @@ object CountdownCalculator {
         target.set(Calendar.SECOND, 0)
         target.set(Calendar.MILLISECOND, 0)
 
-        if (daysUntil === 0 && now.after(target)) {
+        if (daysUntil == 0 && now.after(target)) {
             val diffMs = now.timeInMillis - target.timeInMillis
             val airDurationMs = 90 * 60 * 1000
             if (diffMs < airDurationMs) {
