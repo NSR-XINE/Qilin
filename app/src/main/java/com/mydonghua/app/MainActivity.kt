@@ -391,19 +391,35 @@ class MainActivity : ComponentActivity() {
                         "stopped" -> 3
                         else -> -1
                     }
-                    val tabCenters = remember { mutableStateListOf(0f, 0f, 0f, 0f) }
-                    var capsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+                    val leftTabCenters = remember { mutableStateListOf(0f, 0f) }
+                    val rightTabCenters = remember { mutableStateListOf(0f, 0f) }
+                    var leftCapsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+                    var rightCapsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
 
-                    val targetCenterX = if (selectedIndex >= 0) tabCenters[selectedIndex] else 0f
-                    val pillOffsetX by animateFloatAsState(
-                        targetValue = targetCenterX,
+                    val leftSel = if (selectedIndex in 0..1) selectedIndex else -1
+                    val rightSel = when (selectedIndex) { 2 -> 0; 3 -> 1; else -> -1 }
+                    val leftTarget = if (leftSel >= 0) leftTabCenters[leftSel] else 0f
+                    val rightTarget = if (rightSel >= 0) rightTabCenters[rightSel] else 0f
+
+                    val leftPillOffsetX by animateFloatAsState(
+                        targetValue = leftTarget,
                         animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
-                        label = "pillOffsetX"
+                        label = "leftPillOffsetX"
                     )
-                    val indicatorAlpha by animateFloatAsState(
-                        targetValue = if (selectedIndex >= 0) 1.0f else 0.0f,
+                    val leftPillAlpha by animateFloatAsState(
+                        targetValue = if (leftSel >= 0) 1f else 0f,
                         animationSpec = tween(durationMillis = 200),
-                        label = "indicatorAlpha"
+                        label = "leftPillAlpha"
+                    )
+                    val rightPillOffsetX by animateFloatAsState(
+                        targetValue = rightTarget,
+                        animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
+                        label = "rightPillOffsetX"
+                    )
+                    val rightPillAlpha by animateFloatAsState(
+                        targetValue = if (rightSel >= 0) 1f else 0f,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "rightPillAlpha"
                     )
 
                     Box(
@@ -414,162 +430,254 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
                         contentAlignment = Alignment.BottomCenter
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .widthIn(max = 500.dp)
-                                .fillMaxWidth()
-                                .height(65.dp)
-                                .clip(RoundedCornerShape(32.dp))
-                                .onGloballyPositioned { capsuleCoordinates = it }
+                        Row(
+                            modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Blurred liquid-glass backdrop using Haze
+                            // Left capsule — Home & Airing
                             Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .hazeChild(
-                                        state = hazeState,
-                                        shape = RoundedCornerShape(32.dp)
-                                    )
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.White.copy(alpha = 0.25f),
-                                                Color.White.copy(alpha = 0.05f),
-                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-                                            )
-                                        ),
-                                        shape = RoundedCornerShape(32.dp)
-                                    )
-
-                            )
-                            // Sliding liquid-glass active selection indicator pill
-                            val density = LocalDensity.current
-                            val pillHeight = 44.dp
-                            val measuredColumnWidth = if (tabCenters[1] > 0f) tabCenters[1] - tabCenters[0] else 0f
-                            val pillWidthPx = if (measuredColumnWidth > 0f) measuredColumnWidth * 0.72f else with(density) { 44.dp.toPx() }
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer { alpha = indicatorAlpha }
+                                    .weight(1f)
+                                    .height(65.dp)
+                                    .clip(RoundedCornerShape(32.dp))
+                                    .onGloballyPositioned { leftCapsuleCoordinates = it }
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(
-                                            width = with(density) { pillWidthPx.toDp() },
-                                            height = pillHeight
-                                        )
-                                        .offset {
-                                            val xOffset = (pillOffsetX - pillWidthPx / 2f).roundToInt()
-                                            val yOffset = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
-                                            IntOffset(xOffset, yOffset)
-                                        }
+                                        .fillMaxSize()
+                                        .hazeChild(state = hazeState, shape = RoundedCornerShape(32.dp))
                                         .background(
                                             brush = Brush.verticalGradient(
                                                 colors = listOf(
-                                                    Color.White.copy(alpha = 0.28f),
-                                                    Color.White.copy(alpha = 0.08f)
+                                                    Color.White.copy(alpha = 0.25f),
+                                                    Color.White.copy(alpha = 0.05f),
+                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
                                                 )
                                             ),
-                                            shape = RoundedCornerShape(22.dp)
+                                            shape = RoundedCornerShape(32.dp)
                                         )
+                                )
+
+                                val density = LocalDensity.current
+                                val pillHeight = 44.dp
+                                val leftColW = if (leftTabCenters[1] > 0f) leftTabCenters[1] - leftTabCenters[0] else 0f
+                                val leftPillW = if (leftColW > 0f) leftColW * 0.72f else with(density) { 44.dp.toPx() }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer { alpha = leftPillAlpha }
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(
+                                                width = with(density) { leftPillW.toDp() },
+                                                height = pillHeight
+                                            )
+                                            .offset {
+                                                val x = (leftPillOffsetX - leftPillW / 2f).roundToInt()
+                                                val y = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
+                                                IntOffset(x, y)
+                                            }
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        Color.White.copy(alpha = 0.28f),
+                                                        Color.White.copy(alpha = 0.08f)
+                                                    )
+                                                ),
+                                                shape = RoundedCornerShape(22.dp)
+                                            )
+                                            .border(
+                                                width = 1.dp,
+                                                brush = Brush.linearGradient(
+                                                    colors = listOf(
+                                                        Color.White.copy(alpha = 0.45f),
+                                                        Color.Transparent
+                                                    )
+                                                ),
+                                                shape = RoundedCornerShape(22.dp)
+                                            )
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
                                         .border(
-                                            width = 1.dp,
+                                            width = 1.2.dp,
                                             brush = Brush.linearGradient(
                                                 colors = listOf(
-                                                    Color.White.copy(alpha = 0.45f),
-                                                    Color.Transparent
+                                                    Color.White.copy(alpha = 0.65f),
+                                                    Color.White.copy(alpha = 0.2f),
+                                                    Color.Transparent,
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                                                 )
                                             ),
-                                            shape = RoundedCornerShape(22.dp)
+                                            shape = RoundedCornerShape(32.dp)
+                                        ),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_home,
+                                        label = "Home",
+                                        selected = currentRoute == "home",
+                                        onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val c = leftCapsuleCoordinates
+                                            if (c != null) {
+                                                leftTabCenters[0] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
+                                        }
+                                    )
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_airing,
+                                        label = "Airing",
+                                        selected = currentRoute == "airing",
+                                        onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val c = leftCapsuleCoordinates
+                                            if (c != null) {
+                                                leftTabCenters[1] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+
+                            // Center donguha button
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
                                         )
+                                    )
+                                    .clickable {
+                                        navController.navigate("add_edit_show")
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.mipmap.ic_launcher),
+                                    contentDescription = "Donguha",
+                                    modifier = Modifier.size(28.dp),
+                                    tint = Color.White
                                 )
                             }
 
-                            // Normal sharp container and icons
-                            Row(
+                            // Right capsule — Complete & Upcoming
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .border(
-                                        width = 1.2.dp,
-                                        brush = Brush.linearGradient(
-                                            colors = listOf(
-                                                Color.White.copy(alpha = 0.65f),
-                                                Color.White.copy(alpha = 0.2f),
-                                                Color.Transparent,
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                                            )
-                                        ),
-                                        shape = RoundedCornerShape(32.dp)
-                                    )
-                                    .padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceAround
+                                    .weight(1f)
+                                    .height(65.dp)
+                                    .clip(RoundedCornerShape(32.dp))
+                                    .onGloballyPositioned { rightCapsuleCoordinates = it }
                             ) {
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_home,
-                                    label = "Home",
-                                    selected = currentRoute == "home",
-                                    onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[0] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
-                                        }
-                                    }
-                                )
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_airing,
-                                    label = "Airing",
-                                    selected = currentRoute == "airing",
-                                    onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[1] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
-                                        }
-                                    }
-                                )
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(CircleShape)
+                                        .fillMaxSize()
+                                        .hazeChild(state = hazeState, shape = RoundedCornerShape(32.dp))
                                         .background(
-                                            Brush.linearGradient(
-                                                colors = listOf(Color(0xFF00F2FE), Color(0xFF9D4EDD))
-                                            )
+                                            brush = Brush.verticalGradient(
+                                                colors = listOf(
+                                                    Color.White.copy(alpha = 0.25f),
+                                                    Color.White.copy(alpha = 0.05f),
+                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(32.dp)
                                         )
-                                        .clickable {
-                                            navController.navigate("add_edit_show")
-                                        },
-                                    contentAlignment = Alignment.Center
+                                )
+
+                                val rightColW = if (rightTabCenters[1] > 0f) rightTabCenters[1] - rightTabCenters[0] else 0f
+                                val rightPillW = if (rightColW > 0f) rightColW * 0.72f else with(density) { 44.dp.toPx() }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer { alpha = rightPillAlpha }
                                 ) {
-                                    Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(
+                                                width = with(density) { rightPillW.toDp() },
+                                                height = pillHeight
+                                            )
+                                            .offset {
+                                                val x = (rightPillOffsetX - rightPillW / 2f).roundToInt()
+                                                val y = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
+                                                IntOffset(x, y)
+                                            }
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        Color.White.copy(alpha = 0.28f),
+                                                        Color.White.copy(alpha = 0.08f)
+                                                    )
+                                                ),
+                                                shape = RoundedCornerShape(22.dp)
+                                            )
+                                            .border(
+                                                width = 1.dp,
+                                                brush = Brush.linearGradient(
+                                                    colors = listOf(
+                                                        Color.White.copy(alpha = 0.45f),
+                                                        Color.Transparent
+                                                    )
+                                                ),
+                                                shape = RoundedCornerShape(22.dp)
+                                            )
+                                    )
                                 }
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_complete,
-                                    label = "Complete",
-                                    selected = currentRoute == "complete",
-                                    onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[2] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(
+                                            width = 1.2.dp,
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(
+                                                    Color.White.copy(alpha = 0.65f),
+                                                    Color.White.copy(alpha = 0.2f),
+                                                    Color.Transparent,
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                                )
+                                            ),
+                                            shape = RoundedCornerShape(32.dp)
+                                        ),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_complete,
+                                        label = "Complete",
+                                        selected = currentRoute == "complete",
+                                        onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val c = rightCapsuleCoordinates
+                                            if (c != null) {
+                                                rightTabCenters[0] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
                                         }
-                                    }
-                                )
-                                BottomNavItem(
-                                    iconRes = R.drawable.ic_stopped,
-                                    label = "Stopped",
-                                    selected = currentRoute == "stopped",
-                                    onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                    modifier = Modifier.onGloballyPositioned { coords ->
-                                        val capsule = capsuleCoordinates
-                                        if (capsule != null) {
-                                            tabCenters[3] = capsule.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                    )
+                                    BottomNavItem(
+                                        iconRes = R.drawable.ic_stopped,
+                                        label = "Upcoming",
+                                        selected = currentRoute == "stopped",
+                                        onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
+                                        modifier = Modifier.onGloballyPositioned { coords ->
+                                            val c = rightCapsuleCoordinates
+                                            if (c != null) {
+                                                rightTabCenters[1] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
                     }
