@@ -429,7 +429,7 @@ class MainActivity : ComponentActivity() {
                                     iconRes = R.drawable.ic_home,
                                     label = "Home",
                                     selected = currentRoute == "home",
-                                    onClick = { navController.navigate("home") { popUpTo("home") { saveState = true }; launchSingleTop = true; restoreState = true } }
+                                    onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } }
                                 )
                                 BottomNavItem(
                                     iconRes = R.drawable.ic_airing,
