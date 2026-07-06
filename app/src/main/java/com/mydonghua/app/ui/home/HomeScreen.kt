@@ -271,17 +271,14 @@ private fun BannerTimeBox(value: Long, label: String) {
                 .height(18.dp)
                 .wrapContentHeight(Alignment.CenterVertically)
         )
+        Spacer(modifier = Modifier.height(0.dp))
         Text(
             text = label,
             fontSize = 8.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(14.dp)
-                .offset(y = (-4).dp)
-                .wrapContentHeight(Alignment.CenterVertically)
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
