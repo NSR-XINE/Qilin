@@ -34,9 +34,9 @@ fun GlassBackground(
                         Color.White.copy(alpha = 0.02f),
                         MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
                     ) else listOf(
-                        Color.Black.copy(alpha = 0.04f),
-                        Color.Black.copy(alpha = 0.01f),
-                        Color.Black.copy(alpha = 0.06f)
+                        Color.Black.copy(alpha = 0.08f),
+                        Color.Black.copy(alpha = 0.03f),
+                        Color.Black.copy(alpha = 0.10f)
                     )
                 )
             )

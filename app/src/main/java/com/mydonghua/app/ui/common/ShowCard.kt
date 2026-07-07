@@ -101,9 +101,9 @@ fun ShowCard(
                         Color.White.copy(alpha = 0.05f),
                         MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
                     ) else listOf(
-                        Color.Black.copy(alpha = 0.06f),
-                        Color.Black.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                        Color.Black.copy(alpha = 0.10f),
+                        Color.Black.copy(alpha = 0.04f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     )
                 ),
                 shape = RoundedCornerShape(16.dp)
@@ -122,10 +122,10 @@ fun ShowCard(
                     Color.Transparent,
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                 ) else listOf(
-                    Color.Black.copy(alpha = 0.10f),
-                    Color.Black.copy(alpha = 0.03f),
+                    Color.Black.copy(alpha = 0.15f),
+                    Color.Black.copy(alpha = 0.06f),
                     Color.Transparent,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                 )
             )
         )

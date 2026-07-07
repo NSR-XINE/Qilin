@@ -44,6 +44,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import androidx.compose.material.icons.Icons
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .haze(hazeState)
+                                .haze(hazeState, style = HazeStyle(blurRadius = 24.dp))
                         ) {
                             if (settingsState.themeMode.lowercase() != "light") {
                                 StarsBackground()
@@ -493,9 +494,9 @@ class MainActivity : ComponentActivity() {
                                                     Color.White.copy(alpha = 0.05f),
                                                     MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
                                                 ) else listOf(
+                                                    Color.Black.copy(alpha = 0.12f),
                                                     Color.Black.copy(alpha = 0.06f),
-                                                    Color.Black.copy(alpha = 0.02f),
-                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                                                 )
                                             ),
                                             shape = RoundedCornerShape(32.dp)
@@ -527,8 +528,8 @@ class MainActivity : ComponentActivity() {
                                                         Color.White.copy(alpha = 0.28f),
                                                         Color.White.copy(alpha = 0.08f)
                                                     ) else listOf(
-                                                        Color.Black.copy(alpha = 0.08f),
-                                                        Color.Black.copy(alpha = 0.02f)
+                                                        Color.Black.copy(alpha = 0.15f),
+                                                        Color.Black.copy(alpha = 0.06f)
                                                     )
                                                 ),
                                                 shape = RoundedCornerShape(22.dp)
@@ -608,14 +609,14 @@ class MainActivity : ComponentActivity() {
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = if (isDark) listOf(
-                                                Color.White.copy(alpha = 0.25f),
-                                                Color.White.copy(alpha = 0.05f),
-                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-                                            ) else listOf(
-                                                Color.Black.copy(alpha = 0.06f),
-                                                Color.Black.copy(alpha = 0.02f),
-                                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                                            )
+                                                    Color.White.copy(alpha = 0.25f),
+                                                    Color.White.copy(alpha = 0.05f),
+                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                                ) else listOf(
+                                                    Color.Black.copy(alpha = 0.12f),
+                                                    Color.Black.copy(alpha = 0.06f),
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                                )
                                         ),
                                         shape = CircleShape
                                     )
@@ -664,9 +665,9 @@ class MainActivity : ComponentActivity() {
                                                     Color.White.copy(alpha = 0.05f),
                                                     MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
                                                 ) else listOf(
+                                                    Color.Black.copy(alpha = 0.12f),
                                                     Color.Black.copy(alpha = 0.06f),
-                                                    Color.Black.copy(alpha = 0.02f),
-                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                                                 )
                                             ),
                                             shape = RoundedCornerShape(32.dp)
@@ -698,8 +699,8 @@ class MainActivity : ComponentActivity() {
                                                         Color.White.copy(alpha = 0.28f),
                                                         Color.White.copy(alpha = 0.08f)
                                                     ) else listOf(
-                                                        Color.Black.copy(alpha = 0.08f),
-                                                        Color.Black.copy(alpha = 0.02f)
+                                                        Color.Black.copy(alpha = 0.15f),
+                                                        Color.Black.copy(alpha = 0.06f)
                                                     )
                                                 ),
                                                 shape = RoundedCornerShape(22.dp)
