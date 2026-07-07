@@ -385,6 +385,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (showGlobalHeader) {
+                    val isDark = settingsState.themeMode.lowercase() != "light"
                     val selectedIndex = when (currentRoute) {
                         "home" -> 0
                         "airing" -> 1
@@ -452,10 +453,14 @@ class MainActivity : ComponentActivity() {
                                         .hazeChild(state = hazeState, shape = RoundedCornerShape(32.dp))
                                         .background(
                                             brush = Brush.verticalGradient(
-                                                colors = listOf(
+                                                colors = if (isDark) listOf(
                                                     Color.White.copy(alpha = 0.25f),
                                                     Color.White.copy(alpha = 0.05f),
                                                     MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                                ) else listOf(
+                                                    Color.Black.copy(alpha = 0.06f),
+                                                    Color.Black.copy(alpha = 0.02f),
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                                                 )
                                             ),
                                             shape = RoundedCornerShape(32.dp)
@@ -483,9 +488,12 @@ class MainActivity : ComponentActivity() {
                                             }
                                             .background(
                                                 brush = Brush.verticalGradient(
-                                                    colors = listOf(
+                                                    colors = if (isDark) listOf(
                                                         Color.White.copy(alpha = 0.28f),
                                                         Color.White.copy(alpha = 0.08f)
+                                                    ) else listOf(
+                                                        Color.Black.copy(alpha = 0.08f),
+                                                        Color.Black.copy(alpha = 0.02f)
                                                     )
                                                 ),
                                                 shape = RoundedCornerShape(22.dp)
@@ -493,8 +501,11 @@ class MainActivity : ComponentActivity() {
                                             .border(
                                                 width = 1.dp,
                                                 brush = Brush.linearGradient(
-                                                    colors = listOf(
+                                                    colors = if (isDark) listOf(
                                                         Color.White.copy(alpha = 0.45f),
+                                                        Color.Transparent
+                                                    ) else listOf(
+                                                        Color.Black.copy(alpha = 0.10f),
                                                         Color.Transparent
                                                     )
                                                 ),
@@ -509,11 +520,16 @@ class MainActivity : ComponentActivity() {
                                         .border(
                                             width = 1.2.dp,
                                             brush = Brush.linearGradient(
-                                                colors = listOf(
+                                                colors = if (isDark) listOf(
                                                     Color.White.copy(alpha = 0.65f),
                                                     Color.White.copy(alpha = 0.2f),
                                                     Color.Transparent,
                                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                                ) else listOf(
+                                                    Color.Black.copy(alpha = 0.12f),
+                                                    Color.Black.copy(alpha = 0.04f),
+                                                    Color.Transparent,
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                                                 )
                                             ),
                                             shape = RoundedCornerShape(32.dp)
@@ -551,15 +567,19 @@ class MainActivity : ComponentActivity() {
                             // Center search button with liquid glass
                             Box(
                                 modifier = Modifier
-                                    .size(64.dp)
+                                    .size(72.dp)
                                     .clip(CircleShape)
                                     .hazeChild(state = hazeState, shape = CircleShape)
                                     .background(
                                         brush = Brush.verticalGradient(
-                                            colors = listOf(
+                                            colors = if (isDark) listOf(
                                                 Color.White.copy(alpha = 0.25f),
                                                 Color.White.copy(alpha = 0.05f),
                                                 MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                            ) else listOf(
+                                                Color.Black.copy(alpha = 0.06f),
+                                                Color.Black.copy(alpha = 0.02f),
+                                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                                             )
                                         ),
                                         shape = CircleShape
@@ -567,8 +587,11 @@ class MainActivity : ComponentActivity() {
                                     .border(
                                         width = 1.dp,
                                         brush = Brush.linearGradient(
-                                            colors = listOf(
+                                            colors = if (isDark) listOf(
                                                 Color.White.copy(alpha = 0.45f),
+                                                Color.Transparent
+                                            ) else listOf(
+                                                Color.Black.copy(alpha = 0.10f),
                                                 Color.Transparent
                                             )
                                         ),
@@ -582,8 +605,8 @@ class MainActivity : ComponentActivity() {
                                 Icon(
                                     imageVector = Icons.Rounded.Search,
                                     contentDescription = "Search",
-                                    modifier = Modifier.size(38.dp),
-                                    tint = Color.White
+                                    modifier = Modifier.size(44.dp),
+                                    tint = if (isDark) Color.White else Color.Black
                                 )
                             }
 
@@ -601,10 +624,14 @@ class MainActivity : ComponentActivity() {
                                         .hazeChild(state = hazeState, shape = RoundedCornerShape(32.dp))
                                         .background(
                                             brush = Brush.verticalGradient(
-                                                colors = listOf(
+                                                colors = if (isDark) listOf(
                                                     Color.White.copy(alpha = 0.25f),
                                                     Color.White.copy(alpha = 0.05f),
                                                     MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                                                ) else listOf(
+                                                    Color.Black.copy(alpha = 0.06f),
+                                                    Color.Black.copy(alpha = 0.02f),
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                                                 )
                                             ),
                                             shape = RoundedCornerShape(32.dp)
@@ -632,9 +659,12 @@ class MainActivity : ComponentActivity() {
                                             }
                                             .background(
                                                 brush = Brush.verticalGradient(
-                                                    colors = listOf(
+                                                    colors = if (isDark) listOf(
                                                         Color.White.copy(alpha = 0.28f),
                                                         Color.White.copy(alpha = 0.08f)
+                                                    ) else listOf(
+                                                        Color.Black.copy(alpha = 0.08f),
+                                                        Color.Black.copy(alpha = 0.02f)
                                                     )
                                                 ),
                                                 shape = RoundedCornerShape(22.dp)
@@ -642,8 +672,11 @@ class MainActivity : ComponentActivity() {
                                             .border(
                                                 width = 1.dp,
                                                 brush = Brush.linearGradient(
-                                                    colors = listOf(
+                                                    colors = if (isDark) listOf(
                                                         Color.White.copy(alpha = 0.45f),
+                                                        Color.Transparent
+                                                    ) else listOf(
+                                                        Color.Black.copy(alpha = 0.10f),
                                                         Color.Transparent
                                                     )
                                                 ),
@@ -658,11 +691,16 @@ class MainActivity : ComponentActivity() {
                                         .border(
                                             width = 1.2.dp,
                                             brush = Brush.linearGradient(
-                                                colors = listOf(
+                                                colors = if (isDark) listOf(
                                                     Color.White.copy(alpha = 0.65f),
                                                     Color.White.copy(alpha = 0.2f),
                                                     Color.Transparent,
                                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                                ) else listOf(
+                                                    Color.Black.copy(alpha = 0.12f),
+                                                    Color.Black.copy(alpha = 0.04f),
+                                                    Color.Transparent,
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                                                 )
                                             ),
                                             shape = RoundedCornerShape(32.dp)
