@@ -36,7 +36,7 @@ import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
-import androidx.compose.ui.platform.isSystemInDarkTheme
+import androidx.compose.foundation.isSystemInDarkTheme
 
 @Composable
 fun ShowCard(
