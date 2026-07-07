@@ -35,6 +35,7 @@ fun SearchScreen(
     onWatchClick: (String) -> Unit,
     onShowClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val query by viewModel.searchQuery.collectAsState()
@@ -59,6 +60,9 @@ fun SearchScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onAddClick) {
+                        Text("+", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    }
                     IconButton(onClick = { showFiltersSheet = true }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_settings),
