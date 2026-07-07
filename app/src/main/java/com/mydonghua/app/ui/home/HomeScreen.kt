@@ -540,19 +540,37 @@ fun WeeklyScheduleSection(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                val context = LocalContext.current
                 filteredShows.forEach { show ->
-                    ShowCard(
-                        show = show,
-                        onWatchClick = onWatchClick,
-                        onEditClick = { onShowClick(it.id) },
-                        onDeleteClick = {},
-                        onFavoriteToggle = { viewModel.toggleFavorite(it) },
-                        onNotifyToggle = { viewModel.toggleNotification(context, it) },
-                        onEpIncrement = { viewModel.incrementEpisode(it) },
-                        onEpDecrement = { viewModel.decrementEpisode(it) },
-                        onCardClick = { onShowClick(it.id) }
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .clickable { onShowClick(show.id) }
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = show.title,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = show.releaseTime ?: "10:00",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
             }
         }
