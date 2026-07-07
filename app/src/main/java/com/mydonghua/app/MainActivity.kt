@@ -400,8 +400,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                val isDark = settingsState.themeMode.lowercase() != "light"
                 if (showGlobalHeader) {
-                    val isDark = settingsState.themeMode.lowercase() != "light"
                     val selectedIndex = when (currentRoute) {
                         "home" -> 0
                         "airing" -> 1
