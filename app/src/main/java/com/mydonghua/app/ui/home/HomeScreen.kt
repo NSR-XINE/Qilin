@@ -542,6 +542,7 @@ fun WeeklyScheduleSection(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .padding(bottom = 16.dp)
             ) {
                 filteredShows.forEach { show ->
