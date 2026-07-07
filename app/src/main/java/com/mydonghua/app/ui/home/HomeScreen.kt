@@ -503,10 +503,24 @@ fun WeeklyScheduleSection(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (isSelected) MaterialTheme.colorScheme.primary
-                            else if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                            else MaterialTheme.colorScheme.surface
+                        .then(
+                            if (isSelected) Modifier.background(MaterialTheme.colorScheme.primary)
+                            else Modifier
+                                .hazeChild(state = hazeState, shape = RoundedCornerShape(8.dp))
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = if (isDark) listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                            Color.White.copy(alpha = 0.03f),
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.10f)
+                                        ) else listOf(
+                                            Color.Black.copy(alpha = 0.04f),
+                                            Color.Black.copy(alpha = 0.01f),
+                                            Color.Black.copy(alpha = 0.06f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
                         )
                         .clickable { selectedDay = day }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
