@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -26,6 +25,9 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassBackgroundHeavy
+import com.mydonghua.app.ui.LocalHazeState
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +41,7 @@ fun ShowDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val hazeState = LocalHazeState.current
     val allShows by viewModel.allShows.collectAsState()
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
 
@@ -65,22 +68,23 @@ fun ShowDetailScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(show.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("←", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 actions = {
                     IconButton(onClick = { onEditClick(show) }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
-                            contentDescription = "Edit Show",
+                            contentDescription = "Edit",
                             modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         modifier = modifier
@@ -91,11 +95,11 @@ fun ShowDetailScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Hero banner image
+            // Poster
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp)
+                    .aspectRatio(16f / 9f)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -104,7 +108,7 @@ fun ShowDetailScreen(
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .build(),
                     contentDescription = show.title,
-                    modifier = Modifier.fillMaxSize().blur(10.dp),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
                 Box(
@@ -112,7 +116,8 @@ fun ShowDetailScreen(
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
+                                0.3f to Color.Transparent,
+                                1.0f to MaterialTheme.colorScheme.background.copy(alpha = 1f)
                             )
                         )
                 )
@@ -125,15 +130,15 @@ fun ShowDetailScreen(
                     Text(
                         text = show.title,
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     if (!show.titleZh.isNullOrEmpty()) {
                         Text(
                             text = show.titleZh,
-                            fontSize = 14.sp,
-                            color = Color.LightGray,
-                            modifier = Modifier.padding(top = 4.dp)
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                 }
@@ -142,130 +147,174 @@ fun ShowDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Info Grid cards
+                // Status row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    InfoCard(label = "Status", value = show.status.uppercase(), modifier = Modifier.weight(1f))
-                    InfoCard(label = "Language", value = show.language ?: "CN", modifier = Modifier.weight(1f))
+                    DetailChip(
+                        label = "Status",
+                        value = when (show.status) {
+                            "ongoing" -> "Airing"
+                            "completed" -> "Completed"
+                            else -> "Hiatus"
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    DetailChip(
+                        label = "Language",
+                        value = show.language ?: "CN",
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (show.totalEp > 0) {
+                        DetailChip(
+                            label = "Episodes",
+                            value = "${show.totalEp}",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
 
-                // Countdown details
+                // Countdown section
                 if (show.status == "ongoing") {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
+                            .background(
+                                color = Color.White.copy(alpha = 0.04f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(14.dp)
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Next Episode Release", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            if (countdownTime.airingNow) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_airing),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text("AIRING NOW / JUST RELEASED", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                                }
-                            } else if (!countdownTime.elapsed) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
                                 Text(
-                                    text = "${countdownTime.days}d ${countdownTime.hours}h ${countdownTime.minutes}m ${countdownTime.seconds}s remaining",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
+                                    text = "Next Episode",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
-                            } else {
-                                Text("Waiting for next schedule update", fontSize = 13.sp)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (countdownTime.airingNow) "Available now"
+                                    else "Ep ${show.currentEp + 1} • ${show.releaseDay}",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            if (!countdownTime.airingNow && !countdownTime.elapsed) {
+                                Text(
+                                    text = "${countdownTime.days}d ${countdownTime.hours}h ${countdownTime.minutes}m",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             }
                         }
                     }
                 }
 
-                // Episode progress controller
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                // Progress section
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
+                        .background(
+                            color = Color.White.copy(alpha = 0.04f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(14.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
-                            Text("Watch Progress", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Episode ${show.currentEp}$totalStr", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                            Text(
+                                text = "Progress",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
+                            Text(
+                                text = "Episode ${show.currentEp}$totalStr",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
                                 onClick = { viewModel.decrementEpisode(show) },
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .size(34.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        RoundedCornerShape(8.dp)
+                                    )
                             ) {
-                                Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             }
-
                             IconButton(
                                 onClick = { viewModel.incrementEpisode(show) },
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .size(34.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        RoundedCornerShape(8.dp)
+                                    )
                             ) {
-                                Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
                 }
 
-                // Synopsis/Notes
+                // Synopsis
                 if (!show.notes.isNullOrEmpty()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        Text("Synopsis & Notes", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Synopsis", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(show.notes!!, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f))
+                        Text(
+                            text = show.notes!!,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                            lineHeight = 22.sp
+                        )
                     }
                 }
 
-                // Meta metadata (studio, year, genres)
+                // Meta
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    if (!show.studio.isNullOrEmpty()) {
-                        MetaItem(label = "Studio", value = show.studio!!)
-                    }
-                    if (show.releaseYear != null && show.releaseYear!! > 0) {
-                        MetaItem(label = "Release Year", value = show.releaseYear.toString())
-                    }
-                    if (!show.genres.isNullOrEmpty()) {
-                        MetaItem(label = "Genres", value = show.genres!!)
-                    }
+                    if (!show.studio.isNullOrEmpty()) Meta(label = "Studio", value = show.studio!!)
+                    if (show.releaseYear != null && show.releaseYear!! > 0) Meta(label = "Year", value = show.releaseYear.toString())
+                    if (!show.genres.isNullOrEmpty()) Meta(label = "Genres", value = show.genres!!)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Watch Trigger Action
                 Button(
                     onClick = { onWatchClick(show.watchUrl ?: "") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -274,38 +323,36 @@ fun ShowDetailScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_tv),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            modifier = Modifier.size(18.dp)
                         )
-                        Text("Watch Online", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Watch Online", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
 @Composable
-private fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+private fun DetailChip(label: String, value: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(value, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
 @Composable
-private fun MetaItem(label: String, value: String) {
+private fun Meta(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
