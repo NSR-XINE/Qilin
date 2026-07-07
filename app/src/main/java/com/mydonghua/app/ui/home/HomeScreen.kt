@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,8 +36,9 @@ import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.CountdownTime
 import com.mydonghua.app.domain.model.Show
-import com.mydonghua.app.ui.common.ShowCard
+import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.screens.HomeViewModel
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -464,6 +466,8 @@ fun WeeklyScheduleSection(
     viewModel: HomeViewModel,
     modifier: Modifier = Modifier
 ) {
+    val hazeState = LocalHazeState.current
+    val isDark = isSystemInDarkTheme()
     val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
     val calendar = Calendar.getInstance()
@@ -545,7 +549,21 @@ fun WeeklyScheduleSection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .hazeChild(state = hazeState, shape = RoundedCornerShape(8.dp))
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = if (isDark) listOf(
+                                        Color.White.copy(alpha = 0.06f),
+                                        Color.White.copy(alpha = 0.02f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
+                                    ) else listOf(
+                                        Color.Black.copy(alpha = 0.04f),
+                                        Color.Black.copy(alpha = 0.01f),
+                                        Color.Black.copy(alpha = 0.06f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
                             .clickable { onShowClick(show.id) }
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
