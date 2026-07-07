@@ -373,11 +373,10 @@ fun ContinueWatchingRow(
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                             )
-        }
-        }
-    }
-}
-
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -452,11 +451,9 @@ fun RecentlyUpdatedRow(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-        }
-        }
-    }
-}
-
+                    }
+                }
+            }
         }
     }
 }
@@ -515,7 +512,7 @@ fun WeeklyScheduleSection(
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Day selector tabs
-            LazyRow(
+        LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -631,5 +628,6 @@ fun WeeklyScheduleSection(
                 }
             }
         }
+    }
     }
 }
