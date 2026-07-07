@@ -141,7 +141,7 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .statusBarsPadding()
-                                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -152,53 +152,33 @@ class MainActivity : ComponentActivity() {
                                                 painter = painterResource(id = R.mipmap.ic_launcher),
                                                 contentDescription = "App Icon",
                                                 modifier = Modifier
-                                                    .size(42.dp)
+                                                    .size(36.dp)
                                                     .clip(RoundedCornerShape(8.dp))
                                             )
 
-                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Spacer(modifier = Modifier.width(10.dp))
 
-                                            Row {
-                                                Text(
-                                                    text = "东画 ",
-                                                    fontSize = 20.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
-                                                    color = MaterialTheme.colorScheme.onBackground
-                                                )
-                                                Text(
-                                                    text = "My Donghua",
-                                                    fontSize = 20.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    style = androidx.compose.ui.text.TextStyle(
-                                                        brush = Brush.linearGradient(
-                                                            colors = listOf(
-                                                                Color(0xFF00F2FE),
-                                                                Color(0xFF9D4EDD)
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            }
+                                            Text(
+                                                text = "My Donghua",
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
                                         }
 
                                         IconButton(
                                             onClick = { isDrawerOpen = true },
                                             modifier = Modifier
                                                 .background(
-                                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                                     shape = RoundedCornerShape(8.dp)
                                                 )
-                                                .border(
-                                                    width = 1.dp,
-                                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                                                    shape = RoundedCornerShape(8.dp)
-                                                )
-                                                .size(40.dp)
+                                                .size(38.dp)
                                         ) {
                                             Text(
                                                 text = "☰",
-                                                fontSize = 20.sp,
-                                                color = MaterialTheme.colorScheme.onSurface
+                                                fontSize = 18.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -429,36 +409,6 @@ class MainActivity : ComponentActivity() {
                         "stopped" -> 3
                         else -> -1
                     }
-                    val leftTabCenters = remember { mutableStateListOf(0f, 0f) }
-                    val rightTabCenters = remember { mutableStateListOf(0f, 0f) }
-                    var leftCapsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-                    var rightCapsuleCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-
-                    val leftSel = if (selectedIndex in 0..1) selectedIndex else -1
-                    val rightSel = when (selectedIndex) { 2 -> 0; 3 -> 1; else -> -1 }
-                    val leftTarget = if (leftSel >= 0) leftTabCenters[leftSel] else 0f
-                    val rightTarget = if (rightSel >= 0) rightTabCenters[rightSel] else 0f
-
-                    val leftPillOffsetX by animateFloatAsState(
-                        targetValue = leftTarget,
-                        animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
-                        label = "leftPillOffsetX"
-                    )
-                    val leftPillAlpha by animateFloatAsState(
-                        targetValue = if (leftSel >= 0) 1f else 0f,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "leftPillAlpha"
-                    )
-                    val rightPillOffsetX by animateFloatAsState(
-                        targetValue = rightTarget,
-                        animationSpec = spring(dampingRatio = 0.65f, stiffness = 300f),
-                        label = "rightPillOffsetX"
-                    )
-                    val rightPillAlpha by animateFloatAsState(
-                        targetValue = if (rightSel >= 0) 1f else 0f,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "rightPillAlpha"
-                    )
 
                     Box(
                         modifier = Modifier
@@ -468,8 +418,6 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
                         contentAlignment = Alignment.BottomCenter
                     ) {
-                        val density = LocalDensity.current
-                        val pillHeight = 44.dp
                         Row(
                             modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -479,97 +427,17 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(65.dp)
-                                    .clip(RoundedCornerShape(32.dp))
-                                    .onGloballyPositioned { leftCapsuleCoordinates = it }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .hazeChild(state = hazeState, shape = RoundedCornerShape(32.dp))
-                                        .background(
-                                            brush = Brush.verticalGradient(
-                                                colors = if (isDark) listOf(
-                                                    Color.White.copy(alpha = 0.25f),
-                                                    Color.White.copy(alpha = 0.05f),
-                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-                                                ) else listOf(
-                                                    Color.Black.copy(alpha = 0.12f),
-                                                    Color.Black.copy(alpha = 0.06f),
-                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                                                )
-                                            ),
-                                            shape = RoundedCornerShape(32.dp)
-                                        )
-                                )
-
-                                val leftColW = if (leftTabCenters[1] > 0f) leftTabCenters[1] - leftTabCenters[0] else 0f
-                                val leftPillW = if (leftColW > 0f) leftColW * 0.72f else with(density) { 44.dp.toPx() }
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer { alpha = leftPillAlpha }
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(
-                                                width = with(density) { leftPillW.toDp() },
-                                                height = pillHeight
-                                            )
-                                            .offset {
-                                                val x = (leftPillOffsetX - leftPillW / 2f).roundToInt()
-                                                val y = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
-                                                IntOffset(x, y)
-                                            }
-                                            .background(
-                                                brush = Brush.verticalGradient(
-                                                    colors = if (isDark) listOf(
-                                                        Color.White.copy(alpha = 0.28f),
-                                                        Color.White.copy(alpha = 0.08f)
-                                                    ) else listOf(
-                                                        Color.Black.copy(alpha = 0.15f),
-                                                        Color.Black.copy(alpha = 0.06f)
-                                                    )
-                                                ),
-                                                shape = RoundedCornerShape(22.dp)
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                brush = Brush.linearGradient(
-                                                    colors = if (isDark) listOf(
-                                                        Color.White.copy(alpha = 0.45f),
-                                                        Color.Transparent
-                                                    ) else listOf(
-                                                        Color.Black.copy(alpha = 0.10f),
-                                                        Color.Transparent
-                                                    )
-                                                ),
-                                                shape = RoundedCornerShape(22.dp)
-                                            )
+                                    .height(56.dp)
+                                    .clip(RoundedCornerShape(28.dp))
+                                    .hazeChild(state = hazeState, shape = RoundedCornerShape(28.dp))
+                                    .background(
+                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
+                                        else Color.Black.copy(alpha = 0.04f),
+                                        shape = RoundedCornerShape(28.dp)
                                     )
-                                }
-
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .border(
-                                            width = 1.2.dp,
-                                            brush = Brush.linearGradient(
-                                                colors = if (isDark) listOf(
-                                                    Color.White.copy(alpha = 0.65f),
-                                                    Color.White.copy(alpha = 0.2f),
-                                                    Color.Transparent,
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                                                ) else listOf(
-                                                    Color.Black.copy(alpha = 0.12f),
-                                                    Color.Black.copy(alpha = 0.04f),
-                                                    Color.Transparent,
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                                )
-                                            ),
-                                            shape = RoundedCornerShape(32.dp)
-                                        ),
+                                    modifier = Modifier.fillMaxSize(),
                                     horizontalArrangement = Arrangement.SpaceEvenly,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -577,72 +445,36 @@ class MainActivity : ComponentActivity() {
                                         iconRes = R.drawable.ic_home,
                                         label = "Home",
                                         selected = currentRoute == "home",
-                                        onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
-                                        modifier = Modifier.onGloballyPositioned { coords ->
-                                            val c = leftCapsuleCoordinates
-                                            if (c != null) {
-                                                leftTabCenters[0] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
-                                            }
-                                        }
+                                        onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } }
                                     )
                                     BottomNavItem(
                                         iconRes = R.drawable.ic_airing,
                                         label = "Airing",
                                         selected = currentRoute == "airing",
-                                        onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                        modifier = Modifier.onGloballyPositioned { coords ->
-                                            val c = leftCapsuleCoordinates
-                                            if (c != null) {
-                                                leftTabCenters[1] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
-                                            }
-                                        }
+                                        onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                     )
                                 }
                             }
 
-                            // Center search button with liquid glass
+                            // Center search button
                             Box(
                                 modifier = Modifier
-                                    .size(60.dp)
+                                    .size(56.dp)
                                     .clip(CircleShape)
                                     .hazeChild(state = hazeState, shape = CircleShape)
                                     .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = if (isDark) listOf(
-                                                    Color.White.copy(alpha = 0.25f),
-                                                    Color.White.copy(alpha = 0.05f),
-                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-                                                ) else listOf(
-                                                    Color.Black.copy(alpha = 0.12f),
-                                                    Color.Black.copy(alpha = 0.06f),
-                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                                                )
-                                        ),
+                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
+                                        else Color.Black.copy(alpha = 0.04f),
                                         shape = CircleShape
                                     )
-                                    .border(
-                                        width = 1.dp,
-                                        brush = Brush.linearGradient(
-                                            colors = if (isDark) listOf(
-                                                Color.White.copy(alpha = 0.45f),
-                                                Color.Transparent
-                                            ) else listOf(
-                                                Color.Black.copy(alpha = 0.10f),
-                                                Color.Transparent
-                                            )
-                                        ),
-                                        shape = CircleShape
-                                    )
-                                    .clickable {
-                                        navController.navigate("search")
-                                    },
+                                    .clickable { navController.navigate("search") },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Search,
                                     contentDescription = "Search",
-                                    modifier = Modifier.size(34.dp),
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    modifier = Modifier.size(28.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
@@ -650,97 +482,17 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(65.dp)
-                                    .clip(RoundedCornerShape(32.dp))
-                                    .onGloballyPositioned { rightCapsuleCoordinates = it }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .hazeChild(state = hazeState, shape = RoundedCornerShape(32.dp))
-                                        .background(
-                                            brush = Brush.verticalGradient(
-                                                colors = if (isDark) listOf(
-                                                    Color.White.copy(alpha = 0.25f),
-                                                    Color.White.copy(alpha = 0.05f),
-                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-                                                ) else listOf(
-                                                    Color.Black.copy(alpha = 0.12f),
-                                                    Color.Black.copy(alpha = 0.06f),
-                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                                                )
-                                            ),
-                                            shape = RoundedCornerShape(32.dp)
-                                        )
-                                )
-
-                                val rightColW = if (rightTabCenters[1] > 0f) rightTabCenters[1] - rightTabCenters[0] else 0f
-                                val rightPillW = if (rightColW > 0f) rightColW * 0.72f else with(density) { 44.dp.toPx() }
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer { alpha = rightPillAlpha }
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(
-                                                width = with(density) { rightPillW.toDp() },
-                                                height = pillHeight
-                                            )
-                                            .offset {
-                                                val x = (rightPillOffsetX - rightPillW / 2f).roundToInt()
-                                                val y = with(density) { ((65.dp - pillHeight) / 2f).toPx().roundToInt() }
-                                                IntOffset(x, y)
-                                            }
-                                            .background(
-                                                brush = Brush.verticalGradient(
-                                                    colors = if (isDark) listOf(
-                                                        Color.White.copy(alpha = 0.28f),
-                                                        Color.White.copy(alpha = 0.08f)
-                                                    ) else listOf(
-                                                        Color.Black.copy(alpha = 0.15f),
-                                                        Color.Black.copy(alpha = 0.06f)
-                                                    )
-                                                ),
-                                                shape = RoundedCornerShape(22.dp)
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                brush = Brush.linearGradient(
-                                                    colors = if (isDark) listOf(
-                                                        Color.White.copy(alpha = 0.45f),
-                                                        Color.Transparent
-                                                    ) else listOf(
-                                                        Color.Black.copy(alpha = 0.10f),
-                                                        Color.Transparent
-                                                    )
-                                                ),
-                                                shape = RoundedCornerShape(22.dp)
-                                            )
+                                    .height(56.dp)
+                                    .clip(RoundedCornerShape(28.dp))
+                                    .hazeChild(state = hazeState, shape = RoundedCornerShape(28.dp))
+                                    .background(
+                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
+                                        else Color.Black.copy(alpha = 0.04f),
+                                        shape = RoundedCornerShape(28.dp)
                                     )
-                                }
-
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .border(
-                                            width = 1.2.dp,
-                                            brush = Brush.linearGradient(
-                                                colors = if (isDark) listOf(
-                                                    Color.White.copy(alpha = 0.65f),
-                                                    Color.White.copy(alpha = 0.2f),
-                                                    Color.Transparent,
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                                                ) else listOf(
-                                                    Color.Black.copy(alpha = 0.12f),
-                                                    Color.Black.copy(alpha = 0.04f),
-                                                    Color.Transparent,
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                                )
-                                            ),
-                                            shape = RoundedCornerShape(32.dp)
-                                        ),
+                                    modifier = Modifier.fillMaxSize(),
                                     horizontalArrangement = Arrangement.SpaceEvenly,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -748,25 +500,13 @@ class MainActivity : ComponentActivity() {
                                         iconRes = R.drawable.ic_complete,
                                         label = "Complete",
                                         selected = currentRoute == "complete",
-                                        onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                        modifier = Modifier.onGloballyPositioned { coords ->
-                                            val c = rightCapsuleCoordinates
-                                            if (c != null) {
-                                                rightTabCenters[0] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
-                                            }
-                                        }
+                                        onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                     )
                                     BottomNavItem(
                                         iconRes = R.drawable.ic_stopped,
                                         label = "Upcoming",
                                         selected = currentRoute == "stopped",
-                                        onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } },
-                                        modifier = Modifier.onGloballyPositioned { coords ->
-                                            val c = rightCapsuleCoordinates
-                                            if (c != null) {
-                                                rightTabCenters[1] = c.localPositionOf(coords, Offset(coords.size.width / 2f, 0f)).x
-                                            }
-                                        }
+                                        onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
                                     )
                                 }
                             }
@@ -779,7 +519,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f))
+                            .background(Color.Black.copy(alpha = 0.4f))
                             .clickable { isDrawerOpen = false }
                     ) {
                         Column(
@@ -787,108 +527,78 @@ class MainActivity : ComponentActivity() {
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight()
                                 .width(280.dp)
-                                .background(MaterialTheme.colorScheme.surface)
+                                .hazeChild(state = hazeState)
+                                .background(
+                                    color = if (isDark) Color.White.copy(alpha = 0.04f)
+                                    else Color.Black.copy(alpha = 0.02f)
+                                )
                                 .clickable(enabled = false) {}
                                 .statusBarsPadding()
                                 .navigationBarsPadding()
                                 .padding(20.dp),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_menu),
-                                            contentDescription = "Menu",
-                                            modifier = Modifier.size(24.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = "Menu",
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-
+                                    Text(
+                                        text = "Menu",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
                                     IconButton(onClick = { isDrawerOpen = false }) {
-                                        Text("✕", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                                        Text("✕", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
                                 DrawerItem(
                                     iconRes = R.drawable.ic_stats,
                                     label = "Statistics",
-                                    iconColor = MaterialTheme.colorScheme.primary,
-                                    onClick = {
-                                        isDrawerOpen = false
-                                        navController.navigate("stats")
-                                    }
+                                    onClick = { isDrawerOpen = false; navController.navigate("stats") }
                                 )
                                 DrawerItem(
                                     iconRes = R.drawable.ic_calendar,
                                     label = "Calendar",
-                                    iconColor = Color(0xFF9D4EDD),
-                                    onClick = {
-                                        isDrawerOpen = false
-                                        navController.navigate("calendar")
-                                    }
+                                    onClick = { isDrawerOpen = false; navController.navigate("calendar") }
                                 )
                                 DrawerItem(
                                     iconRes = R.drawable.ic_collections,
                                     label = "Collections",
-                                    iconColor = MaterialTheme.colorScheme.primary,
-                                    onClick = {
-                                        isDrawerOpen = false
-                                        navController.navigate("collections")
-                                    }
+                                    onClick = { isDrawerOpen = false; navController.navigate("collections") }
                                 )
                                 DrawerItem(
                                     iconRes = R.drawable.ic_history,
                                     label = "Watch History",
-                                    iconColor = Color(0xFF9D4EDD),
-                                    onClick = {
-                                        isDrawerOpen = false
-                                        navController.navigate("history")
-                                    }
+                                    onClick = { isDrawerOpen = false; navController.navigate("history") }
                                 )
                                 DrawerItem(
                                     iconRes = R.drawable.ic_seasonal,
                                     label = "Seasonal View",
-                                    iconColor = MaterialTheme.colorScheme.primary,
-                                    onClick = {
-                                        isDrawerOpen = false
-                                    }
+                                    onClick = { isDrawerOpen = false }
                                 )
 
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
 
                                 DrawerItem(
                                     iconRes = R.drawable.ic_settings,
                                     label = "Settings",
-                                    iconColor = MaterialTheme.colorScheme.primary,
-                                    onClick = {
-                                        isDrawerOpen = false
-                                        navController.navigate("settings")
-                                    }
+                                    onClick = { isDrawerOpen = false; navController.navigate("settings") }
                                 )
                             }
 
                             Text(
-                                text = "My Donghua v6.8",
+                                text = "My Donghua",
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                         }
@@ -1010,7 +720,6 @@ private fun RowScope.BottomNavItem(
 private fun DrawerItem(
     iconRes: Int,
     label: String,
-    iconColor: Color,
     onClick: () -> Unit
 ) {
     Row(
@@ -1028,13 +737,13 @@ private fun DrawerItem(
             painter = painterResource(id = iconRes),
             contentDescription = label,
             modifier = Modifier.size(20.dp),
-            tint = iconColor
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = label,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }

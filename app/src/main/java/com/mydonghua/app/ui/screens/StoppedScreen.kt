@@ -1,6 +1,5 @@
 package com.mydonghua.app.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,9 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.ui.common.ShowCard
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun StoppedScreen(
@@ -45,7 +41,7 @@ fun StoppedScreen(
             ) {
                 Text(
                     text = "No hiatus or upcoming shows tracked",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
@@ -53,13 +49,13 @@ fun StoppedScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(bottom = 100.dp)
+                contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
             ) {
                 item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -69,41 +65,13 @@ fun StoppedScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        val showCountText = if (shows.size == 1) "1 show" else "${shows.size} shows"
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.22f),
-                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.45f),
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                            Color.White.copy(alpha = 0.05f),
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = showCountText,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                            )
-                        }
+                        Text(
+                            text = if (shows.size == 1) "1 show" else "${shows.size} shows",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-
 
                 items(shows, key = { it.id }) { show ->
                     ShowCard(

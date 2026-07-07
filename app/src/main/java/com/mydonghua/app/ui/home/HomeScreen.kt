@@ -1,17 +1,11 @@
 package com.mydonghua.app.ui.home
 
 import android.text.format.DateUtils
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -34,7 +27,6 @@ import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
-import com.mydonghua.app.domain.model.CountdownTime
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.screens.HomeViewModel
@@ -54,74 +46,29 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    var ticks by remember { mutableStateOf(0) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            ticks++
-        }
-    }
-
-    var currentTimeString by remember { mutableStateOf("") }
-    LaunchedEffect(ticks) {
-        val sdf = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
-        val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
-        val now = Date()
-        currentTimeString = "${sdf.format(now)} (${dayFormat.format(now)})"
-    }
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Transparent),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
-        // Hero Countdown Banner
         if (state.showCountdownBanner && state.nextUpShow != null) {
-            item(span = { GridItemSpan(2) }) {
-                HeroBanner(
-                    show = state.nextUpShow!!,
-                    ticks = ticks,
-                    onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") },
-                    onBannerClick = { onShowClick(state.nextUpShow!!.id) }
-                )
-            }
+            item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }
         }
 
-        // Continue Watching Section
         if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
-            item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "Continue Watching")
-            }
-            item(span = { GridItemSpan(2) }) {
-                ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick)
-            }
+            item { SectionHeader(title = "Continue Watching") }
+            item { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
         }
 
-        // Recently Updated Section
         if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
-            item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "Recently Updated")
-            }
-            item(span = { GridItemSpan(2) }) {
-                RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick)
-            }
+            item { SectionHeader(title = "Recently Updated") }
+            item { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
         }
 
-        // Weekly Schedule Section
         if (state.showWeeklySchedule) {
-            item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "Weekly Schedule")
-            }
-            item(span = { GridItemSpan(2) }) {
-                WeeklyScheduleSection(
-                    shows = state.allShows,
-                    onShowClick = onShowClick,
-                    onWatchClick = onWatchClick,
-                    viewModel = viewModel
-                )
-            }
+            item { SectionHeader(title = "Weekly Schedule") }
+            item { WeeklyScheduleSection(shows = state.allShows, onShowClick = onShowClick, onWatchClick = onWatchClick, viewModel = viewModel) }
         }
     }
 }
@@ -129,7 +76,6 @@ fun HomeScreen(
 @Composable
 fun HeroBanner(
     show: Show,
-    ticks: Int,
     onWatchClick: () -> Unit,
     onBannerClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -138,19 +84,21 @@ fun HeroBanner(
     val targetMs = remember(show.id) { CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime) }
     var remainingTime by remember(show.id) { mutableStateOf(CountdownCalculator.calculateTimeRemaining(targetMs)) }
 
-    LaunchedEffect(ticks) {
-        remainingTime = CountdownCalculator.calculateTimeRemaining(targetMs)
+    LaunchedEffect(Unit) {
+        while (true) {
+            remainingTime = CountdownCalculator.calculateTimeRemaining(targetMs)
+            delay(1000)
+        }
     }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .aspectRatio(1f)
+            .aspectRatio(16f / 9f)
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBannerClick() }
     ) {
-        // Poster Background
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(show.poster)
@@ -162,28 +110,17 @@ fun HeroBanner(
             contentScale = ContentScale.Crop
         )
 
-
-
-        // Badge showing status
         Box(
             modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.TopEnd)
+                .fillMaxSize()
                 .background(
-                    Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF9D4EDD))),
-                    RoundedCornerShape(8.dp)
+                    Brush.verticalGradient(
+                        0.4f to Color.Transparent,
+                        1.0f to Color.Black.copy(alpha = 0.7f)
+                    )
                 )
-                .padding(horizontal = 10.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text = "NEXT UP RELEASE",
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
+        )
 
-        // Details Block
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -191,62 +128,26 @@ fun HeroBanner(
         ) {
             Text(
                 text = show.title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = androidx.compose.ui.text.TextStyle(
-                    shadow = androidx.compose.ui.graphics.Shadow(
-                        color = Color.Black.copy(alpha = 0.8f),
-                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
-                        blurRadius = 4f
-                    )
-                )
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Episode ${show.currentEp + 1} releasing on ${show.releaseDay} at ${show.releaseTime}",
-                fontSize = 12.sp,
-                color = Color.LightGray,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp),
-                style = androidx.compose.ui.text.TextStyle(
-                    shadow = androidx.compose.ui.graphics.Shadow(
-                        color = Color.Black.copy(alpha = 0.8f),
-                        offset = androidx.compose.ui.geometry.Offset(1.5f, 1.5f),
-                        blurRadius = 3f
-                    )
-                )
+                text = if (remainingTime.airingNow) "New episode available now"
+                else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.8f),
+                maxLines = 1
             )
-
             Spacer(modifier = Modifier.height(10.dp))
-
-            // Time Display Grid
-            if (remainingTime.airingNow) {
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "📡 AIRING NOW / JUST RELEASED",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            } else if (!remainingTime.elapsed) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BannerTimeBox(value = remainingTime.days, label = "Days")
-                    BannerTimeBox(value = remainingTime.hours, label = "Hours")
-                    BannerTimeBox(value = remainingTime.minutes, label = "Mins")
-                    BannerTimeBox(value = remainingTime.seconds, label = "Secs")
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                BannerTimeBox(value = remainingTime.days, label = "d")
+                BannerTimeBox(value = remainingTime.hours, label = "h")
+                BannerTimeBox(value = remainingTime.minutes, label = "m")
+                BannerTimeBox(value = remainingTime.seconds, label = "s")
             }
         }
     }
@@ -256,32 +157,23 @@ fun HeroBanner(
 private fun BannerTimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .size(46.dp)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+            .size(48.dp)
+            .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
     ) {
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = String.format("%02d", value),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(18.dp)
-                .offset(y = 2.dp)
-                .wrapContentHeight(Alignment.CenterVertically)
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(0.dp))
         Text(
             text = label,
-            fontSize = 8.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            fontSize = 9.sp,
+            color = Color.White.copy(alpha = 0.6f),
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -293,7 +185,7 @@ fun SectionHeader(title: String) {
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 10.dp)
+        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 10.dp)
     )
 }
 
@@ -307,16 +199,15 @@ fun ContinueWatchingRow(
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(shows, key = { it.id }) { show ->
             Card(
                 modifier = Modifier
-                    .width(260.dp)
+                    .width(240.dp)
                     .clickable { onShowClick(show.id) },
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
             ) {
                 Row(
                     modifier = Modifier
@@ -326,52 +217,43 @@ fun ContinueWatchingRow(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 56.dp, height = 80.dp)
+                            .size(width = 52.dp, height = 72.dp)
                             .clip(RoundedCornerShape(8.dp))
                     ) {
                         AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(show.poster)
-                                .crossfade(true)
-                                .build(),
+                            model = ImageRequest.Builder(context).data(show.poster).crossfade(true).build(),
                             contentDescription = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
-                    ) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
                         Text(
                             text = "Ep ${show.currentEp}$totalStr",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 2.dp)
                         )
                         if (show.totalEp > 0) {
-                            val ratio = show.currentEp.toFloat() / show.totalEp.toFloat()
+                            Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
-                                progress = ratio.coerceIn(0f, 1f),
+                                progress = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 6.dp)
-                                    .height(4.dp)
+                                    .height(3.dp)
                                     .clip(RoundedCornerShape(2.dp)),
                                 color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
                             )
                         }
                     }
@@ -391,16 +273,15 @@ fun RecentlyUpdatedRow(
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(shows, key = { it.id }) { show ->
             Card(
                 modifier = Modifier
-                    .width(260.dp)
+                    .width(240.dp)
                     .clickable { onShowClick(show.id) },
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
             ) {
                 Row(
                     modifier = Modifier
@@ -410,47 +291,38 @@ fun RecentlyUpdatedRow(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 56.dp, height = 80.dp)
+                            .size(width = 52.dp, height = 72.dp)
                             .clip(RoundedCornerShape(8.dp))
                     ) {
                         AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(show.poster)
-                                .crossfade(true)
-                                .build(),
+                            model = ImageRequest.Builder(context).data(show.poster).crossfade(true).build(),
                             contentDescription = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
-                    ) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         val relativeTime = if (show.lastUpdated != null) {
                             DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
-                        } else {
-                            ""
+                        } else ""
+                        if (relativeTime.isNotEmpty()) {
+                            Text(
+                                text = relativeTime,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp),
+                                maxLines = 1
+                            )
                         }
-                        Text(
-                            text = relativeTime,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(top = 4.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
                 }
             }
@@ -492,119 +364,76 @@ fun WeeklyScheduleSection(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
             .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
             .background(
-                brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        Color.White.copy(alpha = 0.06f),
-                        Color.White.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
-                    ) else listOf(
-                        Color.Black.copy(alpha = 0.08f),
-                        Color.Black.copy(alpha = 0.03f),
-                        Color.Black.copy(alpha = 0.10f)
-                    )
-                ),
+                color = if (isDark) Color.White.copy(alpha = 0.04f)
+                else Color.Black.copy(alpha = 0.02f),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(12.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Day selector tabs
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(days) { day ->
-                val isSelected = day == selectedDay
-                val isToday = day == todayName
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(days) { day ->
+                    val isSelected = day == selectedDay
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable { selectedDay = day }
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = day.substring(0, 3),
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (filteredShows.isEmpty()) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .then(
-                            if (isSelected) Modifier.background(MaterialTheme.colorScheme.primary)
-                            else Modifier
-                                .hazeChild(state = hazeState, shape = RoundedCornerShape(8.dp))
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = if (isDark) listOf(
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                            Color.White.copy(alpha = 0.03f),
-                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.10f)
-                                        ) else listOf(
-                                            Color.Black.copy(alpha = 0.08f),
-                                            Color.Black.copy(alpha = 0.03f),
-                                            Color.Black.copy(alpha = 0.10f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                        )
-                        .clickable { selectedDay = day }
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .fillMaxWidth()
+                        .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = day.substring(0, 3) + if (isToday) " •" else "",
-                        fontSize = 12.sp,
-                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onBackground
+                        text = "No shows releasing on this day",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Schedule list
-        if (filteredShows.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No shows releasing on this day",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp)
-            ) {
-                filteredShows.forEach { show ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .hazeChild(state = hazeState, shape = RoundedCornerShape(8.dp))
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = if (isDark) listOf(
-                                        Color.White.copy(alpha = 0.06f),
-                                        Color.White.copy(alpha = 0.02f),
-                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
-                                    ) else listOf(
-                                        Color.Black.copy(alpha = 0.08f),
-                                        Color.Black.copy(alpha = 0.03f),
-                                        Color.Black.copy(alpha = 0.10f)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable { onShowClick(show.id) }
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .padding(bottom = 8.dp)
+                ) {
+                    filteredShows.forEach { show ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onShowClick(show.id) }
+                                .padding(horizontal = 8.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -618,16 +447,14 @@ fun WeeklyScheduleSection(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = show.releaseTime ?: "10:00",
+                                text = show.releaseTime ?: "",
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
                 }
             }
         }
-    }
     }
 }

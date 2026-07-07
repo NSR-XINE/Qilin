@@ -7,7 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
 import dev.chrisbanes.haze.HazeState
@@ -28,17 +27,29 @@ fun GlassBackground(
             .fillMaxSize()
             .hazeChild(state = hazeState)
             .background(
-                brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        Color.White.copy(alpha = 0.06f),
-                        Color.White.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
-                    ) else listOf(
-                        Color.Black.copy(alpha = 0.08f),
-                        Color.Black.copy(alpha = 0.03f),
-                        Color.Black.copy(alpha = 0.10f)
-                    )
-                )
+                color = if (isDark) Color.White.copy(alpha = 0.03f)
+                else Color.Black.copy(alpha = 0.02f)
+            )
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun GlassBackgroundHeavy(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val hazeState = LocalHazeState.current
+    val isDark = isSystemInDarkTheme()
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .hazeChild(state = hazeState)
+            .background(
+                color = if (isDark) Color.White.copy(alpha = 0.06f)
+                else Color.Black.copy(alpha = 0.04f)
             )
     ) {
         content()

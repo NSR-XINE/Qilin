@@ -18,64 +18,62 @@ import com.mydonghua.app.R
 val UbuntuSansFamily = FontFamily(
     Font(R.font.ubuntu_sans_regular, FontWeight.Normal),
     Font(R.font.ubuntu_sans_bold, FontWeight.Bold),
-    Font(R.font.ubuntu_sans_bold, FontWeight.ExtraBold),
-    Font(R.font.ubuntu_sans_regular, FontWeight.Medium),
-    Font(R.font.ubuntu_sans_regular, FontWeight.SemiBold)
+    Font(R.font.ubuntu_sans_bold, FontWeight.ExtraBold)
 )
 
-private val defaultTypography = Typography()
-val UbuntuSansTypography = Typography(
-    displayLarge = defaultTypography.displayLarge.copy(fontFamily = UbuntuSansFamily),
-    displayMedium = defaultTypography.displayMedium.copy(fontFamily = UbuntuSansFamily),
-    displaySmall = defaultTypography.displaySmall.copy(fontFamily = UbuntuSansFamily),
-    headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = UbuntuSansFamily),
-    headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = UbuntuSansFamily),
-    headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = UbuntuSansFamily),
-    titleLarge = defaultTypography.titleLarge.copy(fontFamily = UbuntuSansFamily),
-    titleMedium = defaultTypography.titleMedium.copy(fontFamily = UbuntuSansFamily),
-    titleSmall = defaultTypography.titleSmall.copy(fontFamily = UbuntuSansFamily),
-    bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = UbuntuSansFamily),
-    bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = UbuntuSansFamily),
-    bodySmall = defaultTypography.bodySmall.copy(fontFamily = UbuntuSansFamily),
-    labelLarge = defaultTypography.labelLarge.copy(fontFamily = UbuntuSansFamily),
-    labelMedium = defaultTypography.labelMedium.copy(fontFamily = UbuntuSansFamily),
-    labelSmall = defaultTypography.labelSmall.copy(fontFamily = UbuntuSansFamily)
+val AppTypography = Typography(
+    headlineLarge = Typography().headlineLarge.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
+    headlineMedium = Typography().headlineMedium.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
+    headlineSmall = Typography().headlineSmall.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
+    titleLarge = Typography().titleLarge.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
+    titleMedium = Typography().titleMedium.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.SemiBold),
+    titleSmall = Typography().titleSmall.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Medium),
+    bodyLarge = Typography().bodyLarge.copy(fontFamily = UbuntuSansFamily),
+    bodyMedium = Typography().bodyMedium.copy(fontFamily = UbuntuSansFamily),
+    bodySmall = Typography().bodySmall.copy(fontFamily = UbuntuSansFamily),
+    labelLarge = Typography().labelLarge.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Medium),
+    labelMedium = Typography().labelMedium.copy(fontFamily = UbuntuSansFamily),
+    labelSmall = Typography().labelSmall.copy(fontFamily = UbuntuSansFamily)
 )
-
 
 private val DarkColorScheme = darkColorScheme(
     primary = AccentCyan,
+    onPrimary = Color.Black,
     background = DarkBg,
-    surface = DarkCardBg,
-    secondary = DarkSecondaryBg,
+    surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
+    outline = DarkOutline,
     onBackground = TextPrimaryDark,
-    onSurface = TextSecondaryDark,
-    outline = DarkBorder
+    onSurface = TextPrimaryDark,
+    onSurfaceVariant = TextSecondaryDark
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = AccentCyanLight,
+    onPrimary = Color.White,
     background = LightBg,
-    surface = LightCardBg,
-    secondary = LightSecondaryBg,
+    surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant,
+    outline = LightOutline,
     onBackground = TextPrimaryLight,
-    onSurface = TextSecondaryLight,
-    outline = LightBorder
+    onSurface = TextPrimaryLight,
+    onSurfaceVariant = TextSecondaryLight
 )
 
 private val AmoledColorScheme = darkColorScheme(
     primary = AccentCyan,
+    onPrimary = Color.Black,
     background = AmoledBg,
-    surface = AmoledCardBg,
-    secondary = AmoledBg,
+    surface = AmoledSurface,
+    surfaceVariant = AmoledSurfaceVariant,
+    outline = AmoledOutline,
     onBackground = TextPrimaryDark,
-    onSurface = TextSecondaryDark,
-    outline = AmoledBorder
+    onSurface = TextPrimaryDark,
+    onSurfaceVariant = TextSecondaryDark
 )
 
 fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
-        "cyan" -> if (isLight) Color(0xFF009AA6) else Color(0xFF00F2FE)
         "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFF9D4EDD)
         "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF2A5F)
         "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF3FB950)
@@ -111,8 +109,8 @@ fun MyDonghuaTheme(
         if (themeMode.lowercase() == "amoled") {
             dynamicScheme.copy(
                 background = AmoledBg,
-                surface = AmoledCardBg,
-                secondary = AmoledBg
+                surface = AmoledSurface,
+                surfaceVariant = AmoledSurfaceVariant
             )
         } else {
             dynamicScheme
@@ -124,7 +122,7 @@ fun MyDonghuaTheme(
 
     MaterialTheme(
         colorScheme = finalScheme,
-        typography = UbuntuSansTypography,
+        typography = AppTypography,
         content = content
     )
 }
