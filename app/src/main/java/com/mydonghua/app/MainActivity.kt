@@ -47,6 +47,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.HazeMaterials
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Search
@@ -125,7 +126,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .haze(hazeState, style = HazeStyle(blurRadius = 24.dp))
+                                .haze(hazeState, style = HazeMaterials.ultraThin())
                         ) {
                             if (settingsState.themeMode.lowercase() != "light") {
                                 StarsBackground()
