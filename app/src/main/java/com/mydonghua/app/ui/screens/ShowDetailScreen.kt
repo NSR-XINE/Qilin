@@ -1,6 +1,8 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
+
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
@@ -25,7 +27,6 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
-import com.mydonghua.app.ui.GlassBackgroundHeavy
 import com.mydonghua.app.ui.LocalHazeState
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
@@ -42,6 +43,7 @@ fun ShowDetailScreen(
 ) {
     val context = LocalContext.current
     val hazeState = LocalHazeState.current
+    val isDark = isSystemInDarkTheme()
     val allShows by viewModel.allShows.collectAsState()
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
 
@@ -150,12 +152,13 @@ fun ShowDetailScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Status row
+                // Status chips with glass
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DetailChip(
+                    GlassChip(
+                        isDark = isDark, hazeState = hazeState,
                         label = "Status",
                         value = when (show.status) {
                             "ongoing" -> "Airing"
@@ -164,13 +167,15 @@ fun ShowDetailScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    DetailChip(
+                    GlassChip(
+                        isDark = isDark, hazeState = hazeState,
                         label = "Language",
                         value = show.language ?: "CN",
                         modifier = Modifier.weight(1f)
                     )
                     if (show.totalEp > 0) {
-                        DetailChip(
+                        GlassChip(
+                            isDark = isDark, hazeState = hazeState,
                             label = "Episodes",
                             value = "${show.totalEp}",
                             modifier = Modifier.weight(1f)
@@ -178,19 +183,9 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Countdown section
+                // Countdown
                 if (show.status == "ongoing") {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
-                            .background(
-                                color = Color.White.copy(alpha = 0.04f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .padding(14.dp)
-                    ) {
+                    GlassSection(isDark = isDark, hazeState = hazeState) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -223,18 +218,8 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Progress section
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
-                        .background(
-                            color = Color.White.copy(alpha = 0.04f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(14.dp)
-                ) {
+                // Progress
+                GlassSection(isDark = isDark, hazeState = hazeState) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -336,11 +321,52 @@ fun ShowDetailScreen(
 }
 
 @Composable
-private fun DetailChip(label: String, value: String, modifier: Modifier = Modifier) {
+private fun GlassSection(isDark: Boolean, hazeState: dev.chrisbanes.haze.HazeState, content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = if (isDark) listOf(
+                        Color.White.copy(alpha = 0.07f),
+                        Color.White.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.06f),
+                        Color.Black.copy(alpha = 0.02f),
+                        Color.Black.copy(alpha = 0.08f)
+                    )
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(14.dp)
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun GlassChip(isDark: Boolean, hazeState: dev.chrisbanes.haze.HazeState, label: String, value: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(10.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = if (isDark) listOf(
+                        Color.White.copy(alpha = 0.07f),
+                        Color.White.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.06f),
+                        Color.Black.copy(alpha = 0.02f),
+                        Color.Black.copy(alpha = 0.08f)
+                    )
+                ),
+                shape = RoundedCornerShape(10.dp)
+            )
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
