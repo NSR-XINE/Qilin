@@ -373,10 +373,11 @@ fun ContinueWatchingRow(
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                             )
-                        }
-                    }
-                }
-            }
+        }
+        }
+    }
+}
+
         }
     }
 }
@@ -451,9 +452,11 @@ fun RecentlyUpdatedRow(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                    }
-                }
-            }
+        }
+        }
+    }
+}
+
         }
     }
 }
@@ -489,9 +492,30 @@ fun WeeklyScheduleSection(
             .sortedWith(compareBy { it.releaseTime ?: "" })
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Day selector tabs
-        LazyRow(
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = if (isDark) listOf(
+                        Color.White.copy(alpha = 0.06f),
+                        Color.White.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.08f),
+                        Color.Black.copy(alpha = 0.03f),
+                        Color.Black.copy(alpha = 0.10f)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(12.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Day selector tabs
+            LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
