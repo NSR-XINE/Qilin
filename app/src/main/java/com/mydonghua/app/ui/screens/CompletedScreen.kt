@@ -65,7 +65,7 @@ fun CompletedScreen(
                     ) {
                         Text(
                             text = "Completed Series",
-                            fontSize = 18.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )

@@ -65,7 +65,7 @@ fun StoppedScreen(
                     ) {
                         Text(
                             text = "Upcoming & On Hiatus",
-                            fontSize = 18.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
