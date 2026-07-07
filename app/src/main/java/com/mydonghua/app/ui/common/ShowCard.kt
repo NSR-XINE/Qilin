@@ -33,7 +33,10 @@ import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.CountdownTime
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.LocalHazeState
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.isSystemInDarkTheme
 
 @Composable
 fun ShowCard(
@@ -49,6 +52,8 @@ fun ShowCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val hazeState = LocalHazeState.current
+    val isDark = isSystemInDarkTheme()
     var countdownTime by remember(show.id) {
         mutableStateOf(CountdownCalculator.calculateTimeRemaining(CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)))
     }
@@ -88,12 +93,17 @@ fun ShowCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
+                    colors = if (isDark) listOf(
                         Color.White.copy(alpha = 0.22f),
                         Color.White.copy(alpha = 0.05f),
                         MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.06f),
+                        Color.Black.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     )
                 ),
                 shape = RoundedCornerShape(16.dp)
@@ -106,11 +116,16 @@ fun ShowCard(
         border = BorderStroke(
             width = 1.2.dp,
             brush = Brush.linearGradient(
-                colors = listOf(
+                colors = if (isDark) listOf(
                     Color.White.copy(alpha = 0.55f),
                     Color.White.copy(alpha = 0.15f),
                     Color.Transparent,
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                ) else listOf(
+                    Color.Black.copy(alpha = 0.10f),
+                    Color.Black.copy(alpha = 0.03f),
+                    Color.Transparent,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                 )
             )
         )

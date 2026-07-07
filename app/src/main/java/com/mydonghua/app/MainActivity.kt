@@ -49,6 +49,8 @@ import dev.chrisbanes.haze.hazeChild
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Search
+import com.mydonghua.app.ui.GlassBackground
+import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
@@ -119,9 +121,16 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         val hazeState = remember { HazeState() }
-                        if (settingsState.themeMode.lowercase() != "light") {
-                            StarsBackground()
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .haze(hazeState)
+                        ) {
+                            if (settingsState.themeMode.lowercase() != "light") {
+                                StarsBackground()
+                            }
                         }
+                        CompositionLocalProvider(LocalHazeState provides hazeState) {
                         Scaffold(
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
@@ -200,11 +209,11 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .haze(hazeState)
                                     .padding(top = innerPadding.calculateTopPadding())
                             ) {
                         composable("home") {
-                            HomeScreen(
+                            GlassBackground {
+                                HomeScreen(
                                 viewModel = homeViewModel,
                                 onSearchClick = {
                                     navController.navigate("search")
@@ -223,8 +232,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        }
                         composable("airing") {
-                            AiringScreen(
+                            GlassBackground {
+                                AiringScreen(
                                 viewModel = showsViewModel,
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
@@ -239,9 +250,11 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("show_detail/${show.id}")
                                 }
                             )
+                        }
                         }
                         composable("complete") {
-                            CompletedScreen(
+                            GlassBackground {
+                                CompletedScreen(
                                 viewModel = showsViewModel,
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
@@ -256,9 +269,11 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("show_detail/${show.id}")
                                 }
                             )
+                        }
                         }
                         composable("stopped") {
-                            StoppedScreen(
+                            GlassBackground {
+                                StoppedScreen(
                                 viewModel = showsViewModel,
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
@@ -274,8 +289,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        }
                         composable("favorites") {
-                            FavoritesScreen(
+                            GlassBackground {
+                                FavoritesScreen(
                                 viewModel = showsViewModel,
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
@@ -290,6 +307,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("show_detail/${show.id}")
                                 }
                             )
+                        }
                         }
                         composable(
                             "add_edit_show?showId={showId}",
@@ -301,16 +319,19 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         ) { backStackEntry ->
-                            val showIdArg = backStackEntry.arguments?.getString("showId")
-                            AddEditShowScreen(
+                            GlassBackground {
+                                val showIdArg = backStackEntry.arguments?.getString("showId")
+                                AddEditShowScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                        }
                         composable("show_detail/{showId}") { backStackEntry ->
-                            val showIdArg = backStackEntry.arguments?.getString("showId") ?: ""
-                            ShowDetailScreen(
+                            GlassBackground {
+                                val showIdArg = backStackEntry.arguments?.getString("showId") ?: ""
+                                ShowDetailScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
                                 onWatchClick = { url ->
@@ -325,8 +346,10 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                        }
                         composable("search") {
-                            SearchScreen(
+                            GlassBackground {
+                                SearchScreen(
                                 viewModel = searchViewModel,
                                 showsViewModel = showsViewModel,
                                 onWatchClick = { url ->
@@ -342,8 +365,10 @@ class MainActivity : ComponentActivity() {
                                 onAddClick = { navController.navigate("add_edit_show") }
                             )
                         }
+                        }
                         composable("settings") {
-                            SettingsScreen(
+                            GlassBackground {
+                                SettingsScreen(
                                 viewModel = settingsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 onNavigateToStats = { navController.navigate("stats") },
@@ -352,20 +377,26 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToCollections = { navController.navigate("collections") }
                             )
                         }
+                        }
                         composable("stats") {
-                            StatsScreen(
+                            GlassBackground {
+                                StatsScreen(
                                 showsViewModel = showsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
+                        }
                         }
                         composable("calendar") {
-                            CalendarScreen(
+                            GlassBackground {
+                                CalendarScreen(
                                 showsViewModel = showsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
+                        }
                         }
                         composable("history") {
-                            HistoryScreen(
+                            GlassBackground {
+                                HistoryScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
@@ -373,14 +404,17 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                        }
                         composable("collections") {
-                            CollectionsScreen(
+                            GlassBackground {
+                                CollectionsScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
+                        }
                         }
                     }
                 }
@@ -862,9 +896,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    }
 }
 }
-
+ 
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         requestNotificationPermission()
