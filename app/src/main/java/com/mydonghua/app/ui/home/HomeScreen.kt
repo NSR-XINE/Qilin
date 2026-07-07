@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
@@ -53,7 +55,7 @@ fun HomeScreen(
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
-            item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }
+            item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }) }
         }
 
         if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
@@ -99,80 +101,139 @@ fun HeroBanner(
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBannerClick() }
     ) {
+        // Blurred poster background
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(show.poster)
                 .crossfade(true)
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build(),
-            contentDescription = "Hero Banner",
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
+        // Dark gradient overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    Brush.verticalGradient(
-                        0.4f to Color.Transparent,
-                        1.0f to Color.Black.copy(alpha = 0.7f)
+                    Brush.horizontalGradient(
+                        0.0f to Color.Black.copy(alpha = 0.75f),
+                        0.3f to Color.Black.copy(alpha = 0.4f),
+                        0.7f to Color.Black.copy(alpha = 0.3f),
+                        1.0f to Color.Black.copy(alpha = 0.6f)
                     )
                 )
         )
 
-        Column(
+        Row(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = show.title,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (remainingTime.airingNow) "New episode available now"
-                else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                fontSize = 13.sp,
-                color = Color.White.copy(alpha = 0.8f),
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                BannerTimeBox(value = remainingTime.days, label = "d")
-                BannerTimeBox(value = remainingTime.hours, label = "h")
-                BannerTimeBox(value = remainingTime.minutes, label = "m")
-                BannerTimeBox(value = remainingTime.seconds, label = "s")
+            // Poster thumbnail
+            Box(
+                modifier = Modifier
+                    .width(100.dp)
+                    .aspectRatio(2f / 3f)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(show.poster)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = show.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            // Info side
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Next Episode",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 2.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = show.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (remainingTime.airingNow) "Available now — watch now!"
+                    else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    maxLines = 1
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (!remainingTime.airingNow && !remainingTime.elapsed) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        TimeBox(value = remainingTime.days, label = "d")
+                        TimeBox(value = remainingTime.hours, label = "h")
+                        TimeBox(value = remainingTime.minutes, label = "m")
+                        TimeBox(value = remainingTime.seconds, label = "s")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = onWatchClick,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_circle_play),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (remainingTime.airingNow) "Watch Now" else "Stream",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun BannerTimeBox(value: Long, label: String) {
+private fun TimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .size(48.dp)
-            .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+            .size(42.dp)
+            .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
     ) {
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = String.format("%02d", value),
-            fontSize = 18.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             textAlign = TextAlign.Center
         )
         Text(
             text = label,
-            fontSize = 9.sp,
-            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 8.sp,
+            color = Color.White.copy(alpha = 0.5f),
             textAlign = TextAlign.Center
         )
     }
