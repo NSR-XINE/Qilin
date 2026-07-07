@@ -3,10 +3,13 @@ package com.mydonghua.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
 import dev.chrisbanes.haze.HazeState
@@ -27,8 +30,17 @@ fun GlassBackground(
             .fillMaxSize()
             .hazeChild(state = hazeState)
             .background(
-                color = if (isDark) Color.White.copy(alpha = 0.03f)
-                else Color.Black.copy(alpha = 0.02f)
+                brush = Brush.verticalGradient(
+                    colors = if (isDark) listOf(
+                        Color.White.copy(alpha = 0.06f),
+                        Color.White.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.10f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.05f),
+                        Color.Black.copy(alpha = 0.02f),
+                        Color.Black.copy(alpha = 0.06f)
+                    )
+                )
             )
     ) {
         content()
@@ -36,7 +48,7 @@ fun GlassBackground(
 }
 
 @Composable
-fun GlassBackgroundHeavy(
+fun GlassSection(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -45,12 +57,24 @@ fun GlassBackgroundHeavy(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .hazeChild(state = hazeState)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
             .background(
-                color = if (isDark) Color.White.copy(alpha = 0.06f)
-                else Color.Black.copy(alpha = 0.04f)
+                brush = Brush.verticalGradient(
+                    colors = if (isDark) listOf(
+                        Color.White.copy(alpha = 0.08f),
+                        Color.White.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.07f),
+                        Color.Black.copy(alpha = 0.02f),
+                        Color.Black.copy(alpha = 0.09f)
+                    )
+                ),
+                shape = RoundedCornerShape(12.dp)
             )
+            .padding(14.dp)
     ) {
         content()
     }

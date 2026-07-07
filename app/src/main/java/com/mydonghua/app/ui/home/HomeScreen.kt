@@ -28,6 +28,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.screens.HomeViewModel
 import dev.chrisbanes.haze.hazeChild
@@ -202,16 +203,11 @@ fun ContinueWatchingRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(shows, key = { it.id }) { show ->
-            Card(
-                modifier = Modifier
-                    .width(240.dp)
-                    .clickable { onShowClick(show.id) },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
-            ) {
+            GlassSection(modifier = Modifier.width(240.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { onShowClick(show.id) }
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -276,16 +272,11 @@ fun RecentlyUpdatedRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(shows, key = { it.id }) { show ->
-            Card(
-                modifier = Modifier
-                    .width(240.dp)
-                    .clickable { onShowClick(show.id) },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
-            ) {
+            GlassSection(modifier = Modifier.width(240.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { onShowClick(show.id) }
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

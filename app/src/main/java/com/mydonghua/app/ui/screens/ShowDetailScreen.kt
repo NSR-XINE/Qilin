@@ -2,7 +2,6 @@ package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
@@ -27,6 +26,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
@@ -43,7 +43,6 @@ fun ShowDetailScreen(
 ) {
     val context = LocalContext.current
     val hazeState = LocalHazeState.current
-    val isDark = isSystemInDarkTheme()
     val allShows by viewModel.allShows.collectAsState()
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
 
@@ -185,7 +184,7 @@ fun ShowDetailScreen(
 
                 // Countdown
                 if (show.status == "ongoing") {
-                    GlassSection(isDark = isDark, hazeState = hazeState) {
+                    GlassSection {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -219,7 +218,7 @@ fun ShowDetailScreen(
                 }
 
                 // Progress
-                GlassSection(isDark = isDark, hazeState = hazeState) {
+                GlassSection {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -317,33 +316,6 @@ fun ShowDetailScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun GlassSection(isDark: Boolean, hazeState: dev.chrisbanes.haze.HazeState, content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        Color.White.copy(alpha = 0.07f),
-                        Color.White.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
-                    ) else listOf(
-                        Color.Black.copy(alpha = 0.06f),
-                        Color.Black.copy(alpha = 0.02f),
-                        Color.Black.copy(alpha = 0.08f)
-                    )
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(14.dp)
-    ) {
-        content()
     }
 }
 
