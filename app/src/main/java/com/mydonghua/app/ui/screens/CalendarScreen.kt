@@ -1,10 +1,9 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -31,25 +30,8 @@ fun CalendarScreen(
     val scrollState = rememberScrollState()
 
     val now = Calendar.getInstance()
-    val currentYear = now.get(Calendar.YEAR)
-    val currentMonth = now.get(Calendar.MONTH)
-    val todayDate = now.get(Calendar.DATE)
-
-    // Calculate days of current month
-    val firstDayOfWeek = Calendar.getInstance().apply {
-        set(Calendar.YEAR, currentYear)
-        set(Calendar.MONTH, currentMonth)
-        set(Calendar.DAY_OF_MONTH, 1)
-    }.get(Calendar.DAY_OF_WEEK) - 1 // 0-indexed (Sunday = 0)
-
-    val daysInMonth = Calendar.getInstance().apply {
-        set(Calendar.YEAR, currentYear)
-        set(Calendar.MONTH, currentMonth + 1)
-        set(Calendar.DAY_OF_MONTH, 0)
-    }.get(Calendar.DAY_OF_MONTH)
-
     val monthName = now.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()) ?: ""
-    val yearName = currentYear.toString()
+    val yearName = now.get(Calendar.YEAR).toString()
 
     val weekDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
@@ -91,115 +73,6 @@ fun CalendarScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Days of Week labels
-            Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa").forEach { label ->
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = label,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                    }
-                }
-            }
-
-            // Days grid using custom math
-            val totalCells = firstDayOfWeek + daysInMonth
-            val rowsCount = (totalCells + 6) / 7
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                for (r in 0 until rowsCount) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        for (c in 0 until 7) {
-                            val cellIndex = r * 7 + c
-                            val dayNumber = cellIndex - firstDayOfWeek + 1
-
-                            if (dayNumber in 1..daysInMonth) {
-                                val isToday = dayNumber == todayDate
-                                val date = Calendar.getInstance().apply {
-                                    set(Calendar.YEAR, currentYear)
-                                    set(Calendar.MONTH, currentMonth)
-                                    set(Calendar.DAY_OF_MONTH, dayNumber)
-                                }
-                                val dayOfWeekName = weekDays[date.get(Calendar.DAY_OF_WEEK) - 1]
-                                val dayShows = ongoingShows.filter { it.releaseDay == dayOfWeekName }
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                                        )
-                                        .clickable { }
-                                        .padding(4.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.fillMaxSize(),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = dayNumber.toString(),
-                                            fontSize = 11.sp,
-                                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                        )
-
-                                        // Dots
-                                        if (dayShows.isNotEmpty()) {
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                dayShows.take(3).forEach { _ ->
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(4.dp)
-                                                            .clip(CircleShape)
-                                                            .background(MaterialTheme.colorScheme.primary)
-                                                    )
-                                                }
-                                                if (dayShows.size > 3) {
-                                                    Text(
-                                                        text = "+",
-                                                        fontSize = 8.sp,
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                }
-                                            }
-                                        } else {
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                        }
-                                    }
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Upcoming This Week section
-            Text("Upcoming This Week", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-
             if (upcomingWeekList.isEmpty()) {
                 Text(
                     text = "No shows scheduled for release this week",
