@@ -28,8 +28,11 @@ import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
-import com.mydonghua.app.ui.LocalHazeState
-import dev.chrisbanes.haze.hazeChild
+import com.mydonghua.app.ui.LocalBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -318,25 +321,21 @@ fun ShowDetailScreen(
 
 @Composable
 private fun GlassChip(label: String, value: String, modifier: Modifier = Modifier) {
-    val hazeState = LocalHazeState.current
+    val backdrop = LocalBackdrop.current
     val isDark = isSystemInDarkTheme()
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(10.dp))
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        Color.White.copy(alpha = 0.07f),
-                        Color.White.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
-                    ) else listOf(
-                        Color.Black.copy(alpha = 0.06f),
-                        Color.Black.copy(alpha = 0.02f),
-                        Color.Black.copy(alpha = 0.08f)
-                    )
-                ),
-                shape = RoundedCornerShape(10.dp)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(10.dp) },
+                effects = {
+                    vibrancy()
+                    colorControls(brightness = 0.05f, contrast = 1f, saturation = 1.5f)
+                    blur(6f.dp.toPx())
+                },
+                onDrawSurface = {
+                    drawRect(Color.Black.copy(alpha = if (isDark) 0.12f else 0.18f))
+                }
             )
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {

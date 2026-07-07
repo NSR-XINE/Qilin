@@ -43,15 +43,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Search
 import com.mydonghua.app.ui.GlassBackground
-import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.LocalBackdrop
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
@@ -121,18 +125,20 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        val hazeState = remember { HazeState() }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .haze(hazeState, style = HazeStyle(blurRadius = 24.dp))
-                        ) {
-                            if (settingsState.themeMode.lowercase() != "light") {
-                                StarsBackground()
-                            }
+                        val backdrop = rememberLayerBackdrop {
+                            drawRect(Color.Black)
+                            drawContent()
                         }
-                        CompositionLocalProvider(LocalHazeState provides hazeState) {
-                        Scaffold(
+                        CompositionLocalProvider(LocalBackdrop provides backdrop) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .layerBackdrop(backdrop)
+                            ) {
+                                if (settingsState.themeMode.lowercase() != "light") {
+                                    StarsBackground()
+                                }
+                            Scaffold(
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
                             topBar = {
@@ -398,6 +404,7 @@ class MainActivity : ComponentActivity() {
                         }
                         }
                     }
+                    }
                 }
 
                 val isDark = settingsState.themeMode.lowercase() != "light"
@@ -428,12 +435,17 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(56.dp)
-                                    .clip(RoundedCornerShape(28.dp))
-                                    .hazeChild(state = hazeState, shape = RoundedCornerShape(28.dp))
-                                    .background(
-                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                                        else Color.Black.copy(alpha = 0.04f),
-                                        shape = RoundedCornerShape(28.dp)
+                                    .drawBackdrop(
+                                        backdrop = backdrop,
+                                        shape = { RoundedCornerShape(28.dp) },
+                                        effects = {
+                                            vibrancy()
+                                            colorControls(brightness = 0.05f, contrast = 1f, saturation = 1.5f)
+                                            blur(8f.dp.toPx())
+                                        },
+                                        onDrawSurface = {
+                                            drawRect(Color.Black.copy(alpha = if (isDark) 0.12f else 0.18f))
+                                        }
                                     )
                             ) {
                                 Row(
@@ -460,12 +472,17 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .size(56.dp)
-                                    .clip(CircleShape)
-                                    .hazeChild(state = hazeState, shape = CircleShape)
-                                    .background(
-                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                                        else Color.Black.copy(alpha = 0.04f),
-                                        shape = CircleShape
+                                    .drawBackdrop(
+                                        backdrop = backdrop,
+                                        shape = { CircleShape },
+                                        effects = {
+                                            vibrancy()
+                                            colorControls(brightness = 0.05f, contrast = 1f, saturation = 1.5f)
+                                            blur(8f.dp.toPx())
+                                        },
+                                        onDrawSurface = {
+                                            drawRect(Color.Black.copy(alpha = if (isDark) 0.12f else 0.18f))
+                                        }
                                     )
                                     .clickable { navController.navigate("search") },
                                 contentAlignment = Alignment.Center
@@ -483,12 +500,17 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(56.dp)
-                                    .clip(RoundedCornerShape(28.dp))
-                                    .hazeChild(state = hazeState, shape = RoundedCornerShape(28.dp))
-                                    .background(
-                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                                        else Color.Black.copy(alpha = 0.04f),
-                                        shape = RoundedCornerShape(28.dp)
+                                    .drawBackdrop(
+                                        backdrop = backdrop,
+                                        shape = { RoundedCornerShape(28.dp) },
+                                        effects = {
+                                            vibrancy()
+                                            colorControls(brightness = 0.05f, contrast = 1f, saturation = 1.5f)
+                                            blur(8f.dp.toPx())
+                                        },
+                                        onDrawSurface = {
+                                            drawRect(Color.Black.copy(alpha = if (isDark) 0.12f else 0.18f))
+                                        }
                                     )
                             ) {
                                 Row(
@@ -527,10 +549,16 @@ class MainActivity : ComponentActivity() {
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight()
                                 .width(280.dp)
-                                .hazeChild(state = hazeState)
-                                .background(
-                                    color = if (isDark) Color.White.copy(alpha = 0.04f)
-                                    else Color.Black.copy(alpha = 0.02f)
+                                .drawBackdrop(
+                                    backdrop = backdrop,
+                                    effects = {
+                                        vibrancy()
+                                        colorControls(brightness = 0.05f, contrast = 1f, saturation = 1.5f)
+                                        blur(8f.dp.toPx())
+                                    },
+                                    onDrawSurface = {
+                                        drawRect(Color.Black.copy(alpha = if (isDark) 0.18f else 0.24f))
+                                    }
                                 )
                                 .clickable(enabled = false) {}
                                 .statusBarsPadding()

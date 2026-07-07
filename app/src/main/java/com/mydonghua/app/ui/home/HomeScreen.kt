@@ -29,9 +29,12 @@ import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
-import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.LocalBackdrop
 import com.mydonghua.app.ui.screens.HomeViewModel
-import dev.chrisbanes.haze.hazeChild
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -329,7 +332,7 @@ fun WeeklyScheduleSection(
     viewModel: HomeViewModel,
     modifier: Modifier = Modifier
 ) {
-    val hazeState = LocalHazeState.current
+    val backdrop = LocalBackdrop.current
     val isDark = isSystemInDarkTheme()
     val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
@@ -356,12 +359,17 @@ fun WeeklyScheduleSection(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
-            .background(
-                color = if (isDark) Color.White.copy(alpha = 0.04f)
-                else Color.Black.copy(alpha = 0.02f),
-                shape = RoundedCornerShape(16.dp)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(16.dp) },
+                effects = {
+                    vibrancy()
+                    colorControls(brightness = 0.05f, contrast = 1f, saturation = 1.5f)
+                    blur(8f.dp.toPx())
+                },
+                onDrawSurface = {
+                    drawRect(Color.Black.copy(alpha = if (isDark) 0.10f else 0.15f))
+                }
             )
             .padding(12.dp)
     ) {
