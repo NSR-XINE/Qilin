@@ -2,6 +2,7 @@ package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
@@ -42,7 +43,6 @@ fun ShowDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val hazeState = LocalHazeState.current
     val allShows by viewModel.allShows.collectAsState()
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
 
@@ -157,7 +157,6 @@ fun ShowDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     GlassChip(
-                        isDark = isDark, hazeState = hazeState,
                         label = "Status",
                         value = when (show.status) {
                             "ongoing" -> "Airing"
@@ -167,14 +166,12 @@ fun ShowDetailScreen(
                         modifier = Modifier.weight(1f)
                     )
                     GlassChip(
-                        isDark = isDark, hazeState = hazeState,
                         label = "Language",
                         value = show.language ?: "CN",
                         modifier = Modifier.weight(1f)
                     )
                     if (show.totalEp > 0) {
                         GlassChip(
-                            isDark = isDark, hazeState = hazeState,
                             label = "Episodes",
                             value = "${show.totalEp}",
                             modifier = Modifier.weight(1f)
@@ -320,7 +317,9 @@ fun ShowDetailScreen(
 }
 
 @Composable
-private fun GlassChip(isDark: Boolean, hazeState: dev.chrisbanes.haze.HazeState, label: String, value: String, modifier: Modifier = Modifier) {
+private fun GlassChip(label: String, value: String, modifier: Modifier = Modifier) {
+    val hazeState = LocalHazeState.current
+    val isDark = isSystemInDarkTheme()
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
