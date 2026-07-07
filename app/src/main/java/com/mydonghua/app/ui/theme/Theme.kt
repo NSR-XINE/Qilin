@@ -15,31 +15,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.Typography
 import com.mydonghua.app.R
 
-val JustSansFamily = FontFamily(
-    Font(R.font.just_sans_regular, FontWeight.Normal),
-    Font(R.font.just_sans_exbold, FontWeight.Bold),
-    Font(R.font.just_sans_exbold, FontWeight.ExtraBold),
-    Font(R.font.just_sans_regular, FontWeight.Medium),
-    Font(R.font.just_sans_regular, FontWeight.SemiBold)
+val UbuntuSansFamily = FontFamily(
+    Font(R.font.ubuntu_sans_regular, FontWeight.Normal),
+    Font(R.font.ubuntu_sans_bold, FontWeight.Bold),
+    Font(R.font.ubuntu_sans_bold, FontWeight.ExtraBold),
+    Font(R.font.ubuntu_sans_regular, FontWeight.Medium),
+    Font(R.font.ubuntu_sans_regular, FontWeight.SemiBold)
 )
 
 private val defaultTypography = Typography()
-val JustSansTypography = Typography(
-    displayLarge = defaultTypography.displayLarge.copy(fontFamily = JustSansFamily),
-    displayMedium = defaultTypography.displayMedium.copy(fontFamily = JustSansFamily),
-    displaySmall = defaultTypography.displaySmall.copy(fontFamily = JustSansFamily),
-    headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = JustSansFamily),
-    headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = JustSansFamily),
-    headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = JustSansFamily),
-    titleLarge = defaultTypography.titleLarge.copy(fontFamily = JustSansFamily),
-    titleMedium = defaultTypography.titleMedium.copy(fontFamily = JustSansFamily),
-    titleSmall = defaultTypography.titleSmall.copy(fontFamily = JustSansFamily),
-    bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = JustSansFamily),
-    bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = JustSansFamily),
-    bodySmall = defaultTypography.bodySmall.copy(fontFamily = JustSansFamily),
-    labelLarge = defaultTypography.labelLarge.copy(fontFamily = JustSansFamily),
-    labelMedium = defaultTypography.labelMedium.copy(fontFamily = JustSansFamily),
-    labelSmall = defaultTypography.labelSmall.copy(fontFamily = JustSansFamily)
+val UbuntuSansTypography = Typography(
+    displayLarge = defaultTypography.displayLarge.copy(fontFamily = UbuntuSansFamily),
+    displayMedium = defaultTypography.displayMedium.copy(fontFamily = UbuntuSansFamily),
+    displaySmall = defaultTypography.displaySmall.copy(fontFamily = UbuntuSansFamily),
+    headlineLarge = defaultTypography.headlineLarge.copy(fontFamily = UbuntuSansFamily),
+    headlineMedium = defaultTypography.headlineMedium.copy(fontFamily = UbuntuSansFamily),
+    headlineSmall = defaultTypography.headlineSmall.copy(fontFamily = UbuntuSansFamily),
+    titleLarge = defaultTypography.titleLarge.copy(fontFamily = UbuntuSansFamily),
+    titleMedium = defaultTypography.titleMedium.copy(fontFamily = UbuntuSansFamily),
+    titleSmall = defaultTypography.titleSmall.copy(fontFamily = UbuntuSansFamily),
+    bodyLarge = defaultTypography.bodyLarge.copy(fontFamily = UbuntuSansFamily),
+    bodyMedium = defaultTypography.bodyMedium.copy(fontFamily = UbuntuSansFamily),
+    bodySmall = defaultTypography.bodySmall.copy(fontFamily = UbuntuSansFamily),
+    labelLarge = defaultTypography.labelLarge.copy(fontFamily = UbuntuSansFamily),
+    labelMedium = defaultTypography.labelMedium.copy(fontFamily = UbuntuSansFamily),
+    labelSmall = defaultTypography.labelSmall.copy(fontFamily = UbuntuSansFamily)
 )
 
 
@@ -124,7 +124,7 @@ fun MyDonghuaTheme(
 
     MaterialTheme(
         colorScheme = finalScheme,
-        typography = JustSansTypography,
+        typography = UbuntuSansTypography,
         content = content
     )
 }
