@@ -641,7 +641,7 @@ class MainActivity : ComponentActivity() {
                                     imageVector = Icons.Rounded.Search,
                                     contentDescription = "Search",
                                     modifier = Modifier.size(34.dp),
-                                    tint = if (isDark) Color.White else Color.Black
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
 
