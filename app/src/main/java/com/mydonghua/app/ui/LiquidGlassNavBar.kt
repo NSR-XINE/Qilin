@@ -11,7 +11,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -114,6 +114,7 @@ fun LiquidGlassNavBar(
     val totalSlots = 5f
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
     val coroutineScope = rememberCoroutineScope()
+    val barInteraction = rememberGlassInteraction()
 
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
@@ -138,7 +139,8 @@ fun LiquidGlassNavBar(
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(30.dp),
             )
-            .onSizeChanged { barWidthPx = it.width },
+            .onSizeChanged { barWidthPx = it.width }
+            .pointerInput(barInteraction) { barInteraction.detectPress(this) },
     ) {
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
@@ -255,7 +257,7 @@ fun LiquidGlassNavBar(
                                 shape = CircleShape,
                             )
                             .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
+                                interactionSource = null,
                                 indication = null,
                             ) { onNavigate("add_edit_show") },
                         contentAlignment = Alignment.Center,
@@ -280,21 +282,24 @@ private fun NavBarIcon(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier = Modifier.size(48.dp),
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CapsuleShape)
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Tab,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.size(48.dp),
-        ) {
-            Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -401,6 +406,38 @@ private suspend fun AwaitPointerEventScope.awaitDragOrUp(
     }
 }
 
+class GlassInteraction(
+    private val animationScope: CoroutineScope,
+) {
+    private val pressSpec = spring(dampingRatio = 0.5f, stiffness = 300f, visibilityThreshold = 0.001f)
+    private val pressAnimation = Animatable(0f, 0.001f)
+
+    val pressProgress: Float get() = pressAnimation.value
+
+    var touchPosition by mutableStateOf(Offset.Zero)
+        private set
+
+    suspend fun detectPress(pointer: PointerInputScope) =
+        with(pointer) {
+            inspectDragGestures(
+                onDragStart = { down ->
+                    touchPosition = down.position
+                    animationScope.launch { pressAnimation.animateTo(1f, pressSpec) }
+                },
+                onDragEnd = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
+                onDragCancel = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
+            ) { change, _ ->
+                touchPosition = change.position
+            }
+        }
+}
+
+@Composable
+fun rememberGlassInteraction(): GlassInteraction {
+    val scope = rememberCoroutineScope()
+    return remember(scope) { GlassInteraction(scope) }
+}
+
 class DampedDragAnimation(
     private val animationScope: CoroutineScope,
     val initialValue: Float,
@@ -481,8 +518,7 @@ class DampedDragAnimation(
     fun updateValue(value: Float) {
         val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
         animationScope.launch {
-            valueAnimation.snapTo(target)
-            updateVelocity()
+            valueAnimation.animateTo(target, valueAnimationSpec) { updateVelocity() }
         }
     }
 
