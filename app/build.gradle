@@ -29,11 +29,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '21'
         freeCompilerArgs += ["-Xskip-metadata-version-check"]
     }
 
@@ -106,7 +106,4 @@ dependencies {
     testImplementation 'androidx.test:core-ktx:1.5.0'
     testImplementation 'androidx.test.ext:junit-ktx:1.1.5'
     testImplementation 'kotlinx.coroutines:kotlinx-coroutines-test:1.7.3'
-
-    // Kyant Liquid Glass (RenderEffect-based backdrop blur)
-    implementation 'io.github.kyant0:backdrop:1.0.6'
 }
