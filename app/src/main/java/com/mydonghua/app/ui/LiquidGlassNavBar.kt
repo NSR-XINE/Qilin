@@ -1,6 +1,8 @@
 package com.mydonghua.app.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,7 +11,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import dev.chrisbanes.haze.hazeChild
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
@@ -20,18 +21,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.R
-import com.mydonghua.app.ui.LocalHazeState
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.refraction
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
 import android.graphics.Bitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -40,6 +45,9 @@ import kotlinx.coroutines.withContext
 import kotlin.math.sign
 import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
+
+private val navRoutes = listOf("home", "airing", "complete", "stopped")
+private val CapsuleShape = RoundedCornerShape(percent = 50)
 
 @Composable
 fun LiquidGlassNavBar(
@@ -75,7 +83,25 @@ fun LiquidGlassNavBar(
         }
     }
 
-    Row(
+    val density = LocalDensity.current
+    var barWidthPx by remember { mutableIntStateOf(0) }
+    val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
+    val totalSlots = 5f
+    val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
+    val blobSize = 48.dp
+
+    val blobOffset by animateDpAsState(
+        targetValue = if (barWidthPx > 0) with(density) {
+            val slot = if (navIndex < 2) navIndex else navIndex + 1
+            val centerPx = slotWidthPx * (slot + 0.5f)
+            val blobPx = blobSize.toPx()
+            (centerPx - blobPx / 2f).toDp()
+        } else 0.dp,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
+        label = "blobOffset",
+    )
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(60.dp)
@@ -94,76 +120,90 @@ fun LiquidGlassNavBar(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(30.dp),
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly,
+            )
+            .onSizeChanged { barWidthPx = it.width },
     ) {
-        NavBarIcon(
-            iconRes = R.drawable.ic_home,
-            selected = currentRoute == "home",
-            onClick = { onNavigate("home") },
-        )
-        NavBarIcon(
-            iconRes = R.drawable.ic_airing,
-            selected = currentRoute == "airing",
-            onClick = { onNavigate("airing") },
-        )
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                    shape = CircleShape,
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) { onNavigate("add_edit_show") },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Add,
-                contentDescription = "Add",
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        if (barWidthPx > 0) {
+            val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
+            Box(
+                modifier = Modifier
+                    .offset(x = blobOffset)
+                    .size(blobSize)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { CapsuleShape },
+                        effects = {
+                            colorControls(
+                                brightness = if (l > 0f) lerp(0.15f, 0.5f, l) else lerp(0.15f, -0.15f, -l),
+                                contrast = 1f,
+                                saturation = 1.5f,
+                            )
+                            blur(if (l > 0f) lerp(10f.dp.toPx(), 18f.dp.toPx(), l) else lerp(10f.dp.toPx(), 4f.dp.toPx(), -l))
+                        },
+                        highlight = { Highlight.Default.copy(alpha = 0.5f) },
+                        shadow = { Shadow(radius = 4f.dp, alpha = 0.3f) },
+                    )
+                    .graphicsLayer {
+                        val darken = lerp(0.15f, 0.4f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
+                        drawRect(Color.Black.copy(alpha = darken))
+                    },
             )
         }
-        NavBarIcon(
-            iconRes = R.drawable.ic_complete,
-            selected = currentRoute == "complete",
-            onClick = { onNavigate("complete") },
-        )
-        NavBarIcon(
-            iconRes = R.drawable.ic_stopped,
-            selected = currentRoute == "stopped",
-            onClick = { onNavigate("stopped") },
-        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            navRoutes.forEachIndexed { _, route ->
+                NavBarIcon(
+                    iconRes = when (route) {
+                        "home" -> R.drawable.ic_home
+                        "airing" -> R.drawable.ic_airing
+                        "complete" -> R.drawable.ic_complete
+                        else -> R.drawable.ic_stopped
+                    },
+                    selected = navRoutes.indexOf(currentRoute) == navRoutes.indexOf(route),
+                    onClick = { onNavigate(route) },
+                )
+                if (route == "airing") {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                                shape = CircleShape,
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) { onNavigate("add_edit_show") },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = "Add",
+                            modifier = Modifier.size(28.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun RowScope.NavBarIcon(
+private fun NavBarIcon(
     iconRes: Int,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier.size(48.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .hazeChild(state = LocalHazeState.current, shape = RoundedCornerShape(10.dp))
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-            )
-        }
         IconButton(
             onClick = onClick,
             modifier = Modifier.size(48.dp),
