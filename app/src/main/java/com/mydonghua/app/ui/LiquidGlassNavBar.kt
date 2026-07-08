@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
@@ -143,10 +142,12 @@ fun LiquidGlassNavBar(
                         highlight = { Highlight.Default.copy(alpha = 0.5f) },
                         shadow = { Shadow(radius = 4f.dp, alpha = 0.3f) },
                     )
-                    .graphicsLayer {
-                        val darken = lerp(0.15f, 0.4f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                        drawRect(Color.Black.copy(alpha = darken))
-                    },
+                    .background(
+                        color = Color.Black.copy(
+                            alpha = lerp(0.15f, 0.4f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
+                        ),
+                        shape = CapsuleShape,
+                    ),
             )
         }
 
