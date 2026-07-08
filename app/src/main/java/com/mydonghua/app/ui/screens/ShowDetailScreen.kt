@@ -322,6 +322,7 @@ fun ShowDetailScreen(
 private fun GlassChip(label: String, value: String, modifier: Modifier = Modifier) {
     val backdrop = LocalBackdrop.current
     val isDark = isSystemInDarkTheme()
+    val surfaceColor = MaterialTheme.colorScheme.surface
     Box(
         modifier = modifier
             .drawPlainBackdrop(
@@ -337,7 +338,7 @@ private fun GlassChip(label: String, value: String, modifier: Modifier = Modifie
                             colors = if (isDark) listOf(
                                 Color.White.copy(alpha = 0.07f),
                                 Color.White.copy(alpha = 0.02f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                                surfaceColor.copy(alpha = 0.15f)
                             ) else listOf(
                                 Color.Black.copy(alpha = 0.06f),
                                 Color.Black.copy(alpha = 0.02f),

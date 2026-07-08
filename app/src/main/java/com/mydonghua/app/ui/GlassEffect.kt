@@ -81,6 +81,7 @@ fun GlassSection(
     val backdrop = LocalBackdrop.current
     val isDark = isSystemInDarkTheme()
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -97,7 +98,7 @@ fun GlassSection(
                             colors = if (isDark) listOf(
                                 Color.White.copy(alpha = 0.08f),
                                 Color.White.copy(alpha = 0.02f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                                surfaceColor.copy(alpha = 0.15f)
                             ) else listOf(
                                 Color.Black.copy(alpha = 0.06f),
                                 Color.Black.copy(alpha = 0.01f),

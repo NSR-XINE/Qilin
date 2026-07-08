@@ -123,8 +123,9 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
+                        val backgroundColor = MaterialTheme.colorScheme.background
                         val backdrop = rememberLayerBackdrop {
-                            drawRect(MaterialTheme.colorScheme.background)
+                            drawRect(backgroundColor)
                             drawContent()
                         }
                         Box(
