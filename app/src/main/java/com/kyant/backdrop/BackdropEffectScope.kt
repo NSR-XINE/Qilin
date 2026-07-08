@@ -11,6 +11,7 @@ sealed interface BackdropEffectScope : Density {
     val size: Size
     val layoutDirection: LayoutDirection
     var renderEffect: RenderEffect?
+    var padding: Float
 }
 
 internal class BackdropEffectScopeImpl : BackdropEffectScope {
@@ -19,6 +20,7 @@ internal class BackdropEffectScopeImpl : BackdropEffectScope {
     override var size: Size = Size.Unspecified
     override var layoutDirection: LayoutDirection = LayoutDirection.Ltr
     override var renderEffect: RenderEffect? = null
+    override var padding: Float = 0f
 
     fun update(scope: DrawScope): Boolean {
         val changed = scope.density != density ||
@@ -45,5 +47,6 @@ internal class BackdropEffectScopeImpl : BackdropEffectScope {
         size = Size.Unspecified
         layoutDirection = LayoutDirection.Ltr
         renderEffect = null
+        padding = 0f
     }
 }

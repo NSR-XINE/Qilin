@@ -20,6 +20,7 @@ class LayerBackdrop internal constructor(
     internal val onDraw: ContentDrawScope.() -> Unit
 ) : Backdrop {
     override fun DrawScope.drawBackdrop(density: Density) {}
+    override fun draw(drawScope: DrawScope, density: Density) {}
 
     fun capture(onDraw: ContentDrawScope.() -> Unit) {}
 }
