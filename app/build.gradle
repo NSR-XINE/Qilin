@@ -35,7 +35,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = '17'
-        freeCompilerArgs += ["-Xskip-metadata-version-check", "-opt-in=androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi"]
+        freeCompilerArgs += ["-Xskip-metadata-version-check"]
     }
 
     buildFeatures {

@@ -18,17 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
+import com.mydonghua.app.R
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.refraction
+import android.graphics.Bitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -37,7 +38,6 @@ import kotlin.math.sign
 import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalGraphicsLayerApi::class)
 @Composable
 fun LiquidGlassNavBar(
     currentRoute: String,
@@ -55,7 +55,7 @@ fun LiquidGlassNavBar(
             try {
                 withContext(Dispatchers.IO) {
                     val imageBitmap = layer.toImageBitmap()
-                    val thumbnail = imageBitmap.asAndroidBitmap().scale(5, 5, false)
+                    val thumbnail = Bitmap.createScaledBitmap(imageBitmap.asAndroidBitmap(), 5, 5, false)
                     buffer.rewind()
                     thumbnail.copyPixelsToBuffer(buffer)
                 }
@@ -158,7 +158,6 @@ private fun RowScope.NavBarIcon(
     }
 }
 
-@OptIn(ExperimentalGraphicsLayerApi::class)
 private fun Modifier.drawBackdropCustomShape(
     backdrop: Backdrop,
     layer: GraphicsLayer,

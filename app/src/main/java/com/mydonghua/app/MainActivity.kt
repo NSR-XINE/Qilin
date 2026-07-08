@@ -431,7 +431,7 @@ class MainActivity : ComponentActivity() {
                                 .width(280.dp)
                                 .hazeChild(state = hazeState)
                                 .background(
-                                    color = if (isDark) Color.White.copy(alpha = 0.04f)
+                                    color = if (settingsState.themeMode.lowercase() != "light") Color.White.copy(alpha = 0.04f)
                                     else Color.Black.copy(alpha = 0.02f)
                                 )
                                 .clickable(enabled = false) {}
