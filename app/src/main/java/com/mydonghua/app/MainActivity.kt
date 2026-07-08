@@ -8,7 +8,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -40,6 +39,7 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
 import com.mydonghua.app.ui.GlassBackground
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.home.HomeScreen
@@ -128,51 +128,18 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             topBar = {
                                 if (showGlobalHeader) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .statusBarsPadding()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Image(
-                                                painter = painterResource(id = R.mipmap.ic_launcher),
-                                                contentDescription = "App Icon",
-                                                modifier = Modifier
-                                                    .size(36.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
-                                            )
-
-                                            Spacer(modifier = Modifier.width(10.dp))
-
-                                            Text(
-                                                text = "My Donghua",
-                                                fontSize = 20.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onBackground
-                                            )
-                                        }
-
-                                        IconButton(
-                                            onClick = { isDrawerOpen = true },
-                                            modifier = Modifier
-                                                .background(
-                                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                                    shape = RoundedCornerShape(8.dp)
-                                                )
-                                                .size(38.dp)
-                                        ) {
-                                            Text(
-                                                text = "☰",
-                                                fontSize = 18.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+                                    GlassHeader(
+                                        currentRoute = currentRoute,
+                                        isDark = settingsState.themeMode.lowercase() != "light",
+                                        onNavigate = { route ->
+                                            when (route) {
+                                                "home" -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }
+                                                "search" -> navController.navigate("search")
+                                                else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
+                                            }
+                                        },
+                                        onDrawerOpen = { isDrawerOpen = true },
+                                    )
                                 }
                             }
                         ) { innerPadding ->
