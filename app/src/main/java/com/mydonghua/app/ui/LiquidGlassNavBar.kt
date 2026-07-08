@@ -1,12 +1,14 @@
 package com.mydonghua.app.ui
 
+import android.graphics.Bitmap
+import android.os.SystemClock
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,17 +20,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerId
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.util.fastCoerceIn
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.lerp
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.R
 import com.kyant.backdrop.Backdrop
@@ -36,23 +48,30 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.refraction
+import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
-import android.graphics.Bitmap
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withFrameNanos
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.snapshotFlow
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sign
 import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
 private val CapsuleShape = RoundedCornerShape(percent = 50)
-private val PillWidth = 52.dp
-private val PillHeight = 48.dp
+private val BlobWidth = 44.dp
+private val BlobHeight = 52.dp
 
 @Composable
 fun LiquidGlassNavBar(
@@ -93,32 +112,11 @@ fun LiquidGlassNavBar(
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
     val totalSlots = 5f
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
-    val blobWidthPx = with(density) { PillWidth.toPx() }
-    val blobAnimatable = remember { Animatable(0f) }
-    val blobOffsetDp by remember { derivedStateOf { with(density) { blobAnimatable.value.toDp() } } }
     val coroutineScope = rememberCoroutineScope()
+    val barInteraction = rememberGlassInteraction()
 
-    fun targetOffset(index: Int): Float {
-        if (barWidthPx <= 0) return 0f
-        val slot = if (index < 2) index else index + 1
-        val centerPx = slotWidthPx * (slot + 0.5f)
-        return centerPx - blobWidthPx / 2f
-    }
-
-    fun findNearestTab(offsetPx: Float): Int {
-        val centers = navRoutes.indices.map { i ->
-            val slot = if (i < 2) i else i + 1
-            slotWidthPx * (slot + 0.5f)
-        }
-        val blobCenter = offsetPx + blobWidthPx / 2f
-        return centers.indices.minByOrNull { abs(centers[it] - blobCenter) } ?: navIndex
-    }
-
-    LaunchedEffect(navIndex, barWidthPx) {
-        if (barWidthPx > 0) {
-            blobAnimatable.animateTo(targetOffset(navIndex), spring(dampingRatio = 0.7f, stiffness = 400f))
-        }
-    }
+    fun navToValue(index: Int): Float =
+        if (index < 2) index.toFloat() else (index + 1).toFloat()
 
     Box(
         modifier = modifier
@@ -141,64 +139,103 @@ fun LiquidGlassNavBar(
                 shape = RoundedCornerShape(30.dp),
             )
             .onSizeChanged { barWidthPx = it.width }
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        val target = findNearestTab(blobAnimatable.value)
-                        if (target >= 0 && target < navRoutes.size) {
-                            onNavigate(navRoutes[target])
-                        }
-                    },
-                    onDragCancel = {
-                        coroutineScope.launch {
-                            blobAnimatable.animateTo(targetOffset(navIndex), spring(0.7f, 400f))
-                        }
-                    },
-                ) { _, dragAmount ->
-                    val maxOffset = barWidthPx.toFloat() - blobWidthPx
-                    val newPos = (blobAnimatable.value + dragAmount).coerceIn(0f, maxOffset)
-                    coroutineScope.launch {
-                        blobAnimatable.snapTo(newPos)
-                    }
-                }
-            },
+            .pointerInput(barInteraction) { barInteraction.detectPress(this) },
     ) {
+        val dampedDrag =
+            remember(coroutineScope, navRoutes.size) {
+                DampedDragAnimation(
+                    animationScope = coroutineScope,
+                    initialValue = navToValue(navIndex),
+                    valueRange = 0f..totalSlots,
+                    visibilityThreshold = 0.001f,
+                    initialScale = 1f,
+                    pressedScale = 72f / 52f,
+                    onDragStarted = {},
+                    onDragStopped = {
+                        val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                        val targetIndex = when {
+                            snapped <= 1 -> snapped
+                            snapped == 2 -> if (targetValue > 2.5f) 2 else 1
+                            else -> snapped - 1
+                        }
+                        if (targetIndex in navRoutes.indices && targetIndex != navIndex) {
+                            onNavigate(navRoutes[targetIndex])
+                        }
+                    },
+                    onDrag = { _, dragAmount ->
+                        val slotWidth = barWidthPx / totalSlots
+                        updateValue(
+                            (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots),
+                        )
+                    },
+                )
+            }
+
+        LaunchedEffect(navIndex) {
+            if (barWidthPx > 0) {
+                dampedDrag.animateToValue(navToValue(navIndex))
+            }
+        }
+
         if (barWidthPx > 0) {
             val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
+            val blobPx = with(density) { BlobWidth.toPx() }
             Box(
                 modifier = Modifier
-                    .offset(x = blobOffsetDp)
-                    .width(PillWidth)
-                    .height(PillHeight)
+                    .graphicsLayer {
+                        val centerPx = (dampedDrag.value + 0.5f) * slotWidthPx
+                        translationX = centerPx - blobPx / 2f
+                        scaleX = dampedDrag.scaleX
+                        scaleY = dampedDrag.scaleY
+                        val velocity = dampedDrag.velocity / 10f
+                        scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                        scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                    }
+                    .width(BlobWidth)
+                    .height(BlobHeight)
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { CapsuleShape },
                         effects = {
+                            val progress = dampedDrag.pressProgress
+                            vibrancy()
                             colorControls(
-                                brightness = if (l > 0f) lerp(0.15f, 0.5f, l) else lerp(0.15f, -0.15f, -l),
+                                brightness = 0.05f,
                                 contrast = 1f,
                                 saturation = 1.5f,
                             )
-                            blur(if (l > 0f) lerp(10f.dp.toPx(), 18f.dp.toPx(), l) else lerp(10f.dp.toPx(), 4f.dp.toPx(), -l))
+                            blur(
+                                (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
+                                else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 20f.dp.toPx(),
+                            )
                         },
-                        highlight = { Highlight.Default.copy(alpha = 0.5f) },
-                        shadow = { Shadow(radius = 4f.dp, alpha = 0.3f) },
-                    )
-                    .background(
-                        color = Color.Black.copy(
-                            alpha = lerp(0.15f, 0.4f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                        ),
-                        shape = CapsuleShape,
+                        highlight = { Highlight.Default.copy(alpha = 0.6f) },
+                        shadow = { Shadow(radius = 4f.dp, alpha = 0.4f) },
+                        innerShadow = {
+                            val progress = dampedDrag.pressProgress
+                            InnerShadow(radius = 8f.dp * progress, alpha = progress)
+                        },
+                        layerBlock = {
+                            scaleX = dampedDrag.scaleX
+                            scaleY = dampedDrag.scaleY
+                            val velocity = dampedDrag.velocity / 10f
+                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                        },
+                        onDrawSurface = {
+                            val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
+                            drawRect(Color.Black.copy(alpha = darken))
+                        },
                     ),
             )
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+            modifier = Modifier.fillMaxWidth().align(Alignment.Center).then(dampedDrag.modifier),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            navRoutes.forEachIndexed { _, route ->
+            navRoutes.forEachIndexed { position, route ->
                 NavBarIcon(
                     iconRes = when (route) {
                         "home" -> R.drawable.ic_home
@@ -206,7 +243,7 @@ fun LiquidGlassNavBar(
                         "complete" -> R.drawable.ic_complete
                         else -> R.drawable.ic_stopped
                     },
-                    selected = navRoutes.indexOf(currentRoute) == navRoutes.indexOf(route),
+                    selected = navRoutes.indexOf(currentRoute) == position,
                     onClick = { onNavigate(route) },
                 )
                 if (route == "airing") {
@@ -293,3 +330,212 @@ private fun Modifier.drawBackdropCustomShape(
         },
         shape = { shape },
     )
+
+class GlassInteraction(
+    private val animationScope: CoroutineScope,
+) {
+    private val pressSpec = spring(dampingRatio = 0.5f, stiffness = 300f, visibilityThreshold = 0.001f)
+    private val pressAnimation = Animatable(0f, 0.001f)
+
+    val pressProgress: Float get() = pressAnimation.value
+
+    var touchPosition by mutableStateOf(Offset.Zero)
+        private set
+
+    suspend fun detectPress(pointer: PointerInputScope) =
+        with(pointer) {
+            inspectDragGestures(
+                onDragStart = { down ->
+                    touchPosition = down.position
+                    animationScope.launch { pressAnimation.animateTo(1f, pressSpec) }
+                },
+                onDragEnd = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
+                onDragCancel = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
+            ) { change, _ ->
+                touchPosition = change.position
+            }
+        }
+}
+
+@Composable
+fun rememberGlassInteraction(): GlassInteraction {
+    val scope = rememberCoroutineScope()
+    return remember(scope) { GlassInteraction(scope) }
+}
+
+internal suspend fun PointerInputScope.inspectDragGestures(
+    onDragStart: (down: PointerInputChange) -> Unit = {},
+    onDragEnd: (change: PointerInputChange) -> Unit = {},
+    onDragCancel: () -> Unit = {},
+    onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit,
+) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+
+        val down = awaitFirstDown(requireUnconsumed = false)
+
+        onDragStart(down)
+        onDrag(down, Offset.Zero)
+        val upEvent =
+            drag(
+                pointerId = down.id,
+                onDrag = { onDrag(it, it.positionChange()) },
+            )
+        if (upEvent == null) {
+            onDragCancel()
+        } else {
+            onDragEnd(upEvent)
+        }
+    }
+}
+
+private suspend fun AwaitPointerEventScope.drag(
+    pointerId: PointerId,
+    onDrag: (PointerInputChange) -> Unit,
+): PointerInputChange? {
+    val isPointerUp = currentEvent.changes.fastFirstOrNull { it.id == pointerId }?.pressed != true
+    if (isPointerUp) {
+        return null
+    }
+    var pointer = pointerId
+    while (true) {
+        val change = awaitDragOrUp(pointer) ?: return null
+        if (change.isConsumed) {
+            return null
+        }
+        if (change.changedToUpIgnoreConsumed()) {
+            return change
+        }
+        onDrag(change)
+        pointer = change.id
+    }
+}
+
+private suspend fun AwaitPointerEventScope.awaitDragOrUp(
+    pointerId: PointerId,
+): PointerInputChange? {
+    var pointer = pointerId
+    while (true) {
+        val event = awaitPointerEvent()
+        val dragEvent = event.changes.fastFirstOrNull { it.id == pointer } ?: return null
+        if (dragEvent.changedToUpIgnoreConsumed()) {
+            val otherDown = event.changes.fastFirstOrNull { it.pressed }
+            if (otherDown == null) {
+                return dragEvent
+            } else {
+                pointer = otherDown.id
+            }
+        } else {
+            val hasDragged = dragEvent.previousPosition != dragEvent.position
+            if (hasDragged) {
+                return dragEvent
+            }
+        }
+    }
+}
+
+class DampedDragAnimation(
+    private val animationScope: CoroutineScope,
+    val initialValue: Float,
+    val valueRange: ClosedRange<Float>,
+    val visibilityThreshold: Float,
+    val initialScale: Float,
+    val pressedScale: Float,
+    val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
+    val onDragStopped: DampedDragAnimation.() -> Unit,
+    val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
+) {
+    private val valueAnimationSpec = spring(1f, 1000f, visibilityThreshold)
+    private val velocityAnimationSpec = spring(0.5f, 300f, visibilityThreshold * 10f)
+    private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
+    private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
+    private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
+
+    private val valueAnimation = Animatable(initialValue, visibilityThreshold)
+    private val velocityAnimation = Animatable(0f, 5f)
+    private val pressProgressAnimation = Animatable(0f, 0.001f)
+    private val scaleXAnimation = Animatable(initialScale, 0.001f)
+    private val scaleYAnimation = Animatable(initialScale, 0.001f)
+
+    private val mutatorMutex = MutatorMutex()
+    private val velocityTracker = VelocityTracker()
+
+    val value: Float get() = valueAnimation.value
+    val targetValue: Float get() = valueAnimation.targetValue
+    val pressProgress: Float get() = pressProgressAnimation.value
+    val scaleX: Float get() = scaleXAnimation.value
+    val scaleY: Float get() = scaleYAnimation.value
+    val velocity: Float get() = velocityAnimation.value
+
+    val modifier: Modifier =
+        Modifier.pointerInput(Unit) {
+            inspectDragGestures(
+                onDragStart = { down ->
+                    onDragStarted(down.position)
+                    press()
+                },
+                onDragEnd = {
+                    onDragStopped()
+                    release()
+                },
+                onDragCancel = {
+                    onDragStopped()
+                    release()
+                },
+            ) { _, dragAmount ->
+                onDrag(size, dragAmount)
+            }
+        }
+
+    fun press() {
+        velocityTracker.resetTracking()
+        animationScope.launch {
+            launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
+            launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
+            launch { scaleYAnimation.animateTo(pressedScale, scaleYAnimationSpec) }
+        }
+    }
+
+    fun release() {
+        animationScope.launch {
+            withFrameNanos {}
+            if (value != targetValue) {
+                val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
+                snapshotFlow { valueAnimation.value }
+                    .filter { abs(it - valueAnimation.targetValue) < threshold }
+                    .first()
+            }
+            launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
+            launch { scaleXAnimation.animateTo(initialScale, scaleXAnimationSpec) }
+            launch { scaleYAnimation.animateTo(initialScale, scaleYAnimationSpec) }
+        }
+    }
+
+    fun updateValue(value: Float) {
+        val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+        animationScope.launch {
+            valueAnimation.animateTo(target, valueAnimationSpec) { updateVelocity() }
+        }
+    }
+
+    fun animateToValue(value: Float) {
+        animationScope.launch {
+            mutatorMutex.mutate {
+                press()
+                val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+                launch { valueAnimation.animateTo(target, valueAnimationSpec) }
+                if (velocity != 0f) {
+                    launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
+                }
+                release()
+            }
+        }
+    }
+
+    private fun updateVelocity() {
+        velocityTracker.addPosition(SystemClock.uptimeMillis(), Offset(value, 0f))
+        val targetVelocity =
+            velocityTracker.calculateVelocity().x / (valueRange.endInclusive - valueRange.start)
+        animationScope.launch { velocityAnimation.animateTo(targetVelocity, velocityAnimationSpec) }
+    }
+}
