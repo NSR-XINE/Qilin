@@ -531,7 +531,7 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
         val width = size.width
         val height = size.height
         if (width > 0 && height > 0) {
-            for (i in 0 until 120) {
+            for (i in 0 until 60) {
                 val x = random.nextFloat() * width
                 val y = random.nextFloat() * height
                 val radius = random.nextFloat() * 1.5f + 0.5f
