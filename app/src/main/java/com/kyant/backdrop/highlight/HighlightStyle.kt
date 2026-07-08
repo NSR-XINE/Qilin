@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.AmbientHighlightShaderString
 import com.kyant.backdrop.DefaultHighlightShaderString
@@ -199,9 +198,9 @@ private fun DrawScope.getCornerRadii(shape: Shape): FloatArray {
         if (isLtr) shape.bottomStart.toPx(size, this)
         else shape.bottomEnd.toPx(size, this)
     return floatArrayOf(
-        topLeft.fastCoerceAtMost(maxRadius),
-        topRight.fastCoerceAtMost(maxRadius),
-        bottomRight.fastCoerceAtMost(maxRadius),
-        bottomLeft.fastCoerceAtMost(maxRadius)
+        topLeft.coerceAtMost(maxRadius),
+        topRight.coerceAtMost(maxRadius),
+        bottomRight.coerceAtMost(maxRadius),
+        bottomLeft.coerceAtMost(maxRadius)
     )
 }

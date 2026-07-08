@@ -16,10 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.lerp
@@ -37,7 +36,6 @@ import kotlin.math.sign
 import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalGraphicsLayerApi::class)
 @Composable
 fun LiquidGlassNavBar(
     currentRoute: String,
@@ -62,12 +60,12 @@ fun LiquidGlassNavBar(
             } catch (_: Exception) { continue }
             val avg = (0 until 25).sumOf { i ->
                 val c = buffer.get(i)
-                val r = (c shr 16 and 0xFF) / 255f
-                val g = (c shr 8 and 0xFF) / 255f
-                val b = (c and 0xFF) / 255f
-                0.2126f * r + 0.7152f * g + 0.0722f * b
-            } / 25f
-            luminanceAnimation.animateTo(avg.coerceAtMost(0.8f), tween(500))
+                val r = (c shr 16 and 0xFF) / 255.0
+                val g = (c shr 8 and 0xFF) / 255.0
+                val b = (c and 0xFF) / 255.0
+                0.2126 * r + 0.7152 * g + 0.0722 * b
+            } / 25.0
+            luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
             delay(1.seconds)
         }
     }
@@ -158,7 +156,6 @@ private fun RowScope.NavBarIcon(
     }
 }
 
-@OptIn(ExperimentalGraphicsLayerApi::class)
 private fun Modifier.drawBackdropCustomShape(
     backdrop: Backdrop,
     layer: GraphicsLayer,

@@ -5,13 +5,13 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.os.Build
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.GraphicsLayer
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.drawLayer
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.layer.CompositingStrategy
-import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.node.DrawModifierNode
@@ -19,7 +19,6 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
-import androidx.compose.ui.util.fastCoerceAtMost
 import com.kyant.backdrop.RuntimeShaderCacheScopeImpl
 import com.kyant.backdrop.ShapeProvider
 import kotlin.math.ceil
@@ -146,7 +145,7 @@ internal class HighlightNode(
     private fun DrawScope.configurePaint(highlight: Highlight) {
         paint.color = highlight.style.color.toArgb()
         paint.strokeWidth =
-            ceil(highlight.width.toPx().fastCoerceAtMost(size.minDimension / 2f)) * 2f
+            ceil(highlight.width.toPx().coerceAtMost(size.minDimension / 2f)) * 2f
         val blurRadius = highlight.blurRadius.toPx()
         paint.maskFilter =
             if (blurRadius > 0f) {
@@ -169,19 +168,15 @@ internal class HighlightNode(
             }
 
             is Outline.Rounded -> {
-                @Suppress("INVISIBLE_REFERENCE")
-                val path = outline.roundRectPath?.asAndroidPath()
-                if (path != null) {
-                    canvas.clipPath(path)
-                    canvas.drawPath(path, paint)
-                } else {
-                    val rr = outline.roundRect
-                    val radius = outline.roundRect.topLeftCornerRadius.x
-                    val clipPath = clipPath?.apply { rewind() } ?: Path().also { clipPath = it }
-                    clipPath.addRoundRect(rr.left, rr.top, rr.right, rr.bottom, radius, radius, Path.Direction.CW)
-                    canvas.clipPath(clipPath)
-                    canvas.drawRoundRect(rr.left, rr.top, rr.right, rr.bottom, radius, radius, paint)
-                }
+                val rr = outline.roundRect
+                val path = clipPath?.apply { rewind() } ?: Path().also { clipPath = it }
+                path.addRoundRect(
+                    rr.left, rr.top, rr.right, rr.bottom,
+                    rr.topLeftCornerRadius.x, rr.topLeftCornerRadius.x,
+                    Path.Direction.CW
+                )
+                canvas.clipPath(path)
+                canvas.drawPath(path, paint)
             }
 
             is Outline.Generic -> {

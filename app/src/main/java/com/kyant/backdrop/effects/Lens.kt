@@ -4,7 +4,6 @@ import android.graphics.RenderEffect
 import android.os.Build
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.util.fastCoerceAtMost
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.RoundedRectDispersionShaderString
 import com.kyant.backdrop.RoundedRectRefractionShaderString
@@ -111,10 +110,10 @@ private val BackdropEffectScope.cornerRadii: FloatArray?
             if (isLtr) shape.bottomStart.toPx(size, this)
             else shape.bottomEnd.toPx(size, this)
         return floatArrayOf(
-            topLeft.fastCoerceAtMost(maxRadius),
-            topRight.fastCoerceAtMost(maxRadius),
-            bottomRight.fastCoerceAtMost(maxRadius),
-            bottomLeft.fastCoerceAtMost(maxRadius)
+            topLeft.coerceAtMost(maxRadius),
+            topRight.coerceAtMost(maxRadius),
+            bottomRight.coerceAtMost(maxRadius),
+            bottomLeft.coerceAtMost(maxRadius)
         )
     }
 
