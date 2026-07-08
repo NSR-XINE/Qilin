@@ -331,7 +331,6 @@ fun WeeklyScheduleSection(
     modifier: Modifier = Modifier
 ) {
     val hazeState = LocalHazeState.current
-    val isDark = isSystemInDarkTheme()
     val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
     val calendar = Calendar.getInstance()
@@ -360,8 +359,7 @@ fun WeeklyScheduleSection(
             .clip(RoundedCornerShape(12.dp))
             .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
             .background(
-                color = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.04f)
-                else MaterialTheme.colorScheme.scrim.copy(alpha = 0.02f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(Spacing.md)

@@ -96,7 +96,7 @@ fun SettingsScreen(
                             .clip(RoundedCornerShape(8.dp))
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                else MaterialTheme.colorScheme.surface
                             )
                             .clickable { viewModel.setThemeMode(modeKey) }
                             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -134,7 +134,7 @@ fun SettingsScreen(
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(
                                         if (isSelected) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                        else MaterialTheme.colorScheme.surface
                                     )
                                     .clickable { viewModel.setAccentColor(accentKey) }
                                     .padding(vertical = 12.dp),
@@ -144,7 +144,7 @@ fun SettingsScreen(
                                     text = accentName,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -164,7 +164,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -173,19 +173,19 @@ fun SettingsScreen(
                     checked = uiState.showBanner,
                     onCheckedChange = { viewModel.setShowBanner(it) }
                 )
-                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
                 TogglePreferenceItem(
                     title = "Show Continue Watching",
                     checked = uiState.showContinue,
                     onCheckedChange = { viewModel.setShowContinue(it) }
                 )
-                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
                 TogglePreferenceItem(
                     title = "Show Recently Updated",
                     checked = uiState.showRecent,
                     onCheckedChange = { viewModel.setShowRecent(it) }
                 )
-                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
                 TogglePreferenceItem(
                     title = "Show Weekly Schedule",
                     checked = uiState.showSchedule,
@@ -199,16 +199,16 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 SettingsActionItem("Detailed Stats & Analytics", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
-                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsActionItem("Scheduled Releases Calendar", iconRes = R.drawable.ic_calendar, onClick = onNavigateToCalendar)
-                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsActionItem("Date-Grouped Watch History", iconRes = R.drawable.ic_history, onClick = onNavigateToHistory)
-                Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                Divider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsActionItem("Grouped Show Collections", iconRes = R.drawable.ic_collections, onClick = onNavigateToCollections)
             }
 
@@ -239,7 +239,7 @@ fun SettingsScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Export Backup JSON", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text("Export Backup JSON", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
 
                 OutlinedButton(
@@ -285,7 +285,7 @@ private fun TogglePreferenceItem(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.Black,
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 checkedTrackColor = MaterialTheme.colorScheme.primary
             )
         )
@@ -315,11 +315,11 @@ private fun SettingsActionItem(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
-        Text("→", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        Text("→", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

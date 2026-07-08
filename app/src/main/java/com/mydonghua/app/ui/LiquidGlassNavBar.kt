@@ -86,8 +86,7 @@ fun LiquidGlassNavBar(
                 shape = RoundedCornerShape(30.dp),
             )
             .background(
-                color = if (isDark) Color.White.copy(alpha = 0.06f)
-                else Color.Black.copy(alpha = 0.04f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(30.dp),
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -108,8 +107,7 @@ fun LiquidGlassNavBar(
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(
-                    color = if (isDark) Color.White.copy(alpha = 0.1f)
-                    else Color.Black.copy(alpha = 0.05f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
                     shape = CircleShape,
                 )
                 .clickable(
@@ -169,7 +167,7 @@ private fun RowScope.NavBarIcon(
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 tint = if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

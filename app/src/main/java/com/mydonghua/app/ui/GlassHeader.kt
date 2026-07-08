@@ -37,8 +37,7 @@ fun GlassHeader(
                     .clip(RoundedCornerShape(16.dp))
                     .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
                     .background(
-                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                        else Color.Black.copy(alpha = 0.04f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                         shape = RoundedCornerShape(16.dp)
                     )
                     .padding(horizontal = 12.dp, vertical = 6.dp)
@@ -51,8 +50,7 @@ fun GlassHeader(
                 .height(38.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(
-                    color = if (isDark) Color.White.copy(alpha = 0.08f)
-                    else Color.Black.copy(alpha = 0.05f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
                 )
                 .clickable { onSearchClick() }
                 .padding(horizontal = 12.dp),
@@ -66,12 +64,12 @@ fun GlassHeader(
                     imageVector = Icons.Rounded.Search,
                     contentDescription = "Search",
                     modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Search anime\u2026",
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Normal
                 )
             }
@@ -84,7 +82,7 @@ fun GlassHeader(
                 .size(34.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 )
                 .clickable { onDrawerOpen() },
             contentAlignment = Alignment.Center

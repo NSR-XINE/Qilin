@@ -381,7 +381,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.4f))
+                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
                             .clickable { isDrawerOpen = false }
                     ) {
                         Column(
@@ -391,8 +391,7 @@ class MainActivity : ComponentActivity() {
                                 .width(280.dp)
                                 .hazeChild(state = hazeState)
                                 .background(
-                                    color = if (settingsState.themeMode.lowercase() != "light") Color.White.copy(alpha = 0.04f)
-                                    else Color.Black.copy(alpha = 0.02f)
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
                                 )
                                 .clickable(enabled = false) {}
                                 .statusBarsPadding()
@@ -446,7 +445,7 @@ class MainActivity : ComponentActivity() {
                                 )
 
                                 HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    color = MaterialTheme.colorScheme.outlineVariant,
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
 
@@ -460,7 +459,7 @@ class MainActivity : ComponentActivity() {
                             Text(
                                 text = "My Donghua",
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                         }

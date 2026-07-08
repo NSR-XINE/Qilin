@@ -61,12 +61,12 @@ fun CollectionsScreen(
                     Text("No collections", fontSize = 48.sp)
                     Text(
                         text = "No collections created yet",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "Edit a show and set its Collection field to start grouping them.",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.padding(horizontal = 32.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -86,7 +86,7 @@ fun CollectionsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                            .background(MaterialTheme.colorScheme.surface)
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -133,7 +133,7 @@ fun CollectionsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(Spacing.sm))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                        .background(MaterialTheme.colorScheme.surface)
                                         .clickable { onShowClick(show.id) }
                                         .padding(6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -176,7 +176,7 @@ fun CollectionsScreen(
                                     // Status Badge
                                     val statusColor = when (show.status) {
                                         "ongoing" -> MaterialTheme.colorScheme.primary
-                                        "completed" -> Color(0xFF2EA043)
+                                        "completed" -> MaterialTheme.colorScheme.tertiary
                                         else -> MaterialTheme.colorScheme.error
                                     }
                                     Box(

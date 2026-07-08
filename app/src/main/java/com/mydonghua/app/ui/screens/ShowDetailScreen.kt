@@ -2,7 +2,6 @@ package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
@@ -139,7 +138,7 @@ fun ShowDetailScreen(
                         Text(
                             text = show.titleZh,
                             fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
@@ -273,7 +272,7 @@ fun ShowDetailScreen(
                         Text(
                             text = show.notes!!,
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                            color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 22.sp
                         )
                     }
@@ -320,29 +319,19 @@ fun ShowDetailScreen(
 @Composable
 private fun GlassChip(label: String, value: String, modifier: Modifier = Modifier) {
     val hazeState = LocalHazeState.current
-    val isDark = isSystemInDarkTheme()
+    val tint = MaterialTheme.colorScheme.onSurface
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(Spacing.md))
             .hazeChild(state = hazeState, shape = RoundedCornerShape(Spacing.md))
             .background(
-                brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
-                    ) else listOf(
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f),
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                    )
-                ),
+                color = tint.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(Spacing.md)
             )
             .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            Text(label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(3.dp))
             Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

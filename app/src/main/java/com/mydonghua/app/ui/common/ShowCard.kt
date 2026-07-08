@@ -29,7 +29,7 @@ import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
-import androidx.compose.foundation.isSystemInDarkTheme
+
 
 @Composable
 fun ShowCard(
@@ -46,7 +46,6 @@ fun ShowCard(
 ) {
     val context = LocalContext.current
     val hazeState = LocalHazeState.current
-    val isDark = isSystemInDarkTheme()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     if (showDeleteDialog) {
@@ -76,8 +75,7 @@ fun ShowCard(
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
             .background(
-                color = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.04f)
-                else MaterialTheme.colorScheme.scrim.copy(alpha = 0.02f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable { onCardClick(show) },
@@ -123,8 +121,8 @@ fun ShowCard(
                         .padding(Spacing.sm)
                         .background(
                             color = when (show.status) {
-                                "completed" -> Color(0xFF2EA043).copy(alpha = 0.85f)
-                                "stopped" -> Color(0xFFFF2A5F).copy(alpha = 0.85f)
+                                "completed" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
+                                "stopped" -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
                                 else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                             },
                             shape = RoundedCornerShape(6.dp)
@@ -205,7 +203,7 @@ fun ShowCard(
                         Text(
                             text = "Ep ${show.currentEp}/${show.totalEp}",
                             fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -223,7 +221,7 @@ fun ShowCard(
                             ),
                             contentDescription = "Favorite",
                             modifier = Modifier.size(18.dp),
-                            tint = if (show.isFavorite == 1) Color(0xFFFF2A5F)
+                            tint = if (show.isFavorite == 1) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

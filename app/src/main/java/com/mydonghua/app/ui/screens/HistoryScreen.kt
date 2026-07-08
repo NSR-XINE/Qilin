@@ -63,7 +63,7 @@ fun HistoryScreen(
             ) {
                 Text(
                     text = "No watch history recorded yet",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
@@ -91,7 +91,7 @@ fun HistoryScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .background(MaterialTheme.colorScheme.surface)
                                 .clickable { onShowClick(item.showId) }
                                 .padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -133,7 +133,7 @@ fun HistoryScreen(
                                 Text(
                                     text = "Watched Episode ${item.episodeNum}",
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
@@ -141,7 +141,7 @@ fun HistoryScreen(
                             Text(
                                 text = formatTimeOfDay(item.watchedAt),
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 fontWeight = FontWeight.Medium
                             )
                         }
