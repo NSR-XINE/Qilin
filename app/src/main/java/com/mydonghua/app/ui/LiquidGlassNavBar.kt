@@ -73,8 +73,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
 private val CapsuleShape = RoundedCornerShape(percent = 50)
-private val BlobWidth = 44.dp
-private val BlobHeight = 52.dp
+private val BlobHeight = 56.dp
 
 @Composable
 fun LiquidGlassNavBar(
@@ -124,7 +123,7 @@ fun LiquidGlassNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(64.dp)
             .clip(RoundedCornerShape(30.dp))
             .drawBackdropCustomShape(
                 backdrop = backdrop,
@@ -154,7 +153,7 @@ fun LiquidGlassNavBar(
                     valueRange = 0f..totalSlots,
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
-                    pressedScale = 72f / 52f,
+                    pressedScale = 76f / 56f,
                     onDragStarted = {},
                     onDragStopped = {
                         val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
@@ -184,25 +183,23 @@ fun LiquidGlassNavBar(
 
         if (barWidthPx > 0) {
             val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-            val blobPx = with(density) { BlobWidth.toPx() }
+            val pillWidthPx = (slotWidthPx - 8.dp.toPx()).coerceAtLeast(32.dp.toPx())
             Box(
                 modifier = Modifier
                     .graphicsLayer {
-                        val centerPx = (dampedDrag.value + 0.5f) * slotWidthPx
-                        translationX = centerPx - blobPx / 2f
+                        translationX = dampedDrag.value * slotWidthPx + 4.dp.toPx()
                         scaleX = dampedDrag.scaleX
                         scaleY = dampedDrag.scaleY
                         val velocity = dampedDrag.velocity / 10f
                         scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                         scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                     }
-                    .width(BlobWidth)
+                    .width(with(density) { pillWidthPx.toDp() })
                     .height(BlobHeight)
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { CapsuleShape },
                         effects = {
-                            val progress = dampedDrag.pressProgress
                             vibrancy()
                             colorControls(
                                 brightness = 0.05f,
