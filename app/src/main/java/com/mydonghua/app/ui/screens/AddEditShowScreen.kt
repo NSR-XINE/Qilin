@@ -6,18 +6,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.mydonghua.app.AlarmScheduler
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassSection
+import com.mydonghua.app.ui.Spacing
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -33,11 +42,7 @@ fun AddEditShowScreen(
     val coroutineScope = rememberCoroutineScope()
     val allShows by viewModel.allShows.collectAsState()
     val editingShow = remember(showId, allShows) {
-        if (!showId.isNullOrEmpty()) {
-            allShows.find { it.id == showId }
-        } else {
-            null
-        }
+        if (!showId.isNullOrEmpty()) allShows.find { it.id == showId } else null
     }
 
     var title by remember { mutableStateOf("") }
@@ -57,7 +62,6 @@ fun AddEditShowScreen(
     var releaseYear by remember { mutableStateOf("") }
     var language by remember { mutableStateOf("") }
     var collectionId by remember { mutableStateOf("") }
-
     var isAutoFilling by remember { mutableStateOf(false) }
 
     LaunchedEffect(editingShow) {
@@ -86,12 +90,18 @@ fun AddEditShowScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(if (editingShow != null) "Edit Show" else "Add New Show", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        if (editingShow != null) "Edit Show" else "Add New Show",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("\u2190", fontSize = 24.sp)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         modifier = modifier
@@ -101,234 +111,400 @@ fun AddEditShowScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
-            // Title Input with Autofill Option
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("English Title *") },
-                    modifier = Modifier.weight(1f)
-                )
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
-                Button(
-                    onClick = {
-                        if (title.isBlank()) {
-                            Toast.makeText(context, "Enter title first", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        isAutoFilling = true
-                        coroutineScope.launch {
-                            // 1. Try Jikan API
-                            var result = PosterFetchService.fetchFromJikan(title)
-                            if (result == null) {
-                                // 2. Fallback to AniList GraphQL
-                                result = PosterFetchService.fetchFromAniList(title)
-                            }
+            // Basic Info
+            GlassSection {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    Text(
+                        text = "Basic Info",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-                            if (result != null) {
-                                titleZh = result.titleZh ?: titleZh
-                                notes = result.synopsis ?: notes
-                                poster = result.poster ?: poster
-                                if (result.totalEp > 0) totalEp = result.totalEp.toString()
-                                status = result.status ?: status
-                                Toast.makeText(context, "Details auto-filled!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "No matching show found", Toast.LENGTH_SHORT).show()
-                            }
-                            isAutoFilling = false
-                        }
-                    },
-                    enabled = !isAutoFilling,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(if (isAutoFilling) "..." else "Auto-Fill")
-                }
-            }
-
-            OutlinedTextField(
-                value = titleZh,
-                onValueChange = { titleZh = it },
-                label = { Text("Chinese/Alternate Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Status Selector Dropdown
-            var statusExpanded by remember { mutableStateOf(false) }
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
-                    onClick = { statusExpanded = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Status: ${status.uppercase()}")
-                }
-                DropdownMenu(
-                    expanded = statusExpanded,
-                    onDismissRequest = { statusExpanded = false }
-                ) {
-                    DropdownMenuItem(text = { Text("Ongoing") }, onClick = { status = "ongoing"; statusExpanded = false })
-                    DropdownMenuItem(text = { Text("Completed") }, onClick = { status = "completed"; statusExpanded = false })
-                    DropdownMenuItem(text = { Text("Stopped / Hiatus") }, onClick = { status = "stopped"; statusExpanded = false })
-                }
-            }
-
-            // Release Day Selector Dropdown
-            if (status == "ongoing") {
-                var dayExpanded by remember { mutableStateOf(false) }
-                val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(
-                        onClick = { dayExpanded = true },
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        Text("Broadcast Day: $releaseDay")
-                    }
-                    DropdownMenu(
-                        expanded = dayExpanded,
-                        onDismissRequest = { dayExpanded = false }
-                    ) {
-                        days.forEach { day ->
-                            DropdownMenuItem(text = { Text(day) }, onClick = { releaseDay = day; dayExpanded = false })
+                        OutlinedTextField(
+                            value = title,
+                            onValueChange = { title = it },
+                            label = { Text("English Title *") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+
+                        FilledTonalButton(
+                            onClick = {
+                                if (title.isBlank()) {
+                                    Toast.makeText(context, "Enter title first", Toast.LENGTH_SHORT).show()
+                                    return@FilledTonalButton
+                                }
+                                isAutoFilling = true
+                                coroutineScope.launch {
+                                    var result = PosterFetchService.fetchFromJikan(title)
+                                    if (result == null) {
+                                        result = PosterFetchService.fetchFromAniList(title)
+                                    }
+                                    if (result != null) {
+                                        titleZh = result.titleZh ?: titleZh
+                                        notes = result.synopsis ?: notes
+                                        poster = result.poster ?: poster
+                                        if (result.totalEp > 0) totalEp = result.totalEp.toString()
+                                        status = result.status ?: status
+                                        Toast.makeText(context, "Details auto-filled!", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "No matching show found", Toast.LENGTH_SHORT).show()
+                                    }
+                                    isAutoFilling = false
+                                }
+                            },
+                            enabled = !isAutoFilling,
+                            shape = RoundedCornerShape(Spacing.sm)
+                        ) {
+                            Text(if (isAutoFilling) "\u2026" else "Auto-Fill", fontSize = 13.sp)
                         }
                     }
-                }
 
-                OutlinedTextField(
-                    value = releaseTime,
-                    onValueChange = { releaseTime = it },
-                    label = { Text("Broadcast Time (HH:MM e.g. 10:30)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+                    OutlinedTextField(
+                        value = titleZh,
+                        onValueChange = { titleZh = it },
+                        label = { Text("Chinese / Alternate Title") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Spacing.sm)
+                    )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = currentEp,
-                    onValueChange = { currentEp = it },
-                    label = { Text("Current Episode") },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = totalEp,
-                    onValueChange = { totalEp = it },
-                    label = { Text("Total Episodes") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Poster image URL + scraper option
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = poster,
-                    onValueChange = { poster = it },
-                    label = { Text("Poster Image URL") },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Button(
-                    onClick = {
-                        val sourceUrl = watchUrl.takeIf { it.isNotEmpty() } ?: countdownUrl
-                        if (sourceUrl.isBlank()) {
-                            Toast.makeText(context, "Enter watch or countdown URL first", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        coroutineScope.launch {
-                            val scraped = PosterFetchService.scrapePoster(sourceUrl)
-                            if (scraped != null) {
-                                poster = scraped
-                                Toast.makeText(context, "Poster image extracted!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Could not scrape image", Toast.LENGTH_SHORT).show()
+                    // Status selector
+                    var statusExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = statusExpanded,
+                        onExpandedChange = { statusExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = status.replaceFirstChar { it.uppercase() },
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Status") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = statusExpanded,
+                            onDismissRequest = { statusExpanded = false }
+                        ) {
+                            listOf("ongoing", "completed", "stopped").forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option.replaceFirstChar { it.uppercase() }) },
+                                    onClick = { status = option; statusExpanded = false }
+                                )
                             }
                         }
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Scrape")
+                    }
                 }
             }
 
-            OutlinedTextField(
-                value = watchUrl,
-                onValueChange = { watchUrl = it },
-                label = { Text("Watch Source URL") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Schedule (for ongoing)
+            if (status == "ongoing") {
+                GlassSection {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                        Text(
+                            text = "Schedule",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
 
-            OutlinedTextField(
-                value = countdownUrl,
-                onValueChange = { countdownUrl = it },
-                label = { Text("Countdown / Calendar URL") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                        var dayExpanded by remember { mutableStateOf(false) }
+                        val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+                        ExposedDropdownMenuBox(
+                            expanded = dayExpanded,
+                            onExpandedChange = { dayExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = releaseDay,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Broadcast Day") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
+                                shape = RoundedCornerShape(Spacing.sm)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = dayExpanded,
+                                onDismissRequest = { dayExpanded = false }
+                            ) {
+                                days.forEach { day ->
+                                    DropdownMenuItem(
+                                        text = { Text(day) },
+                                        onClick = { releaseDay = day; dayExpanded = false }
+                                    )
+                                }
+                            }
+                        }
 
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Synopsis / Personal Notes") },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 4
-            )
-
-
-
-            OutlinedTextField(
-                value = genres,
-                onValueChange = { genres = it },
-                label = { Text("Genres (comma-separated)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = studio,
-                onValueChange = { studio = it },
-                label = { Text("Studio") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = releaseYear,
-                    onValueChange = { releaseYear = it },
-                    label = { Text("Release Year") },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = language,
-                    onValueChange = { language = it },
-                    label = { Text("Language") },
-                    modifier = Modifier.weight(1f)
-                )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                        ) {
+                            OutlinedTextField(
+                                value = releaseTime,
+                                onValueChange = { releaseTime = it },
+                                label = { Text("Time (HH:MM)") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(Spacing.sm)
+                            )
+                            OutlinedTextField(
+                                value = releaseYear,
+                                onValueChange = { releaseYear = it },
+                                label = { Text("Year") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(Spacing.sm)
+                            )
+                        }
+                    }
+                }
             }
 
-            OutlinedTextField(
-                value = collectionId,
-                onValueChange = { collectionId = it },
-                label = { Text("Collection ID") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Episodes
+            GlassSection {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    Text(
+                        text = "Episodes",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        OutlinedTextField(
+                            value = currentEp,
+                            onValueChange = { currentEp = it },
+                            label = { Text("Current") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+                        OutlinedTextField(
+                            value = totalEp,
+                            onValueChange = { totalEp = it },
+                            label = { Text("Total") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+                    }
+                }
+            }
 
-            // Save / Submit Button
+            // Media & Links
+            GlassSection {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    Text(
+                        text = "Media & Links",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        OutlinedTextField(
+                            value = poster,
+                            onValueChange = { poster = it },
+                            label = { Text("Poster URL") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            FilledTonalButton(
+                                onClick = {
+                                    val sourceUrl = watchUrl.takeIf { it.isNotEmpty() } ?: countdownUrl
+                                    if (sourceUrl.isBlank()) {
+                                        Toast.makeText(context, "Enter watch or countdown URL first", Toast.LENGTH_SHORT).show()
+                                        return@FilledTonalButton
+                                    }
+                                    coroutineScope.launch {
+                                        val scraped = PosterFetchService.scrapePoster(sourceUrl)
+                                        if (scraped != null) {
+                                            poster = scraped
+                                            Toast.makeText(context, "Poster extracted!", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, "Could not scrape image", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(Spacing.sm),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Scrape", fontSize = 13.sp)
+                            }
+
+                            if (poster.isNotBlank()) {
+                                Spacer(Modifier.height(Spacing.sm))
+                                AsyncImage(
+                                    model = poster,
+                                    contentDescription = "Poster preview",
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(RoundedCornerShape(Spacing.sm)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = watchUrl,
+                        onValueChange = { watchUrl = it },
+                        label = { Text("Watch URL") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Spacing.sm)
+                    )
+
+                    OutlinedTextField(
+                        value = countdownUrl,
+                        onValueChange = { countdownUrl = it },
+                        label = { Text("Countdown / Calendar URL") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Spacing.sm)
+                    )
+
+                    OutlinedTextField(
+                        value = collectionId,
+                        onValueChange = { collectionId = it },
+                        label = { Text("Collection ID") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Spacing.sm)
+                    )
+                }
+            }
+
+            // Details
+            GlassSection {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    Text(
+                        text = "Details",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text("Synopsis / Notes") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 4,
+                        shape = RoundedCornerShape(Spacing.sm)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        OutlinedTextField(
+                            value = genres,
+                            onValueChange = { genres = it },
+                            label = { Text("Genres") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+                        OutlinedTextField(
+                            value = studio,
+                            onValueChange = { studio = it },
+                            label = { Text("Studio") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        OutlinedTextField(
+                            value = language,
+                            onValueChange = { language = it },
+                            label = { Text("Language") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(Spacing.sm)
+                        )
+                    }
+                }
+            }
+
+            // Rating
+            GlassSection {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Text(
+                        text = "Rating",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Star,
+                            contentDescription = null,
+                            tint = if (rating > 0) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Slider(
+                            value = rating,
+                            onValueChange = { rating = it },
+                            valueRange = 0f..10f,
+                            steps = 19,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${rating.toInt()}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.width(28.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            // Save Button
             Button(
                 onClick = {
                     if (title.isBlank()) {
@@ -361,19 +537,12 @@ fun AddEditShowScreen(
                         collectionId = collectionId.takeIf { it.isNotEmpty() }
                     )
 
-                    // Schedule alarm if ongoing and release schedule details are set
                     if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty()) {
                         AlarmScheduler.schedule(
-                            context,
-                            show.id,
-                            show.title,
-                            show.releaseDay,
-                            show.releaseTime,
-                            show.alarmRequestCode ?: 0,
-                            show.currentEp
+                            context, show.id, show.title, show.releaseDay,
+                            show.releaseTime, show.alarmRequestCode ?: 0, show.currentEp
                         )
                     } else {
-                        // Cancel any scheduled alarm
                         AlarmScheduler.cancel(context, show.id, show.alarmRequestCode ?: 0)
                     }
 
@@ -383,11 +552,15 @@ fun AddEditShowScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(10.dp)
+                    .height(52.dp),
+                shape = RoundedCornerShape(Spacing.md)
             ) {
-                Text("Save Show Details", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(Spacing.sm))
+                Text("Save Show", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
+
+            Spacer(modifier = Modifier.height(Spacing.xxxl))
         }
     }
 }
