@@ -111,6 +111,4 @@ dependencies {
     implementation 'dev.chrisbanes.haze:haze:0.7.3'
     implementation 'dev.chrisbanes.haze:haze-materials:0.7.3'
 
-    // Kyant Liquid Glass Backdrop
-    implementation 'com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15'
 }

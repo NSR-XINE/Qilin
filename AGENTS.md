@@ -5,14 +5,17 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 
 ## Glass Effect Strategy
 - **Haze 0.7.3** for general glass backgrounds (stars background, drawer, etc.)
-- **Kyant Backdrop `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15` from JitPack** for the liquid glass bottom navigation bar
+- **Kyant Backdrop (vendored source)** for the liquid glass bottom navigation bar
+  - AAR at `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15` is **unusable** — compiled with Java 21, env has JDK 17
+  - All 22 source files copied from tag `1.0.0-alpha15` to `app/src/main/java/com/kyant/backdrop/`
+  - `@Language("AGSL")` annotations removed (not on classpath)
 - Compose BOM bumped to `2024.06.00` for `GraphicsLayer` API availability
 - `ExperimentalGraphicsLayerApi` opt-in used where needed
 
 ## Key Dependencies
 - Compose BOM: `2024.06.00` (provides `rememberGraphicsLayer` / `GraphicsLayer`)
 - Haze: `0.7.3`
-- Kyant Liquid Glass: `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15`
+- Kyant Liquid Glass: **none (vendored)**
 
 ## Liquid Glass Nav Bar
 - `LiquidGlassNavBar.kt` in `com.mydonghua.app.ui` package
@@ -22,11 +25,20 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 - 5 items: Home, Airing, Search (center circle), Complete, Stopped
 - Applied as `Modifier` on the Row containing all nav items
 
+## Vendor Directory
+- `app/src/main/java/com/kyant/backdrop/` — 22 Kyant Backdrop source files (no external dependency)
+  - Core: `Backdrop.kt`, `BackdropEffectScope.kt`, `DrawBackdropModifier.kt`, `InverseLayerScope.kt`, `RuntimeShaderCacheScope.kt`, `Shaders.kt`, `ShapeProvider.kt`
+  - `backdrops/`: `CanvasBackdrop.kt`, `CombinedBackdrop.kt`, `EmptyBackdrop.kt`, `LayerBackdrop.kt`, `LayerBackdropModifier.kt`
+  - `effects/`: `Blur.kt`, `ColorFilter.kt`, `Lens.kt`, `RenderEffect.kt`
+  - `highlight/`: `Highlight.kt`, `HighlightModifier.kt`, `HighlightStyle.kt`
+  - `shadow/`: `InnerShadow.kt`, `InnerShadowModifier.kt`, `Shadow.kt`, `ShadowModifier.kt`
+
 ## Modified Files
-- `settings.gradle` — added JitPack repository
-- `app/build.gradle` — Bump BOM to `2024.06.00`, add Kyant dependency
+- `settings.gradle` — added JitPack repository (kept for other potential JitPack deps)
+- `app/build.gradle` — bumped BOM to `2024.06.00`, Kyant AAR dependency removed
 - `app/src/main/java/com/mydonghua/app/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension
 - `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)` on NavHost content; replaced old nav with `LiquidGlassNavBar`
+- `app/src/main/java/com/kyant/backdrop/` — NEW: 22 vendored Kyant Backdrop source files
 
 ## Build
 - Java 17 JDK embedded in AndroidIDE (no shell-level `java` command).
