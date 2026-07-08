@@ -2,10 +2,11 @@ package com.mydonghua.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,19 +21,12 @@ import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun GlassHeader(
-    currentRoute: String,
     isDark: Boolean,
-    onNavigate: (String) -> Unit,
+    onSearchClick: () -> Unit,
     onDrawerOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val hazeState = LocalHazeState.current
-    val tabs = listOf(
-        "home" to "Home",
-        "airing" to "Airing",
-        "complete" to "Complete",
-        "stopped" to "Stopped"
-    )
 
     Row(
         modifier = modifier
@@ -47,43 +41,46 @@ fun GlassHeader(
                         else Color.Black.copy(alpha = 0.04f),
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .padding(horizontal = 4.dp, vertical = 4.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .weight(1f)
-                .horizontalScroll(rememberScrollState()),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                .height(38.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    color = if (isDark) Color.White.copy(alpha = 0.08f)
+                    else Color.Black.copy(alpha = 0.05f)
+                )
+                .clickable { onSearchClick() }
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.CenterStart
         ) {
-            tabs.forEach { (route, label) ->
-                val selected = currentRoute == route
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                            else Color.Transparent
-                        )
-                        .clickable { onNavigate(route) }
-                        .padding(horizontal = 14.dp, vertical = 7.dp)
-                ) {
-                    Text(
-                        text = label,
-                        fontSize = 14.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (selected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Search,
+                    contentDescription = "Search",
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = "Search anime\u2026",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Normal
+                )
             }
         }
 
+        Spacer(modifier = Modifier.width(8.dp))
+
         Box(
             modifier = Modifier
-                .padding(start = 4.dp)
                 .size(34.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(
