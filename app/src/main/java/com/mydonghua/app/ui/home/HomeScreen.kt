@@ -2,6 +2,7 @@ package com.mydonghua.app.ui.home
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -360,6 +361,11 @@ fun WeeklyScheduleSection(
             .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(Spacing.md)

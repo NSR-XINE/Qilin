@@ -1,6 +1,7 @@
 package com.mydonghua.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,11 @@ fun GlassHeader(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                         shape = RoundedCornerShape(16.dp)
                     )
+                    .border(
+                        width = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = RoundedCornerShape(16.dp)
+                    )
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ),
         verticalAlignment = Alignment.CenterVertically
@@ -51,6 +57,11 @@ fun GlassHeader(
                 .clip(RoundedCornerShape(12.dp))
                 .background(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(12.dp)
                 )
                 .clickable { onSearchClick() }
                 .padding(horizontal = 12.dp),
@@ -83,6 +94,11 @@ fun GlassHeader(
                 .clip(RoundedCornerShape(8.dp))
                 .background(
                     color = MaterialTheme.colorScheme.surfaceVariant
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(8.dp)
                 )
                 .clickable { onDrawerOpen() },
             contentAlignment = Alignment.Center

@@ -1,6 +1,7 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -87,6 +88,11 @@ fun CollectionsScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.surface)
+                            .border(
+                                width = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                shape = RoundedCornerShape(8.dp)
+                            )
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -134,6 +140,11 @@ fun CollectionsScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(Spacing.sm))
                                         .background(MaterialTheme.colorScheme.surface)
+                                        .border(
+                                            width = 0.5.dp,
+                                            color = MaterialTheme.colorScheme.outlineVariant,
+                                            shape = RoundedCornerShape(Spacing.sm)
+                                        )
                                         .clickable { onShowClick(show.id) }
                                         .padding(6.dp),
                                     verticalAlignment = Alignment.CenterVertically,

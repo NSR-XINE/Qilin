@@ -1,6 +1,7 @@
 package com.mydonghua.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,6 +67,11 @@ fun GlassSection(
             .fillMaxWidth()
             .clip(RoundedCornerShape(Spacing.md))
             .hazeChild(state = hazeState, shape = RoundedCornerShape(Spacing.md))
+            .border(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = RoundedCornerShape(Spacing.md)
+            )
     ) {
         Box(
             modifier = Modifier
