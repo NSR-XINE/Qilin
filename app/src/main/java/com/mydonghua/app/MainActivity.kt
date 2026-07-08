@@ -387,8 +387,9 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight()
-                                .width(220.dp)
+                                .width(180.dp)
                                 .hazeChild(state = hazeState)
+                                .background(MaterialTheme.colorScheme.surface)
                                 .clickable(enabled = false) {}
                                 .statusBarsPadding()
                                 .navigationBarsPadding()
