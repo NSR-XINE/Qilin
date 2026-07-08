@@ -381,18 +381,14 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
                             .clickable { isDrawerOpen = false }
                     ) {
                         Column(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight()
-                                .width(280.dp)
+                                .width(220.dp)
                                 .hazeChild(state = hazeState)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
-                                )
                                 .clickable(enabled = false) {}
                                 .statusBarsPadding()
                                 .navigationBarsPadding()
