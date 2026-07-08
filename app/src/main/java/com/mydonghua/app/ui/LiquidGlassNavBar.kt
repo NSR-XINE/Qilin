@@ -62,6 +62,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -116,6 +118,8 @@ fun LiquidGlassNavBar(
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
     val coroutineScope = rememberCoroutineScope()
     val barInteraction = rememberGlassInteraction()
+    var currentTabIndex by remember { mutableIntStateOf(navIndex) }
+    val draggedFlag = remember { booleanArrayOf(false) }
 
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
@@ -144,6 +148,7 @@ fun LiquidGlassNavBar(
             )
             .onSizeChanged { barWidthPx = it.width }
             .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+        contentAlignment = Alignment.CenterStart,
     ) {
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
@@ -154,19 +159,22 @@ fun LiquidGlassNavBar(
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
                     pressedScale = 76f / 56f,
-                    onDragStarted = {},
+                    onDragStarted = { draggedFlag[0] = false },
                     onDragStopped = {
-                        val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
-                        val targetIndex = when {
-                            snapped <= 1 -> snapped
-                            snapped == 2 -> if (targetValue > 2.5f) 2 else 1
-                            else -> snapped - 1
-                        }
-                        if (targetIndex in navRoutes.indices && targetIndex != navIndex) {
-                            onNavigate(navRoutes[targetIndex])
+                        if (draggedFlag[0]) {
+                            val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                            val targetIndex = when {
+                                snapped <= 1 -> snapped
+                                snapped == 2 -> if (targetValue > 2.5f) 2 else 1
+                                else -> snapped - 1
+                            }
+                            if (targetIndex in navRoutes.indices && targetIndex != currentTabIndex) {
+                                currentTabIndex = targetIndex
+                            }
                         }
                     },
                     onDrag = { _, dragAmount ->
+                        if (dragAmount.x != 0f) draggedFlag[0] = true
                         val slotWidth = barWidthPx / totalSlots
                         updateValue(
                             (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots),
@@ -176,9 +184,23 @@ fun LiquidGlassNavBar(
             }
 
         LaunchedEffect(navIndex) {
+            if (navIndex != currentTabIndex) {
+                currentTabIndex = navIndex
+            }
             if (barWidthPx > 0) {
                 dampedDrag.animateToValue(navToValue(navIndex))
             }
+        }
+
+        LaunchedEffect(dampedDrag) {
+            snapshotFlow { currentTabIndex }
+                .drop(1)
+                .collectLatest { index ->
+                    if (draggedFlag[0]) {
+                        dampedDrag.animateToValue(navToValue(index))
+                        onNavigate(navRoutes[index])
+                    }
+                }
         }
 
         if (barWidthPx > 0) {
@@ -233,7 +255,7 @@ fun LiquidGlassNavBar(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth().align(Alignment.Center).then(dampedDrag.modifier),
+            modifier = Modifier.matchParentSize().then(dampedDrag.modifier),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
@@ -245,8 +267,11 @@ fun LiquidGlassNavBar(
                         "complete" -> R.drawable.ic_complete
                         else -> R.drawable.ic_stopped
                     },
-                    selected = navRoutes.indexOf(currentRoute) == position,
-                    onClick = { onNavigate(route) },
+                    selected = currentTabIndex == position,
+                    onClick = {
+                        currentTabIndex = position
+                        onNavigate(route)
+                    },
                 )
                 if (route == "airing") {
                     Box(
