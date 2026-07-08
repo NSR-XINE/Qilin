@@ -160,17 +160,18 @@ fun LiquidGlassNavBar(
                     pressedScale = 76f / 56f,
                     onDragStarted = { draggedFlag[0] = false },
                     onDragStopped = {
-                        if (draggedFlag[0]) {
-                            val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
-                            val targetIndex = when {
-                                snapped <= 1 -> snapped
-                                snapped == 2 -> if (targetValue > 2.5f) 2 else 1
-                                else -> snapped - 1
-                            }
-                            if (targetIndex in navRoutes.indices && targetIndex != currentTabIndex) {
-                                currentTabIndex = targetIndex
-                            }
+                        val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                        val targetIndex = when {
+                            snapped <= 1 -> snapped
+                            snapped == 2 -> if (targetValue > 2.5f) 2 else 1
+                            else -> snapped - 1
                         }
+                        val safeIndex =
+                            if (targetIndex in navRoutes.indices) targetIndex else currentTabIndex
+                        if (draggedFlag[0] && safeIndex != currentTabIndex) {
+                            currentTabIndex = safeIndex
+                        }
+                        updateValue(navToValue(safeIndex))
                     },
                     onDrag = { _, dragAmount ->
                         if (dragAmount.x != 0f) draggedFlag[0] = true
@@ -196,7 +197,6 @@ fun LiquidGlassNavBar(
                 .drop(1)
                 .collectLatest { index ->
                     if (draggedFlag[0]) {
-                        dampedDrag.animateToValue(navToValue(index))
                         onNavigate(navRoutes[index])
                     }
                 }
