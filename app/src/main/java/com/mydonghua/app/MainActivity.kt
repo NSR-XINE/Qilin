@@ -31,6 +31,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -145,7 +149,19 @@ class MainActivity : ComponentActivity() {
                             NavHost(
                                 navController = navController,
                                 startDestination = "home",
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                enterTransition = {
+                                    fadeIn() + slideInHorizontally { -it }
+                                },
+                                exitTransition = {
+                                    fadeOut() + slideOutHorizontally { it }
+                                },
+                                popEnterTransition = {
+                                    fadeIn() + slideInHorizontally { -it }
+                                },
+                                popExitTransition = {
+                                    fadeOut() + slideOutHorizontally { it }
+                                },
                             ) {
                         composable("home") {
                             GlassBackground {
