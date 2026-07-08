@@ -46,8 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.lerp
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import com.mydonghua.app.R
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
@@ -205,11 +204,11 @@ fun LiquidGlassNavBar(
 
         if (barWidthPx > 0) {
             val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-            val pillWidthPx = (slotWidthPx - 8.dp.toPx()).coerceAtLeast(32.dp.toPx())
+            val pillWidthPx = with(density) { (slotWidthPx - 8.dp.toPx()).coerceAtLeast(32.dp.toPx()) }
             Box(
                 modifier = Modifier
                     .graphicsLayer {
-                        translationX = dampedDrag.value * slotWidthPx + 4.dp.toPx()
+                        translationX = dampedDrag.value * slotWidthPx + with(density) { 4.dp.toPx() }
                         scaleX = dampedDrag.scaleX
                         scaleY = dampedDrag.scaleY
                         val velocity = dampedDrag.velocity / 10f
