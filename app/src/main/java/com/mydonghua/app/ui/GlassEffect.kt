@@ -21,6 +21,17 @@ import dev.chrisbanes.haze.hazeChild
 
 val LocalHazeState = staticCompositionLocalOf<HazeState> { error("No HazeState provided") }
 
+object Spacing {
+    val xs = 4.dp
+    val sm = 8.dp
+    val md = 12.dp
+    val lg = 16.dp
+    val xl = 20.dp
+    val xxl = 24.dp
+    val xxxl = 32.dp
+    val section = xxxl
+}
+
 @Composable
 fun GlassBackground(
     modifier: Modifier = Modifier,
@@ -78,8 +89,8 @@ fun GlassSection(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(Spacing.md))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(Spacing.md))
     ) {
         Box(
             modifier = Modifier
@@ -96,7 +107,7 @@ fun GlassSection(
                             Color.Black.copy(alpha = 0.08f)
                         )
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(Spacing.md)
                 )
         )
         Box(
@@ -109,10 +120,10 @@ fun GlassSection(
                             Color.Transparent
                         )
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(Spacing.md)
                 )
         )
-        Box(modifier = Modifier.padding(14.dp)) {
+        Box(modifier = Modifier.padding(Spacing.sm + 2.dp)) {
             content()
         }
     }

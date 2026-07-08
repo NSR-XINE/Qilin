@@ -29,6 +29,7 @@ import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.Spacing
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 
@@ -126,19 +127,19 @@ fun ShowDetailScreen(
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(16.dp)
+                        .padding(Spacing.lg)
                 ) {
                     Text(
                         text = show.title,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     if (!show.titleZh.isNullOrEmpty()) {
                         Text(
                             text = show.titleZh,
                             fontSize = 13.sp,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
@@ -148,13 +149,13 @@ fun ShowDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md + 2.dp)
             ) {
                 // Status chips with glass
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm + 2.dp)
                 ) {
                     GlassChip(
                         label = "Status",
@@ -244,7 +245,7 @@ fun ShowDetailScreen(
                                     .size(34.dp)
                                     .background(
                                         MaterialTheme.colorScheme.surfaceVariant,
-                                        RoundedCornerShape(8.dp)
+                                        RoundedCornerShape(Spacing.md)
                                     )
                             ) {
                                 Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -255,7 +256,7 @@ fun ShowDetailScreen(
                                     .size(34.dp)
                                     .background(
                                         MaterialTheme.colorScheme.surfaceVariant,
-                                        RoundedCornerShape(8.dp)
+                                        RoundedCornerShape(Spacing.md)
                                     )
                             ) {
                                 Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -268,7 +269,7 @@ fun ShowDetailScreen(
                 if (!show.notes.isNullOrEmpty()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text("Synopsis", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xs + 2.dp))
                         Text(
                             text = show.notes!!,
                             fontSize = 14.sp,
@@ -281,14 +282,14 @@ fun ShowDetailScreen(
                 // Meta
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)
                 ) {
                     if (!show.studio.isNullOrEmpty()) Meta(label = "Studio", value = show.studio!!)
                     if (show.releaseYear != null && show.releaseYear!! > 0) Meta(label = "Year", value = show.releaseYear.toString())
                     if (!show.genres.isNullOrEmpty()) Meta(label = "Genres", value = show.genres!!)
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Button(
                     onClick = { onWatchClick(show.watchUrl ?: "") },
@@ -310,7 +311,7 @@ fun ShowDetailScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Spacing.xxl))
             }
         }
     }
@@ -322,23 +323,23 @@ private fun GlassChip(label: String, value: String, modifier: Modifier = Modifie
     val isDark = isSystemInDarkTheme()
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(Spacing.md))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(Spacing.md))
             .background(
                 brush = Brush.verticalGradient(
                     colors = if (isDark) listOf(
-                        Color.White.copy(alpha = 0.07f),
-                        Color.White.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f),
                         MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
                     ) else listOf(
-                        Color.Black.copy(alpha = 0.06f),
-                        Color.Black.copy(alpha = 0.02f),
-                        Color.Black.copy(alpha = 0.08f)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f),
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                     )
                 ),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(Spacing.md)
             )
-            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))

@@ -30,6 +30,7 @@ import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.screens.HomeViewModel
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
@@ -95,9 +96,9 @@ fun HeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(Spacing.lg)
             .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onBannerClick() }
     ) {
         AsyncImage(
@@ -117,7 +118,7 @@ fun HeroBanner(
                 .background(
                     Brush.verticalGradient(
                         0.4f to Color.Transparent,
-                        1.0f to Color.Black.copy(alpha = 0.7f)
+                        1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
                     )
                 )
         )
@@ -125,7 +126,7 @@ fun HeroBanner(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(16.dp)
+                .padding(Spacing.lg)
         ) {
             Text(
                 text = show.title,
@@ -160,7 +161,7 @@ private fun BannerTimeBox(value: Long, label: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .size(48.dp)
-            .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
     ) {
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -183,10 +184,10 @@ private fun BannerTimeBox(value: Long, label: String) {
 fun SectionHeader(title: String) {
     Text(
         text = title,
-        fontSize = 18.sp,
+        style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 10.dp)
+        modifier = Modifier.padding(start = Spacing.lg, top = 24.dp, bottom = Spacing.md)
     )
 }
 
@@ -199,8 +200,8 @@ fun ContinueWatchingRow(
     val context = LocalContext.current
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         items(shows, key = { it.id }) { show ->
             GlassSection(modifier = Modifier.width(240.dp)) {
@@ -208,7 +209,7 @@ fun ContinueWatchingRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onShowClick(show.id) }
-                        .padding(8.dp),
+                        .padding(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -223,7 +224,7 @@ fun ContinueWatchingRow(
                             contentScale = ContentScale.Crop
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
@@ -241,9 +242,9 @@ fun ContinueWatchingRow(
                             modifier = Modifier.padding(top = 2.dp)
                         )
                         if (show.totalEp > 0) {
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(Spacing.sm))
                             LinearProgressIndicator(
-                                progress = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f),
+                                progress = { (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(3.dp)
@@ -268,8 +269,8 @@ fun RecentlyUpdatedRow(
     val context = LocalContext.current
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         items(shows, key = { it.id }) { show ->
             GlassSection(modifier = Modifier.width(240.dp)) {
@@ -277,7 +278,7 @@ fun RecentlyUpdatedRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onShowClick(show.id) }
-                        .padding(8.dp),
+                        .padding(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -292,7 +293,7 @@ fun RecentlyUpdatedRow(
                             contentScale = ContentScale.Crop
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
@@ -355,15 +356,15 @@ fun WeeklyScheduleSection(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
+            .padding(horizontal = Spacing.lg)
+            .clip(RoundedCornerShape(12.dp))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
             .background(
-                color = if (isDark) Color.White.copy(alpha = 0.04f)
-                else Color.Black.copy(alpha = 0.02f),
-                shape = RoundedCornerShape(16.dp)
+                color = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.04f)
+                else MaterialTheme.colorScheme.scrim.copy(alpha = 0.02f),
+                shape = RoundedCornerShape(12.dp)
             )
-            .padding(12.dp)
+            .padding(Spacing.md)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             LazyRow(
@@ -382,7 +383,7 @@ fun WeeklyScheduleSection(
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .clickable { selectedDay = day }
-                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                            .padding(horizontal = Spacing.md, vertical = 7.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -416,7 +417,7 @@ fun WeeklyScheduleSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
-                        .padding(bottom = 8.dp)
+                        .padding(bottom = Spacing.sm)
                 ) {
                     filteredShows.forEach { show ->
                         Row(
@@ -424,7 +425,7 @@ fun WeeklyScheduleSection(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable { onShowClick(show.id) }
-                                .padding(horizontal = 8.dp, vertical = 10.dp),
+                                .padding(horizontal = Spacing.sm, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ShowCard
 
 import androidx.compose.ui.graphics.Color
@@ -49,25 +50,24 @@ fun StoppedScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
+                contentPadding = PaddingValues(top = Spacing.sm, bottom = 100.dp)
             ) {
                 item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Upcoming & On Hiatus",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
                             text = if (shows.size == 1) "1 show" else "${shows.size} shows",
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

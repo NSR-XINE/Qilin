@@ -10,10 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import com.mydonghua.app.ui.Spacing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -102,7 +100,7 @@ fun SearchScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             ) {
                 // Suggestions inside search bar overlay
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
@@ -141,7 +139,7 @@ fun SearchScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             // Active Filters Tags
             ActiveFiltersTags(filters = filters, onClearFilters = { viewModel.updateFilters(SearchFilters()) })
@@ -152,10 +150,29 @@ fun SearchScreen(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No matching shows found",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        Text(
+                            text = if (query.isEmpty()) "Search your shows" else "No matching shows found",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        if (query.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                            Text(
+                                text = "Try adjusting your search or filters",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                        }
+                    }
                 }
             } else {
                 LazyColumn(
@@ -200,7 +217,7 @@ private fun SuggestionItem(text: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -222,9 +239,9 @@ private fun ActiveFiltersTags(filters: SearchFilters, onClearFilters: () -> Unit
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
         ) {
             Text("Filters:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             LazyRow(
@@ -234,8 +251,8 @@ private fun ActiveFiltersTags(filters: SearchFilters, onClearFilters: () -> Unit
                 items(activeList) { tag ->
                     Box(
                         modifier = Modifier
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(Spacing.sm))
+                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                     ) {
                         Text(tag, fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                     }
@@ -272,9 +289,9 @@ fun FilterBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(Spacing.lg)
+                .padding(bottom = Spacing.xxxl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             Text("Advanced Filtering Options", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
 
@@ -294,7 +311,7 @@ fun FilterBottomSheet(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 OutlinedTextField(
                     value = year,
@@ -315,10 +332,10 @@ fun FilterBottomSheet(
 
             // Sorting Selection row
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Sorting Order Mode", fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp))
+                Text("Sorting Order Mode", fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = Spacing.xs + 2.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)
                 ) {
                     listOf("alphabetical", "countdown", "progress", "last_updated").forEach { mode ->
                         val isSelected = sortBy == mode
@@ -331,21 +348,21 @@ fun FilterBottomSheet(
                                     else MaterialTheme.colorScheme.surfaceVariant
                                 )
                                 .clickable { sortBy = mode }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = Spacing.sm),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = mode.substring(0, 4).uppercase(),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             Button(
                 onClick = {
@@ -363,7 +380,7 @@ fun FilterBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(Spacing.sm)
             ) {
                 Text("Apply Search Filters", fontWeight = FontWeight.Bold)
             }

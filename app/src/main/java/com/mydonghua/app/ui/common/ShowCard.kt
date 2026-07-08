@@ -26,6 +26,7 @@ import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.Spacing
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -72,15 +73,15 @@ fun ShowCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
             .background(
-                color = if (isDark) Color.White.copy(alpha = 0.04f)
-                else Color.Black.copy(alpha = 0.02f),
-                shape = RoundedCornerShape(16.dp)
+                color = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.04f)
+                else MaterialTheme.colorScheme.scrim.copy(alpha = 0.02f),
+                shape = RoundedCornerShape(12.dp)
             )
             .clickable { onCardClick(show) },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column {
@@ -88,9 +89,8 @@ fun ShowCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxWidth()
                     .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(12.dp))
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -111,7 +111,7 @@ fun ShowCard(
                         .background(
                             brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                                 0.5f to Color.Transparent,
-                                1.0f to Color.Black.copy(alpha = 0.6f)
+                                1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
                             )
                         )
                 )
@@ -120,7 +120,7 @@ fun ShowCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                        .padding(Spacing.sm)
                         .background(
                             color = when (show.status) {
                                 "completed" -> Color(0xFF2EA043).copy(alpha = 0.85f)
@@ -147,7 +147,7 @@ fun ShowCard(
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(12.dp)
+                        .padding(Spacing.md)
                 ) {
                     Text(
                         text = show.title,
@@ -173,7 +173,7 @@ fun ShowCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -193,7 +193,7 @@ fun ShowCard(
                     if (show.totalEp > 0) {
                         Spacer(modifier = Modifier.height(6.dp))
                         LinearProgressIndicator(
-                            progress = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f),
+                            progress = { (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth(0.7f)
                                 .height(3.dp)

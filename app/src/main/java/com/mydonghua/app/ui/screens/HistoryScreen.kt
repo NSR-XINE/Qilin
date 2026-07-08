@@ -20,6 +20,7 @@ import coil.compose.AsyncImage
 import java.text.SimpleDateFormat
 import java.util.*
 
+import com.mydonghua.app.ui.Spacing
 import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +101,7 @@ fun HistoryScreen(
                             Box(
                                 modifier = Modifier
                                     .size(42.dp)
-                                    .clip(RoundedCornerShape(4.dp))
+                                    .clip(RoundedCornerShape(Spacing.sm))
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {

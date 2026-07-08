@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mydonghua.app.ui.Spacing
 import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
 import com.mydonghua.app.domain.model.Show
@@ -109,7 +110,7 @@ fun CollectionsScreen(
                             }
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
+                                    .clip(RoundedCornerShape(Spacing.sm))
                                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
@@ -131,7 +132,7 @@ fun CollectionsScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .clip(RoundedCornerShape(Spacing.sm))
                                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                         .clickable { onShowClick(show.id) }
                                         .padding(6.dp),
@@ -142,7 +143,7 @@ fun CollectionsScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .clip(RoundedCornerShape(4.dp))
+                                            .clip(RoundedCornerShape(Spacing.sm))
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -180,7 +181,7 @@ fun CollectionsScreen(
                                     }
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
+                                            .clip(RoundedCornerShape(Spacing.sm))
                                             .background(statusColor.copy(alpha = 0.15f))
                                             .padding(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
