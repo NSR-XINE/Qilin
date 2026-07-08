@@ -1,12 +1,12 @@
 package com.mydonghua.app.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -23,10 +23,12 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.lerp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.R
 import com.kyant.backdrop.Backdrop
@@ -40,13 +42,17 @@ import android.graphics.Bitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
 import kotlin.math.sign
 import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
 private val CapsuleShape = RoundedCornerShape(percent = 50)
+private val PillWidth = 52.dp
+private val PillHeight = 48.dp
 
 @Composable
 fun LiquidGlassNavBar(
@@ -87,18 +93,32 @@ fun LiquidGlassNavBar(
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
     val totalSlots = 5f
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
-    val blobSize = 48.dp
+    val blobWidthPx = with(density) { PillWidth.toPx() }
+    val blobAnimatable = remember { Animatable(0f) }
+    val blobOffsetDp by remember { derivedStateOf { with(density) { blobAnimatable.value.toDp() } } }
+    val coroutineScope = rememberCoroutineScope()
 
-    val blobOffset by animateDpAsState(
-        targetValue = if (barWidthPx > 0) with(density) {
-            val slot = if (navIndex < 2) navIndex else navIndex + 1
-            val centerPx = slotWidthPx * (slot + 0.5f)
-            val blobPx = blobSize.toPx()
-            (centerPx - blobPx / 2f).toDp()
-        } else 0.dp,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
-        label = "blobOffset",
-    )
+    fun targetOffset(index: Int): Float {
+        if (barWidthPx <= 0) return 0f
+        val slot = if (index < 2) index else index + 1
+        val centerPx = slotWidthPx * (slot + 0.5f)
+        return centerPx - blobWidthPx / 2f
+    }
+
+    fun findNearestTab(offsetPx: Float): Int {
+        val centers = navRoutes.indices.map { i ->
+            val slot = if (i < 2) i else i + 1
+            slotWidthPx * (slot + 0.5f)
+        }
+        val blobCenter = offsetPx + blobWidthPx / 2f
+        return centers.indices.minByOrNull { abs(centers[it] - blobCenter) } ?: navIndex
+    }
+
+    LaunchedEffect(navIndex, barWidthPx) {
+        if (barWidthPx > 0) {
+            blobAnimatable.animateTo(targetOffset(navIndex), spring(dampingRatio = 0.7f, stiffness = 400f))
+        }
+    }
 
     Box(
         modifier = modifier
@@ -120,14 +140,36 @@ fun LiquidGlassNavBar(
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(30.dp),
             )
-            .onSizeChanged { barWidthPx = it.width },
+            .onSizeChanged { barWidthPx = it.width }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        val target = findNearestTab(blobAnimatable.value)
+                        if (target >= 0 && target < navRoutes.size) {
+                            onNavigate(navRoutes[target])
+                        }
+                    },
+                    onDragCancel = {
+                        coroutineScope.launch {
+                            blobAnimatable.animateTo(targetOffset(navIndex), spring(0.7f, 400f))
+                        }
+                    },
+                ) { _, dragAmount ->
+                    val maxOffset = barWidthPx.toFloat() - blobWidthPx
+                    val newPos = (blobAnimatable.value + dragAmount).coerceIn(0f, maxOffset)
+                    coroutineScope.launch {
+                        blobAnimatable.snapTo(newPos)
+                    }
+                }
+            },
     ) {
         if (barWidthPx > 0) {
             val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
             Box(
                 modifier = Modifier
-                    .offset(x = blobOffset)
-                    .size(blobSize)
+                    .offset(x = blobOffsetDp)
+                    .width(PillWidth)
+                    .height(PillHeight)
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { CapsuleShape },
