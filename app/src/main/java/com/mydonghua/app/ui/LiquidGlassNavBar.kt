@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import dev.chrisbanes.haze.hazeChild
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.LocalHazeState
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -142,17 +144,34 @@ private fun RowScope.NavBarIcon(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    IconButton(
-        onClick = onClick,
+    Box(
         modifier = Modifier.size(48.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        )
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .hazeChild(state = LocalHazeState.current, shape = RoundedCornerShape(10.dp))
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            )
+        }
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+        }
     }
 }
 
