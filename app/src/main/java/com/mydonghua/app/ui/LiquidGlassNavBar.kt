@@ -17,8 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
+
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.R
@@ -27,7 +26,6 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.refraction
 
 @Composable
 fun LiquidGlassNavBar(
@@ -37,7 +35,6 @@ fun LiquidGlassNavBar(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val layer = rememberGraphicsLayer()
     val tint = MaterialTheme.colorScheme.onSurface
 
     Row(
@@ -47,7 +44,6 @@ fun LiquidGlassNavBar(
             .clip(RoundedCornerShape(30.dp))
             .drawBackdropCustomShape(
                 backdrop = backdrop,
-                layer = layer,
                 shape = RoundedCornerShape(30.dp),
             )
             .background(
@@ -145,7 +141,6 @@ private fun RowScope.NavBarIcon(
 
 private fun Modifier.drawBackdropCustomShape(
     backdrop: Backdrop,
-    layer: GraphicsLayer,
     shape: Shape,
 ): Modifier =
     this.drawBackdrop(
@@ -153,10 +148,6 @@ private fun Modifier.drawBackdropCustomShape(
         effects = {
             colorControls(saturation = 1.5f)
             blur(4f.dp.toPx())
-        },
-        onDrawBackdrop = { drawBackdrop ->
-            drawBackdrop()
-            layer.record { drawBackdrop() }
         },
         shape = { shape },
     )
