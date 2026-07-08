@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -129,6 +131,7 @@ fun LiquidGlassNavBar(
                 layer = layer,
                 luminanceAnimation = luminanceAnimation.value,
                 shape = RoundedCornerShape(30.dp),
+                interaction = barInteraction,
             )
             .background(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
@@ -308,11 +311,14 @@ private fun Modifier.drawBackdropCustomShape(
     layer: GraphicsLayer,
     luminanceAnimation: Float,
     shape: Shape,
+    interaction: GlassInteraction? = null,
+    pressedScale: Float = 1.08f,
 ): Modifier =
     this.drawBackdrop(
         backdrop = backdrop,
         effects = {
             val l = (luminanceAnimation * 2f - 1f).let { sign(it) * it * it }
+            val press = interaction?.pressProgress ?: 0f
             colorControls(
                 brightness =
                     if (l > 0f) lerp(0.1f, 0.5f, l)
@@ -323,8 +329,8 @@ private fun Modifier.drawBackdropCustomShape(
                 saturation = 1.5f,
             )
             blur(
-                if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
-                else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l),
+                (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
+                else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 2f.dp.toPx() * press,
             )
             refraction(24f.dp.toPx(), size.minDimension / 2f, true)
         },
@@ -332,6 +338,28 @@ private fun Modifier.drawBackdropCustomShape(
             drawBackdrop()
             layer.record { drawBackdrop() }
         },
+        onDrawSurface = {
+            val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
+            drawRect(Color.Black.copy(alpha = darken))
+            val press = interaction?.pressProgress ?: 0f
+            if (press > 0f) {
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.18f * press), Color.Transparent),
+                        center = interaction?.touchPosition ?: Offset(size.width / 2f, size.height / 2f),
+                        radius = size.minDimension * 1.2f,
+                    ),
+                    blendMode = BlendMode.Plus,
+                )
+            }
+        },
+        layerBlock = if (interaction != null) {
+            {
+                val scale = lerp(1f, pressedScale, interaction.pressProgress)
+                scaleX = scale
+                scaleY = scale
+            }
+        } else null,
         shape = { shape },
     )
 
