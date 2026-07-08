@@ -95,7 +95,7 @@ private class DrawBackdropNode(
 
     private val layoutLayerBlock: androidx.compose.ui.graphics.GraphicsLayerScope.() -> Unit = {
         clip = true
-        shape = this@DrawBackdropNode.shape ?: androidx.compose.ui.graphics.Shape { size, _, _ -> androidx.compose.ui.graphics.Outline.Rectangle(size) }
+        shape = this@DrawBackdropNode.shape ?: RectangleShape
         renderEffect = this@DrawBackdropNode.renderEffect
         compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
     }
