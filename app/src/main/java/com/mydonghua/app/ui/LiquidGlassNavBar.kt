@@ -114,7 +114,6 @@ fun LiquidGlassNavBar(
     val totalSlots = 5f
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
     val coroutineScope = rememberCoroutineScope()
-    val barInteraction = rememberGlassInteraction()
 
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
@@ -139,8 +138,7 @@ fun LiquidGlassNavBar(
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(30.dp),
             )
-            .onSizeChanged { barWidthPx = it.width }
-            .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+            .onSizeChanged { barWidthPx = it.width },
     ) {
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
@@ -332,38 +330,6 @@ private fun Modifier.drawBackdropCustomShape(
         shape = { shape },
     )
 
-class GlassInteraction(
-    private val animationScope: CoroutineScope,
-) {
-    private val pressSpec = spring(dampingRatio = 0.5f, stiffness = 300f, visibilityThreshold = 0.001f)
-    private val pressAnimation = Animatable(0f, 0.001f)
-
-    val pressProgress: Float get() = pressAnimation.value
-
-    var touchPosition by mutableStateOf(Offset.Zero)
-        private set
-
-    suspend fun detectPress(pointer: PointerInputScope) =
-        with(pointer) {
-            inspectDragGestures(
-                onDragStart = { down ->
-                    touchPosition = down.position
-                    animationScope.launch { pressAnimation.animateTo(1f, pressSpec) }
-                },
-                onDragEnd = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
-                onDragCancel = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
-            ) { change, _ ->
-                touchPosition = change.position
-            }
-        }
-}
-
-@Composable
-fun rememberGlassInteraction(): GlassInteraction {
-    val scope = rememberCoroutineScope()
-    return remember(scope) { GlassInteraction(scope) }
-}
-
 internal suspend fun PointerInputScope.inspectDragGestures(
     onDragStart: (down: PointerInputChange) -> Unit = {},
     onDragEnd: (change: PointerInputChange) -> Unit = {},
@@ -515,7 +481,8 @@ class DampedDragAnimation(
     fun updateValue(value: Float) {
         val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
         animationScope.launch {
-            valueAnimation.animateTo(target, valueAnimationSpec) { updateVelocity() }
+            valueAnimation.snapTo(target)
+            updateVelocity()
         }
     }
 
