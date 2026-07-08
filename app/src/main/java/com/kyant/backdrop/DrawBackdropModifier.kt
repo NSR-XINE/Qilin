@@ -1,6 +1,7 @@
 package com.kyant.backdrop
 
 import android.os.Build
+import androidx.compose.ui.geometry.Size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
@@ -351,6 +352,8 @@ private class DrawBackdropNode(
 
     private fun updateEffects() {
         if (effectScope != null) {
+            if (effectScope.size == Size.Unspecified) return
+
             val graphicsContext = requireGraphicsContext()
 
             val backdropEffects = effects
