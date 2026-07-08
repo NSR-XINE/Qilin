@@ -2,6 +2,9 @@ package com.kyant.backdrop
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.DefaultCameraDistance
 import androidx.compose.ui.graphics.DefaultShadowColor
@@ -40,6 +43,8 @@ internal class InverseLayerScope : GraphicsLayerScope {
     override var ambientShadowColor: Color = DefaultShadowColor
     override var spotShadowColor: Color = DefaultShadowColor
     override var compositingStrategy: CompositingStrategy = CompositingStrategy.Auto
+    override var blendMode: BlendMode = BlendMode.SrcOver
+    override var colorFilter: ColorFilter? = null
 
     private var matrix: Matrix? = null
 

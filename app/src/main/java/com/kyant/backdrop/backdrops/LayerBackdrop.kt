@@ -6,13 +6,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.GraphicsLayer
 import androidx.compose.ui.graphics.GraphicsLayerScope
-import androidx.compose.ui.graphics.drawLayer
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.Density
@@ -49,7 +49,7 @@ class LayerBackdrop internal constructor(
         layerBlock: (GraphicsLayerScope.() -> Unit)?
     ) {
         val currentCoordinates = currentCoordinates ?: return
-        val offset = currentCoordinates.localPositionOf(coordinates ?: return, null)
+        val offset = currentCoordinates.localPositionOf(coordinates ?: return)
         val layerBlock = layerBlock
         if (layerBlock != null) {
             withTransform({

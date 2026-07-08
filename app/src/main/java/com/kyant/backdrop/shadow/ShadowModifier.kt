@@ -6,14 +6,14 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.os.Build
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.GraphicsLayer
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.drawLayer
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.layer.CompositingStrategy
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.node.DrawModifierNode
@@ -148,9 +148,11 @@ internal class ShadowNode(
             is Outline.Rounded -> {
                 val rr = outline.roundRect
                 val r = rr.topLeftCornerRadius.x
-                canvas.drawRoundRect(rr.left, rr.top, rr.right, rr.bottom, r, r, paint)
+                val path = Path()
+                path.addRoundRect(rr.left, rr.top, rr.right, rr.bottom, r, r, Path.Direction.CW)
+                canvas.drawPath(path, paint)
                 canvas.translate(-offsetX, -offsetY)
-                canvas.drawRoundRect(rr.left, rr.top, rr.right, rr.bottom, r, r, ShadowMaskPaint)
+                canvas.drawPath(path, ShadowMaskPaint)
                 canvas.translate(offsetX, offsetY)
             }
 

@@ -9,11 +9,12 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
   - AAR at `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15` is **unusable** — compiled with Java 21, env has JDK 17
   - All 22 source files copied from tag `1.0.0-alpha15` to `app/src/main/java/com/kyant/backdrop/`
   - `@Language("AGSL")` annotations removed (not on classpath)
-- Compose BOM bumped to `2024.06.00` for `GraphicsLayer` API availability
-- `ExperimentalGraphicsLayerApi` opt-in used where needed
+  - Vendored source adapted for Compose 1.7.x (no `roundRectPath`/`fastCoerceAtMost` dependency)
+- Compose BOM upgraded to `2024.09.00` for `GraphicsLayer` API availability (requires Kotlin 2.0+)
+- `ExperimentalGraphicsLayerApi` opt-in set globally via `-opt-in=` compiler arg
 
 ## Key Dependencies
-- Compose BOM: `2024.06.00` (provides `rememberGraphicsLayer` / `GraphicsLayer`)
+- Compose BOM: `2024.09.00` (provides `rememberGraphicsLayer` / `GraphicsLayer` via Compose UI 1.7.x)
 - Haze: `0.7.3`
 - Kyant Liquid Glass: **none (vendored)**
 
@@ -44,4 +45,15 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 - Java 17 JDK embedded in AndroidIDE (no shell-level `java` command).
 - Build must be run from within AndroidIDE, not from shell.
 - `compileSdk 36`, `targetSdk 35`, `minSdk 29`
-- Kotlin 1.9.24, AGP 8.6.0
+- Kotlin 2.0.0, AGP 8.6.0
+- Compose Compiler Gradle Plugin (`org.jetbrains.kotlin.plugin.compose`) replaces `composeOptions { kotlinCompilerExtensionVersion }`
+- `composeOptions` block removed — compose plugin handles compilation
+
+## Build File Changes (Kotlin 2.0 Upgrade)
+- `build.gradle` (project): `kotlin 1.9.24 → 2.0.0`, added `org.jetbrains.kotlin.plugin.compose 2.0.0`
+- `app/build.gradle`:
+  - Added `id 'org.jetbrains.kotlin.plugin.compose'` to plugins
+  - Removed `composeOptions { kotlinCompilerExtensionVersion '1.5.14' }`
+  - Added `-opt-in=androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi` to freeCompilerArgs
+  - Compose BOM: `2024.06.00 → 2024.09.00`
+- No changes needed to settings.gradle or gradle-wrapper

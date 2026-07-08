@@ -5,13 +5,13 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.os.Build
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.GraphicsLayer
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.drawLayer
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.layer.CompositingStrategy
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.node.DrawModifierNode
@@ -19,6 +19,7 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
+
 import com.kyant.backdrop.RuntimeShaderCacheScopeImpl
 import com.kyant.backdrop.ShapeProvider
 import kotlin.math.ceil
@@ -169,12 +170,9 @@ internal class HighlightNode(
 
             is Outline.Rounded -> {
                 val rr = outline.roundRect
+                val r = rr.topLeftCornerRadius.x
                 val path = clipPath?.apply { rewind() } ?: Path().also { clipPath = it }
-                path.addRoundRect(
-                    rr.left, rr.top, rr.right, rr.bottom,
-                    rr.topLeftCornerRadius.x, rr.topLeftCornerRadius.x,
-                    Path.Direction.CW
-                )
+                path.addRoundRect(rr.left, rr.top, rr.right, rr.bottom, r, r, Path.Direction.CW)
                 canvas.clipPath(path)
                 canvas.drawPath(path, paint)
             }

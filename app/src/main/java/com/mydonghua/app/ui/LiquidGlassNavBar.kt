@@ -18,7 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.GraphicsLayer
+import androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.lerp
@@ -36,6 +37,7 @@ import kotlin.math.sign
 import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalGraphicsLayerApi::class)
 @Composable
 fun LiquidGlassNavBar(
     currentRoute: String,
@@ -156,6 +158,7 @@ private fun RowScope.NavBarIcon(
     }
 }
 
+@OptIn(ExperimentalGraphicsLayerApi::class)
 private fun Modifier.drawBackdropCustomShape(
     backdrop: Backdrop,
     layer: GraphicsLayer,

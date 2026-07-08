@@ -7,14 +7,14 @@ import android.graphics.PorterDuffXfermode
 import android.os.Build
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.GraphicsLayer
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.drawLayer
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.layer.CompositingStrategy
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.node.DrawModifierNode
