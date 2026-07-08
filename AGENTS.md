@@ -1,31 +1,35 @@
 # AGENTS.md
 
 ## Project
-RadixUI — Compose music app with iOS-like liquid glass UI.
+MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid glass bottom nav.
 
 ## Glass Effect Strategy
-Kyant 1.0.6 source files are copied directly into the project under `app/src/main/java/com/kyant/backdrop/` to avoid the Java 21 build issue (Kyant AAR was compiled with Java 21, but the environment only has JDK 17).
+- **Haze 0.7.3** for general glass backgrounds (stars background, drawer, etc.)
+- **Kyant Backdrop `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15` from JitPack** for the liquid glass bottom navigation bar
+- Compose BOM bumped to `2024.06.00` for `GraphicsLayer` API availability
+- `ExperimentalGraphicsLayerApi` opt-in used where needed
 
-13 files were copied (simplified — only `drawPlainBackdrop`, no highlight/shadow/lens effects):
-- `Backdrop.kt`, `BackdropEffectScope.kt`, `DrawBackdropModifier.kt` (drawPlainBackdrop only)
-- `InverseLayerScope.kt`, `LayerRecorder.kt`, `RuntimeShaderCache.kt`
-- `Shaders.kt` (GammaAdjustmentShader only), `ShapeProvider.kt`
-- `backdrops/LayerBackdrop.kt`, `backdrops/LayerBackdropModifier.kt`
-- `effects/Blur.kt`, `effects/ColorFilter.kt`, `effects/RenderEffect.kt`
+## Key Dependencies
+- Compose BOM: `2024.06.00` (provides `rememberGraphicsLayer` / `GraphicsLayer`)
+- Haze: `0.7.3`
+- Kyant Liquid Glass: `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15`
 
-Dependency removed from `app/build.gradle` (no more `io.github.kyant0:backdrop:1.0.6`).
-
-Effects chain: `vibrancy() + blur(24.dp.toPx())`.
+## Liquid Glass Nav Bar
+- `LiquidGlassNavBar.kt` in `com.mydonghua.app.ui` package
+- Uses `rememberLayerBackdrop()` + `Modifier.layerBackdrop(backdrop)` to capture screen content
+- `Modifier.drawBackdropCustomShape()` applies: `colorControls(brightness/contrast/saturation) + blur(2-16px adaptive) + refraction(24px)`
+- Luminance animation: captures 5x5 thumbnail every 1s, calculates average luminance, animates `Animatable` — used for adaptive effect intensity
+- 5 items: Home, Airing, Search (center circle), Complete, Stopped
+- Applied as `Modifier` on the Row containing all nav items
 
 ## Modified Files
-- `app/build.gradle` — removed Kyant dependency
-- `app/src/main/java/com/mydonghua/app/ui/GlassEffect.kt` — `LocalBackdrop` + `drawPlainBackdrop` with vibrancy+blur
-- `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop` + `layerBackdrop` for stars capture; glass surfaces via `drawPlainBackdrop`
-- `app/src/main/java/com/mydonghua/app/ui/common/ShowCard.kt` — `drawPlainBackdrop`
-- `app/src/main/java/com/mydonghua/app/ui/home/HomeScreen.kt` — `drawPlainBackdrop`
-- `app/src/main/java/com/mydonghua/app/ui/screens/ShowDetailScreen.kt` — `GlassChip` via `drawPlainBackdrop`
+- `settings.gradle` — added JitPack repository
+- `app/build.gradle` — Bump BOM to `2024.06.00`, add Kyant dependency
+- `app/src/main/java/com/mydonghua/app/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension
+- `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)` on NavHost content; replaced old nav with `LiquidGlassNavBar`
 
 ## Build
 - Java 17 JDK embedded in AndroidIDE (no shell-level `java` command).
-- Project targets Java 21 (`compileOptions VERSION_21`, `kotlinOptions jvmTarget = '21'`).
 - Build must be run from within AndroidIDE, not from shell.
+- `compileSdk 36`, `targetSdk 35`, `minSdk 29`
+- Kotlin 1.9.24, AGP 8.6.0

@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
@@ -18,22 +17,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
-import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -43,15 +34,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.Search
 import com.mydonghua.app.ui.GlassBackground
+import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
@@ -71,6 +61,7 @@ class MainActivity : ComponentActivity() {
 
         requestPermissionsOnStart()
 
+        @OptIn(ExperimentalGraphicsLayerApi::class)
         setContent {
             val state by homeViewModel.uiState.collectAsState()
             val settingsState by settingsViewModel.uiState.collectAsState()
@@ -80,6 +71,7 @@ class MainActivity : ComponentActivity() {
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
+            val backdrop = rememberLayerBackdrop()
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -186,12 +178,16 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         ) { innerPadding ->
-                            NavHost(
-                                navController = navController,
-                                startDestination = "home",
+                            Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(top = innerPadding.calculateTopPadding())
+                                    .layerBackdrop(backdrop)
+                            ) {
+                            NavHost(
+                                navController = navController,
+                                startDestination = "home",
+                                modifier = Modifier.fillMaxSize()
                             ) {
                         composable("home") {
                             GlassBackground {
@@ -397,122 +393,29 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        }
                     }
                 }
+            }
+            }
 
-                val isDark = settingsState.themeMode.lowercase() != "light"
                 if (showGlobalHeader) {
-                    val selectedIndex = when (currentRoute) {
-                        "home" -> 0
-                        "airing" -> 1
-                        "complete" -> 2
-                        "stopped" -> 3
-                        else -> -1
-                    }
-
-                    Box(
+                    LiquidGlassNavBar(
+                        currentRoute = currentRoute,
+                        isDark = settingsState.themeMode.lowercase() != "light",
+                        backdrop = backdrop,
+                        onNavigate = { route ->
+                            when (route) {
+                                "home" -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }
+                                "search" -> navController.navigate("search")
+                                else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
+                            }
+                        },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .navigationBarsPadding()
                             .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        Row(
-                            modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Left capsule — Home & Airing
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(56.dp)
-                                    .clip(RoundedCornerShape(28.dp))
-                                    .hazeChild(state = hazeState, shape = RoundedCornerShape(28.dp))
-                                    .background(
-                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                                        else Color.Black.copy(alpha = 0.04f),
-                                        shape = RoundedCornerShape(28.dp)
-                                    )
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    BottomNavItem(
-                                        iconRes = R.drawable.ic_home,
-                                        label = "Home",
-                                        selected = currentRoute == "home",
-                                        onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } }
-                                    )
-                                    BottomNavItem(
-                                        iconRes = R.drawable.ic_airing,
-                                        label = "Airing",
-                                        selected = currentRoute == "airing",
-                                        onClick = { navController.navigate("airing") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                    )
-                                }
-                            }
-
-                            // Center search button
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(CircleShape)
-                                    .hazeChild(state = hazeState, shape = CircleShape)
-                                    .background(
-                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                                        else Color.Black.copy(alpha = 0.04f),
-                                        shape = CircleShape
-                                    )
-                                    .clickable { navController.navigate("search") },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Search,
-                                    contentDescription = "Search",
-                                    modifier = Modifier.size(28.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            // Right capsule — Complete & Upcoming
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(56.dp)
-                                    .clip(RoundedCornerShape(28.dp))
-                                    .hazeChild(state = hazeState, shape = RoundedCornerShape(28.dp))
-                                    .background(
-                                        color = if (isDark) Color.White.copy(alpha = 0.06f)
-                                        else Color.Black.copy(alpha = 0.04f),
-                                        shape = RoundedCornerShape(28.dp)
-                                    )
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    BottomNavItem(
-                                        iconRes = R.drawable.ic_complete,
-                                        label = "Complete",
-                                        selected = currentRoute == "complete",
-                                        onClick = { navController.navigate("complete") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                    )
-                                    BottomNavItem(
-                                        iconRes = R.drawable.ic_stopped,
-                                        label = "Upcoming",
-                                        selected = currentRoute == "stopped",
-                                        onClick = { navController.navigate("stopped") { popUpTo("home"); launchSingleTop = true; restoreState = true } }
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    )
                 }
 
                 // Right Drawer Menu
@@ -684,36 +587,6 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun RowScope.BottomNavItem(
-    iconRes: Int,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .weight(1f)
-            .fillMaxHeight()
-            .clickable(
-                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                indication = null
-            ) { onClick() },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            modifier = Modifier
-                .size(24.dp)
-                .align(Alignment.CenterHorizontally),
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
     }
 }
 
