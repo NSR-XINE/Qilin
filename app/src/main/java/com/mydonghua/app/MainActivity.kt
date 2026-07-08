@@ -364,7 +364,7 @@ class MainActivity : ComponentActivity() {
                         onNavigate = { route ->
                             when (route) {
                                 "home" -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }
-                                "search" -> navController.navigate("search")
+                                "add_edit_show" -> navController.navigate("add_edit_show")
                                 else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
                             }
                         },

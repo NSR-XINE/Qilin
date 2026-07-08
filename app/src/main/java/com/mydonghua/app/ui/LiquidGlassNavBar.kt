@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -106,23 +106,21 @@ fun LiquidGlassNavBar(
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(
-                    color = if (currentRoute == "search") MaterialTheme.colorScheme.primaryContainer
-                    else if (isDark) Color.White.copy(alpha = 0.1f)
+                    color = if (isDark) Color.White.copy(alpha = 0.1f)
                     else Color.Black.copy(alpha = 0.05f),
                     shape = CircleShape,
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                ) { onNavigate("search") },
+                ) { onNavigate("add_edit_show") },
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Search,
-                contentDescription = "Search",
+                imageVector = Icons.Rounded.Add,
+                contentDescription = "Add",
                 modifier = Modifier.size(28.dp),
-                tint = if (currentRoute == "search") MaterialTheme.colorScheme.onPrimaryContainer
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         NavBarIcon(
