@@ -135,7 +135,7 @@ fun LiquidGlassNavBar(
     )
 
     val searchTranslationX by animateFloatAsState(
-        targetValue = if (isSearchMode) -(barWidthPx / 2f - 32.dp.toPx()) else 0f,
+        targetValue = if (isSearchMode) with(density) { -(barWidthPx / 2f - 32.dp.toPx()) } else 0f,
         animationSpec = tween(300),
         label = "searchTx"
     )
