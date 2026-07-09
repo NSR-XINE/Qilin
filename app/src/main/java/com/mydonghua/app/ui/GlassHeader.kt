@@ -1,24 +1,28 @@
 package com.mydonghua.app.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun GlassHeader(
@@ -27,86 +31,91 @@ fun GlassHeader(
     onDrawerOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hazeState = LocalHazeState.current
+    val searchInteraction = remember { MutableInteractionSource() }
+    val isSearchPressed by searchInteraction.collectIsPressedAsState()
+    val searchScale by animateFloatAsState(
+        targetValue = if (isSearchPressed) 1.12f else 1f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        label = "searchScale"
+    )
+
+    val menuInteraction = remember { MutableInteractionSource() }
+    val isMenuPressed by menuInteraction.collectIsPressedAsState()
+    val menuScale by animateFloatAsState(
+        targetValue = if (isMenuPressed) 1.12f else 1f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        label = "menuScale"
+    )
+
+    val density = LocalDensity.current
+    val glowRadius = with(density) { (48.dp * 1.2f).toPx() }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .then(
-                Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .hazeChild(state = hazeState, shape = RoundedCornerShape(16.dp))
-                    .background(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(38.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable { onSearchClick() }
-                .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Search,
-                    contentDescription = "Search",
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Search anime\u2026",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Normal
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(Modifier.weight(1f))
 
         Box(
             modifier = Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .clickable { onDrawerOpen() },
+                .size(48.dp)
+                .scale(searchScale)
+                .clip(CircleShape)
+                .background(Color.DarkGray.copy(alpha = 0.7f))
+                .clickable(
+                    interactionSource = searchInteraction,
+                    indication = null,
+                    onClick = onSearchClick
+                ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "\u2630",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            if (isSearchPressed) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.18f),
+                                    Color.Transparent
+                                ),
+                                radius = glowRadius
+                            )
+                        )
+                )
+            }
+            Icon(
+                imageVector = Icons.Rounded.Search,
+                contentDescription = "Search",
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .scale(menuScale)
+                .clip(CircleShape)
+                .background(Color.DarkGray.copy(alpha = 0.5f))
+                .clickable(
+                    interactionSource = menuInteraction,
+                    indication = null,
+                    onClick = onDrawerOpen
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_menu),
+                contentDescription = "Menu",
+                tint = Color.White,
+                modifier = Modifier.size(22.dp)
             )
         }
     }
