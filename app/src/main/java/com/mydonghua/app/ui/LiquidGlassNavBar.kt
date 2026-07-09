@@ -171,7 +171,7 @@ fun LiquidGlassNavBar(
                         if (draggedFlag[0] && safeIndex != currentTabIndex) {
                             currentTabIndex = safeIndex
                         }
-                        animateToValue(navToValue(currentTabIndex))
+                        animateToValue(navToValue(safeIndex))
                     },
                     onDrag = { _, dragAmount ->
                         if (dragAmount.x != 0f) draggedFlag[0] = true
