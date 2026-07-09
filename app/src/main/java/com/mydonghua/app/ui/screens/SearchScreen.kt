@@ -86,29 +86,29 @@ fun SearchScreen(
                 },
                 active = isSearchActive,
                 onActiveChange = { isSearchActive = it },
-                placeholder = { Text("Search shows, genres, studios...", fontSize = 14.sp) },
+                placeholder = { Text("Search shows, genres, studios...") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        modifier = Modifier.padding(start = 10.dp).size(22.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        modifier = Modifier.padding(start = 12.dp)
                     )
                 },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.clearQuery() }) {
+                        IconButton(
+                            onClick = { viewModel.clearQuery() },
+                            modifier = Modifier.clip(androidx.compose.foundation.shape.CircleShape)
+                        ) {
                             Text("✕", fontSize = 16.sp)
                         }
                     }
                 },
-                shape = RoundedCornerShape(28.dp),
-                colors = SearchBarDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                ),
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = 6.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 6.dp)
             ) {
                 suggestions.forEach { suggestion ->
                     when (suggestion) {
