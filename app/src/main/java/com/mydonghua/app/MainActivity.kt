@@ -72,9 +72,7 @@ class MainActivity : ComponentActivity() {
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
-            val tabRoutes = listOf("home", "airing", "complete", "stopped")
-            val showGlobalHeader = currentRoute in tabRoutes
-            val showNavBar = currentRoute in tabRoutes + "search"
+            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped", "search")
             val backdrop = rememberLayerBackdrop()
 
             androidx.activity.compose.BackHandler(enabled = true) {
@@ -135,8 +133,10 @@ class MainActivity : ComponentActivity() {
                             topBar = {
                                 if (showGlobalHeader) {
                                     GlassHeader(
+                                        currentRoute = currentRoute,
                                         isDark = settingsState.themeMode.lowercase() != "light",
                                         onSearchClick = { navController.navigate("search") },
+                                        onSearchBackClick = { navController.popBackStack() },
                                         onDrawerOpen = { isDrawerOpen = true },
                                     )
                                 }
@@ -373,7 +373,7 @@ class MainActivity : ComponentActivity() {
             }
             }
 
-                if (showNavBar) {
+                if (showGlobalHeader) {
                     LiquidGlassNavBar(
                         currentRoute = currentRoute,
                         isDark = settingsState.themeMode.lowercase() != "light",
@@ -384,11 +384,6 @@ class MainActivity : ComponentActivity() {
                                 "add_edit_show" -> navController.navigate("add_edit_show")
                                 else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
                             }
-                        },
-                        onSearchClick = { navController.navigate("search") },
-                        onSearchBackClick = {
-                            if (currentRoute == "search") navController.popBackStack()
-                            else navController.navigate("search")
                         },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
