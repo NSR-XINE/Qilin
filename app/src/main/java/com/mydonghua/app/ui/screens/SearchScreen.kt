@@ -61,7 +61,7 @@ fun SearchScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 4.dp, end = Spacing.lg, top = 4.dp, bottom = 2.dp),
+                    .padding(start = 4.dp, end = Spacing.lg, top = 2.dp, bottom = 0.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -108,7 +108,7 @@ fun SearchScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+                    .padding(horizontal = Spacing.lg, vertical = 6.dp)
             ) {
                 suggestions.forEach { suggestion ->
                     when (suggestion) {
@@ -144,7 +144,6 @@ fun SearchScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.xs))
             FilterChipsRow(
                 filters = filters,
                 onGenreClick = { showGenreDialog = true },
@@ -155,7 +154,7 @@ fun SearchScreen(
                 onClearAll = { viewModel.updateFilters(SearchFilters()) }
             )
 
-            Spacer(modifier = Modifier.height(Spacing.sm))
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (results.isEmpty()) {
                 Box(
@@ -314,7 +313,7 @@ private fun FilterChipsRow(
                 )
             }
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(3.dp))
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
