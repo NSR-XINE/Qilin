@@ -553,13 +553,6 @@ class DampedDragAnimation(
         }
     }
 
-    fun snapTo(value: Float) {
-        val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
-        animationScope.launch {
-            valueAnimation.snapTo(target)
-        }
-    }
-
     fun release() {
         animationScope.launch {
             withFrameNanos {}
