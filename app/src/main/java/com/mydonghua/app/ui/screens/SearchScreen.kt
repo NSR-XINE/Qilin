@@ -37,7 +37,6 @@ fun SearchScreen(
     onWatchClick: (String) -> Unit,
     onShowClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
-    onAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val query by viewModel.searchQuery.collectAsState()
@@ -57,19 +56,22 @@ fun SearchScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text("Search & Filters", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onAddClick) {
-                        Text("+", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Text("←", fontSize = 20.sp)
                 }
-            )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    "Search & Filters",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         },
         modifier = modifier
     ) { paddingValues ->

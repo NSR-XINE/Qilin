@@ -313,8 +313,7 @@ class MainActivity : ComponentActivity() {
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
-                                onNavigateBack = { navController.popBackStack() },
-                                onAddClick = { navController.navigate("add_edit_show") }
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         }
