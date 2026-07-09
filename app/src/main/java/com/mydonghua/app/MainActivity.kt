@@ -72,7 +72,9 @@ class MainActivity : ComponentActivity() {
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
-            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
+            val tabRoutes = listOf("home", "airing", "complete", "stopped")
+            val showGlobalHeader = currentRoute in tabRoutes
+            val showNavBar = currentRoute in tabRoutes + "search"
             val backdrop = rememberLayerBackdrop()
 
             androidx.activity.compose.BackHandler(enabled = true) {
@@ -371,7 +373,7 @@ class MainActivity : ComponentActivity() {
             }
             }
 
-                if (showGlobalHeader) {
+                if (showNavBar) {
                     LiquidGlassNavBar(
                         currentRoute = currentRoute,
                         isDark = settingsState.themeMode.lowercase() != "light",
@@ -382,6 +384,11 @@ class MainActivity : ComponentActivity() {
                                 "add_edit_show" -> navController.navigate("add_edit_show")
                                 else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
                             }
+                        },
+                        onSearchClick = { navController.navigate("search") },
+                        onSearchBackClick = {
+                            if (currentRoute == "search") navController.popBackStack()
+                            else navController.navigate("search")
                         },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)

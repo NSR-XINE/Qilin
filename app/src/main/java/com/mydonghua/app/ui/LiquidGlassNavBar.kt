@@ -2,23 +2,33 @@ package com.mydonghua.app.ui
 
 import android.graphics.Bitmap
 import android.os.SystemClock
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.BlendMode
@@ -72,6 +82,8 @@ fun LiquidGlassNavBar(
     isDark: Boolean,
     backdrop: Backdrop,
     onNavigate: (String) -> Unit,
+    onSearchClick: () -> Unit,
+    onSearchBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val layer = rememberGraphicsLayer()
@@ -100,6 +112,7 @@ fun LiquidGlassNavBar(
         }
     }
 
+    val isSearchMode = currentRoute == "search"
     val density = LocalDensity.current
     var barWidthPx by remember { mutableIntStateOf(0) }
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
@@ -112,6 +125,20 @@ fun LiquidGlassNavBar(
 
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
+
+    val searchBtnInteraction = remember { MutableInteractionSource() }
+    val isSearchBtnPressed by searchBtnInteraction.collectIsPressedAsState()
+    val searchBtnScale by animateFloatAsState(
+        targetValue = if (isSearchBtnPressed) 1.12f else 1f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        label = "searchBtnScale"
+    )
+
+    val searchTranslationX by animateFloatAsState(
+        targetValue = if (isSearchMode) -(barWidthPx / 2f - 32.dp.toPx()) else 0f,
+        animationSpec = tween(300),
+        label = "searchTx"
+    )
 
     Box(
         modifier = modifier
@@ -248,46 +275,90 @@ fun LiquidGlassNavBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             navRoutes.forEachIndexed { position, route ->
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    NavBarIcon(
-                        iconRes = when (route) {
-                            "home" -> R.drawable.ic_home
-                            "airing" -> R.drawable.ic_airing
-                            "complete" -> R.drawable.ic_complete
-                            else -> R.drawable.ic_stopped
-                        },
-                        selected = currentTabIndex == position,
-                        onClick = {
-                            currentTabIndex = position
-                            onNavigate(route)
-                        },
-                    )
+                AnimatedVisibility(
+                    visible = !isSearchMode,
+                    enter = fadeIn() + slideInHorizontally { -it / 2 },
+                    exit = fadeOut() + slideOutHorizontally { -it / 2 },
+                ) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        NavBarIcon(
+                            iconRes = when (route) {
+                                "home" -> R.drawable.ic_home
+                                "airing" -> R.drawable.ic_airing
+                                "complete" -> R.drawable.ic_complete
+                                else -> R.drawable.ic_stopped
+                            },
+                            selected = currentTabIndex == position,
+                            onClick = {
+                                currentTabIndex = position
+                                onNavigate(route)
+                            },
+                        )
+                    }
                 }
                 if (route == "airing") {
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                                    shape = CircleShape,
+                    AnimatedVisibility(
+                        visible = !isSearchMode,
+                        enter = fadeIn() + slideInHorizontally { -it / 2 },
+                        exit = fadeOut() + slideOutHorizontally { -it / 2 },
+                    ) {
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                                        shape = CircleShape,
+                                    )
+                                    .clickable(
+                                        interactionSource = null,
+                                        indication = null,
+                                    ) { onNavigate("add_edit_show") },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = "Add",
+                                    modifier = Modifier.size(28.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = null,
-                                ) { onNavigate("add_edit_show") },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = "Add",
-                                modifier = Modifier.size(28.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            }
                         }
                     }
                 }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            if (!isSearchMode) {
+                Spacer(Modifier.width(8.dp))
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .scale(searchBtnScale)
+                    .graphicsLayer { translationX = searchTranslationX }
+                    .clip(CircleShape)
+                    .background(
+                        color = Color.DarkGray.copy(alpha = 0.7f),
+                        shape = CircleShape,
+                    )
+                    .clickable(
+                        interactionSource = searchBtnInteraction,
+                        indication = null,
+                    ) {
+                        if (isSearchMode) onSearchBackClick() else onSearchClick()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Search,
+                    contentDescription = if (isSearchMode) "Back from search" else "Search",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp),
+                )
             }
         }
     }
