@@ -18,14 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.mydonghua.app.R
-import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ShowCard
 
@@ -55,7 +52,13 @@ fun SearchScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = {
+        modifier = modifier
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -64,22 +67,14 @@ fun SearchScreen(
             ) {
                 Text(
                     "←",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     modifier = Modifier
                         .clickable { onNavigateBack() }
-                        .padding(6.dp)
+                        .padding(4.dp)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text("Search & Filters", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("Search & Filters", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
-        },
-        modifier = modifier
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
             SearchBar(
                 query = query,
                 onQueryChange = { viewModel.searchQuery.value = it },
