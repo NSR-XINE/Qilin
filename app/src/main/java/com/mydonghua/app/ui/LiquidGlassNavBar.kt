@@ -186,9 +186,9 @@ fun LiquidGlassNavBar(
         LaunchedEffect(navIndex) {
             if (navIndex != currentTabIndex) {
                 currentTabIndex = navIndex
-            }
-            if (barWidthPx > 0) {
-                dampedDrag.animateToValue(navToValue(navIndex))
+                if (barWidthPx > 0) {
+                    dampedDrag.animateToValue(navToValue(navIndex))
+                }
             }
         }
 
