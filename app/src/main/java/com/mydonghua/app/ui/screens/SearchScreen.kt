@@ -59,18 +59,18 @@ fun SearchScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Text("←", fontSize = 20.sp)
-                }
-                Spacer(Modifier.width(4.dp))
                 Text(
-                    "Search & Filters",
+                    "←",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    modifier = Modifier
+                        .clickable { onNavigateBack() }
+                        .padding(6.dp)
                 )
+                Spacer(Modifier.width(4.dp))
+                Text("Search & Filters", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
         },
         modifier = modifier
