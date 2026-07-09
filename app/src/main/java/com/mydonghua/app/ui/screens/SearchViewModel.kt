@@ -39,6 +39,15 @@ class SearchViewModel @Inject constructor(
     private val allShows = showRepository.getAllShows()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val distinctGenres: StateFlow<List<String>> = allShows
+        .map { shows ->
+            shows.flatMap { it.genres?.split(",")?.map { g -> g.trim() } ?: emptyList() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+                .sorted()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val suggestions: StateFlow<List<SearchSuggestion>> = combine(
         searchQuery,
         allShows,

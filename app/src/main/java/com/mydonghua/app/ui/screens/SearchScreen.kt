@@ -2,27 +2,31 @@ package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import com.mydonghua.app.ui.Spacing
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ShowCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,18 +44,21 @@ fun SearchScreen(
     val suggestions by viewModel.suggestions.collectAsState()
     val results by viewModel.filteredShows.collectAsState()
     val filters by viewModel.activeFilters.collectAsState()
+    val genres by viewModel.distinctGenres.collectAsState()
     val context = LocalContext.current
 
-    var showFiltersSheet by remember { mutableStateOf(false) }
     var isSearchActive by remember { mutableStateOf(false) }
+    var showGenreDialog by remember { mutableStateOf(false) }
+    var showStudioDialog by remember { mutableStateOf(false) }
+    var showYearDialog by remember { mutableStateOf(false) }
+    var showRatingDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Search & Filters", fontWeight = FontWeight.Bold)
-                },
+                title = { Text("Search & Filters", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Text("←", fontSize = 24.sp)
@@ -60,14 +67,6 @@ fun SearchScreen(
                 actions = {
                     IconButton(onClick = onAddClick) {
                         Text("+", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    }
-                    IconButton(onClick = { showFiltersSheet = true }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_settings),
-                            contentDescription = "Show Filters",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
                     }
                 }
             )
@@ -79,7 +78,6 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Search Input Row
             SearchBar(
                 query = query,
                 onQueryChange = { viewModel.searchQuery.value = it },
@@ -89,62 +87,72 @@ fun SearchScreen(
                 },
                 active = isSearchActive,
                 onActiveChange = { isSearchActive = it },
-                placeholder = { Text("Search show titles, synopsis...") },
-                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(start = 8.dp).size(20.dp)) },
+                placeholder = { Text("Search by title, synopsis...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.padding(start = 8.dp).size(20.dp)
+                    )
+                },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearQuery() }) {
-                            Text("✕")
+                            Text("✕", fontSize = 16.sp)
                         }
                     }
                 },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             ) {
-                // Suggestions inside search bar overlay
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(suggestions) { suggestion ->
-                        when (suggestion) {
-                            is SearchSuggestion.Popular -> {
-                                SuggestionItem(
-                                    text = suggestion.text,
-                                    onClick = {
-                                        viewModel.selectQuery(suggestion.text)
-                                        isSearchActive = false
-                                    }
-                                )
-                            }
-                            is SearchSuggestion.Recent -> {
-                                SuggestionItem(
-                                    text = suggestion.text,
-                                    onClick = {
-                                        viewModel.selectQuery(suggestion.text)
-                                        isSearchActive = false
-                                    }
-                                )
-                            }
-                            is SearchSuggestion.ShowMatch -> {
-                                SuggestionItem(
-                                    text = suggestion.displayText,
-                                    onClick = {
-                                        viewModel.selectQuery(suggestion.displayText)
-                                        isSearchActive = false
-                                        onShowClick(suggestion.show.id)
-                                    }
-                                )
-                            }
+                suggestions.forEach { suggestion ->
+                    when (suggestion) {
+                        is SearchSuggestion.Popular -> {
+                            SuggestionItem(
+                                text = suggestion.text,
+                                onClick = {
+                                    viewModel.selectQuery(suggestion.text)
+                                    isSearchActive = false
+                                }
+                            )
+                        }
+                        is SearchSuggestion.Recent -> {
+                            SuggestionItem(
+                                text = suggestion.text,
+                                onClick = {
+                                    viewModel.selectQuery(suggestion.text)
+                                    isSearchActive = false
+                                }
+                            )
+                        }
+                        is SearchSuggestion.ShowMatch -> {
+                            SuggestionItem(
+                                text = suggestion.displayText,
+                                onClick = {
+                                    viewModel.selectQuery(suggestion.displayText)
+                                    isSearchActive = false
+                                    onShowClick(suggestion.show.id)
+                                }
+                            )
                         }
                     }
                 }
             }
 
+            FilterChipsRow(
+                filters = filters,
+                onGenreClick = { showGenreDialog = true },
+                onStudioClick = { showStudioDialog = true },
+                onYearClick = { showYearDialog = true },
+                onRatingClick = { showRatingDialog = true },
+                onSortClick = { showSortDialog = true },
+                onClearAll = { viewModel.updateFilters(SearchFilters()) }
+            )
+
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Active Filters Tags
-            ActiveFiltersTags(filters = filters, onClearFilters = { viewModel.updateFilters(SearchFilters()) })
-
-            // Results Grid list
             if (results.isEmpty()) {
                 Box(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -179,7 +187,6 @@ fun SearchScreen(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
-
                     items(results, key = { it.id }) { show ->
                         ShowCard(
                             show = show,
@@ -196,18 +203,58 @@ fun SearchScreen(
                 }
             }
         }
+    }
 
-        // Filter Sheet Dialog
-        if (showFiltersSheet) {
-            FilterBottomSheet(
-                currentFilters = filters,
-                onDismiss = { showFiltersSheet = false },
-                onApply = { newFilters ->
-                    viewModel.updateFilters(newFilters)
-                    showFiltersSheet = false
-                }
-            )
-        }
+    if (showGenreDialog) {
+        GenreFilterDialog(
+            genres = genres,
+            selected = filters.selectedGenre,
+            onDismiss = { showGenreDialog = false },
+            onApply = { genre ->
+                viewModel.updateFilters(filters.copy(selectedGenre = genre))
+                showGenreDialog = false
+            }
+        )
+    }
+    if (showStudioDialog) {
+        StudioFilterDialog(
+            initial = filters.selectedStudio ?: "",
+            onDismiss = { showStudioDialog = false },
+            onApply = { studio ->
+                viewModel.updateFilters(filters.copy(selectedStudio = studio.takeIf { it.isNotEmpty() }))
+                showStudioDialog = false
+            }
+        )
+    }
+    if (showYearDialog) {
+        YearFilterDialog(
+            initial = filters.selectedYear?.toString() ?: "",
+            onDismiss = { showYearDialog = false },
+            onApply = { year ->
+                viewModel.updateFilters(filters.copy(selectedYear = year.toIntOrNull()))
+                showYearDialog = false
+            }
+        )
+    }
+    if (showRatingDialog) {
+        RatingFilterDialog(
+            initial = filters.minRating.toFloat(),
+            onDismiss = { showRatingDialog = false },
+            onApply = { rating ->
+                viewModel.updateFilters(filters.copy(minRating = rating.toInt()))
+                showRatingDialog = false
+            }
+        )
+    }
+    if (showSortDialog) {
+        SortFilterDialog(
+            initial = filters.sortBy,
+            onDismiss = { showSortDialog = false },
+            onApply = { sort ->
+                viewModel.updateFilters(filters.copy(sortBy = sort))
+                showSortDialog = false
+            }
+        )
     }
 }
 
@@ -226,163 +273,365 @@ private fun SuggestionItem(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ActiveFiltersTags(filters: SearchFilters, onClearFilters: () -> Unit) {
-    val activeList = mutableListOf<String>()
-    filters.selectedGenre?.let { activeList.add("Genre: $it") }
-    filters.selectedStudio?.let { activeList.add("Studio: $it") }
-    filters.selectedYear?.let { activeList.add("Year: $it") }
-    if (filters.minRating > 0) activeList.add("Rating >= ${filters.minRating}")
-    if (filters.maxEpisodes > 0) activeList.add("Max Ep: ${filters.maxEpisodes}")
-    if (filters.sortBy != "alphabetical") activeList.add("Sort: ${filters.sortBy.uppercase()}")
+private fun FilterChipsRow(
+    filters: SearchFilters,
+    onGenreClick: () -> Unit,
+    onStudioClick: () -> Unit,
+    onYearClick: () -> Unit,
+    onRatingClick: () -> Unit,
+    onSortClick: () -> Unit,
+    onClearAll: () -> Unit
+) {
+    val hasActiveFilters = filters.selectedGenre != null || filters.selectedStudio != null ||
+        filters.selectedYear != null || filters.minRating > 0 || filters.sortBy != "alphabetical"
 
-    if (activeList.isNotEmpty()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-        ) {
-            Text("Filters:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            LazyRow(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(activeList) { tag ->
-                    Box(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(Spacing.sm))
-                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-                    ) {
-                        Text(tag, fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
-            Text(
-                text = "Clear ✕",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.clickable { onClearFilters() }
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        item {
+            FilterChipButton(
+                label = filters.selectedGenre ?: "Genre",
+                isSelected = filters.selectedGenre != null,
+                onClick = onGenreClick
             )
+        }
+        item {
+            FilterChipButton(
+                label = filters.selectedStudio ?: "Studio",
+                isSelected = filters.selectedStudio != null,
+                onClick = onStudioClick
+            )
+        }
+        item {
+            FilterChipButton(
+                label = filters.selectedYear?.toString() ?: "Year",
+                isSelected = filters.selectedYear != null,
+                onClick = onYearClick
+            )
+        }
+        item {
+            FilterChipButton(
+                label = if (filters.minRating > 0) "≥${filters.minRating}" else "Rating",
+                isSelected = filters.minRating > 0,
+                onClick = onRatingClick
+            )
+        }
+        item {
+            val sortLabel = when (filters.sortBy) {
+                "countdown" -> "Countdown"
+                "progress" -> "Progress"
+                "last_updated" -> "Updated"
+                else -> "Sort"
+            }
+            FilterChipButton(
+                label = sortLabel,
+                isSelected = filters.sortBy != "alphabetical",
+                onClick = onSortClick
+            )
+        }
+        if (hasActiveFilters) {
+            item {
+                Text(
+                    text = "Clear",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .clickable { onClearAll() }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                )
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilterBottomSheet(
-    currentFilters: SearchFilters,
-    onDismiss: () -> Unit,
-    onApply: (SearchFilters) -> Unit
+private fun FilterChipButton(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
-    var genre by remember { mutableStateOf(currentFilters.selectedGenre ?: "") }
-    var studio by remember { mutableStateOf(currentFilters.selectedStudio ?: "") }
-    var year by remember { mutableStateOf(currentFilters.selectedYear?.toString() ?: "") }
-    var minRating by remember { mutableStateOf(currentFilters.minRating.toFloat()) }
-    var maxEpisodes by remember { mutableStateOf(currentFilters.maxEpisodes.toString()) }
-    var sortBy by remember { mutableStateOf(currentFilters.sortBy) }
+    val bg = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    else MaterialTheme.colorScheme.surfaceVariant
+    val textColor = if (isSelected) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.onSurfaceVariant
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(bg)
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Spacing.lg)
-                .padding(bottom = Spacing.xxxl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
-        ) {
-            Text("Advanced Filtering Options", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+            color = textColor
+        )
+    }
+}
 
-            OutlinedTextField(
-                value = genre,
-                onValueChange = { genre = it },
-                label = { Text("Filter by Genre") },
-                modifier = Modifier.fillMaxWidth()
-            )
+@Composable
+private fun GenreFilterDialog(
+    genres: List<String>,
+    selected: String?,
+    onDismiss: () -> Unit,
+    onApply: (String?) -> Unit
+) {
+    var localSelected by remember { mutableStateOf(selected) }
 
-            OutlinedTextField(
-                value = studio,
-                onValueChange = { studio = it },
-                label = { Text("Filter by Studio") },
-                modifier = Modifier.fillMaxWidth()
-            )
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text("Filter by Genre", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(Spacing.md))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-            ) {
-                OutlinedTextField(
-                    value = year,
-                    onValueChange = { year = it },
-                    label = { Text("Release Year") },
-                    modifier = Modifier.weight(1f)
-                )
+                if (genres.isEmpty()) {
+                    Text(
+                        "No genres found",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        genres.forEach { genre ->
+                            val isGenreSelected = localSelected == genre
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(
+                                        if (isGenreSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                        else Color.Transparent
+                                    )
+                                    .clickable {
+                                        localSelected = if (isGenreSelected) null else genre
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = genre,
+                                    fontWeight = if (isGenreSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isGenreSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (isGenreSelected) {
+                                    Text(
+                                        "✓",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
-                OutlinedTextField(
-                    value = maxEpisodes,
-                    onValueChange = { maxEpisodes = it },
-                    label = { Text("Max Episodes") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-
-
-            // Sorting Selection row
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Sorting Order Mode", fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = Spacing.xs + 2.dp))
+                Spacer(Modifier.height(Spacing.lg))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    listOf("alphabetical", "countdown", "progress", "last_updated").forEach { mode ->
-                        val isSelected = sortBy == mode
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                                .clickable { sortBy = mode }
-                                .padding(vertical = Spacing.sm),
-                            contentAlignment = Alignment.Center
-                        ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.width(Spacing.sm))
+                    Button(onClick = { onApply(localSelected) }) { Text("Apply") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudioFilterDialog(
+    initial: String,
+    onDismiss: () -> Unit,
+    onApply: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(initial) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text("Filter by Studio", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(Spacing.md))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("Studio name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(Spacing.lg))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.width(Spacing.sm))
+                    Button(onClick = { onApply(text) }) { Text("Apply") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun YearFilterDialog(
+    initial: String,
+    onDismiss: () -> Unit,
+    onApply: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(initial) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text("Filter by Year", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(Spacing.md))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it.filter { c -> c.isDigit() }.take(4) },
+                    label = { Text("Release year (e.g. 2024)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(Spacing.lg))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.width(Spacing.sm))
+                    Button(onClick = { onApply(text) }) { Text("Apply") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RatingFilterDialog(
+    initial: Float,
+    onDismiss: () -> Unit,
+    onApply: (Float) -> Unit
+) {
+    var sliderValue by remember { mutableStateOf(initial) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text("Minimum Rating", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(Spacing.lg))
+                Text(
+                    text = if (sliderValue > 0) "≥ ${sliderValue.toInt()}" else "No minimum",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(Spacing.md))
+                Slider(
+                    value = sliderValue,
+                    onValueChange = { sliderValue = it },
+                    valueRange = 0f..100f,
+                    steps = 19,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("0", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    Text("100", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                }
+                Spacer(Modifier.height(Spacing.lg))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.width(Spacing.sm))
+                    Button(onClick = { onApply(sliderValue) }) { Text("Apply") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortFilterDialog(
+    initial: String,
+    onDismiss: () -> Unit,
+    onApply: (String) -> Unit
+) {
+    var selected by remember { mutableStateOf(initial) }
+    val options = listOf(
+        "alphabetical" to "Alphabetical",
+        "countdown" to "Countdown (next airing)",
+        "progress" to "Progress (most episodes)",
+        "last_updated" to "Last Updated"
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+            Column(modifier = Modifier.padding(Spacing.lg)) {
+                Text("Sort Order", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(Spacing.md))
+                options.forEach { (value, label) ->
+                    val isSelected = selected == value
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                else Color.Transparent
+                            )
+                            .clickable { selected = value }
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = label,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isSelected) {
                             Text(
-                                text = mode.substring(0, 4).uppercase(),
-                                fontSize = 10.sp,
+                                "✓",
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                fontSize = 16.sp
                             )
                         }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(Spacing.md))
-
-            Button(
-                onClick = {
-                    onApply(
-                        SearchFilters(
-                            selectedGenre = genre.takeIf { it.isNotEmpty() },
-                            selectedStudio = studio.takeIf { it.isNotEmpty() },
-                            selectedYear = year.toIntOrNull(),
-                            minRating = minRating.toInt(),
-                            maxEpisodes = maxEpisodes.toIntOrNull() ?: 0,
-                            sortBy = sortBy
-                        )
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(Spacing.sm)
-            ) {
-                Text("Apply Search Filters", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(Spacing.lg))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.width(Spacing.sm))
+                    Button(onClick = { onApply(selected) }) { Text("Apply") }
+                }
             }
         }
     }
