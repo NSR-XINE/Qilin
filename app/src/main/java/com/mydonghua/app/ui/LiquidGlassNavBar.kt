@@ -172,6 +172,7 @@ fun LiquidGlassNavBar(
                             if (safeIndex != currentTabIndex) {
                                 currentTabIndex = safeIndex
                             }
+                            updateValue(navToValue(currentTabIndex))
                         }
                     },
                     onDrag = { _, dragAmount ->
@@ -549,6 +550,13 @@ class DampedDragAnimation(
             launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
             launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
             launch { scaleYAnimation.animateTo(pressedScale, scaleYAnimationSpec) }
+        }
+    }
+
+    fun snapTo(value: Float) {
+        val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+        animationScope.launch {
+            valueAnimation.snapTo(target)
         }
     }
 
