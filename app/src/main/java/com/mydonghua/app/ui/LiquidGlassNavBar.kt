@@ -256,43 +256,46 @@ fun LiquidGlassNavBar(
         Row(
             modifier = Modifier.matchParentSize().then(dampedDrag.modifier),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             navRoutes.forEachIndexed { position, route ->
-                NavBarIcon(
-                    iconRes = when (route) {
-                        "home" -> R.drawable.ic_home
-                        "airing" -> R.drawable.ic_airing
-                        "complete" -> R.drawable.ic_complete
-                        else -> R.drawable.ic_stopped
-                    },
-                    selected = currentTabIndex == position,
-                    onClick = {
-                        currentTabIndex = position
-                        onNavigate(route)
-                    },
-                )
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    NavBarIcon(
+                        iconRes = when (route) {
+                            "home" -> R.drawable.ic_home
+                            "airing" -> R.drawable.ic_airing
+                            "complete" -> R.drawable.ic_complete
+                            else -> R.drawable.ic_stopped
+                        },
+                        selected = currentTabIndex == position,
+                        onClick = {
+                            currentTabIndex = position
+                            onNavigate(route)
+                        },
+                    )
+                }
                 if (route == "airing") {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                                shape = CircleShape,
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                                    shape = CircleShape,
+                                )
+                                .clickable(
+                                    interactionSource = null,
+                                    indication = null,
+                                ) { onNavigate("add_edit_show") },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Add",
+                                modifier = Modifier.size(28.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            .clickable(
-                                interactionSource = null,
-                                indication = null,
-                            ) { onNavigate("add_edit_show") },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Add,
-                            contentDescription = "Add",
-                            modifier = Modifier.size(28.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        }
                     }
                 }
             }
