@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -62,18 +61,21 @@ fun SearchScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .padding(start = 4.dp, end = Spacing.lg, top = 4.dp, bottom = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     "←",
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     modifier = Modifier
                         .clickable { onNavigateBack() }
-                        .padding(4.dp)
+                        .padding(6.dp)
                 )
-                Spacer(Modifier.width(4.dp))
-                Text("Search & Filters", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.width(6.dp))
+                Column {
+                    Text("Search", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Browse your collection", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f))
+                }
             }
             SearchBar(
                 query = query,
@@ -84,12 +86,13 @@ fun SearchScreen(
                 },
                 active = isSearchActive,
                 onActiveChange = { isSearchActive = it },
-                placeholder = { Text("Search by title, synopsis...") },
+                placeholder = { Text("Search shows, genres, studios...", fontSize = 14.sp) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        modifier = Modifier.padding(start = 8.dp).size(20.dp)
+                        modifier = Modifier.padding(start = 10.dp).size(22.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 },
                 trailingIcon = {
@@ -99,7 +102,10 @@ fun SearchScreen(
                         }
                     }
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
@@ -138,6 +144,7 @@ fun SearchScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(Spacing.xs))
             FilterChipsRow(
                 filters = filters,
                 onGenreClick = { showGenreDialog = true },
@@ -282,65 +289,78 @@ private fun FilterChipsRow(
     val hasActiveFilters = filters.selectedGenre != null || filters.selectedStudio != null ||
         filters.selectedYear != null || filters.minRating > 0 || filters.sortBy != "alphabetical"
 
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        item {
-            FilterChipButton(
-                label = filters.selectedGenre ?: "Genre",
-                isSelected = filters.selectedGenre != null,
-                onClick = onGenreClick
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Filters",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                letterSpacing = 0.5.sp
             )
-        }
-        item {
-            FilterChipButton(
-                label = filters.selectedStudio ?: "Studio",
-                isSelected = filters.selectedStudio != null,
-                onClick = onStudioClick
-            )
-        }
-        item {
-            FilterChipButton(
-                label = filters.selectedYear?.toString() ?: "Year",
-                isSelected = filters.selectedYear != null,
-                onClick = onYearClick
-            )
-        }
-        item {
-            FilterChipButton(
-                label = if (filters.minRating > 0) "≥${filters.minRating}" else "Rating",
-                isSelected = filters.minRating > 0,
-                onClick = onRatingClick
-            )
-        }
-        item {
-            val sortLabel = when (filters.sortBy) {
-                "countdown" -> "Countdown"
-                "progress" -> "Progress"
-                "last_updated" -> "Updated"
-                else -> "Sort"
-            }
-            FilterChipButton(
-                label = sortLabel,
-                isSelected = filters.sortBy != "alphabetical",
-                onClick = onSortClick
-            )
-        }
-        if (hasActiveFilters) {
-            item {
+            if (hasActiveFilters) {
+                Spacer(Modifier.width(Spacing.sm))
                 Text(
-                    text = "Clear",
-                    fontSize = 12.sp,
+                    text = "Clear all",
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .clickable { onClearAll() }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                    modifier = Modifier.clickable { onClearAll() }
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item {
+                FilterChipButton(
+                    label = filters.selectedGenre ?: "Genre",
+                    isSelected = filters.selectedGenre != null,
+                    onClick = onGenreClick
+                )
+            }
+            item {
+                FilterChipButton(
+                    label = filters.selectedStudio ?: "Studio",
+                    isSelected = filters.selectedStudio != null,
+                    onClick = onStudioClick
+                )
+            }
+            item {
+                FilterChipButton(
+                    label = filters.selectedYear?.toString() ?: "Year",
+                    isSelected = filters.selectedYear != null,
+                    onClick = onYearClick
+                )
+            }
+            item {
+                FilterChipButton(
+                    label = if (filters.minRating > 0) "${filters.minRating}+" else "Rating",
+                    isSelected = filters.minRating > 0,
+                    onClick = onRatingClick
+                )
+            }
+            item {
+                val sortLabel = when (filters.sortBy) {
+                    "countdown" -> "Countdown"
+                    "progress" -> "Progress"
+                    "last_updated" -> "Updated"
+                    else -> "Sort"
+                }
+                FilterChipButton(
+                    label = sortLabel,
+                    isSelected = filters.sortBy != "alphabetical",
+                    onClick = onSortClick
                 )
             }
         }
@@ -353,24 +373,33 @@ private fun FilterChipButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val bg = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    val bg = if (isSelected) MaterialTheme.colorScheme.primary
     else MaterialTheme.colorScheme.surfaceVariant
-    val textColor = if (isSelected) MaterialTheme.colorScheme.primary
+    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimary
     else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(18.dp))
             .background(bg)
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .padding(start = 12.dp, end = if (isSelected) 10.dp else 12.dp, top = 7.dp, bottom = 7.dp)
     ) {
-        Text(
-            text = label,
-            fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-            color = textColor
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor
+            )
+            Text(
+                text = if (isSelected) "✕" else "+",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        }
     }
 }
 
