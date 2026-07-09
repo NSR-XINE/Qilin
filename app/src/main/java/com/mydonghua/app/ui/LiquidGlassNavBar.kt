@@ -157,7 +157,7 @@ fun LiquidGlassNavBar(
                     valueRange = 0f..totalSlots,
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
-                    pressedScale = 76f / 56f,
+                    pressedScale = 60f / 56f,
                     onDragStarted = { draggedFlag[0] = false },
                     onDragStopped = {
                         val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
