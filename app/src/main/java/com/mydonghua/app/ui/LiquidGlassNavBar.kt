@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -112,8 +111,6 @@ fun LiquidGlassNavBar(
     val searchLayer = rememberGraphicsLayer()
     val searchInteraction = rememberGlassInteraction()
     val density = LocalDensity.current
-    var containerWidthPx by remember { mutableFloatStateOf(0f) }
-    val currentIsSearchOpen by rememberUpdatedState(isSearchOpen)
     var barWidthPx by remember { mutableIntStateOf(0) }
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
     val totalSlots = 5f
@@ -126,48 +123,45 @@ fun LiquidGlassNavBar(
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
 
-    val searchOffsetX by animateFloatAsState(
-        targetValue = if (isSearchOpen) 0f else (containerWidthPx - with(density) { 56.dp.toPx() }).coerceAtLeast(0f),
-        animationSpec = tween(300),
-        label = "searchOffset",
-    )
-
-    Box(
+    Row(
         modifier = modifier
             .navigationBarsPadding()
             .wrapContentHeight()
-            .onSizeChanged { if (!currentIsSearchOpen) containerWidthPx = it.width.toFloat() },
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        AnimatedVisibility(
-            visible = !isSearchOpen,
-            enter = expandHorizontally(expandFrom = Alignment.Start, animationSpec = tween(300)) + fadeIn(tween(200)),
-            exit = shrinkHorizontally(shrinkTowards = Alignment.Start, animationSpec = tween(300)) + fadeOut(tween(200)),
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(64.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .drawBackdropCustomShape(
+                    backdrop = backdrop,
+                    layer = layer,
+                    luminanceAnimation = luminanceAnimation.value,
+                    shape = RoundedCornerShape(30.dp),
+                    interaction = barInteraction,
+                    pressedScale = 1.12f,
+                )
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(30.dp),
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(30.dp),
+                )
+                .onSizeChanged { barWidthPx = it.width }
+                .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+            contentAlignment = Alignment.CenterStart,
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(30.dp))
-                    .drawBackdropCustomShape(
-                        backdrop = backdrop,
-                        layer = layer,
-                        luminanceAnimation = luminanceAnimation.value,
-                        shape = RoundedCornerShape(30.dp),
-                        interaction = barInteraction,
-                        pressedScale = 1.12f,
-                    )
-                    .background(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(30.dp),
-                    )
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(30.dp),
-                    )
-                    .onSizeChanged { barWidthPx = it.width }
-                    .pointerInput(barInteraction) { barInteraction.detectPress(this) },
-                contentAlignment = Alignment.CenterStart,
+            AnimatedVisibility(
+                visible = !isSearchOpen,
+                enter = expandHorizontally(expandFrom = Alignment.Start, animationSpec = tween(300)) + fadeIn(tween(200)),
+                exit = shrinkHorizontally(shrinkTowards = Alignment.Start, animationSpec = tween(300)) + fadeOut(tween(200)),
             ) {
             val dampedDrag =
                 remember(coroutineScope, navRoutes.size) {
@@ -325,9 +319,7 @@ fun LiquidGlassNavBar(
 
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
                 .size(48.dp)
-                .graphicsLayer { translationX = searchOffsetX }
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
                     layer = searchLayer,
