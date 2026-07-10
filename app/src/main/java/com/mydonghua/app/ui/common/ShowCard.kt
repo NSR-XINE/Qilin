@@ -131,9 +131,9 @@ fun ShowCard(
                                 "stopped" -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
                                 else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                             },
-                            shape = RoundedCornerShape(6.dp)
+                            shape = RoundedCornerShape(Spacing.sm)
                         )
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                        .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                 ) {
                     Text(
                         text = when (show.status) {
@@ -195,7 +195,7 @@ fun ShowCard(
                     )
 
                     if (show.totalEp > 0) {
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         LinearProgressIndicator(
                             progress = { (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f) },
                             modifier = Modifier
@@ -205,7 +205,7 @@ fun ShowCard(
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xs))
                         Text(
                             text = "Ep ${show.currentEp}/${show.totalEp}",
                             fontSize = 10.sp,
@@ -215,7 +215,7 @@ fun ShowCard(
                 }
 
                 // Actions
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     IconButton(
                         onClick = { onFavoriteToggle(show) },
                         modifier = Modifier.size(36.dp)

@@ -68,7 +68,7 @@ fun CollectionsScreen(
                         text = "Edit a show and set its Collection field to start grouping them.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(horizontal = 32.dp),
+                        modifier = Modifier.padding(horizontal = Spacing.xxxl),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
@@ -78,23 +78,23 @@ fun CollectionsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 32.dp)
+                    .padding(horizontal = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+                contentPadding = PaddingValues(bottom = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm })
             ) {
                 items(sortedCollections) { (collectionName, showsList) ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(Spacing.sm))
                             .background(MaterialTheme.colorScheme.surface)
                             .border(
                                 width = 0.5.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(Spacing.sm)
                             )
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         // Collection Title Header Row
                         Row(
@@ -118,7 +118,7 @@ fun CollectionsScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(Spacing.sm))
                                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                             ) {
                                 Text(
                                     text = "${showsList.size} shows",
@@ -132,7 +132,7 @@ fun CollectionsScreen(
                         // Shows items list
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
                             showsList.forEach { show ->
                                 Row(
@@ -146,9 +146,9 @@ fun CollectionsScreen(
                                             shape = RoundedCornerShape(Spacing.sm)
                                         )
                                         .clickable { onShowClick(show.id) }
-                                        .padding(6.dp),
+                                        .padding(Spacing.sm),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                                 ) {
                                     // Mini thumbnail
                                     Box(
@@ -194,7 +194,7 @@ fun CollectionsScreen(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(Spacing.sm))
                                             .background(statusColor.copy(alpha = 0.15f))
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                                     ) {
                                         Text(
                                             text = show.status.uppercase(),

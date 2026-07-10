@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ShowCard
@@ -48,7 +49,7 @@ fun FavoritesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(top = Spacing.sm, bottom = 100.dp)
+                contentPadding = PaddingValues(top = Spacing.sm, bottom = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm })
             ) {
                 items(shows, key = { it.id }) { show ->
                     ShowCard(

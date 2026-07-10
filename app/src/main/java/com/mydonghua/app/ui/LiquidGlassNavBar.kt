@@ -134,6 +134,7 @@ fun LiquidGlassNavBar(
 
     Box(
         modifier = modifier
+            .navigationBarsPadding()
             .wrapContentHeight()
             .onSizeChanged { if (!currentIsSearchOpen) containerWidthPx = it.width.toFloat() },
     ) {

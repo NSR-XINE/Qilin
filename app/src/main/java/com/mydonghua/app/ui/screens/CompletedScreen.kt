@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ShowCard
 
@@ -50,7 +51,7 @@ fun CompletedScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(top = Spacing.sm, bottom = 100.dp)
+                contentPadding = PaddingValues(top = Spacing.sm, bottom = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm })
             ) {
                 item {
                     Row(

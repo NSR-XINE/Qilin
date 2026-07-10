@@ -149,12 +149,12 @@ fun ShowDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(Spacing.md + 2.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
             ) {
                 // Status chips with glass
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm + 2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     GlassChip(
                         label = "Status",
@@ -194,7 +194,7 @@ fun ShowDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
+                                Spacer(modifier = Modifier.height(Spacing.xs))
                                 Text(
                                     text = if (countdownTime.airingNow) "Available now"
                                     else "Ep ${show.currentEp + 1} • ${show.releaseDay}",
@@ -228,7 +228,7 @@ fun ShowDetailScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(Spacing.xs))
                             val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
                             Text(
                                 text = "Episode ${show.currentEp}$totalStr",
@@ -237,7 +237,7 @@ fun ShowDetailScreen(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                             IconButton(
                                 onClick = { viewModel.decrementEpisode(show) },
                                 modifier = Modifier
@@ -268,7 +268,7 @@ fun ShowDetailScreen(
                 if (!show.notes.isNullOrEmpty()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text("Synopsis", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.height(Spacing.xs + 2.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         Text(
                             text = show.notes!!,
                             fontSize = 14.sp,
@@ -281,7 +281,7 @@ fun ShowDetailScreen(
                 // Meta
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     if (!show.studio.isNullOrEmpty()) Meta(label = "Studio", value = show.studio!!)
                     if (show.releaseYear != null && show.releaseYear!! > 0) Meta(label = "Year", value = show.releaseYear.toString())
@@ -295,11 +295,11 @@ fun ShowDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(Spacing.md)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_tv),
@@ -328,11 +328,11 @@ private fun GlassChip(label: String, value: String, modifier: Modifier = Modifie
                 color = tint.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(Spacing.md)
             )
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.md)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(Spacing.xs))
             Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -342,7 +342,7 @@ private fun GlassChip(label: String, value: String, modifier: Modifier = Modifie
 private fun Meta(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         Text("$label:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Text(value, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)

@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.Spacing
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,22 +80,22 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = Spacing.lg)
                 .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
             // Theme Mode Section
             SectionHeader("Theme Mode Options")
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 listOf("light" to "Light Mode", "dark" to "Dark Mode", "amoled" to "AMOLED Black").forEach { (modeKey, modeName) ->
                     val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(Spacing.sm))
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                 else MaterialTheme.colorScheme.surface
@@ -102,10 +103,10 @@ fun SettingsScreen(
                             .border(
                                 width = 0.5.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(Spacing.sm)
                             )
                             .clickable { viewModel.setThemeMode(modeKey) }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -129,8 +130,8 @@ fun SettingsScreen(
                 val rows = accentPresets.chunked(3)
                 rows.forEach { rowItems ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         rowItems.forEach { (accentKey, accentName) ->
                             val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
@@ -145,10 +146,10 @@ fun SettingsScreen(
                                     .border(
                                         width = 0.5.dp,
                                         color = MaterialTheme.colorScheme.outlineVariant,
-                                        shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(Spacing.sm)
                                     )
                                     .clickable { viewModel.setAccentColor(accentKey) }
-                                    .padding(vertical = 12.dp),
+                                    .padding(vertical = Spacing.md),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -174,15 +175,15 @@ fun SettingsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(Spacing.sm))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(Spacing.sm)
                     )
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 TogglePreferenceItem(
                     title = "Show Hero Countdown Banner",
@@ -214,15 +215,15 @@ fun SettingsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(Spacing.sm))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(Spacing.sm)
                     )
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 SettingsActionItem("Detailed Stats & Analytics", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
                 Divider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -236,8 +237,8 @@ fun SettingsScreen(
             // Backup & Import/Export
             SectionHeader("Data Backups Management")
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.xxxl),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 Button(
                     onClick = {
@@ -284,7 +285,7 @@ private fun SectionHeader(title: String) {
         fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp)
+        modifier = Modifier.padding(top = Spacing.sm)
     )
 }
 
@@ -297,7 +298,7 @@ private fun TogglePreferenceItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -323,12 +324,12 @@ private fun SettingsActionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 12.dp),
+            .padding(horizontal = Spacing.sm, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (iconRes != null) {

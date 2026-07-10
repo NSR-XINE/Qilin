@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -49,11 +50,13 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val bottomInset = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Transparent),
-        contentPadding = PaddingValues(bottom = 100.dp)
+        contentPadding = PaddingValues(bottom = bottomInset)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }
@@ -137,7 +140,7 @@ fun HeroBanner(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Spacing.xs))
             Text(
                 text = if (remainingTime.airingNow) "New episode available now"
                 else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
@@ -145,8 +148,8 @@ fun HeroBanner(
                 color = Color.White.copy(alpha = 0.8f),
                 maxLines = 1
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Spacer(modifier = Modifier.height(Spacing.md))
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 BannerTimeBox(value = remainingTime.days, label = "d")
                 BannerTimeBox(value = remainingTime.hours, label = "h")
                 BannerTimeBox(value = remainingTime.minutes, label = "m")
@@ -164,7 +167,7 @@ private fun BannerTimeBox(value: Long, label: String) {
             .size(48.dp)
             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
     ) {
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
         Text(
             text = String.format("%02d", value),
             fontSize = 18.sp,
@@ -188,7 +191,7 @@ fun SectionHeader(title: String) {
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(start = Spacing.lg, top = 24.dp, bottom = Spacing.md)
+        modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xxl, bottom = Spacing.md)
     )
 }
 
@@ -373,8 +376,8 @@ fun WeeklyScheduleSection(
         Column(modifier = Modifier.fillMaxWidth()) {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                contentPadding = PaddingValues(horizontal = Spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 items(days) { day ->
                     val isSelected = day == selectedDay
@@ -401,13 +404,13 @@ fun WeeklyScheduleSection(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             if (filteredShows.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(Spacing.xxl),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -420,7 +423,7 @@ fun WeeklyScheduleSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
+                        .padding(horizontal = Spacing.xs)
                         .padding(bottom = Spacing.sm)
                 ) {
                     filteredShows.forEach { show ->
@@ -429,7 +432,7 @@ fun WeeklyScheduleSection(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable { onShowClick(show.id) }
-                                .padding(horizontal = Spacing.sm, vertical = 10.dp),
+                                .padding(horizontal = Spacing.sm, vertical = Spacing.md),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.StatsCalculator
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.Spacing
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,9 +64,9 @@ fun StatsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = Spacing.lg)
                 .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             // First 8-card grid
             Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
@@ -101,15 +102,15 @@ fun StatsScreen(
                 Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     stats.topGenres.forEach { (genre, count) ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(RoundedCornerShape(Spacing.sm))
                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                         ) {
                             Text(
                                 text = "$genre ($count)",
@@ -127,15 +128,15 @@ fun StatsScreen(
                 Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     stats.topStudios.forEach { (studio, count) ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(RoundedCornerShape(Spacing.sm))
                                 .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                         ) {
                             Text(
                                 text = "$studio ($count)",
@@ -156,15 +157,15 @@ fun StatsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(Spacing.sm))
                         .background(MaterialTheme.colorScheme.surface)
                         .border(
                             width = 0.5.dp,
                             color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(Spacing.sm)
                         )
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     thisWeekShows.forEach { show ->
                         val isToday = show.releaseDay == todayName
@@ -174,9 +175,9 @@ fun StatsScreen(
                                 .background(
                                     if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                     else Color.Transparent,
-                                    RoundedCornerShape(4.dp)
+                                    RoundedCornerShape(Spacing.xs)
                                 )
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                                .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -206,7 +207,7 @@ fun StatsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Spacing.xxxl))
         }
     }
 }
@@ -222,12 +223,12 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
     val chunked = items.chunked(columns)
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         chunked.forEach { rowItems ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 rowItems.forEach { item ->
                     Box(
@@ -240,7 +241,7 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                                 color = MaterialTheme.colorScheme.outlineVariant,
                                 shape = RoundedCornerShape(8.dp)
                             )
-                            .padding(12.dp)
+                            .padding(Spacing.md)
                     ) {
                         Column {
                             Text(item.value, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)

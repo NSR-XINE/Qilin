@@ -81,7 +81,7 @@ fun GlassSection(
                     shape = RoundedCornerShape(Spacing.md)
                 )
         )
-        Box(modifier = Modifier.padding(Spacing.sm + 2.dp)) {
+        Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
     }

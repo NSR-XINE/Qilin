@@ -356,10 +356,10 @@ fun AddEditShowScreen(
                                     }
                                 },
                                 shape = RoundedCornerShape(Spacing.sm),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.sm)
                             ) {
                                 Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
+                                Spacer(Modifier.width(Spacing.xs))
                                 Text("Scrape", fontSize = 13.sp)
                             }
 

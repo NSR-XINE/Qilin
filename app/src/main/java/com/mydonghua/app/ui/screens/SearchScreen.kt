@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,7 +78,7 @@ fun SearchScreen(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        modifier = Modifier.padding(start = 12.dp)
+                        modifier = Modifier.padding(start = Spacing.md)
                     )
                 },
                 trailingIcon = {
@@ -93,8 +94,8 @@ fun SearchScreen(
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 6.dp)
+                    .padding(horizontal = Spacing.lg)
+                    .padding(top = Spacing.xs)
             ) {
                 suggestions.forEach { suggestion ->
                     when (suggestion) {
@@ -140,7 +141,7 @@ fun SearchScreen(
                 onClearAll = { viewModel.updateFilters(SearchFilters()) }
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Spacing.xs))
 
             if (results.isEmpty()) {
                 Box(
@@ -174,7 +175,7 @@ fun SearchScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = 100.dp)
+                    contentPadding = PaddingValues(bottom = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm })
                 ) {
                     items(results, key = { it.id }) { show ->
                         ShowCard(
@@ -299,7 +300,7 @@ private fun FilterChipsRow(
                 )
             }
         }
-        Spacer(Modifier.height(3.dp))
+        Spacer(Modifier.height(Spacing.xs))
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -368,7 +369,7 @@ private fun FilterChipButton(
             .clip(RoundedCornerShape(18.dp))
             .background(bg)
             .clickable { onClick() }
-            .padding(start = 12.dp, end = if (isSelected) 10.dp else 12.dp, top = 7.dp, bottom = 7.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
@@ -413,14 +414,14 @@ private fun GenreFilterDialog(
                         modifier = Modifier
                             .heightIn(max = 300.dp)
                             .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         genres.forEach { genre ->
                             val isGenreSelected = localSelected == genre
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(Spacing.md))
                                     .background(
                                         if (isGenreSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                         else Color.Transparent
@@ -428,7 +429,7 @@ private fun GenreFilterDialog(
                                     .clickable {
                                         localSelected = if (isGenreSelected) null else genre
                                     }
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    .padding(horizontal = Spacing.md, vertical = Spacing.md),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -608,13 +609,13 @@ private fun SortFilterDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(Spacing.md))
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                 else Color.Transparent
                             )
                             .clickable { selected = value }
-                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                            .padding(horizontal = Spacing.md, vertical = Spacing.md),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
