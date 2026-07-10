@@ -72,7 +72,8 @@ class MainActivity : ComponentActivity() {
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
-            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped", "search")
+            var isSearchOpen by remember { mutableStateOf(false) }
+            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
             val backdrop = rememberLayerBackdrop()
 
             androidx.activity.compose.BackHandler(enabled = true) {
@@ -133,10 +134,10 @@ class MainActivity : ComponentActivity() {
                             topBar = {
                                 if (showGlobalHeader) {
                                     GlassHeader(
-                                        currentRoute = currentRoute,
+                                        isSearchOpen = isSearchOpen,
                                         isDark = settingsState.themeMode.lowercase() != "light",
-                                        onSearchClick = { navController.navigate("search") },
-                                        onSearchBackClick = { navController.popBackStack() },
+                                        onSearchClick = { isSearchOpen = true },
+                                        onSearchBackClick = { isSearchOpen = false },
                                         onDrawerOpen = { isDrawerOpen = true },
                                     )
                                 }
@@ -170,7 +171,7 @@ class MainActivity : ComponentActivity() {
                                 HomeScreen(
                                 viewModel = homeViewModel,
                                 onSearchClick = {
-                                    navController.navigate("search")
+                                    isSearchOpen = true
                                 },
                                 onSettingsClick = {
                                     navController.navigate("settings")
@@ -301,24 +302,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         }
-                        composable("search") {
-                            GlassBackground {
-                                SearchScreen(
-                                viewModel = searchViewModel,
-                                showsViewModel = showsViewModel,
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
-                                onShowClick = { showId ->
-                                    navController.navigate("show_detail/$showId")
-                                },
-                                onNavigateBack = { navController.popBackStack() }
-                            )
-                        }
-                        }
                         composable("settings") {
                             GlassBackground {
                                 SettingsScreen(
@@ -368,6 +351,29 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = isSearchOpen,
+                    enter = slideInHorizontally { it } + fadeIn(),
+                    exit = slideOutHorizontally { it } + fadeOut(),
+                ) {
+                    GlassBackground {
+                        SearchScreen(
+                            viewModel = searchViewModel,
+                            showsViewModel = showsViewModel,
+                            onWatchClick = { url ->
+                                val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                                    putExtra("watch_url", url)
+                                }
+                                startActivity(intent)
+                            },
+                            onShowClick = { showId ->
+                                navController.navigate("show_detail/$showId")
+                            },
+                            onNavigateBack = { isSearchOpen = false }
+                        )
                     }
                 }
             }

@@ -27,14 +27,13 @@ import com.mydonghua.app.R
 
 @Composable
 fun GlassHeader(
-    currentRoute: String,
+    isSearchOpen: Boolean,
     isDark: Boolean,
     onSearchClick: () -> Unit,
     onSearchBackClick: () -> Unit,
     onDrawerOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isSearchMode = currentRoute == "search"
     val searchInteraction = remember { MutableInteractionSource() }
     val isSearchPressed by searchInteraction.collectIsPressedAsState()
     val searchScale by animateFloatAsState(
@@ -55,7 +54,7 @@ fun GlassHeader(
     val glowRadius = with(density) { (48.dp * 1.2f).toPx() }
 
     val searchOffsetX by animateFloatAsState(
-        targetValue = if (isSearchMode) with(density) { -(200.dp.toPx()) } else 0f,
+        targetValue = if (isSearchOpen) with(density) { -(200.dp.toPx()) } else 0f,
         animationSpec = tween(300),
         label = "searchOffset"
     )
@@ -67,7 +66,7 @@ fun GlassHeader(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isSearchMode) {
+        if (isSearchOpen) {
             Box(
                 modifier = Modifier
                     .size(48.dp)

@@ -1,11 +1,7 @@
 package com.mydonghua.app.ui.screens
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -67,74 +63,6 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            val backInteractionSource = remember { MutableInteractionSource() }
-            val isBackPressed by backInteractionSource.collectIsPressedAsState()
-            val backScale by animateFloatAsState(
-                targetValue = if (isBackPressed) 1.12f else 1f,
-                animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
-                label = "backScale"
-            )
-            val searchBtnInteractionSource = remember { MutableInteractionSource() }
-            val isSearchBtnPressed by searchBtnInteractionSource.collectIsPressedAsState()
-            val searchBtnScale by animateFloatAsState(
-                targetValue = if (isSearchBtnPressed) 1.12f else 1f,
-                animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
-                label = "searchBtnScale"
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = Spacing.lg, top = 2.dp, bottom = 0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .scale(backScale)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray.copy(alpha = 0.7f))
-                        .clickable(
-                            interactionSource = backInteractionSource,
-                            indication = null,
-                            onClick = onNavigateBack
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_back),
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(Modifier.width(10.dp))
-                Column {
-                    Text("Search", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Browse your collection", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f))
-                }
-                Spacer(Modifier.weight(1f))
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .scale(searchBtnScale)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray.copy(alpha = 0.7f))
-                        .clickable(
-                            interactionSource = searchBtnInteractionSource,
-                            indication = null,
-                            onClick = { isSearchActive = true }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
             SearchBar(
                 query = query,
                 onQueryChange = { viewModel.searchQuery.value = it },
