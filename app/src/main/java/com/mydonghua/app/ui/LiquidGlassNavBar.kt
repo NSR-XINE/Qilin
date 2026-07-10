@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,6 +72,8 @@ fun LiquidGlassNavBar(
     currentRoute: String,
     isDark: Boolean,
     backdrop: Backdrop,
+    isSearchOpen: Boolean,
+    onSearchClick: () -> Unit,
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -100,7 +103,14 @@ fun LiquidGlassNavBar(
         }
     }
 
+    val searchLayer = rememberGraphicsLayer()
+    val searchInteraction = rememberGlassInteraction()
     val density = LocalDensity.current
+    val searchOffsetX by animateFloatAsState(
+        targetValue = if (isSearchOpen) with(density) { -(100.dp.toPx()) } else 0f,
+        animationSpec = tween(300),
+        label = "searchOffset"
+    )
     var barWidthPx by remember { mutableIntStateOf(0) }
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
     val totalSlots = 5f
@@ -289,6 +299,35 @@ fun LiquidGlassNavBar(
                     }
                 }
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 4.dp)
+                .size(48.dp)
+                .graphicsLayer { translationX = searchOffsetX }
+                .drawBackdropCustomShape(
+                    backdrop = backdrop,
+                    layer = searchLayer,
+                    luminanceAnimation = luminanceAnimation.value,
+                    shape = CircleShape,
+                    interaction = searchInteraction,
+                )
+                .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
+                .clickable(
+                    interactionSource = null,
+                    indication = null,
+                    onClick = onSearchClick,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Search,
+                contentDescription = "Search",
+                modifier = Modifier.size(24.dp),
+                tint = Color.White,
+            )
         }
     }
 }

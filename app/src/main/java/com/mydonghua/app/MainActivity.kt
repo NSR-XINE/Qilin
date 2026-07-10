@@ -135,10 +135,7 @@ class MainActivity : ComponentActivity() {
                             topBar = {
                                 if (showGlobalHeader) {
                                     GlassHeader(
-                                        isSearchOpen = isSearchOpen,
                                         isDark = settingsState.themeMode.lowercase() != "light",
-                                        onSearchClick = { isSearchOpen = true },
-                                        onSearchBackClick = { isSearchOpen = false },
                                         onDrawerOpen = { isDrawerOpen = true },
                                     )
                                 }
@@ -385,6 +382,8 @@ class MainActivity : ComponentActivity() {
                         currentRoute = currentRoute,
                         isDark = settingsState.themeMode.lowercase() != "light",
                         backdrop = backdrop,
+                        isSearchOpen = isSearchOpen,
+                        onSearchClick = { isSearchOpen = true },
                         onNavigate = { route ->
                             when (route) {
                                 "home" -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }
