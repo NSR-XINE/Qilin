@@ -135,7 +135,7 @@ fun LiquidGlassNavBar(
     Box(
         modifier = modifier
             .wrapContentHeight()
-            .onSizeChanged { if (!currentIsSearchOpen) containerWidthPx = it.width },
+            .onSizeChanged { if (!currentIsSearchOpen) containerWidthPx = it.width.toFloat() },
     ) {
         AnimatedVisibility(
             visible = !isSearchOpen,
@@ -349,5 +349,197 @@ fun LiquidGlassNavBar(
                 tint = Color.White,
             )
         }
+    }
+}
+
+@Composable
+private fun NavBarIcon(
+    iconRes: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CapsuleShape)
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Tab,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+private fun Modifier.drawBackdropCustomShape(
+    backdrop: Backdrop,
+    layer: GraphicsLayer,
+    luminanceAnimation: Float,
+    shape: Shape,
+    interaction: GlassInteraction? = null,
+    pressedScale: Float = 1.08f,
+): Modifier =
+    this.drawBackdrop(
+        backdrop = backdrop,
+        effects = {
+            val l = (luminanceAnimation * 2f - 1f).let { sign(it) * it * it }
+            val press = interaction?.pressProgress ?: 0f
+            colorControls(
+                brightness =
+                    if (l > 0f) lerp(0.1f, 0.5f, l)
+                    else lerp(0.1f, -0.2f, -l),
+                contrast =
+                    if (l > 0f) lerp(1f, 0f, l)
+                    else 1f,
+                saturation = 1.5f,
+            )
+            blur(
+                (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
+                else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 2f.dp.toPx() * press,
+            )
+            refraction(24f.dp.toPx(), size.minDimension / 2f, true)
+        },
+        onDrawBackdrop = { drawBackdrop ->
+            drawBackdrop()
+            layer.record { drawBackdrop() }
+        },
+        onDrawSurface = {
+            val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
+            drawRect(Color.Black.copy(alpha = darken))
+            val press = interaction?.pressProgress ?: 0f
+            if (press > 0f) {
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.18f * press), Color.Transparent),
+                        center = interaction?.touchPosition ?: Offset(size.width / 2f, size.height / 2f),
+                        radius = size.minDimension * 1.2f,
+                    ),
+                    blendMode = BlendMode.Plus,
+                )
+            }
+        },
+        layerBlock = if (interaction != null) {
+            {
+                val scale = lerp(1f, pressedScale, interaction.pressProgress)
+                scaleX = scale
+                scaleY = scale
+            }
+        } else null,
+        shape = { shape },
+    )
+
+class DampedDragAnimation(
+    private val animationScope: CoroutineScope,
+    val initialValue: Float,
+    val valueRange: ClosedRange<Float>,
+    val visibilityThreshold: Float,
+    val initialScale: Float,
+    val pressedScale: Float,
+    val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
+    val onDragStopped: DampedDragAnimation.() -> Unit,
+    val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
+) {
+    private val valueAnimationSpec = spring(1f, 1000f, visibilityThreshold)
+    private val smoothAnimationSpec = spring(0.55f, 200f, visibilityThreshold)
+    private val velocityAnimationSpec = spring(0.5f, 300f, visibilityThreshold * 10f)
+    private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
+    private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
+    private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
+
+    private val valueAnimation = Animatable(initialValue, visibilityThreshold)
+    private val velocityAnimation = Animatable(0f, 5f)
+    private val pressProgressAnimation = Animatable(0f, 0.001f)
+    private val scaleXAnimation = Animatable(initialScale, 0.001f)
+    private val scaleYAnimation = Animatable(initialScale, 0.001f)
+
+    private val mutatorMutex = MutatorMutex()
+    private val velocityTracker = VelocityTracker()
+
+    val value: Float get() = valueAnimation.value
+    val targetValue: Float get() = valueAnimation.targetValue
+    val pressProgress: Float get() = pressProgressAnimation.value
+    val scaleX: Float get() = scaleXAnimation.value
+    val scaleY: Float get() = scaleYAnimation.value
+    val velocity: Float get() = velocityAnimation.value
+
+    val modifier: Modifier =
+        Modifier.pointerInput(Unit) {
+            inspectDragGestures(
+                onDragStart = { down ->
+                    onDragStarted(down.position)
+                    press()
+                },
+                onDragEnd = {
+                    onDragStopped()
+                    release()
+                },
+                onDragCancel = {
+                    onDragStopped()
+                    release()
+                },
+            ) { _, dragAmount ->
+                onDrag(size, dragAmount)
+            }
+        }
+
+    fun press() {
+        velocityTracker.resetTracking()
+        animationScope.launch {
+            launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
+            launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
+            launch { scaleYAnimation.animateTo(pressedScale, scaleYAnimationSpec) }
+        }
+    }
+
+    fun release() {
+        animationScope.launch {
+            withFrameNanos {}
+            if (value != targetValue) {
+                val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
+                while (abs(valueAnimation.value - valueAnimation.targetValue) >= threshold) {
+                    withFrameNanos {}
+                }
+            }
+            launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
+            launch { scaleXAnimation.animateTo(initialScale, scaleXAnimationSpec) }
+            launch { scaleYAnimation.animateTo(initialScale, scaleYAnimationSpec) }
+        }
+    }
+
+    fun updateValue(value: Float) {
+        val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+        animationScope.launch {
+            valueAnimation.animateTo(target, valueAnimationSpec) { updateVelocity() }
+        }
+    }
+
+    fun animateToValue(value: Float) {
+        animationScope.launch {
+            mutatorMutex.mutate {
+                press()
+                val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+                launch { valueAnimation.animateTo(target, smoothAnimationSpec) }
+                if (velocity != 0f) {
+                    launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
+                }
+                release()
+            }
+        }
+    }
+
+    private fun updateVelocity() {
+        velocityTracker.addPosition(SystemClock.uptimeMillis(), Offset(value, 0f))
+        val targetVelocity =
+            velocityTracker.calculateVelocity().x / (valueRange.endInclusive - valueRange.start)
+        animationScope.launch { velocityAnimation.animateTo(targetVelocity, velocityAnimationSpec) }
     }
 }
