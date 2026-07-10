@@ -44,6 +44,9 @@ import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.*
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.NavBarHeight
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -69,8 +72,8 @@ import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
-private val CapsuleShape = RoundedCornerShape(percent = 50)
-private val BlobHeight = 56.dp
+private val CapsuleShape = CornerRadius.full
+private val BlobHeight = NavBarHeight.blob
 
 @Composable
 fun LiquidGlassNavBar(
@@ -138,24 +141,24 @@ fun LiquidGlassNavBar(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(30.dp))
+                    .height(NavBarHeight.bar)
+                    .clip(RoundedCornerShape(CornerRadius.pill))
                     .drawBackdropCustomShape(
                         backdrop = backdrop,
                         layer = layer,
                         luminanceAnimation = luminanceAnimation.value,
-                        shape = RoundedCornerShape(30.dp),
+                        shape = RoundedCornerShape(CornerRadius.pill),
                         interaction = barInteraction,
                         pressedScale = 1.12f,
                     )
                     .background(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(30.dp),
+                        shape = RoundedCornerShape(CornerRadius.pill),
                     )
                     .border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(30.dp),
+                        shape = RoundedCornerShape(CornerRadius.pill),
                     )
                     .onSizeChanged { barWidthPx = it.width }
                     .pointerInput(barInteraction) { barInteraction.detectPress(this) },
@@ -216,7 +219,7 @@ fun LiquidGlassNavBar(
 
             if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val pillWidthPx = with(density) { (slotWidthPx - 8.dp.toPx()).coerceAtLeast(32.dp.toPx()) }
+                val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(Spacing.xxxl.toPx()) }
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
@@ -289,7 +292,7 @@ fun LiquidGlassNavBar(
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                             Box(
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(NavBarHeight.addButton)
                                     .clip(CircleShape)
                                     .background(
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
@@ -304,7 +307,7 @@ fun LiquidGlassNavBar(
                                 Icon(
                                     imageVector = Icons.Rounded.Add,
                                     contentDescription = "Add",
-                                    modifier = Modifier.size(28.dp),
+                                    modifier = Modifier.size(IconSize.xxl),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -317,7 +320,7 @@ fun LiquidGlassNavBar(
 
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(NavBarHeight.searchButton)
                 .align(Alignment.CenterEnd)
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
@@ -337,7 +340,7 @@ fun LiquidGlassNavBar(
             Icon(
                 imageVector = Icons.Rounded.Search,
                 contentDescription = "Search",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(IconSize.xl),
                 tint = Color.White,
             )
         }
@@ -352,7 +355,7 @@ private fun NavBarIcon(
 ) {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(NavBarHeight.icon)
             .clip(CapsuleShape)
             .clickable(
                 interactionSource = null,
@@ -365,7 +368,7 @@ private fun NavBarIcon(
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(IconSize.xl),
             tint = if (selected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurfaceVariant,
         )

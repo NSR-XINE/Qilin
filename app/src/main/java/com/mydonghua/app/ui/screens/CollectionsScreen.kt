@@ -12,14 +12,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mydonghua.app.ui.Spacing
-import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.ButtonHeight
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +45,7 @@ fun CollectionsScreen(
                 title = { Text("Collections folders", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
                     }
                 }
             )
@@ -57,7 +61,7 @@ fun CollectionsScreen(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     Text("No collections", fontSize = 48.sp)
                     Text(
@@ -69,7 +73,7 @@ fun CollectionsScreen(
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.padding(horizontal = Spacing.xxxl),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -87,17 +91,16 @@ fun CollectionsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(Spacing.sm))
+                            .clip(RoundedCornerShape(CornerRadius.sm))
                             .background(MaterialTheme.colorScheme.surface)
                             .border(
                                 width = 0.5.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(Spacing.sm)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                             .padding(Spacing.md),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        // Collection Title Header Row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -105,9 +108,9 @@ fun CollectionsScreen(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                             ) {
-                                Text("▸", fontSize = 16.sp)
+                                Text("\u25B8", fontSize = 16.sp)
                                 Text(
                                     text = collectionName,
                                     fontSize = 14.sp,
@@ -117,7 +120,7 @@ fun CollectionsScreen(
                             }
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(Spacing.sm))
+                                    .clip(RoundedCornerShape(CornerRadius.sm))
                                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                                     .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                             ) {
@@ -130,7 +133,6 @@ fun CollectionsScreen(
                             }
                         }
 
-                        // Shows items list
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -139,23 +141,22 @@ fun CollectionsScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(Spacing.sm))
+                                        .clip(RoundedCornerShape(CornerRadius.sm))
                                         .background(MaterialTheme.colorScheme.surface)
                                         .border(
                                             width = 0.5.dp,
                                             color = MaterialTheme.colorScheme.outlineVariant,
-                                            shape = RoundedCornerShape(Spacing.sm)
+                                            shape = RoundedCornerShape(CornerRadius.sm)
                                         )
                                         .clickable { onShowClick(show.id) }
                                         .padding(Spacing.sm),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                                 ) {
-                                    // Mini thumbnail
                                     Box(
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .clip(RoundedCornerShape(Spacing.sm))
+                                            .clip(RoundedCornerShape(CornerRadius.sm))
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -175,7 +176,6 @@ fun CollectionsScreen(
                                         }
                                     }
 
-                                    // Title
                                     Text(
                                         text = show.title,
                                         fontSize = 12.sp,
@@ -185,7 +185,6 @@ fun CollectionsScreen(
                                         maxLines = 1
                                     )
 
-                                    // Status Badge
                                     val statusColor = when (show.status) {
                                         "ongoing" -> MaterialTheme.colorScheme.primary
                                         "completed" -> MaterialTheme.colorScheme.tertiary
@@ -193,7 +192,7 @@ fun CollectionsScreen(
                                     }
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(Spacing.sm))
+                                            .clip(RoundedCornerShape(CornerRadius.sm))
                                             .background(statusColor.copy(alpha = 0.15f))
                                             .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                                     ) {

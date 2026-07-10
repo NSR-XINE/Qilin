@@ -27,6 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import com.mydonghua.app.ui.theme.ButtonHeight
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,7 +72,7 @@ fun SettingsScreen(
                 title = { Text("App Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
                     }
                 }
             )
@@ -84,7 +87,6 @@ fun SettingsScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
-            // Theme Mode Section
             SectionHeader("Theme Mode Options")
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -95,7 +97,7 @@ fun SettingsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(Spacing.sm))
+                            .clip(RoundedCornerShape(CornerRadius.sm))
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                 else MaterialTheme.colorScheme.surface
@@ -103,7 +105,7 @@ fun SettingsScreen(
                             .border(
                                 width = 0.5.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(Spacing.sm)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                             .clickable { viewModel.setThemeMode(modeKey) }
                             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
@@ -112,13 +114,12 @@ fun SettingsScreen(
                     ) {
                         Text(modeName, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         if (isSelected) {
-                            Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Text("\u2713", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            // Theme Accent Presets
             SectionHeader("Accent Themes Colors")
             Column(modifier = Modifier.fillMaxWidth()) {
                 val accentPresets = listOf(
@@ -126,7 +127,6 @@ fun SettingsScreen(
                     "rose" to "Rose", "green" to "Green", "orange" to "Orange", "blue" to "Blue",
                     "teal" to "Teal", "pink" to "Pink"
                 )
-                // Grid representation 3 columns
                 val rows = accentPresets.chunked(3)
                 rows.forEach { rowItems ->
                     Row(
@@ -138,7 +138,7 @@ fun SettingsScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(CornerRadius.sm))
                                     .background(
                                         if (isSelected) MaterialTheme.colorScheme.primary
                                         else MaterialTheme.colorScheme.surface
@@ -146,7 +146,7 @@ fun SettingsScreen(
                                     .border(
                                         width = 0.5.dp,
                                         color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(Spacing.sm)
+                                        shape = RoundedCornerShape(CornerRadius.sm)
                                     )
                                     .clickable { viewModel.setAccentColor(accentKey) }
                                     .padding(vertical = Spacing.md),
@@ -160,7 +160,6 @@ fun SettingsScreen(
                                 )
                             }
                         }
-                        // Fill empty cells if row not full
                         if (rowItems.size < 3) {
                             repeat(3 - rowItems.size) {
                                 Spacer(modifier = Modifier.weight(1f))
@@ -170,17 +169,16 @@ fun SettingsScreen(
                 }
             }
 
-            // Smart Home Dashboard Toggles
             SectionHeader("Smart Home Dashboard Elements")
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(Spacing.sm))
+                    .clip(RoundedCornerShape(CornerRadius.sm))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
                     .padding(Spacing.sm),
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -210,17 +208,16 @@ fun SettingsScreen(
                 )
             }
 
-            // App Tools & Features
             SectionHeader("App Tools & Features")
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(Spacing.sm))
+                    .clip(RoundedCornerShape(CornerRadius.sm))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
                     .padding(Spacing.sm),
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -234,7 +231,6 @@ fun SettingsScreen(
                 SettingsActionItem("Grouped Show Collections", iconRes = R.drawable.ic_collections, onClick = onNavigateToCollections)
             }
 
-            // Backup & Import/Export
             SectionHeader("Data Backups Management")
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.xxxl),
@@ -257,9 +253,9 @@ fun SettingsScreen(
                         }
                         }
                     },
-                    modifier = Modifier.weight(1f).height(48.dp),
+                    modifier = Modifier.weight(1f).height(ButtonHeight.lg),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(CornerRadius.sm)
                 ) {
                     Text("Export Backup JSON", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
@@ -268,8 +264,8 @@ fun SettingsScreen(
                     onClick = {
                         filePickerLauncher.launch("application/json")
                     },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(8.dp)
+                    modifier = Modifier.weight(1f).height(ButtonHeight.lg),
+                    shape = RoundedCornerShape(CornerRadius.sm)
                 ) {
                     Text("Import Backup JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
@@ -336,12 +332,12 @@ private fun SettingsActionItem(
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(IconSize.sm),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
-        Text("→", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("\u2192", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

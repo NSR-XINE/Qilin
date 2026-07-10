@@ -8,19 +8,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,12 +34,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
@@ -47,8 +44,11 @@ import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -394,18 +394,16 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                            .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm),
                     )
                 }
 
-                // Right Drawer Menu
                 if (isDrawerOpen) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
-                            .clickable { isDrawerOpen = false }
+                            .clickable(onClick = { isDrawerOpen = false })
                     ) {
                         Column(
                             modifier = Modifier
@@ -419,10 +417,10 @@ class MainActivity : ComponentActivity() {
                                 .clickable(enabled = false) {}
                                 .statusBarsPadding()
                                 .navigationBarsPadding()
-                                .padding(20.dp),
+                                .padding(horizontal = Spacing.xl, vertical = Spacing.xl),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -435,11 +433,11 @@ class MainActivity : ComponentActivity() {
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                     IconButton(onClick = { isDrawerOpen = false }) {
-                                        Text("✕", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("\u2715", fontSize = IconSize.xs.value.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(Spacing.sm))
 
                                 DrawerItem(
                                     iconRes = R.drawable.ic_stats,
@@ -469,7 +467,7 @@ class MainActivity : ComponentActivity() {
 
                                 HorizontalDivider(
                                     color = MaterialTheme.colorScheme.outlineVariant,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    modifier = Modifier.padding(vertical = Spacing.sm)
                                 )
 
                                 DrawerItem(
@@ -492,7 +490,6 @@ class MainActivity : ComponentActivity() {
         }
     }
     }
-}
 }
  
     private fun requestPermissionsOnStart() {
@@ -562,7 +559,7 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
                 drawCircle(
                     color = starsColor,
                     radius = radius,
-                    center = androidx.compose.ui.geometry.Offset(x, y),
+                    center = Offset(x, y),
                     alpha = alpha
                 )
             }
@@ -580,17 +577,17 @@ private fun DrawerItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() }
-            .padding(vertical = 10.dp),
+            .padding(vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = label,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(IconSize.md),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(

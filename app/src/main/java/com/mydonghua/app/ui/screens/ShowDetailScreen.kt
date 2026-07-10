@@ -1,7 +1,6 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
@@ -29,6 +28,9 @@ import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.ButtonHeight
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 
@@ -72,7 +74,7 @@ fun ShowDetailScreen(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 actions = {
@@ -80,7 +82,7 @@ fun ShowDetailScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
                             contentDescription = "Edit",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(IconSize.md),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -96,7 +98,6 @@ fun ShowDetailScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Poster
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -151,7 +152,6 @@ fun ShowDetailScreen(
                     .padding(horizontal = Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg)
             ) {
-                // Status chips with glass
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.md)
@@ -179,7 +179,6 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Countdown
                 if (show.status == "ongoing") {
                     GlassSection {
                         Row(
@@ -197,7 +196,7 @@ fun ShowDetailScreen(
                                 Spacer(modifier = Modifier.height(Spacing.xs))
                                 Text(
                                     text = if (countdownTime.airingNow) "Available now"
-                                    else "Ep ${show.currentEp + 1} • ${show.releaseDay}",
+                                    else "Ep ${show.currentEp + 1} \u2022 ${show.releaseDay}",
                                     fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -214,7 +213,6 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Progress
                 GlassSection {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -244,7 +242,7 @@ fun ShowDetailScreen(
                                     .size(34.dp)
                                     .background(
                                         MaterialTheme.colorScheme.surfaceVariant,
-                                        RoundedCornerShape(Spacing.md)
+                                        RoundedCornerShape(CornerRadius.md)
                                     )
                             ) {
                                 Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -255,7 +253,7 @@ fun ShowDetailScreen(
                                     .size(34.dp)
                                     .background(
                                         MaterialTheme.colorScheme.surfaceVariant,
-                                        RoundedCornerShape(Spacing.md)
+                                        RoundedCornerShape(CornerRadius.md)
                                     )
                             ) {
                                 Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -264,7 +262,6 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Synopsis
                 if (!show.notes.isNullOrEmpty()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text("Synopsis", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
@@ -278,7 +275,6 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Meta
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm)
@@ -294,17 +290,17 @@ fun ShowDetailScreen(
                     onClick = { onWatchClick(show.watchUrl ?: "") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(Spacing.md)
+                        .height(ButtonHeight.lg),
+                    shape = RoundedCornerShape(CornerRadius.md)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_tv),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(IconSize.sm)
                         )
                         Text("Watch Online", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
@@ -322,11 +318,11 @@ private fun GlassChip(label: String, value: String, modifier: Modifier = Modifie
     val tint = MaterialTheme.colorScheme.onSurface
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(Spacing.md))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(Spacing.md))
+            .clip(RoundedCornerShape(CornerRadius.md))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
             .background(
                 color = tint.copy(alpha = 0.05f),
-                shape = RoundedCornerShape(Spacing.md)
+                shape = RoundedCornerShape(CornerRadius.md)
             )
             .padding(horizontal = Spacing.md, vertical = Spacing.md)
     ) {

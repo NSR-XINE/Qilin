@@ -1,7 +1,5 @@
 package com.mydonghua.app.ui.common
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -24,13 +23,12 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import dev.chrisbanes.haze.hazeChild
-import kotlinx.coroutines.delay
-
 
 @Composable
 fun ShowCard(
@@ -74,27 +72,26 @@ fun ShowCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(CornerRadius.md)
             )
             .border(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(CornerRadius.md)
             )
             .clickable { onCardClick(show) },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(CornerRadius.md),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column {
-            // Poster
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(CornerRadius.md))
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -108,19 +105,17 @@ fun ShowCard(
                     contentScale = ContentScale.Crop
                 )
 
-                // Bottom gradient fade for readability
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            brush = Brush.verticalGradient(
                                 0.5f to Color.Transparent,
                                 1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
                             )
                         )
                 )
 
-                // Status badge top-right
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -131,7 +126,7 @@ fun ShowCard(
                                 "stopped" -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
                                 else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                             },
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                         .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                 ) {
@@ -147,7 +142,6 @@ fun ShowCard(
                     )
                 }
 
-                // Title overlay at bottom
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -173,7 +167,6 @@ fun ShowCard(
                 }
             }
 
-            // Info row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,7 +194,7 @@ fun ShowCard(
                             modifier = Modifier
                                 .fillMaxWidth(0.7f)
                                 .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp)),
+                                .clip(RoundedCornerShape(CornerRadius.xs)),
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
@@ -214,7 +207,6 @@ fun ShowCard(
                     }
                 }
 
-                // Actions
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     IconButton(
                         onClick = { onFavoriteToggle(show) },
@@ -226,7 +218,7 @@ fun ShowCard(
                                 else R.drawable.ic_heart_outline
                             ),
                             contentDescription = "Favorite",
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(IconSize.sm),
                             tint = if (show.isFavorite == 1) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -240,7 +232,7 @@ fun ShowCard(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_circle_play),
                                 contentDescription = "Watch",
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(IconSize.sm),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -253,7 +245,7 @@ fun ShowCard(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
                             contentDescription = "Edit",
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(IconSize.xs),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.NavBarHeight
 
 @Composable
 fun GlassHeader(
@@ -36,7 +38,7 @@ fun GlassHeader(
     )
 
     val density = LocalDensity.current
-    val glowRadius = with(density) { (48.dp * 1.2f).toPx() }
+    val glowRadius = with(density) { (NavBarHeight.icon * 1.2f).toPx() }
 
     Row(
         modifier = modifier
@@ -49,7 +51,7 @@ fun GlassHeader(
 
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(NavBarHeight.icon)
                 .scale(menuScale)
                 .clip(CircleShape)
                 .background(Color.DarkGray.copy(alpha = 0.5f))
@@ -80,7 +82,7 @@ fun GlassHeader(
                 painter = painterResource(id = R.drawable.ic_menu),
                 contentDescription = "Menu",
                 tint = Color.White,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(IconSize.lg)
             )
         }
     }

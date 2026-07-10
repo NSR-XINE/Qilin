@@ -27,6 +27,9 @@ import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.ButtonHeight
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -98,7 +101,7 @@ fun AddEditShowScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", fontSize = 24.sp)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -116,7 +119,6 @@ fun AddEditShowScreen(
         ) {
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Basic Info
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
@@ -137,7 +139,7 @@ fun AddEditShowScreen(
                             label = { Text("English Title *") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
 
                         FilledTonalButton(
@@ -166,7 +168,7 @@ fun AddEditShowScreen(
                                 }
                             },
                             enabled = !isAutoFilling,
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         ) {
                             Text(if (isAutoFilling) "\u2026" else "Auto-Fill", fontSize = 13.sp)
                         }
@@ -178,10 +180,9 @@ fun AddEditShowScreen(
                         label = { Text("Chinese / Alternate Title") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
 
-                    // Status selector
                     var statusExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = statusExpanded,
@@ -196,7 +197,7 @@ fun AddEditShowScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor(),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                         ExposedDropdownMenu(
                             expanded = statusExpanded,
@@ -213,7 +214,6 @@ fun AddEditShowScreen(
                 }
             }
 
-            // Schedule (for ongoing)
             if (status == "ongoing") {
                 GlassSection {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
@@ -239,7 +239,7 @@ fun AddEditShowScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(),
-                                shape = RoundedCornerShape(Spacing.sm)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                             ExposedDropdownMenu(
                                 expanded = dayExpanded,
@@ -264,7 +264,7 @@ fun AddEditShowScreen(
                                 label = { Text("Time (HH:MM)") },
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(Spacing.sm)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                             OutlinedTextField(
                                 value = releaseYear,
@@ -272,14 +272,13 @@ fun AddEditShowScreen(
                                 label = { Text("Year") },
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(Spacing.sm)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                         }
                     }
                 }
             }
 
-            // Episodes
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
@@ -299,7 +298,7 @@ fun AddEditShowScreen(
                             label = { Text("Current") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                         OutlinedTextField(
                             value = totalEp,
@@ -307,13 +306,12 @@ fun AddEditShowScreen(
                             label = { Text("Total") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                     }
                 }
             }
 
-            // Media & Links
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
@@ -334,7 +332,7 @@ fun AddEditShowScreen(
                             label = { Text("Poster URL") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -355,10 +353,10 @@ fun AddEditShowScreen(
                                         }
                                     }
                                 },
-                                shape = RoundedCornerShape(Spacing.sm),
+                                shape = RoundedCornerShape(CornerRadius.sm),
                                 contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.sm)
                             ) {
-                                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(IconSize.xs))
                                 Spacer(Modifier.width(Spacing.xs))
                                 Text("Scrape", fontSize = 13.sp)
                             }
@@ -370,7 +368,7 @@ fun AddEditShowScreen(
                                     contentDescription = "Poster preview",
                                     modifier = Modifier
                                         .size(56.dp)
-                                        .clip(RoundedCornerShape(Spacing.sm)),
+                                        .clip(RoundedCornerShape(CornerRadius.sm)),
                                     contentScale = ContentScale.Crop
                                 )
                             }
@@ -383,7 +381,7 @@ fun AddEditShowScreen(
                         label = { Text("Watch URL") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
 
                     OutlinedTextField(
@@ -392,7 +390,7 @@ fun AddEditShowScreen(
                         label = { Text("Countdown / Calendar URL") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
 
                     OutlinedTextField(
@@ -401,12 +399,11 @@ fun AddEditShowScreen(
                         label = { Text("Collection ID") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
                 }
             }
 
-            // Details
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
@@ -422,7 +419,7 @@ fun AddEditShowScreen(
                         label = { Text("Synopsis / Notes") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 4,
-                        shape = RoundedCornerShape(Spacing.sm)
+                        shape = RoundedCornerShape(CornerRadius.sm)
                     )
 
                     Row(
@@ -435,7 +432,7 @@ fun AddEditShowScreen(
                             label = { Text("Genres") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                         OutlinedTextField(
                             value = studio,
@@ -443,7 +440,7 @@ fun AddEditShowScreen(
                             label = { Text("Studio") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                     }
 
@@ -457,13 +454,12 @@ fun AddEditShowScreen(
                             label = { Text("Language") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                     }
                 }
             }
 
-            // Rating
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Text(
@@ -482,7 +478,7 @@ fun AddEditShowScreen(
                             contentDescription = null,
                             tint = if (rating > 0) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(IconSize.xl)
                         )
                         Slider(
                             value = rating,
@@ -504,7 +500,6 @@ fun AddEditShowScreen(
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Save Button
             Button(
                 onClick = {
                     if (title.isBlank()) {
@@ -552,10 +547,10 @@ fun AddEditShowScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(Spacing.md)
+                    .height(ButtonHeight.xl),
+                shape = RoundedCornerShape(CornerRadius.md)
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(IconSize.md))
                 Spacer(Modifier.width(Spacing.sm))
                 Text("Save Show", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }

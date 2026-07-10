@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +38,6 @@ fun CalendarScreen(
 
     val weekDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
-    // Compile upcoming week releases
     val upcomingWeekList = remember(ongoingShows) {
         val list = mutableListOf<UpcomingDayGroup>()
         for (i in 0 until 7) {
@@ -59,7 +60,7 @@ fun CalendarScreen(
                 title = { Text("$monthName $yearName", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
                     }
                 }
             )
@@ -89,12 +90,12 @@ fun CalendarScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(Spacing.sm))
+                                .clip(RoundedCornerShape(CornerRadius.sm))
                                 .background(MaterialTheme.colorScheme.surface)
                                 .border(
                                     width = 0.5.dp,
                                     color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(Spacing.sm)
+                                    shape = RoundedCornerShape(CornerRadius.sm)
                                 )
                                 .padding(Spacing.md),
                             verticalArrangement = Arrangement.spacedBy(Spacing.sm)

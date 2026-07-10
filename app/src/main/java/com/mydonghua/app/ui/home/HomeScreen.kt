@@ -8,14 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -34,6 +32,8 @@ import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.screens.HomeViewModel
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -101,7 +101,7 @@ fun HeroBanner(
             .fillMaxWidth()
             .padding(Spacing.lg)
             .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(CornerRadius.md))
             .clickable { onBannerClick() }
     ) {
         AsyncImage(
@@ -164,7 +164,7 @@ private fun BannerTimeBox(value: Long, label: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .size(48.dp)
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f), RoundedCornerShape(CornerRadius.sm))
     ) {
         Spacer(modifier = Modifier.height(Spacing.sm))
         Text(
@@ -218,7 +218,7 @@ fun ContinueWatchingRow(
                     Box(
                         modifier = Modifier
                             .size(width = 52.dp, height = 72.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context).data(show.poster).crossfade(true).build(),
@@ -251,7 +251,7 @@ fun ContinueWatchingRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(3.dp)
-                                    .clip(RoundedCornerShape(2.dp)),
+                                    .clip(RoundedCornerShape(CornerRadius.xs)),
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.surfaceVariant
                             )
@@ -287,7 +287,7 @@ fun RecentlyUpdatedRow(
                     Box(
                         modifier = Modifier
                             .size(width = 52.dp, height = 72.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context).data(show.poster).crossfade(true).build(),
@@ -359,16 +359,16 @@ fun WeeklyScheduleSection(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg)
-            .clip(RoundedCornerShape(12.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(CornerRadius.md))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(CornerRadius.md)
             )
             .border(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(CornerRadius.md)
             )
             .padding(Spacing.md)
     ) {
@@ -382,11 +382,11 @@ fun WeeklyScheduleSection(
                     val isSelected = day == selectedDay
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(CornerRadius.sm))
                             .background(
                                 color = if (isSelected) MaterialTheme.colorScheme.primary
                                 else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                             .clickable { selectedDay = day }
                             .padding(horizontal = Spacing.md, vertical = 7.dp),
@@ -429,7 +429,7 @@ fun WeeklyScheduleSection(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(CornerRadius.sm))
                                 .clickable { onShowClick(show.id) }
                                 .padding(horizontal = Spacing.sm, vertical = Spacing.md),
                             verticalAlignment = Alignment.CenterVertically,

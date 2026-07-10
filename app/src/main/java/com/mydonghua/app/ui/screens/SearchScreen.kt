@@ -17,10 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +28,8 @@ import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ShowCard
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,13 +85,13 @@ fun SearchScreen(
                     if (query.isNotEmpty()) {
                         IconButton(
                             onClick = { viewModel.clearQuery() },
-                            modifier = Modifier.clip(androidx.compose.foundation.shape.CircleShape)
+                            modifier = Modifier.clip(CircleShape)
                         ) {
-                            Text("✕", fontSize = 16.sp)
+                            Text("\u2715", fontSize = 16.sp)
                         }
                     }
                 },
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(CornerRadius.sm),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg)
@@ -152,7 +152,7 @@ fun SearchScreen(
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp),
+                            modifier = Modifier.size(IconSize.hero),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                         )
                         Spacer(modifier = Modifier.height(Spacing.md))
@@ -256,7 +256,7 @@ private fun SuggestionItem(text: String, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         Text(text, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
     }
@@ -366,12 +366,12 @@ private fun FilterChipButton(
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(CornerRadius.xl))
             .background(bg)
             .clickable { onClick() }
             .padding(horizontal = Spacing.md, vertical = Spacing.sm)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(
                 text = label,
                 fontSize = 12.sp,
@@ -379,7 +379,7 @@ private fun FilterChipButton(
                 color = textColor
             )
             Text(
-                text = if (isSelected) "✕" else "+",
+                text = if (isSelected) "\u2715" else "+",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
@@ -399,7 +399,7 @@ private fun GenreFilterDialog(
     var localSelected by remember { mutableStateOf(selected) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Genre", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -421,7 +421,7 @@ private fun GenreFilterDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(Spacing.md))
+                                    .clip(RoundedCornerShape(CornerRadius.md))
                                     .background(
                                         if (isGenreSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                         else Color.Transparent
@@ -441,7 +441,7 @@ private fun GenreFilterDialog(
                                 )
                                 if (isGenreSelected) {
                                     Text(
-                                        "✓",
+                                        "\u2713",
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
@@ -476,7 +476,7 @@ private fun StudioFilterDialog(
     var text by remember { mutableStateOf(initial) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Studio", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -510,7 +510,7 @@ private fun YearFilterDialog(
     var text by remember { mutableStateOf(initial) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Year", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -544,12 +544,12 @@ private fun RatingFilterDialog(
     var sliderValue by remember { mutableStateOf(initial) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Minimum Rating", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.lg))
                 Text(
-                    text = if (sliderValue > 0) "≥ ${sliderValue.toInt()}" else "No minimum",
+                    text = if (sliderValue > 0) "\u2265 ${sliderValue.toInt()}" else "No minimum",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -600,7 +600,7 @@ private fun SortFilterDialog(
     )
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Sort Order", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -609,7 +609,7 @@ private fun SortFilterDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(Spacing.md))
+                            .clip(RoundedCornerShape(CornerRadius.md))
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                 else Color.Transparent
@@ -627,7 +627,7 @@ private fun SortFilterDialog(
                         )
                         if (isSelected) {
                             Text(
-                                "✓",
+                                "\u2713",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp

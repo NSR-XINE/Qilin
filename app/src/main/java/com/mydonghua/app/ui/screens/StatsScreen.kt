@@ -16,8 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.StatsCalculator
-import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +54,7 @@ fun StatsScreen(
                 title = { Text("Detailed Statistics", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
                     }
                 }
             )
@@ -68,7 +69,6 @@ fun StatsScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
-            // First 8-card grid
             Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             StatsGrid(
                 items = listOf(
@@ -83,7 +83,6 @@ fun StatsScreen(
                 )
             )
 
-            // Second 8-card grid
             Text("Completion & Activity Metrics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             StatsGrid(
                 items = listOf(
@@ -92,12 +91,11 @@ fun StatsScreen(
                     StatItem("Active This Week", stats.weeklyActivity.toString()),
                     StatItem("Active This Month", stats.monthlyActivity.toString()),
                     StatItem("Avg Rating", stats.avgRating),
-                    StatItem("Longest Series", stats.longestSeries?.title ?: "—", subText = "${stats.longestEpCount} eps")
+                    StatItem("Longest Series", stats.longestSeries?.title ?: "\u2014", subText = "${stats.longestEpCount} eps")
                 ),
                 columns = 2
             )
 
-            // Top Genres
             if (stats.topGenres.isNotEmpty()) {
                 Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 FlowRow(
@@ -108,7 +106,7 @@ fun StatsScreen(
                     stats.topGenres.forEach { (genre, count) ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(Spacing.sm))
+                                .clip(RoundedCornerShape(CornerRadius.sm))
                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                                 .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                         ) {
@@ -123,7 +121,6 @@ fun StatsScreen(
                 }
             }
 
-            // Top Studios
             if (stats.topStudios.isNotEmpty()) {
                 Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 FlowRow(
@@ -134,7 +131,7 @@ fun StatsScreen(
                     stats.topStudios.forEach { (studio, count) ->
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(Spacing.sm))
+                                .clip(RoundedCornerShape(CornerRadius.sm))
                                 .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
                                 .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                         ) {
@@ -149,7 +146,6 @@ fun StatsScreen(
                 }
             }
 
-            // Weekly Releases Preview
             Text("This Week's Remaining Releases", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             if (thisWeekShows.isEmpty()) {
                 Text("No upcoming releases this week", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -157,12 +153,12 @@ fun StatsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(Spacing.sm))
+                        .clip(RoundedCornerShape(CornerRadius.sm))
                         .background(MaterialTheme.colorScheme.surface)
                         .border(
                             width = 0.5.dp,
                             color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(Spacing.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm)
                         )
                         .padding(Spacing.sm),
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -175,7 +171,7 @@ fun StatsScreen(
                                 .background(
                                     if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                     else Color.Transparent,
-                                    RoundedCornerShape(Spacing.xs)
+                                    RoundedCornerShape(CornerRadius.xs)
                                 )
                                 .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
                             verticalAlignment = Alignment.CenterVertically,
@@ -234,12 +230,12 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(CornerRadius.sm))
                             .background(MaterialTheme.colorScheme.surface)
                             .border(
                                 width = 0.5.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(CornerRadius.sm)
                             )
                             .padding(Spacing.md)
                     ) {
@@ -262,7 +258,6 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
     }
 }
 
-// FlowRow implementation helper
 @Composable
 fun FlowRow(
     modifier: Modifier = Modifier,

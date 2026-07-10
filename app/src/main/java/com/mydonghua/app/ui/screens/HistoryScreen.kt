@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,16 +13,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.IconSize
 import java.text.SimpleDateFormat
 import java.util.*
-
-import com.mydonghua.app.ui.Spacing
-import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,7 +35,6 @@ fun HistoryScreen(
 ) {
     val historyList by showsViewModel.history.collectAsState()
 
-    // Group history items by formatted date (e.g. "Today", "Yesterday", "July 5, 2026")
     val groupedHistory = remember(historyList) {
         historyList.groupBy { item ->
             getRelativeDateGroup(item.watchedAt)
@@ -49,7 +48,7 @@ fun HistoryScreen(
                 title = { Text("Watch History Log", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("←", fontSize = 24.sp)
+                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
                     }
                 }
             )
@@ -93,23 +92,22 @@ fun HistoryScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(Spacing.sm))
+                                .clip(RoundedCornerShape(CornerRadius.sm))
                                 .background(MaterialTheme.colorScheme.surface)
                                 .border(
                                     width = 0.5.dp,
                                     color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(Spacing.sm)
+                                    shape = RoundedCornerShape(CornerRadius.sm)
                                 )
                                 .clickable { onShowClick(item.showId) }
                                 .padding(Spacing.sm),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                         ) {
-                            // Mini Poster thumbnail
                             Box(
                                 modifier = Modifier
                                     .size(42.dp)
-                                    .clip(RoundedCornerShape(Spacing.sm))
+                                    .clip(RoundedCornerShape(CornerRadius.sm))
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -129,7 +127,6 @@ fun HistoryScreen(
                                 }
                             }
 
-                            // Details
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = item.showTitle,
@@ -145,7 +142,6 @@ fun HistoryScreen(
                                 )
                             }
 
-                            // Time ago representation
                             Text(
                                 text = formatTimeOfDay(item.watchedAt),
                                 fontSize = 11.sp,

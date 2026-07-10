@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.mydonghua.app.ui.theme.CornerRadius
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
@@ -29,6 +29,9 @@ object Spacing {
     val xxxl = 32.dp
     val section = xxxl
 }
+
+private val GlassTintAlpha = 0.04f
+private val GlassSectionAlpha = 0.05f
 
 @Composable
 fun GlassBackground(
@@ -46,9 +49,7 @@ fun GlassBackground(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(
-                    color = tint.copy(alpha = 0.04f)
-                )
+                .background(color = tint.copy(alpha = GlassTintAlpha))
         )
         content()
     }
@@ -57,6 +58,7 @@ fun GlassBackground(
 @Composable
 fun GlassSection(
     modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.md),
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current
@@ -65,20 +67,20 @@ fun GlassSection(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Spacing.md))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(Spacing.md))
+            .clip(shape)
+            .hazeChild(state = hazeState, shape = shape)
             .border(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(Spacing.md)
+                shape = shape
             )
     ) {
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
-                    color = tint.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(Spacing.md)
+                    color = tint.copy(alpha = GlassSectionAlpha),
+                    shape = shape
                 )
         )
         Box(modifier = Modifier.padding(Spacing.md)) {
