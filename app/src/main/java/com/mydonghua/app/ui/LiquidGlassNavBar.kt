@@ -123,13 +123,12 @@ fun LiquidGlassNavBar(
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
 
-    Row(
+    Box(
         modifier = modifier
             .navigationBarsPadding()
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
         AnimatedVisibility(
             visible = !isSearchOpen,
@@ -138,6 +137,7 @@ fun LiquidGlassNavBar(
         ) {
             Box(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .height(64.dp)
                     .clip(RoundedCornerShape(30.dp))
                     .drawBackdropCustomShape(
@@ -315,11 +315,10 @@ fun LiquidGlassNavBar(
             }
         }
 
-        Spacer(Modifier.weight(1f))
-
         Box(
             modifier = Modifier
                 .size(48.dp)
+                .align(Alignment.CenterEnd)
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
                     layer = searchLayer,
