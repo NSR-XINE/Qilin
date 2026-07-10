@@ -12,6 +12,8 @@ import javax.inject.Singleton
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
+// TODO: Consolidate with SettingsRepositoryImpl (Room) and notification_prefs (SharedPreferences)
+// into a single storage backend (preferably Room) to eliminate three different settings stores.
 @Singleton
 class ThemePreference @Inject constructor(
     @ApplicationContext private val context: Context

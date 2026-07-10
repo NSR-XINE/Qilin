@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+// TODO: Consolidate with ThemePreference (DataStore) and notification_prefs (SharedPreferences)
+// into this Room-backed repository to eliminate the three-way split settings storage.
 class SettingsRepositoryImpl @Inject constructor(
     private val settingsDao: SettingsDao
 ) : SettingsRepository {

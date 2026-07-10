@@ -133,6 +133,8 @@ class SettingsViewModel @Inject constructor(
                 historyArr.put(obj)
             }
 
+            // TODO: Move to SettingsRepository (Room) alongside ThemePreference migration
+            // to eliminate the third settings store (SharedPreferences notification_prefs).
             val notifyPrefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
             val prefsMap = notifyPrefs.all
             val notifyJson = JSONObject(prefsMap)
