@@ -6,7 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.platform.LocalDensity
+
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -73,9 +73,10 @@ fun HistoryScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = Spacing.lg),
+                    .padding(horizontal = Spacing.lg)
+                    .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-                contentPadding = PaddingValues(bottom = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm })
+                contentPadding = PaddingValues(bottom = Spacing.sm)
             ) {
                 groupedHistory.forEach { (dateHeader, items) ->
                     item {

@@ -15,7 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
+
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -50,13 +50,12 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    val bottomInset = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm }
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Transparent),
-        contentPadding = PaddingValues(bottom = bottomInset)
+            .background(Color.Transparent)
+            .navigationBarsPadding(),
+        contentPadding = PaddingValues(bottom = Spacing.sm)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }

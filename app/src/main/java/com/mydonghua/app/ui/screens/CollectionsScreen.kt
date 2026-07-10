@@ -78,9 +78,10 @@ fun CollectionsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = Spacing.lg),
+                    .padding(horizontal = Spacing.lg)
+                    .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-                contentPadding = PaddingValues(bottom = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() + Spacing.sm })
+                contentPadding = PaddingValues(bottom = Spacing.sm)
             ) {
                 items(sortedCollections) { (collectionName, showsList) ->
                     Column(
