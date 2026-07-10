@@ -313,7 +313,6 @@ fun LiquidGlassNavBar(
                 }
             }
             }
-            }
         }
 
         Box(
