@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -208,6 +211,30 @@ fun ShowCard(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    IconButton(
+                        onClick = { onEpDecrement(show) },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Remove,
+                            contentDescription = "Decrement Episode",
+                            modifier = Modifier.size(IconSize.sm),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { onEpIncrement(show) },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = "Increment Episode",
+                            modifier = Modifier.size(IconSize.sm),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     IconButton(
                         onClick = { onFavoriteToggle(show) },
                         modifier = Modifier.size(36.dp)

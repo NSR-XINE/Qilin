@@ -98,15 +98,15 @@ fun LiquidGlassNavBar(
                     buffer.rewind()
                     thumbnail.copyPixelsToBuffer(buffer)
                 }
-            } catch (_: Exception) { continue }
-            val avg = (0 until 25).sumOf { i ->
-                val c = buffer.get(i)
-                val r = (c shr 16 and 0xFF) / 255.0
-                val g = (c shr 8 and 0xFF) / 255.0
-                val b = (c and 0xFF) / 255.0
-                0.2126 * r + 0.7152 * g + 0.0722 * b
-            } / 25.0
-            luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
+                val avg = (0 until 25).sumOf { i ->
+                    val c = buffer.get(i)
+                    val r = (c shr 16 and 0xFF) / 255.0
+                    val g = (c shr 8 and 0xFF) / 255.0
+                    val b = (c and 0xFF) / 255.0
+                    0.2126 * r + 0.7152 * g + 0.0722 * b
+                } / 25.0
+                luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
+            } catch (_: Exception) { }
             delay(1.seconds)
         }
     }
