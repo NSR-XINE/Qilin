@@ -3,9 +3,9 @@ package com.mydonghua.app.ui
 import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -107,11 +107,6 @@ fun LiquidGlassNavBar(
     val searchLayer = rememberGraphicsLayer()
     val searchInteraction = rememberGlassInteraction()
     val density = LocalDensity.current
-    val searchOffsetX by animateFloatAsState(
-        targetValue = if (isSearchOpen) with(density) { -(100.dp.toPx()) } else 0f,
-        animationSpec = tween(300),
-        label = "searchOffset"
-    )
     var barWidthPx by remember { mutableIntStateOf(0) }
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
     val totalSlots = 5f
@@ -125,36 +120,39 @@ fun LiquidGlassNavBar(
         if (index < 2) index.toFloat() else (index + 1).toFloat()
 
     Row(
-        modifier = modifier.wrapContentHeight(),
+        modifier = modifier
+            .wrapContentHeight()
+            .animateContentSize(tween(300)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(64.dp)
-                .clip(RoundedCornerShape(30.dp))
-                .drawBackdropCustomShape(
-                    backdrop = backdrop,
-                    layer = layer,
-                    luminanceAnimation = luminanceAnimation.value,
-                    shape = RoundedCornerShape(30.dp),
-                    interaction = barInteraction,
-                    pressedScale = 1.12f,
-                )
-                .background(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(30.dp),
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(30.dp),
-                )
-                .onSizeChanged { barWidthPx = it.width }
-                .pointerInput(barInteraction) { barInteraction.detectPress(this) },
-            contentAlignment = Alignment.CenterStart,
-        ) {
+        if (!isSearchOpen) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(64.dp)
+                    .clip(RoundedCornerShape(30.dp))
+                    .drawBackdropCustomShape(
+                        backdrop = backdrop,
+                        layer = layer,
+                        luminanceAnimation = luminanceAnimation.value,
+                        shape = RoundedCornerShape(30.dp),
+                        interaction = barInteraction,
+                        pressedScale = 1.12f,
+                    )
+                    .background(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                        shape = RoundedCornerShape(30.dp),
+                    )
+                    .border(
+                        width = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = RoundedCornerShape(30.dp),
+                    )
+                    .onSizeChanged { barWidthPx = it.width }
+                    .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+                contentAlignment = Alignment.CenterStart,
+            ) {
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
                 DampedDragAnimation(
@@ -307,11 +305,11 @@ fun LiquidGlassNavBar(
         }
     }
     }
+    }
 
     Box(
         modifier = Modifier
             .size(48.dp)
-            .graphicsLayer { translationX = searchOffsetX }
             .drawBackdropCustomShape(
                 backdrop = backdrop,
                 layer = searchLayer,
