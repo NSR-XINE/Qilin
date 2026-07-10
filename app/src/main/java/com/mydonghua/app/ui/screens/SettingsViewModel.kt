@@ -200,6 +200,7 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 showRepository.clearAllShows()
+                watchHistoryRepository.clearAllWatchHistory()
                 importedShowsList.forEach { s ->
                     showRepository.insertOrUpdateShow(s)
                 }

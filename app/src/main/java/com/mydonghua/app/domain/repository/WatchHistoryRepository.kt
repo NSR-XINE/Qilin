@@ -9,4 +9,5 @@ interface WatchHistoryRepository {
     suspend fun getWatchHistoryLimited(limit: Int): List<WatchHistoryEntity>
     suspend fun addWatchHistory(showId: String, episodeNum: Int)
     suspend fun removeWatchHistory(showId: String, episodeNum: Int)
+    suspend fun clearAllWatchHistory()
 }

@@ -27,4 +27,8 @@ class WatchHistoryRepositoryImpl @Inject constructor(
     override suspend fun removeWatchHistory(showId: String, episodeNum: Int) {
         watchHistoryDao.deleteHistoryEntry(showId, episodeNum)
     }
+
+    override suspend fun clearAllWatchHistory() {
+        watchHistoryDao.clearAllWatchHistory()
+    }
 }

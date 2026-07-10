@@ -103,6 +103,7 @@ dependencies {
     testImplementation 'androidx.test:core-ktx:1.5.0'
     testImplementation 'androidx.test.ext:junit-ktx:1.1.5'
     testImplementation 'kotlinx.coroutines:kotlinx-coroutines-test:1.7.3'
+    testImplementation "androidx.room:room-testing:2.6.1"
 
     // Haze Backdrop Blur
     implementation 'dev.chrisbanes.haze:haze:0.7.3'

@@ -30,15 +30,18 @@ class BootReceiver : BroadcastReceiver() {
                         val ongoing = showsList.filter { it.status == "ongoing" }
 
                         ongoing.forEach { show ->
-                            AlarmScheduler.schedule(
-                                context = context,
-                                showId = show.id,
-                                title = show.title,
-                                releaseDay = show.releaseDay ?: "Sunday",
-                                releaseTime = show.releaseTime ?: "10:00",
-                                alarmCode = show.alarmRequestCode ?: Math.abs(show.id.hashCode()),
-                                currentEp = show.currentEp
-                            )
+                            val code = show.alarmRequestCode
+                            if (code != null) {
+                                AlarmScheduler.schedule(
+                                    context = context,
+                                    showId = show.id,
+                                    title = show.title,
+                                    releaseDay = show.releaseDay ?: "Sunday",
+                                    releaseTime = show.releaseTime ?: "10:00",
+                                    alarmCode = code,
+                                    currentEp = show.currentEp
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()

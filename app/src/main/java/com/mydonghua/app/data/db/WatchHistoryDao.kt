@@ -22,4 +22,7 @@ interface WatchHistoryDao {
 
     @Query("DELETE FROM watch_history WHERE show_id = :showId AND episode_num = :episodeNum")
     suspend fun deleteHistoryEntry(showId: String, episodeNum: Int)
+
+    @Query("DELETE FROM watch_history")
+    suspend fun clearAllWatchHistory()
 }
