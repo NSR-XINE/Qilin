@@ -124,32 +124,37 @@ fun LiquidGlassNavBar(
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .clip(RoundedCornerShape(30.dp))
-            .drawBackdropCustomShape(
-                backdrop = backdrop,
-                layer = layer,
-                luminanceAnimation = luminanceAnimation.value,
-                shape = RoundedCornerShape(30.dp),
-                interaction = barInteraction,
-                pressedScale = 1.12f,
-            )
-            .background(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                shape = RoundedCornerShape(30.dp),
-            )
-            .border(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(30.dp),
-            )
-            .onSizeChanged { barWidthPx = it.width }
-            .pointerInput(barInteraction) { barInteraction.detectPress(this) },
-        contentAlignment = Alignment.CenterStart,
+    Row(
+        modifier = modifier.wrapContentHeight(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(64.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .drawBackdropCustomShape(
+                    backdrop = backdrop,
+                    layer = layer,
+                    luminanceAnimation = luminanceAnimation.value,
+                    shape = RoundedCornerShape(30.dp),
+                    interaction = barInteraction,
+                    pressedScale = 1.12f,
+                )
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(30.dp),
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(30.dp),
+                )
+                .onSizeChanged { barWidthPx = it.width }
+                .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+            contentAlignment = Alignment.CenterStart,
+        ) {
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
                 DampedDragAnimation(
@@ -298,39 +303,38 @@ fun LiquidGlassNavBar(
                             )
                         }
                     }
-                }
             }
         }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 4.dp)
-                .size(48.dp)
-                .graphicsLayer { translationX = searchOffsetX }
-                .drawBackdropCustomShape(
-                    backdrop = backdrop,
-                    layer = searchLayer,
-                    luminanceAnimation = luminanceAnimation.value,
-                    shape = CircleShape,
-                    interaction = searchInteraction,
-                )
-                .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    onClick = onSearchClick,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Search,
-                contentDescription = "Search",
-                modifier = Modifier.size(24.dp),
-                tint = Color.White,
-            )
-        }
     }
+    }
+
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .graphicsLayer { translationX = searchOffsetX }
+            .drawBackdropCustomShape(
+                backdrop = backdrop,
+                layer = searchLayer,
+                luminanceAnimation = luminanceAnimation.value,
+                shape = CircleShape,
+                interaction = searchInteraction,
+            )
+            .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                onClick = onSearchClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Search,
+            contentDescription = "Search",
+            modifier = Modifier.size(24.dp),
+            tint = Color.White,
+        )
+    }
+}
 }
 
 @Composable
