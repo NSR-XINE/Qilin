@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.mydonghua.app.data.db.AppDatabase
-import java.util.Calendar
 import java.util.concurrent.ConcurrentHashMap
 
 class NotificationReceiver : BroadcastReceiver() {
@@ -40,14 +39,6 @@ class NotificationReceiver : BroadcastReceiver() {
             val cutoff = now - 300000
             _recentNotifications.entries.removeIf { it.value < cutoff }
         }
-
-        val db = AppDatabase.getDatabase(context)
-        val snoozeUntil = readLongSetting(db, SNOOZE_UNTIL_PREFIX + showId) ?:
-            context.getSharedPreferences(PREFS_NOTIFY, Context.MODE_PRIVATE)
-                .getLong(SNOOZE_UNTIL_PREFIX + showId, 0L)
-        if (now < snoozeUntil) return
-
-        if (isQuietHours(context, db, now)) return
 
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
 
@@ -105,57 +96,9 @@ class NotificationReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun isQuietHours(context: Context, db: AppDatabase, now: Long): Boolean {
-        val prefs = context.getSharedPreferences(PREFS_NOTIFY, Context.MODE_PRIVATE)
-        val startStr = readStringSetting(db, QUIET_HOURS_START)
-            ?: prefs.getString(QUIET_HOURS_START, null)
-        val endStr = readStringSetting(db, QUIET_HOURS_END)
-            ?: prefs.getString(QUIET_HOURS_END, null)
-        if (startStr == null || endStr == null) return false
-        return try {
-            val cal = Calendar.getInstance()
-            val startParts = startStr.split(":")
-            val endParts = endStr.split(":")
-            val startMin = startParts[0].toInt() * 60 + startParts[1].toInt()
-            val endMin = endParts[0].toInt() * 60 + endParts[1].toInt()
-            val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-            if (startMin <= endMin) {
-                nowMin in startMin until endMin
-            } else {
-                nowMin >= startMin || nowMin < endMin
-            }
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun readStringSetting(db: AppDatabase, key: String): String? {
-        return try {
-            kotlinx.coroutines.runBlocking {
-                db.settingsDao().getSetting(key)?.value
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun readLongSetting(db: AppDatabase, key: String): Long? {
-        return try {
-            kotlinx.coroutines.runBlocking {
-                db.settingsDao().getSetting(key)?.value?.toLongOrNull()
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     companion object {
         const val CHANNEL_ID = "donghua_countdown_reminders"
         private const val DEDUP_WINDOW_MS = 5000L
-        private const val PREFS_NOTIFY = "notification_prefs"
-        private const val QUIET_HOURS_START = "quiet_hours_start"
-        private const val QUIET_HOURS_END = "quiet_hours_end"
-        private const val SNOOZE_UNTIL_PREFIX = "snooze_until_"
 
         private val _recentNotifications = ConcurrentHashMap<String, Long>()
     }

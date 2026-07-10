@@ -117,10 +117,10 @@ object PosterFetchService {
                 val media = mediaArr.getJSONObject(0)
 
                 val titles = media.optJSONObject("title")
-                val titleZh = titles?.optString("native", "") ?: titles?.optString("romaji", "")
+                val titleZh = titles?.optString("native")?.takeIf { it.isNotEmpty() } ?: titles?.optString("romaji")
 
                 val coverImage = media.optJSONObject("coverImage")
-                val imageUrl = coverImage?.optString("extraLarge", "") ?: coverImage?.optString("large", "")
+                val imageUrl = coverImage?.optString("extraLarge")?.takeIf { it.isNotEmpty() } ?: coverImage?.optString("large")
 
                 val description = media.optString("description", "")
                     .replace(Regex("<[^>]*>"), "")

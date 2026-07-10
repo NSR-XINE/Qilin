@@ -14,9 +14,10 @@ object ShowActions {
         watchHistoryRepository: WatchHistoryRepository
     ) {
         val nextEp = show.currentEp + 1
-        val updated = show.copy(currentEp = nextEp, lastUpdated = System.currentTimeMillis())
+        val clampedEp = if (show.totalEp > 0) nextEp.coerceAtMost(show.totalEp) else nextEp
+        val updated = show.copy(currentEp = clampedEp, lastUpdated = System.currentTimeMillis())
         showRepository.insertOrUpdateShow(updated)
-        watchHistoryRepository.addWatchHistory(show.id, nextEp)
+        watchHistoryRepository.addWatchHistory(show.id, clampedEp)
     }
 
     suspend fun decrementEpisode(
