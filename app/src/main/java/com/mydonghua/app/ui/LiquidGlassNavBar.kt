@@ -334,35 +334,36 @@ fun LiquidGlassNavBar(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.width(Spacing.sm * capsuleAlpha))
-
-        Box(
-            modifier = Modifier
-                .size(NavBarHeight.searchButton)
-                .drawBackdropCustomShape(
-                    backdrop = backdrop,
-                    layer = searchLayer,
-                    luminanceAnimation = luminanceAnimation.value,
-                    shape = CircleShape,
-                    interaction = searchInteraction,
-                )
-                .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    onClick = onSearchClick,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Search,
-                contentDescription = "Search",
-                modifier = Modifier.size(IconSize.xl),
-                tint = Color.White,
-            )
-        }
     }
+
+    Spacer(modifier = Modifier.width(Spacing.sm * capsuleAlpha))
+
+    Box(
+        modifier = Modifier
+            .size(NavBarHeight.searchButton)
+            .drawBackdropCustomShape(
+                backdrop = backdrop,
+                layer = searchLayer,
+                luminanceAnimation = luminanceAnimation.value,
+                shape = CircleShape,
+                interaction = searchInteraction,
+            )
+            .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                onClick = onSearchClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Search,
+            contentDescription = "Search",
+            modifier = Modifier.size(IconSize.xl),
+            tint = Color.White,
+        )
+    }
+}
 }
 
 @Composable
