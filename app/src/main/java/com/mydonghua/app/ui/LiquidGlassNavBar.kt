@@ -138,12 +138,24 @@ fun LiquidGlassNavBar(
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Start
     ) {
         AnimatedVisibility(
             visible = !isSearchOpen,
-            enter = expandHorizontally(expandFrom = Alignment.Start, animationSpec = tween(300)) + fadeIn(tween(200)),
-            exit = shrinkHorizontally(shrinkTowards = Alignment.Start, animationSpec = tween(300)) + fadeOut(tween(200)),
+            enter = expandHorizontally(
+                expandFrom = Alignment.Start,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = Spring.DampingRatioLowBouncy
+                )
+            ) + fadeIn(tween(200)),
+            exit = shrinkHorizontally(
+                shrinkTowards = Alignment.Start,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = Spring.DampingRatioLowBouncy
+                )
+            ) + fadeOut(tween(200)),
             modifier = Modifier.weight(1f)
         ) {
             Box(
