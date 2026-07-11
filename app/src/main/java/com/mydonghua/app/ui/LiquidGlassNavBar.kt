@@ -147,8 +147,8 @@ fun LiquidGlassNavBar(
             .padding(horizontal = Spacing.lg),
     ) {
         val maxCapsuleWidth = maxWidth - NavBarHeight.searchButton - Spacing.sm
-        val capsuleWidth by animateDpAsState(
-            targetValue = if (isSearchOpen) 0.dp else maxCapsuleWidth,
+        val searchButtonOffset by animateDpAsState(
+            targetValue = if (isSearchOpen) - (maxCapsuleWidth + Spacing.sm) else 0.dp,
             animationSpec = spring(
                 stiffness = Spring.StiffnessLow,
                 dampingRatio = Spring.DampingRatioNoBouncy
@@ -162,14 +162,13 @@ fun LiquidGlassNavBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            if (capsuleWidth > 0.dp) {
-                Box(
-                    modifier = Modifier
-                        .width(capsuleWidth)
-                        .height(NavBarHeight.bar)
-                        .graphicsLayer {
-                            alpha = capsuleAlpha
-                        }
+            Box(
+                modifier = Modifier
+                    .width(maxCapsuleWidth)
+                    .height(NavBarHeight.bar)
+                    .graphicsLayer {
+                        alpha = capsuleAlpha
+                    }
                 .clip(RoundedCornerShape(CornerRadius.pill))
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
@@ -245,7 +244,7 @@ fun LiquidGlassNavBar(
                     }
             }
 
-            if (capsuleWidth > 120.dp) {
+            if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(Spacing.xxxl.toPx()) }
@@ -346,12 +345,12 @@ fun LiquidGlassNavBar(
             }
     }
 }
-}
 
     Spacer(modifier = Modifier.width(Spacing.sm * capsuleAlpha))
 
     Box(
         modifier = Modifier
+            .offset(x = searchButtonOffset)
             .size(NavBarHeight.searchButton)
             .drawBackdropCustomShape(
                 backdrop = backdrop,
