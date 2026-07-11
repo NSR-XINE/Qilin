@@ -133,7 +133,7 @@ class MainActivity : ComponentActivity() {
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
                             topBar = {
-                                if (showGlobalHeader) {
+                                if (showGlobalHeader && !isSearchOpen) {
                                     GlassHeader(
                                         isDark = settingsState.themeMode.lowercase() != "light",
                                         onDrawerOpen = { isDrawerOpen = true },
