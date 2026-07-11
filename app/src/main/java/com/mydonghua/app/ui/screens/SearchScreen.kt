@@ -89,6 +89,7 @@ fun SearchScreen(
                 shape = RoundedCornerShape(CornerRadius.lg),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(max = 360.dp)
                     .padding(horizontal = Spacing.lg)
                     .padding(top = Spacing.xs)
                     .clip(RoundedCornerShape(CornerRadius.lg))
