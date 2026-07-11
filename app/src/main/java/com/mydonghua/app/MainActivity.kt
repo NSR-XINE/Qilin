@@ -352,32 +352,33 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                AnimatedVisibility(
-                    visible = isSearchOpen,
-                    enter = slideInHorizontally { it } + fadeIn(),
-                    exit = slideOutHorizontally { it } + fadeOut(),
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        SearchScreen(
-                            viewModel = searchViewModel,
-                            showsViewModel = showsViewModel,
-                            onWatchClick = { url ->
-                                val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                    putExtra("watch_url", url)
-                                }
-                                startActivity(intent)
-                            },
-                            onShowClick = { showId ->
-                                navController.navigate("show_detail/$showId")
-                            },
-                            onNavigateBack = { isSearchOpen = false }
-                        )
-                    }
-                }
             }
+            }
+
+            AnimatedVisibility(
+                visible = isSearchOpen,
+                enter = slideInHorizontally { it } + fadeIn(),
+                exit = slideOutHorizontally { it } + fadeOut(),
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SearchScreen(
+                        viewModel = searchViewModel,
+                        showsViewModel = showsViewModel,
+                        onWatchClick = { url ->
+                            val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                                putExtra("watch_url", url)
+                            }
+                            startActivity(intent)
+                        },
+                        onShowClick = { showId ->
+                            navController.navigate("show_detail/$showId")
+                        },
+                        onNavigateBack = { isSearchOpen = false }
+                    )
+                }
             }
 
                 if (showGlobalHeader) {
