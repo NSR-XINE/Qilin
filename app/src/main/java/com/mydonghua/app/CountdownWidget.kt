@@ -39,36 +39,47 @@ class CountdownWidget : AppWidgetProvider() {
         @JvmStatic
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.countdown_widget_layout)
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-            try {
-                kotlinx.coroutines.runBlocking {
-                    val db = AppDatabase.getDatabase(context)
-                    val shows = db.showDao().getAllShowsList().map { it.toDomain() }
-                    val nextUp = CountdownCalculator.getNextUpShow(shows)
+            val title = prefs.getString("${KEY_TITLE}_$appWidgetId", null)
+            val countdown = prefs.getString("${KEY_COUNTDOWN}_$appWidgetId", null)
+            val episode = prefs.getString("${KEY_EPISODE}_$appWidgetId", null)
 
-                    if (nextUp != null) {
-                        val targetMs = CountdownCalculator.getNextReleaseDateMs(nextUp.releaseDay, nextUp.releaseTime)
-                        val remaining = CountdownCalculator.calculateTimeRemaining(targetMs)
-                        val countdownStr = if (remaining.airingNow) {
-                            "AIRING NOW"
+            if (title != null && countdown != null) {
+                views.setTextViewText(R.id.widget_show_title, title)
+                views.setTextViewText(R.id.widget_countdown, countdown)
+                views.setTextViewText(R.id.widget_episode, episode ?: "")
+            } else {
+                try {
+                    kotlinx.coroutines.runBlocking {
+                        val db = AppDatabase.getDatabase(context)
+                        val shows = db.showDao().getAllShowsList().map { it.toDomain() }
+                        val nextUp = CountdownCalculator.getNextUpShow(shows)
+
+                        if (nextUp != null) {
+                            val targetMs = CountdownCalculator.getNextReleaseDateMs(nextUp.releaseDay, nextUp.releaseTime)
+                            val remaining = CountdownCalculator.calculateTimeRemaining(targetMs)
+                            val countdownStr = if (remaining.airingNow) {
+                                "AIRING NOW"
+                            } else {
+                                "${remaining.days}d ${remaining.hours}h ${remaining.minutes}m"
+                            }
+                            val epStr = "Episode ${nextUp.currentEp + 1} releasing ${nextUp.releaseDay}"
+
+                            views.setTextViewText(R.id.widget_show_title, nextUp.title)
+                            views.setTextViewText(R.id.widget_countdown, countdownStr)
+                            views.setTextViewText(R.id.widget_episode, epStr)
                         } else {
-                            "${remaining.days}d ${remaining.hours}h ${remaining.minutes}m"
+                            views.setTextViewText(R.id.widget_show_title, "No shows yet")
+                            views.setTextViewText(R.id.widget_countdown, "--d --h --m")
+                            views.setTextViewText(R.id.widget_episode, "Add a show to get started")
                         }
-                        val epStr = "Episode ${nextUp.currentEp + 1} releasing ${nextUp.releaseDay}"
-
-                        views.setTextViewText(R.id.widget_show_title, nextUp.title)
-                        views.setTextViewText(R.id.widget_countdown, countdownStr)
-                        views.setTextViewText(R.id.widget_episode, epStr)
-                    } else {
-                        views.setTextViewText(R.id.widget_show_title, "No shows yet")
-                        views.setTextViewText(R.id.widget_countdown, "--d --h --m")
-                        views.setTextViewText(R.id.widget_episode, "Add a show to get started")
                     }
+                } catch (e: Exception) {
+                    views.setTextViewText(R.id.widget_show_title, "No shows yet")
+                    views.setTextViewText(R.id.widget_countdown, "--d --h --m")
+                    views.setTextViewText(R.id.widget_episode, "Add a show to get started")
                 }
-            } catch (e: Exception) {
-                views.setTextViewText(R.id.widget_show_title, "No shows yet")
-                views.setTextViewText(R.id.widget_countdown, "--d --h --m")
-                views.setTextViewText(R.id.widget_episode, "Add a show to get started")
             }
 
             appWidgetManager.updateAppWidget(appWidgetId, views)

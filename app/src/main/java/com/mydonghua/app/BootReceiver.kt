@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import com.mydonghua.app.data.db.AppDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
 
@@ -22,39 +25,37 @@ class BootReceiver : BroadcastReceiver() {
             val wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyDonghua:AlarmReschedule")
             wakeLock?.acquire(30000L)
 
-            Thread {
-                kotlinx.coroutines.runBlocking {
-                    try {
-                        val db = AppDatabase.getDatabase(context)
-                        val showsList = db.showDao().getAllShowsList()
-                        val ongoing = showsList.filter { it.status == "ongoing" }
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val db = AppDatabase.getDatabase(context)
+                    val showsList = db.showDao().getAllShowsList()
+                    val ongoing = showsList.filter { it.status == "ongoing" }
 
-                        ongoing.forEach { show ->
-                            val code = show.alarmRequestCode
-                            if (code != null) {
-                                AlarmScheduler.schedule(
-                                    context = context,
-                                    showId = show.id,
-                                    title = show.title,
-                                    releaseDay = show.releaseDay ?: "Sunday",
-                                    releaseTime = show.releaseTime ?: "10:00",
-                                    alarmCode = code,
-                                    currentEp = show.currentEp
-                                )
-                            }
+                    ongoing.forEach { show ->
+                        val code = show.alarmRequestCode
+                        if (code != null) {
+                            AlarmScheduler.schedule(
+                                context = context,
+                                showId = show.id,
+                                title = show.title,
+                                releaseDay = show.releaseDay ?: "Sunday",
+                                releaseTime = show.releaseTime ?: "10:00",
+                                alarmCode = code,
+                                currentEp = show.currentEp
+                            )
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    } finally {
-                        if (wakeLock != null && wakeLock.isHeld) {
-                            try {
-                                wakeLock.release()
-                            } catch (ignored: Exception) {
-                            }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    if (wakeLock != null && wakeLock.isHeld) {
+                        try {
+                            wakeLock.release()
+                        } catch (ignored: Exception) {
                         }
                     }
                 }
-            }.start()
+            }
         }
     }
 }

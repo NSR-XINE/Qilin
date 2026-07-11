@@ -92,8 +92,8 @@ fun LiquidGlassNavBar(
         val buffer = IntBuffer.allocate(25)
         while (isActive) {
             try {
+                val imageBitmap = layer.toImageBitmap()
                 withContext(Dispatchers.IO) {
-                    val imageBitmap = layer.toImageBitmap()
                     val thumbnail = Bitmap.createScaledBitmap(imageBitmap.asAndroidBitmap(), 5, 5, false)
                     buffer.rewind()
                     thumbnail.copyPixelsToBuffer(buffer)

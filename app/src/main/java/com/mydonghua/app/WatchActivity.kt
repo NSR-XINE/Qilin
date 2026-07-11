@@ -54,18 +54,21 @@ class WatchActivity : ComponentActivity() {
 
         setContent {
             val context = LocalContext.current
+            var exoPlayerState by remember { mutableStateOf<ExoPlayer?>(null) }
 
-            DisposableEffect(Unit) {
-                val exoPlayer = ExoPlayer.Builder(context).build().apply {
+            DisposableEffect(context) {
+                val playerInstance = ExoPlayer.Builder(context).build().apply {
                     val mediaItem = MediaItem.fromUri(Uri.parse(watchUrl))
                     setMediaItem(mediaItem)
                     prepare()
                     playWhenReady = true
                 }
-                player = exoPlayer
+                exoPlayerState = playerInstance
+                player = playerInstance
 
                 onDispose {
-                    exoPlayer.release()
+                    playerInstance.release()
+                    exoPlayerState = null
                     player = null
                 }
             }
@@ -79,13 +82,12 @@ class WatchActivity : ComponentActivity() {
                 AndroidView(
                     factory = { ctx ->
                         PlayerView(ctx).apply {
-                            this.player = this@WatchActivity.player
                             useController = true
                         }
                     },
                     modifier = Modifier.fillMaxSize(),
                     update = { view ->
-                        view.player = player
+                        view.player = exoPlayerState
                     }
                 )
             }

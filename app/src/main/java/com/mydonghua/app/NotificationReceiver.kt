@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.mydonghua.app.data.db.AppDatabase
 import java.util.concurrent.ConcurrentHashMap
 
 class NotificationReceiver : BroadcastReceiver() {

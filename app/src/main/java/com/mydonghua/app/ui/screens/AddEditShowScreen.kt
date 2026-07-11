@@ -524,7 +524,7 @@ fun AddEditShowScreen(
                         rating = rating.toInt(),
                         lastUpdated = System.currentTimeMillis(),
                         dateAdded = editingShow?.dateAdded ?: System.currentTimeMillis(),
-                        alarmRequestCode = editingShow?.alarmRequestCode ?: Math.abs(UUID.randomUUID().toString().hashCode()),
+                        alarmRequestCode = if (editingShow != null) editingShow.alarmRequestCode else Math.abs(UUID.randomUUID().toString().hashCode()),
                         genres = genres.takeIf { it.isNotEmpty() },
                         studio = studio.takeIf { it.isNotEmpty() },
                         releaseYear = releaseYear.toIntOrNull() ?: 0,
@@ -532,13 +532,14 @@ fun AddEditShowScreen(
                         collectionId = collectionId.takeIf { it.isNotEmpty() }
                     )
 
-                    if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty()) {
+                    if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty() && show.alarmRequestCode != null) {
                         AlarmScheduler.schedule(
                             context, show.id, show.title, show.releaseDay,
-                            show.releaseTime, show.alarmRequestCode ?: 0, show.currentEp
+                            show.releaseTime, show.alarmRequestCode!!, show.currentEp
                         )
                     } else {
-                        AlarmScheduler.cancel(context, show.id, show.alarmRequestCode ?: 0)
+                        val cancelCode = show.alarmRequestCode ?: editingShow?.alarmRequestCode ?: 0
+                        AlarmScheduler.cancel(context, show.id, cancelCode)
                     }
 
                     viewModel.insertOrUpdateShow(show)
