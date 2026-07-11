@@ -315,7 +315,7 @@ fun SearchScreen(
                                         text = suggestion.text,
                                         onClick = {
                                             viewModel.selectQuery(suggestion.text)
-                                            isSearchActive = false
+                                            focusManager.clearFocus()
                                         }
                                     )
                                 }
@@ -326,7 +326,7 @@ fun SearchScreen(
                                         text = suggestion.text,
                                         onClick = {
                                             viewModel.selectQuery(suggestion.text)
-                                            isSearchActive = false
+                                            focusManager.clearFocus()
                                         }
                                     )
                                 }
@@ -337,7 +337,7 @@ fun SearchScreen(
                                         text = suggestion.displayText,
                                         onClick = {
                                             viewModel.selectQuery(suggestion.displayText)
-                                            isSearchActive = false
+                                            focusManager.clearFocus()
                                             onShowClick(suggestion.show.id)
                                         }
                                     )
