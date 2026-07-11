@@ -5,6 +5,7 @@ import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -91,13 +92,6 @@ fun LiquidGlassNavBar(
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
 
-    val capsuleWeight by animateFloatAsState(
-        targetValue = if (isSearchOpen) 0.0001f else 1f,
-        animationSpec = spring(
-            stiffness = Spring.StiffnessMediumLow,
-            dampingRatio = Spring.DampingRatioLowBouncy
-        )
-    )
     val capsuleAlpha by animateFloatAsState(
         targetValue = if (isSearchOpen) 0f else 1f,
         animationSpec = tween(durationMillis = 250)
@@ -145,22 +139,35 @@ fun LiquidGlassNavBar(
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
 
-    Row(
+    BoxWithConstraints(
         modifier = modifier
             .navigationBarsPadding()
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
     ) {
-        Box(
-            modifier = Modifier
-                .weight(capsuleWeight)
-                .height(NavBarHeight.bar)
-                .graphicsLayer {
-                    alpha = capsuleAlpha
-                }
+        val maxCapsuleWidth = maxWidth - NavBarHeight.searchButton - Spacing.sm
+        val capsuleWidth by animateDpAsState(
+            targetValue = if (isSearchOpen) 0.dp else maxCapsuleWidth,
+            animationSpec = spring(
+                stiffness = Spring.StiffnessMediumLow,
+                dampingRatio = Spring.DampingRatioLowBouncy
+            )
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (capsuleWidth > 0.dp) {
+                Box(
+                    modifier = Modifier
+                        .width(capsuleWidth)
+                        .height(NavBarHeight.bar)
+                        .graphicsLayer {
+                            alpha = capsuleAlpha
+                        }
                 .clip(RoundedCornerShape(CornerRadius.pill))
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
@@ -236,7 +243,7 @@ fun LiquidGlassNavBar(
                     }
             }
 
-            if (capsuleWeight > 0.15f) {
+            if (capsuleWidth > 120.dp) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(Spacing.xxxl.toPx()) }
@@ -365,6 +372,7 @@ fun LiquidGlassNavBar(
             tint = Color.White,
         )
     }
+}
 }
 }
 
