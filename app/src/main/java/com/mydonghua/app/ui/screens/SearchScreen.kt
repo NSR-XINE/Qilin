@@ -246,7 +246,7 @@ fun SearchScreen(
 
         // Suggestions box at the bottom of the screen
         AnimatedVisibility(
-            visible = isSearchActive && (suggestions.isNotEmpty() || query.isNotEmpty()),
+            visible = isSearchActive,
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
@@ -268,7 +268,24 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(Spacing.md)
                 ) {
-                    suggestions.forEach { suggestion ->
+                    if (suggestions.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Spacing.lg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (query.isEmpty()) "Recent searches will show here" else "No matching suggestions",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        suggestions.forEach { suggestion ->
                         when (suggestion) {
                             is SearchSuggestion.Popular -> {
                                 item {
@@ -307,6 +324,7 @@ fun SearchScreen(
                         }
                     }
                 }
+            }
             }
         }
     }
