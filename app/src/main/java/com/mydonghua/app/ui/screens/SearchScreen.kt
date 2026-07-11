@@ -58,6 +58,7 @@ fun SearchScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding()
     ) {
             DockedSearchBar(
                 query = query,
