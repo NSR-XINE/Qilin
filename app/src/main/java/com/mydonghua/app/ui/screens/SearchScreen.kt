@@ -38,6 +38,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.material.icons.filled.ArrowBack
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -58,6 +63,7 @@ fun SearchScreen(
     val filters by viewModel.activeFilters.collectAsState()
     val genres by viewModel.distinctGenres.collectAsState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     var isSearchActive by remember { mutableStateOf(false) }
     var showGenreDialog by remember { mutableStateOf(false) }
@@ -94,13 +100,29 @@ fun SearchScreen(
                     },
                 placeholder = { Text("Search shows, genres, studios...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
                 leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        modifier = Modifier.padding(start = Spacing.md),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                    IconButton(
+                        onClick = {
+                            if (isSearchActive) {
+                                focusManager.clearFocus()
+                            } else {
+                                onNavigateBack()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
+                            contentDescription = if (isSearchActive) "Back" else "Search",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
                 },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.selectQuery(query)
+                        focusManager.clearFocus()
+                    }
+                ),
                 trailingIcon = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
