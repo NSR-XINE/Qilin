@@ -386,7 +386,7 @@ class MainActivity : ComponentActivity() {
                         isDark = settingsState.themeMode.lowercase() != "light",
                         backdrop = backdrop,
                         isSearchOpen = isSearchOpen,
-                        onSearchClick = { isSearchOpen = true },
+                        onSearchClick = { isSearchOpen = !isSearchOpen },
                         onNavigate = { route ->
                             when (route) {
                                 "home" -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }

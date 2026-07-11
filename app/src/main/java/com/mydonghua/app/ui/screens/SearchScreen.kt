@@ -145,7 +145,7 @@ fun SearchScreen(
 
             if (results.isEmpty()) {
                 Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 80.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -175,7 +175,7 @@ fun SearchScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding(),
-                    contentPadding = PaddingValues(bottom = Spacing.sm)
+                    contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(results, key = { it.id }) { show ->
                         ShowCard(
