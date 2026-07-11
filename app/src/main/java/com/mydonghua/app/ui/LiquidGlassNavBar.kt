@@ -91,18 +91,7 @@ fun LiquidGlassNavBar(
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
 
-    val alignmentBias by animateFloatAsState(
-        targetValue = if (isSearchOpen) 0f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow)
-    )
-    val searchAlpha by animateFloatAsState(
-        targetValue = if (isSearchOpen) 0f else 1f,
-        animationSpec = tween(durationMillis = 300)
-    )
-    val searchScale by animateFloatAsState(
-        targetValue = if (isSearchOpen) 0.5f else 1f,
-        animationSpec = tween(durationMillis = 300)
-    )
+
 
     LaunchedEffect(layer) {
         val buffer = IntBuffer.allocate(25)
@@ -142,17 +131,20 @@ fun LiquidGlassNavBar(
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
 
-    Box(
+    Row(
         modifier = modifier
             .navigationBarsPadding()
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         AnimatedVisibility(
             visible = !isSearchOpen,
             enter = expandHorizontally(expandFrom = Alignment.Start, animationSpec = tween(300)) + fadeIn(tween(200)),
             exit = shrinkHorizontally(shrinkTowards = Alignment.Start, animationSpec = tween(300)) + fadeOut(tween(200)),
+            modifier = Modifier.weight(1f)
         ) {
             Box(
                 modifier = Modifier
@@ -334,15 +326,13 @@ fun LiquidGlassNavBar(
             }
         }
 
+        if (!isSearchOpen) {
+            Spacer(modifier = Modifier.width(Spacing.sm))
+        }
+
         Box(
             modifier = Modifier
                 .size(NavBarHeight.searchButton)
-                .align(BiasAlignment(horizontalBias = alignmentBias, verticalBias = 0f))
-                .graphicsLayer {
-                    alpha = searchAlpha
-                    scaleX = searchScale
-                    scaleY = searchScale
-                }
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
                     layer = searchLayer,
@@ -352,7 +342,6 @@ fun LiquidGlassNavBar(
                 )
                 .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
                 .clickable(
-                    enabled = !isSearchOpen,
                     interactionSource = null,
                     indication = null,
                     onClick = onSearchClick,
