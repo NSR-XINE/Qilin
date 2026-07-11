@@ -16,6 +16,15 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -32,7 +41,7 @@ import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
@@ -56,11 +65,20 @@ fun SearchScreen(
     var showRatingDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
 
-    Column(
+    val isKeyboardOpen = WindowInsets.isImeVisible
+    val suggestionsBoxHeight by animateDpAsState(
+        targetValue = if (isKeyboardOpen) 180.dp else 360.dp,
+        label = "suggestionsHeight"
+    )
+
+    Box(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             DockedSearchBar(
                 query = query,
                 onQueryChange = { viewModel.searchQuery.value = it },
@@ -68,7 +86,7 @@ fun SearchScreen(
                     viewModel.selectQuery(it)
                     isSearchActive = false
                 },
-                active = isSearchActive,
+                active = false,
                 onActiveChange = { isSearchActive = it },
                 placeholder = { Text("Search shows, genres, studios...") },
                 leadingIcon = {
@@ -163,40 +181,7 @@ fun SearchScreen(
                     .padding(horizontal = Spacing.lg)
                     .padding(top = Spacing.xs)
                     .clip(RoundedCornerShape(CornerRadius.lg))
-            ) {
-                suggestions.forEach { suggestion ->
-                    when (suggestion) {
-                        is SearchSuggestion.Popular -> {
-                            SuggestionItem(
-                                text = suggestion.text,
-                                onClick = {
-                                    viewModel.selectQuery(suggestion.text)
-                                    isSearchActive = false
-                                }
-                            )
-                        }
-                        is SearchSuggestion.Recent -> {
-                            SuggestionItem(
-                                text = suggestion.text,
-                                onClick = {
-                                    viewModel.selectQuery(suggestion.text)
-                                    isSearchActive = false
-                                }
-                            )
-                        }
-                        is SearchSuggestion.ShowMatch -> {
-                            SuggestionItem(
-                                text = suggestion.displayText,
-                                onClick = {
-                                    viewModel.selectQuery(suggestion.displayText)
-                                    isSearchActive = false
-                                    onShowClick(suggestion.show.id)
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+            ) {}
 
 
 
@@ -250,6 +235,73 @@ fun SearchScreen(
                 }
             }
         }
+
+        // Suggestions box at the bottom of the screen
+        AnimatedVisibility(
+            visible = isSearchActive && (suggestions.isNotEmpty() || query.isNotEmpty()),
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = Spacing.lg, bottom = Spacing.md)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(suggestionsBoxHeight)
+                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg)),
+                shape = RoundedCornerShape(CornerRadius.lg),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+                tonalElevation = 8.dp
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(Spacing.md)
+                ) {
+                    suggestions.forEach { suggestion ->
+                        when (suggestion) {
+                            is SearchSuggestion.Popular -> {
+                                item {
+                                    SuggestionItem(
+                                        text = suggestion.text,
+                                        onClick = {
+                                            viewModel.selectQuery(suggestion.text)
+                                            isSearchActive = false
+                                        }
+                                    )
+                                }
+                            }
+                            is SearchSuggestion.Recent -> {
+                                item {
+                                    SuggestionItem(
+                                        text = suggestion.text,
+                                        onClick = {
+                                            viewModel.selectQuery(suggestion.text)
+                                            isSearchActive = false
+                                        }
+                                    )
+                                }
+                            }
+                            is SearchSuggestion.ShowMatch -> {
+                                item {
+                                    SuggestionItem(
+                                        text = suggestion.displayText,
+                                        onClick = {
+                                            viewModel.selectQuery(suggestion.displayText)
+                                            isSearchActive = false
+                                            onShowClick(suggestion.show.id)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     if (showGenreDialog) {
         GenreFilterDialog(
