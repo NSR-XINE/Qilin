@@ -93,6 +93,15 @@ class SearchViewModel @Inject constructor(
         activeFilters,
         allShows
     ) { query, filters, shows ->
+        val hasActiveFilters = filters.selectedGenre != null ||
+                filters.selectedStudio != null ||
+                filters.selectedYear != null ||
+                filters.minRating > 0
+
+        if (query.trim().isEmpty() && !hasActiveFilters) {
+            return@combine emptyList()
+        }
+
         var list = shows
 
         if (query.trim().isNotEmpty()) {
