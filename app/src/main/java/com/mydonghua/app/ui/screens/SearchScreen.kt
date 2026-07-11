@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -79,21 +80,25 @@ fun SearchScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            DockedSearchBar(
-                query = query,
-                onQueryChange = { viewModel.searchQuery.value = it },
-                onSearch = {
-                    viewModel.selectQuery(it)
-                    isSearchActive = false
-                },
-                active = false,
-                onActiveChange = { isSearchActive = it },
-                placeholder = { Text("Search shows, genres, studios...") },
+            TextField(
+                value = query,
+                onValueChange = { viewModel.searchQuery.value = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.lg)
+                    .padding(top = Spacing.xs)
+                    .clip(RoundedCornerShape(CornerRadius.lg))
+                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
+                    .onFocusChanged { focusState ->
+                        isSearchActive = focusState.isFocused
+                    },
+                placeholder = { Text("Search shows, genres, studios...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        modifier = Modifier.padding(start = Spacing.md)
+                        modifier = Modifier.padding(start = Spacing.md),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 },
                 trailingIcon = {
@@ -106,7 +111,7 @@ fun SearchScreen(
                                 onClick = { viewModel.clearQuery() },
                                 modifier = Modifier.clip(CircleShape)
                             ) {
-                                Text("\u2715", fontSize = 16.sp)
+                                Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                         var showMenu by remember { mutableStateOf(false) }
@@ -114,7 +119,8 @@ fun SearchScreen(
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Filters"
+                                    contentDescription = "Filters",
+                                    tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             DropdownMenu(
@@ -175,13 +181,15 @@ fun SearchScreen(
                     }
                 },
                 shape = RoundedCornerShape(CornerRadius.lg),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 360.dp)
-                    .padding(horizontal = Spacing.lg)
-                    .padding(top = Spacing.xs)
-                    .clip(RoundedCornerShape(CornerRadius.lg))
-            ) {}
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                ),
+                singleLine = true
+            )
 
 
 
