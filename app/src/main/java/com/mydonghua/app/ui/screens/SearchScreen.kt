@@ -58,7 +58,6 @@ fun SearchScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .statusBarsPadding()
     ) {
             SearchBar(
                 query = query,
