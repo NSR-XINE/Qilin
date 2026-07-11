@@ -59,7 +59,7 @@ fun SearchScreen(
         modifier = modifier
             .fillMaxSize()
     ) {
-            SearchBar(
+            DockedSearchBar(
                 query = query,
                 onQueryChange = { viewModel.searchQuery.value = it },
                 onSearch = {
