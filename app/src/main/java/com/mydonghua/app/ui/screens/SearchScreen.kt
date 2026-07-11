@@ -86,11 +86,12 @@ fun SearchScreen(
                         }
                     }
                 },
-                shape = RoundedCornerShape(CornerRadius.sm),
+                shape = RoundedCornerShape(CornerRadius.lg),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg)
                     .padding(top = Spacing.xs)
+                    .clip(RoundedCornerShape(CornerRadius.lg))
             ) {
                 suggestions.forEach { suggestion ->
                     when (suggestion) {
