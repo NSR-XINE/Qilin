@@ -344,6 +344,7 @@ fun LiquidGlassNavBar(
             }
     }
 }
+}
 
     Spacer(modifier = Modifier.width(Spacing.sm * capsuleAlpha))
 
