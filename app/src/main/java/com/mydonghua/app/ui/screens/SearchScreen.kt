@@ -55,15 +55,11 @@ fun SearchScreen(
     var showRatingDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = Color.Transparent,
+    Column(
         modifier = modifier
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
             SearchBar(
                 query = query,
                 onQueryChange = { viewModel.searchQuery.value = it },
@@ -193,7 +189,6 @@ fun SearchScreen(
                 }
             }
         }
-    }
 
     if (showGenreDialog) {
         GenreFilterDialog(
