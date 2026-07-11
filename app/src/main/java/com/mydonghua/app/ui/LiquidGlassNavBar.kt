@@ -4,8 +4,11 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -87,6 +90,19 @@ fun LiquidGlassNavBar(
 ) {
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
+
+    val alignmentBias by animateFloatAsState(
+        targetValue = if (isSearchOpen) 0f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
+    )
+    val searchAlpha by animateFloatAsState(
+        targetValue = if (isSearchOpen) 0f else 1f,
+        animationSpec = tween(durationMillis = 300)
+    )
+    val searchScale by animateFloatAsState(
+        targetValue = if (isSearchOpen) 0.5f else 1f,
+        animationSpec = tween(durationMillis = 300)
+    )
 
     LaunchedEffect(layer) {
         val buffer = IntBuffer.allocate(25)
@@ -321,7 +337,12 @@ fun LiquidGlassNavBar(
         Box(
             modifier = Modifier
                 .size(NavBarHeight.searchButton)
-                .align(Alignment.CenterEnd)
+                .align(BiasAlignment(horizontalBias = alignmentBias, verticalBias = 0f))
+                .graphicsLayer {
+                    alpha = searchAlpha
+                    scaleX = searchScale
+                    scaleY = searchScale
+                }
                 .drawBackdropCustomShape(
                     backdrop = backdrop,
                     layer = searchLayer,
@@ -331,6 +352,7 @@ fun LiquidGlassNavBar(
                 )
                 .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
                 .clickable(
+                    enabled = !isSearchOpen,
                     interactionSource = null,
                     indication = null,
                     onClick = onSearchClick,
