@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -78,12 +79,80 @@ fun SearchScreen(
                     )
                 },
                 trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        IconButton(
-                            onClick = { viewModel.clearQuery() },
-                            modifier = Modifier.clip(CircleShape)
-                        ) {
-                            Text("\u2715", fontSize = 16.sp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = Spacing.sm)
+                    ) {
+                        if (query.isNotEmpty()) {
+                            IconButton(
+                                onClick = { viewModel.clearQuery() },
+                                modifier = Modifier.clip(CircleShape)
+                            ) {
+                                Text("\u2715", fontSize = 16.sp)
+                            }
+                        }
+                        var showMenu by remember { mutableStateOf(false) }
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Filters"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Genre") },
+                                    onClick = {
+                                        showMenu = false
+                                        showGenreDialog = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Studio") },
+                                    onClick = {
+                                        showMenu = false
+                                        showStudioDialog = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Year") },
+                                    onClick = {
+                                        showMenu = false
+                                        showYearDialog = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Rating") },
+                                    onClick = {
+                                        showMenu = false
+                                        showRatingDialog = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Sort") },
+                                    onClick = {
+                                        showMenu = false
+                                        showSortDialog = true
+                                    }
+                                )
+                                val hasActiveFilters = filters.selectedGenre != null ||
+                                        filters.selectedStudio != null ||
+                                        filters.selectedYear != null ||
+                                        filters.minRating > 0
+                                if (hasActiveFilters) {
+                                    HorizontalDivider()
+                                    DropdownMenuItem(
+                                        text = { Text("Clear Filters", color = MaterialTheme.colorScheme.error) },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.updateFilters(SearchFilters())
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 },
@@ -129,17 +198,7 @@ fun SearchScreen(
                 }
             }
 
-            FilterChipsRow(
-                filters = filters,
-                onGenreClick = { showGenreDialog = true },
-                onStudioClick = { showStudioDialog = true },
-                onYearClick = { showYearDialog = true },
-                onRatingClick = { showRatingDialog = true },
-                onSortClick = { showSortDialog = true },
-                onClearAll = { viewModel.updateFilters(SearchFilters()) }
-            )
 
-            Spacer(modifier = Modifier.height(Spacing.xs))
 
             if (results.isEmpty()) {
                 Box(
