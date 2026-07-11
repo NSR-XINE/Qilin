@@ -245,7 +245,7 @@ fun SearchScreen(
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = Spacing.lg, bottom = Spacing.md)
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = Spacing.md)
         ) {
             Surface(
                 modifier = Modifier
