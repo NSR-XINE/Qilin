@@ -91,6 +91,18 @@ fun LiquidGlassNavBar(
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
 
+    val capsuleWeight by animateFloatAsState(
+        targetValue = if (isSearchOpen) 0.0001f else 1f,
+        animationSpec = spring(
+            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioLowBouncy
+        )
+    )
+    val capsuleAlpha by animateFloatAsState(
+        targetValue = if (isSearchOpen) 0f else 1f,
+        animationSpec = tween(durationMillis = 250)
+    )
+
 
 
     LaunchedEffect(layer) {
@@ -140,50 +152,35 @@ fun LiquidGlassNavBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        AnimatedVisibility(
-            visible = !isSearchOpen,
-            enter = expandHorizontally(
-                expandFrom = Alignment.Start,
-                animationSpec = spring(
-                    stiffness = Spring.StiffnessMediumLow,
-                    dampingRatio = Spring.DampingRatioLowBouncy
+        Box(
+            modifier = Modifier
+                .weight(capsuleWeight)
+                .height(NavBarHeight.bar)
+                .graphicsLayer {
+                    alpha = capsuleAlpha
+                }
+                .clip(RoundedCornerShape(CornerRadius.pill))
+                .drawBackdropCustomShape(
+                    backdrop = backdrop,
+                    layer = layer,
+                    luminanceAnimation = luminanceAnimation.value,
+                    shape = RoundedCornerShape(CornerRadius.pill),
+                    interaction = barInteraction,
+                    pressedScale = 1.12f,
                 )
-            ) + fadeIn(tween(200)),
-            exit = shrinkHorizontally(
-                shrinkTowards = Alignment.Start,
-                animationSpec = spring(
-                    stiffness = Spring.StiffnessMediumLow,
-                    dampingRatio = Spring.DampingRatioLowBouncy
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(CornerRadius.pill),
                 )
-            ) + fadeOut(tween(200)),
-            modifier = Modifier.weight(1f)
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(CornerRadius.pill),
+                )
+                .onSizeChanged { barWidthPx = it.width }
+                .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+            contentAlignment = Alignment.CenterStart,
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(NavBarHeight.bar)
-                    .clip(RoundedCornerShape(CornerRadius.pill))
-                    .drawBackdropCustomShape(
-                        backdrop = backdrop,
-                        layer = layer,
-                        luminanceAnimation = luminanceAnimation.value,
-                        shape = RoundedCornerShape(CornerRadius.pill),
-                        interaction = barInteraction,
-                        pressedScale = 1.12f,
-                    )
-                    .background(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(CornerRadius.pill),
-                    )
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(CornerRadius.pill),
-                    )
-                    .onSizeChanged { barWidthPx = it.width }
-                    .pointerInput(barInteraction) { barInteraction.detectPress(this) },
-                contentAlignment = Alignment.CenterStart,
-            ) {
             val dampedDrag =
                 remember(coroutineScope, navRoutes.size) {
                     DampedDragAnimation(
@@ -237,7 +234,8 @@ fun LiquidGlassNavBar(
                     }
             }
 
-            if (barWidthPx > 0) {
+            if (capsuleWeight > 0.15f) {
+                if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(Spacing.xxxl.toPx()) }
                 Box(
@@ -335,12 +333,9 @@ fun LiquidGlassNavBar(
                     }
                 }
             }
-            }
         }
 
-        if (!isSearchOpen) {
-            Spacer(modifier = Modifier.width(Spacing.sm))
-        }
+        Spacer(modifier = Modifier.width(Spacing.sm * capsuleAlpha))
 
         Box(
             modifier = Modifier
