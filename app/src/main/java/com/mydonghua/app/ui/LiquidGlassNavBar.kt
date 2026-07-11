@@ -149,10 +149,7 @@ fun LiquidGlassNavBar(
         val maxCapsuleWidth = maxWidth - NavBarHeight.searchButton - Spacing.sm
         val capsuleWidth by animateDpAsState(
             targetValue = if (isSearchOpen) 0.dp else maxCapsuleWidth,
-            animationSpec = spring(
-                stiffness = Spring.StiffnessMediumLow,
-                dampingRatio = Spring.DampingRatioLowBouncy
-            )
+            animationSpec = tween(durationMillis = 350)
         )
 
         Row(
