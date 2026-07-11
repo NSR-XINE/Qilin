@@ -357,7 +357,10 @@ class MainActivity : ComponentActivity() {
                     enter = slideInHorizontally { it } + fadeIn(),
                     exit = slideOutHorizontally { it } + fadeOut(),
                 ) {
-                    GlassBackground {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
                         SearchScreen(
                             viewModel = searchViewModel,
                             showsViewModel = showsViewModel,
