@@ -86,9 +86,15 @@ fun SearchScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            TextField(
-                value = query,
-                onValueChange = { viewModel.searchQuery.value = it },
+            SearchBarDefaults.InputField(
+                query = query,
+                onQueryChange = { viewModel.searchQuery.value = it },
+                onSearch = {
+                    viewModel.selectQuery(it)
+                    focusManager.clearFocus()
+                },
+                active = isSearchActive,
+                onActiveChange = { isSearchActive = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg)
@@ -116,13 +122,6 @@ fun SearchScreen(
                         )
                     }
                 },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        viewModel.selectQuery(query)
-                        focusManager.clearFocus()
-                    }
-                ),
                 trailingIcon = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -201,16 +200,7 @@ fun SearchScreen(
                             }
                         }
                     }
-                },
-                shape = RoundedCornerShape(CornerRadius.lg),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                singleLine = true
+                }
             )
 
 
