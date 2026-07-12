@@ -181,7 +181,7 @@ fun LiquidGlassNavBar(
                     luminanceAnimation = luminanceAnimation.value,
                     shape = RoundedCornerShape(CornerRadius.pill),
                     interaction = barInteraction,
-                    pressedScale = 1.12f,
+                    pressedScale = 1.0f,
                 )
                 .background(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
