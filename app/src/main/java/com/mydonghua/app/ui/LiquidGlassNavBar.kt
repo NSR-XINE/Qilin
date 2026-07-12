@@ -29,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.BlendMode
@@ -249,13 +250,12 @@ fun LiquidGlassNavBar(
             if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(BlobHeight.toPx()) }
+                val pillWidthPx = slotWidthPx - with(density) { Spacing.sm.toPx() }
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
-                            translationX = (dampedDrag.value + 0.5f) * slotWidthPx - pillWidthPx / 2f
+                            translationX = dampedDrag.value * slotWidthPx + with(density) { 4.dp.toPx() }
                         }
-                        .clip(CapsuleShape)
                         .drawBackdrop(
                             backdrop = backdrop,
                             shape = { CapsuleShape },
@@ -288,11 +288,15 @@ fun LiquidGlassNavBar(
                             },
                             onDrawSurface = {
                                 val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                                drawRect(Color.Black.copy(alpha = darken))
+                                val radius = size.height / 2f
+                                drawRoundRect(
+                                    color = Color.Black.copy(alpha = darken),
+                                    cornerRadius = CornerRadius(radius, radius),
+                                )
                             },
                         )
                         .width(with(density) { pillWidthPx.toDp() })
-                        .height(BlobHeight),
+                        .height(with(density) { pillWidthPx.coerceAtMost(BlobHeight.toPx()).toDp() }),
                 )
             }
 
