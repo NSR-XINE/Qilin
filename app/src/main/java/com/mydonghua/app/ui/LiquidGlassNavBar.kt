@@ -262,11 +262,6 @@ fun LiquidGlassNavBar(
                     modifier = Modifier
                         .graphicsLayer {
                             translationX = (dampedDrag.value + 0.5f) * slotWidthPx - pillWidthPx / 2f
-                            scaleX = dampedDrag.scaleX
-                            scaleY = dampedDrag.scaleY
-                            val velocity = dampedDrag.velocity / 10f
-                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
-                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         }
                         .width(with(density) { pillWidthPx.toDp() })
                         .height(BlobHeight)
