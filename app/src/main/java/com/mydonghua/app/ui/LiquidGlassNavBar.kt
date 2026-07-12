@@ -249,7 +249,7 @@ fun LiquidGlassNavBar(
             if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val pillWidthPx = slotWidthPx - with(density) { Spacing.sm.toPx() }
+                val pillWidthPx = with(density) { NavBarHeight.blob.toPx() }
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
@@ -294,8 +294,8 @@ fun LiquidGlassNavBar(
                                 )
                             },
                         )
-                        .width(with(density) { pillWidthPx.toDp() })
-                        .height(with(density) { pillWidthPx.toDp() }),
+                        .width(NavBarHeight.blob)
+                        .height(NavBarHeight.icon),
                 )
             }
 
