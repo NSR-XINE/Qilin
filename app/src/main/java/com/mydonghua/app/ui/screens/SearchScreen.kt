@@ -143,204 +143,185 @@ fun SearchScreen(
             }
         }
 
-        // 2. Search bar input field and suggestions card directly below it
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .zIndex(1f)
-        ) {
-            SearchBarDefaults.InputField(
-                query = query,
-                onQueryChange = { viewModel.searchQuery.value = it },
-                onSearch = {
-                    viewModel.selectQuery(it)
-                    focusManager.clearFocus()
-                },
-                expanded = isSearchActive,
-                onExpandedChange = { isSearchActive = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg)
-                    .padding(top = Spacing.xs)
-                    .clip(RoundedCornerShape(CornerRadius.lg))
-                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
-                    .onFocusChanged { focusState ->
-                        isSearchActive = focusState.isFocused
-                    },
-                placeholder = { Text("Search shows, genres, studios...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
-                leadingIcon = {
-                    IconButton(
-                        onClick = {
-                            if (isSearchActive) {
-                                focusManager.clearFocus()
-                            } else {
-                                onNavigateBack()
-                            }
+        // 2. Docked Search Bar (drawn on top of the results list)
+        DockedSearchBar(
+            query = query,
+            onQueryChange = { viewModel.searchQuery.value = it },
+            onSearch = {
+                viewModel.selectQuery(it)
+                isSearchActive = false
+                focusManager.clearFocus()
+            },
+            active = isSearchActive,
+            onActiveChange = { isSearchActive = it },
+            placeholder = { Text("Search shows, genres, studios...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
+            leadingIcon = {
+                IconButton(
+                    onClick = {
+                        if (isSearchActive) {
+                            isSearchActive = false
+                            focusManager.clearFocus()
+                        } else {
+                            onNavigateBack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
-                            contentDescription = if (isSearchActive) "Back" else "Search",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
                     }
-                },
-                trailingIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(end = Spacing.sm)
-                    ) {
-                        if (query.isNotEmpty()) {
-                            IconButton(
-                                onClick = { viewModel.clearQuery() },
-                                modifier = Modifier.clip(CircleShape)
-                            ) {
-                                Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                            }
+                ) {
+                    Icon(
+                        imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
+                        contentDescription = if (isSearchActive) "Back" else "Search",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            },
+            trailingIcon = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = Spacing.sm)
+                ) {
+                    if (query.isNotEmpty()) {
+                        IconButton(
+                            onClick = { viewModel.clearQuery() },
+                            modifier = Modifier.clip(CircleShape)
+                        ) {
+                            Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
-                        var showMenu by remember { mutableStateOf(false) }
-                        Box {
-                            IconButton(onClick = { showMenu = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Filters",
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Genre") },
-                                    onClick = {
-                                        showMenu = false
-                                        showGenreDialog = true
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Studio") },
-                                    onClick = {
-                                        showMenu = false
-                                        showStudioDialog = true
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Year") },
-                                    onClick = {
-                                        showMenu = false
-                                        showYearDialog = true
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Rating") },
-                                    onClick = {
-                                        showMenu = false
-                                        showRatingDialog = true
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Sort") },
-                                    onClick = {
-                                        showMenu = false
-                                        showSortDialog = true
-                                    }
-                                )
-                                val hasActiveFilters = filters.selectedGenre != null ||
-                                        filters.selectedStudio != null ||
-                                        filters.selectedYear != null ||
-                                        filters.minRating > 0
-                                if (hasActiveFilters) {
-                                    HorizontalDivider()
-                                    DropdownMenuItem(
-                                        text = { Text("Clear Filters", color = MaterialTheme.colorScheme.error) },
-                                        onClick = {
-                                            showMenu = false
-                                            viewModel.updateFilters(SearchFilters())
-                                        }
-                                    )
+                    }
+                    var showMenu by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Filters",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Genre") },
+                                onClick = {
+                                    showMenu = false
+                                    showGenreDialog = true
                                 }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Studio") },
+                                onClick = {
+                                    showMenu = false
+                                    showStudioDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Year") },
+                                onClick = {
+                                    showMenu = false
+                                    showYearDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Rating") },
+                                onClick = {
+                                    showMenu = false
+                                    showRatingDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Sort") },
+                                onClick = {
+                                    showMenu = false
+                                    showSortDialog = true
+                                }
+                            )
+                            val hasActiveFilters = filters.selectedGenre != null ||
+                                    filters.selectedStudio != null ||
+                                    filters.selectedYear != null ||
+                                    filters.minRating > 0
+                            if (hasActiveFilters) {
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("Clear Filters", color = MaterialTheme.colorScheme.error) },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.updateFilters(SearchFilters())
+                                    }
+                                )
                             }
                         }
                     }
                 }
-            )
-
-            AnimatedVisibility(
-                visible = isSearchActive,
-                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+            },
+            shape = RoundedCornerShape(CornerRadius.lg),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg)
+                .padding(top = Spacing.xs)
+                .align(Alignment.TopCenter)
+        ) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg)
-                    .padding(top = Spacing.xs)
+                    .height(suggestionsBoxHeight)
             ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(suggestionsBoxHeight)
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg)),
-                    shape = RoundedCornerShape(CornerRadius.lg),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
-                    tonalElevation = 8.dp
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(Spacing.md)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(Spacing.md)
-                    ) {
-                        if (suggestions.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = Spacing.lg),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (query.isEmpty()) "Recent searches will show here" else "No matching suggestions",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        fontSize = 14.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
+                    if (suggestions.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Spacing.lg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (query.isEmpty()) "Recent searches will show here" else "No matching suggestions",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center
+                                )
                             }
-                        } else {
-                            suggestions.forEach { suggestion ->
-                                when (suggestion) {
-                                    is SearchSuggestion.Popular -> {
-                                        item {
-                                            SuggestionItem(
-                                                text = suggestion.text,
-                                                onClick = {
-                                                    viewModel.selectQuery(suggestion.text)
-                                                    focusManager.clearFocus()
-                                                }
-                                            )
-                                        }
+                        }
+                    } else {
+                        suggestions.forEach { suggestion ->
+                            when (suggestion) {
+                                is SearchSuggestion.Popular -> {
+                                    item {
+                                        SuggestionItem(
+                                            text = suggestion.text,
+                                            onClick = {
+                                                viewModel.selectQuery(suggestion.text)
+                                                isSearchActive = false
+                                                focusManager.clearFocus()
+                                            }
+                                        )
                                     }
-                                    is SearchSuggestion.Recent -> {
-                                        item {
-                                            SuggestionItem(
-                                                text = suggestion.text,
-                                                onClick = {
-                                                    viewModel.selectQuery(suggestion.text)
-                                                    focusManager.clearFocus()
-                                                }
-                                            )
-                                        }
+                                }
+                                is SearchSuggestion.Recent -> {
+                                    item {
+                                        SuggestionItem(
+                                            text = suggestion.text,
+                                            onClick = {
+                                                viewModel.selectQuery(suggestion.text)
+                                                isSearchActive = false
+                                                focusManager.clearFocus()
+                                            }
+                                        )
                                     }
-                                    is SearchSuggestion.ShowMatch -> {
-                                        item {
-                                            SuggestionItem(
-                                                text = suggestion.displayText,
-                                                onClick = {
-                                                    viewModel.selectQuery(suggestion.displayText)
-                                                    focusManager.clearFocus()
-                                                    onShowClick(suggestion.show.id)
-                                                }
-                                            )
-                                        }
+                                }
+                                is SearchSuggestion.ShowMatch -> {
+                                    item {
+                                        SuggestionItem(
+                                            text = suggestion.displayText,
+                                            onClick = {
+                                                viewModel.selectQuery(suggestion.displayText)
+                                                isSearchActive = false
+                                                focusManager.clearFocus()
+                                                onShowClick(suggestion.show.id)
+                                            }
+                                        )
                                     }
                                 }
                             }
