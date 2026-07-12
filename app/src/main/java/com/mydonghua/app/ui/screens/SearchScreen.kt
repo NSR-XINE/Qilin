@@ -76,11 +76,14 @@ fun SearchScreen(
     var showRatingDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
 
-    val isKeyboardOpen = WindowInsets.isImeVisible
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
+    val imePadding = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    val navPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val topOffset = 76.dp
+    val targetHeight = screenHeight - imePadding - navPadding - topOffset
     val suggestionsBoxHeight by animateDpAsState(
-        targetValue = if (isKeyboardOpen) 180.dp else (screenHeight - 140.dp),
+        targetValue = targetHeight,
         label = "suggestionsHeight"
     )
 
