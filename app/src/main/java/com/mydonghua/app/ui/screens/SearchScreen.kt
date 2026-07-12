@@ -1,5 +1,6 @@
 package com.mydonghua.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -75,6 +76,14 @@ fun SearchScreen(
     var showYearDialog by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = true) {
+        if (isSearchActive) {
+            focusManager.clearFocus()
+        } else {
+            onNavigateBack()
+        }
+    }
 
     Column(
         modifier = modifier
