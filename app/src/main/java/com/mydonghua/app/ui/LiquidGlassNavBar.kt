@@ -249,7 +249,7 @@ fun LiquidGlassNavBar(
             if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(BlobHeight.toPx()) }
+                val pillWidthPx = slotWidthPx - with(density) { Spacing.sm.toPx() }
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
@@ -295,7 +295,7 @@ fun LiquidGlassNavBar(
                             },
                         )
                         .width(with(density) { pillWidthPx.toDp() })
-                        .height(BlobHeight),
+                        .height(with(density) { pillWidthPx.toDp() }),
                 )
             }
 
@@ -444,7 +444,11 @@ private fun Modifier.drawBackdropCustomShape(
         },
         onDrawSurface = {
             val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
-            drawRect(Color.Black.copy(alpha = darken))
+            val radius = size.height / 2f
+            drawRoundRect(
+                color = Color.Black.copy(alpha = darken),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
+            )
             val press = interaction?.pressProgress ?: 0f
             if (press > 0f) {
                 drawRect(
