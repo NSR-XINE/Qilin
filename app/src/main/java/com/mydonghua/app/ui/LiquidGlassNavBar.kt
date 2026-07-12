@@ -79,7 +79,7 @@ import kotlin.time.Duration.Companion.seconds
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
 private val BlobHeight = NavBarHeight.blob
 private val BarShape = RoundedCornerShape(CornerRadius.pill)
-private val CapsuleShape = RoundedCornerShape(percent = 50)
+private val CapsuleShape = RoundedCornerShape(CornerRadius.pill * 0.95f)
 
 @Composable
 fun LiquidGlassNavBar(
