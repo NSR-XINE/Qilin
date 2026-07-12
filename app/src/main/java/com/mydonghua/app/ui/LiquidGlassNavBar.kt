@@ -249,11 +249,11 @@ fun LiquidGlassNavBar(
             if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val pillWidthPx = slotWidthPx - with(density) { Spacing.sm.toPx() }
+                val pillWidthPx = with(density) { (slotWidthPx - Spacing.sm.toPx()).coerceAtLeast(BlobHeight.toPx()) }
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
-                            translationX = dampedDrag.value * slotWidthPx + with(density) { 4.dp.toPx() }
+                            translationX = dampedDrag.value * (barWidthPx - with(density) { 8.dp.toPx() } - pillWidthPx) / (totalSlots - 1f) + with(density) { 4.dp.toPx() }
                         }
                         .drawBackdrop(
                             backdrop = backdrop,
@@ -295,7 +295,7 @@ fun LiquidGlassNavBar(
                             },
                         )
                         .width(with(density) { pillWidthPx.toDp() })
-                        .height(with(density) { pillWidthPx.coerceAtMost(BlobHeight.toPx()).toDp() }),
+                        .height(BlobHeight),
                 )
             }
 
