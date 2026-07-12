@@ -350,7 +350,6 @@ fun SearchScreen(
             }
         }
     }
-    }
 
     if (showGenreDialog) {
         GenreFilterDialog(
