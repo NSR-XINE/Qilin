@@ -249,7 +249,14 @@ fun LiquidGlassNavBar(
             if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val pillWidthPx = with(density) { NavBarHeight.blob.toPx() }
+                val progress = dampedDrag.pressProgress
+                val restWidth = slotWidthPx - with(density) { Spacing.sm.toPx() }
+                val pressedWidth = with(density) { NavBarHeight.blob.toPx() }
+                val pillWidthPx = lerp(restWidth, pressedWidth, progress)
+
+                val restHeight = restWidth
+                val pressedHeight = with(density) { NavBarHeight.icon.toPx() }
+                val pillHeightPx = lerp(restHeight, pressedHeight, progress)
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
@@ -269,33 +276,30 @@ fun LiquidGlassNavBar(
                                     (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
                                     else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 20f.dp.toPx(),
                                 )
-                                val progress = dampedDrag.pressProgress
-                                refractionWithDispersion(10f.dp.toPx() * progress, 14f.dp.toPx() * progress, hasDepthEffect = false)
+                                val pressProg = dampedDrag.pressProgress
+                                refractionWithDispersion(10f.dp.toPx() * pressProg, 14f.dp.toPx() * pressProg, hasDepthEffect = false)
                             },
                             highlight = { Highlight.Default.copy(alpha = 0.6f) },
                             shadow = { Shadow(radius = 4f.dp, alpha = 0.4f) },
                             innerShadow = {
-                                val progress = dampedDrag.pressProgress
-                                InnerShadow(radius = 8f.dp * progress, alpha = progress)
+                                val pressProg = dampedDrag.pressProgress
+                                InnerShadow(radius = 8f.dp * pressProg, alpha = pressProg)
                             },
                             layerBlock = {
-                                scaleX = dampedDrag.scaleX
-                                scaleY = dampedDrag.scaleY
+                                scaleX = 1f
+                                scaleY = 1f
                                 val velocity = dampedDrag.velocity / 10f
                                 scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                                 scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                             },
                             onDrawSurface = {
                                 val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                                val radius = size.height / 2f
-                                drawRoundRect(
-                                    color = Color.Black.copy(alpha = darken),
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
-                                )
+                                drawRect(Color.Black.copy(alpha = darken))
                             },
                         )
-                        .width(NavBarHeight.blob)
-                        .height(NavBarHeight.icon),
+                        .width(with(density) { pillWidthPx.toDp() })
+                        .height(with(density) { pillHeightPx.toDp() })
+                        .clip(CapsuleShape),
                 )
             }
 
