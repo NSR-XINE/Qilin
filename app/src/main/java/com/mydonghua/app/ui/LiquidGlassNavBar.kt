@@ -263,9 +263,6 @@ fun LiquidGlassNavBar(
                         .graphicsLayer {
                             translationX = (dampedDrag.value + 0.5f) * slotWidthPx - pillWidthPx / 2f
                         }
-                        .width(with(density) { pillWidthPx.toDp() })
-                        .height(BlobHeight)
-                        .clip(CapsuleShape)
                         .drawBackdrop(
                             backdrop = backdrop,
                             shape = { CapsuleShape },
@@ -298,7 +295,9 @@ fun LiquidGlassNavBar(
                                 val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
                                 drawRect(Color.Black.copy(alpha = darken))
                             },
-                        ),
+                        )
+                        .width(with(density) { pillWidthPx.toDp() })
+                        .height(BlobHeight),
                 )
             }
 
