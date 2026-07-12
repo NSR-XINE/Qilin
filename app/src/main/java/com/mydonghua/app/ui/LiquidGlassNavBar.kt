@@ -198,7 +198,7 @@ fun LiquidGlassNavBar(
                     DampedDragAnimation(
                         animationScope = coroutineScope,
                         initialValue = navToValue(navIndex),
-                        valueRange = 0f..totalSlots,
+                        valueRange = 0f..(totalSlots - 1f),
                         visibilityThreshold = 0.001f,
                         initialScale = 1f,
                         pressedScale = 76f / 56f,
@@ -223,7 +223,7 @@ fun LiquidGlassNavBar(
                             if (dragAmount.x != 0f) draggedFlag[0] = true
                             val slotWidth = barWidthPx / totalSlots
                             updateValue(
-                                (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots),
+                                (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f),
                             )
                         },
                     )
@@ -255,6 +255,7 @@ fun LiquidGlassNavBar(
                         .graphicsLayer {
                             translationX = (dampedDrag.value + 0.5f) * slotWidthPx - pillWidthPx / 2f
                         }
+                        .clip(CapsuleShape)
                         .drawBackdrop(
                             backdrop = backdrop,
                             shape = { CapsuleShape },
