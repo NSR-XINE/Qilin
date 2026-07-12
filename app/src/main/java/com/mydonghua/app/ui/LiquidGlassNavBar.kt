@@ -56,7 +56,8 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.refraction
+import com.kyant.backdrop.effects.refractionWithDispersion
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
@@ -269,7 +270,7 @@ fun LiquidGlassNavBar(
                                     else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 20f.dp.toPx(),
                                 )
                                 val progress = dampedDrag.pressProgress
-                                lens(10f.dp.toPx() * progress, 14f.dp.toPx() * progress, chromaticAberration = true)
+                                refractionWithDispersion(10f.dp.toPx() * progress, 14f.dp.toPx() * progress, hasDepthEffect = false)
                             },
                             highlight = { Highlight.Default.copy(alpha = 0.6f) },
                             shadow = { Shadow(radius = 4f.dp, alpha = 0.4f) },
@@ -431,7 +432,7 @@ private fun Modifier.drawBackdropCustomShape(
                     lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)
                 }) + 2f.dp.toPx() * press,
             )
-            lens(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
+            refraction(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
         },
         onDrawBackdrop = { drawBackdrop ->
             drawBackdrop()
