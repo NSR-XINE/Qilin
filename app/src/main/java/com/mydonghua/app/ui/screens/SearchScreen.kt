@@ -79,9 +79,8 @@ fun SearchScreen(
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val imePadding = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-    val navPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val topOffset = 76.dp
-    val targetHeight = screenHeight - imePadding - navPadding - topOffset
+    val targetHeight = screenHeight - imePadding - topOffset
     val suggestionsBoxHeight by animateDpAsState(
         targetValue = targetHeight,
         label = "suggestionsHeight"
