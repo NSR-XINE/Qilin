@@ -293,10 +293,12 @@ class SearchViewModel @Inject constructor(
         if (title.contains(q)) return 60
         if (titleZh.contains(q)) return 50
         
-        if (fuzzyMatch(title, q)) return 40
-        if (fuzzyMatch(titleZh, q)) return 30
+        // Only allow fuzzy (subsequence) match for queries with at least 3 characters
+        if (q.length >= 3) {
+            if (fuzzyMatch(title, q)) return 40
+            if (fuzzyMatch(titleZh, q)) return 30
+        }
         
-        if (show.notes != null && show.notes.lowercase().contains(q)) return 20
         return 0
     }
 }
