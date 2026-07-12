@@ -108,27 +108,43 @@ class SearchViewModel @Inject constructor(
                 }
                 _isSearchingOnline.value = true
                 try {
-                    val searchResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
+                    val aniListResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
+                    val malResults = com.mydonghua.app.data.service.PosterFetchService.searchMyAnimeList(q)
+
+                    val combined = mutableListOf<Show>()
+                    val addedTitles = mutableSetOf<String>()
                     val localTitles = allShows.value.map { it.title.lowercase().trim() }
-                    val mapped = searchResults.mapNotNull { result ->
-                        val isAlreadyAdded = localTitles.contains(result.title.lowercase().trim()) || 
-                                             (result.titleZh != null && localTitles.contains(result.titleZh.lowercase().trim()))
-                        if (isAlreadyAdded) return@mapNotNull null
-                        
-                        Show(
-                            id = "online_${result.title.hashCode()}",
-                            title = result.title,
-                            titleZh = result.titleZh,
-                            status = result.status ?: "ongoing",
-                            totalEp = result.totalEp,
-                            poster = result.poster,
-                            notes = result.synopsis,
-                            genres = null,
-                            studio = null,
-                            releaseYear = 0
+
+                    fun addResult(title: String, titleZh: String?, status: String?, totalEp: Int, poster: String?, synopsis: String?, source: String) {
+                        val key = title.lowercase().trim()
+                        if (localTitles.contains(key) || addedTitles.contains(key)) return
+                        if (titleZh != null && localTitles.contains(titleZh.lowercase().trim())) return
+
+                        addedTitles.add(key)
+                        combined.add(
+                            Show(
+                                id = "online_${source}_${title.hashCode()}",
+                                title = title,
+                                titleZh = titleZh,
+                                status = status ?: "ongoing",
+                                totalEp = totalEp,
+                                poster = poster,
+                                notes = synopsis,
+                                genres = null,
+                                studio = null,
+                                releaseYear = 0
+                            )
                         )
                     }
-                    emit(mapped)
+
+                    aniListResults.forEach { r ->
+                        addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "anilist")
+                    }
+                    malResults.forEach { r ->
+                        addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "mal")
+                    }
+
+                    emit(combined)
                 } catch (e: Exception) {
                     emit(emptyList())
                 } finally {

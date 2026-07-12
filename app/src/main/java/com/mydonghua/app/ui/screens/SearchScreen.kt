@@ -292,7 +292,7 @@ fun SearchScreen(
                 } else if (onlineResults.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Online Results (AniList)",
+                            text = "Online Results (AniList / MyAnimeList)",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary,
