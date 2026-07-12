@@ -77,7 +77,7 @@ import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
-private val CapsuleShape = CornerRadius.full
+private val CapsuleShape = RoundedCornerShape(26.dp)
 private val BlobHeight = NavBarHeight.blob
 
 @Composable
@@ -208,7 +208,7 @@ fun LiquidGlassNavBar(
                         valueRange = 0f..totalSlots,
                         visibilityThreshold = 0.001f,
                         initialScale = 1f,
-                        pressedScale = 60f / 56f,
+                        pressedScale = 76f / 56f,
                         onDragStarted = { draggedFlag[0] = false },
                         onDragStopped = {
                             if (draggedFlag[0]) {
@@ -269,6 +269,7 @@ fun LiquidGlassNavBar(
                         }
                         .width(with(density) { pillWidthPx.toDp() })
                         .height(BlobHeight)
+                        .clip(CapsuleShape)
                         .drawBackdrop(
                             backdrop = backdrop,
                             shape = { CapsuleShape },
