@@ -29,7 +29,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.BlendMode
@@ -291,7 +290,7 @@ fun LiquidGlassNavBar(
                                 val radius = size.height / 2f
                                 drawRoundRect(
                                     color = Color.Black.copy(alpha = darken),
-                                    cornerRadius = CornerRadius(radius, radius),
+                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
                                 )
                             },
                         )
