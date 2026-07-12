@@ -56,7 +56,7 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.refraction
+import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
@@ -191,15 +191,6 @@ fun LiquidGlassNavBar(
                             interaction = barInteraction,
                             pressedScale = 1.12f,
                         )
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                            shape = BarShape,
-                        )
-                        .border(
-                            width = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = BarShape,
-                        )
                 )
             val dampedDrag =
                 remember(coroutineScope, navRoutes.size) {
@@ -277,6 +268,8 @@ fun LiquidGlassNavBar(
                                     (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
                                     else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 20f.dp.toPx(),
                                 )
+                                val progress = dampedDrag.pressProgress
+                                lens(10f.dp.toPx() * progress, 14f.dp.toPx() * progress, chromaticAberration = true)
                             },
                             highlight = { Highlight.Default.copy(alpha = 0.6f) },
                             shadow = { Shadow(radius = 4f.dp, alpha = 0.4f) },
@@ -417,27 +410,28 @@ private fun Modifier.drawBackdropCustomShape(
     luminanceAnimation: Float,
     shape: Shape,
     interaction: GlassInteraction? = null,
-    pressedScale: Float = 1.08f,
+    pressedScale: Float = 1.12f,
 ): Modifier =
     this.drawBackdrop(
         backdrop = backdrop,
+        shape = { shape },
         effects = {
             val l = (luminanceAnimation * 2f - 1f).let { sign(it) * it * it }
             val press = interaction?.pressProgress ?: 0f
+            vibrancy()
             colorControls(
-                brightness =
-                    if (l > 0f) lerp(0.1f, 0.5f, l)
-                    else lerp(0.1f, -0.2f, -l),
-                contrast =
-                    if (l > 0f) lerp(1f, 0f, l)
-                    else 1f,
+                brightness = 0.05f,
+                contrast = 1f,
                 saturation = 1.5f,
             )
             blur(
-                (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
-                else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 2f.dp.toPx() * press,
+                (if (l > 0f) {
+                    lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
+                } else {
+                    lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)
+                }) + 2f.dp.toPx() * press,
             )
-            refraction(24f.dp.toPx(), size.minDimension / 2f, true)
+            lens(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
         },
         onDrawBackdrop = { drawBackdrop ->
             drawBackdrop()
@@ -450,7 +444,10 @@ private fun Modifier.drawBackdropCustomShape(
             if (press > 0f) {
                 drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color.White.copy(alpha = 0.18f * press), Color.Transparent),
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.18f * press),
+                            Color.Transparent,
+                        ),
                         center = interaction?.touchPosition ?: Offset(size.width / 2f, size.height / 2f),
                         radius = size.minDimension * 1.2f,
                     ),
@@ -465,7 +462,6 @@ private fun Modifier.drawBackdropCustomShape(
                 scaleY = scale
             }
         } else null,
-        shape = { shape },
     )
 
 class DampedDragAnimation(
