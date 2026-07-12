@@ -49,6 +49,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.filled.ArrowBack
 import com.mydonghua.app.ui.common.ShowCard
+import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 
