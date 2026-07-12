@@ -174,4 +174,104 @@ object PosterFetchService {
             null
         }
     }
+
+    data class AniListSearchResult(
+        val title: String,
+        val titleZh: String?,
+        val synopsis: String?,
+        val poster: String?,
+        val totalEp: Int,
+        val status: String?
+    )
+
+    suspend fun searchAniList(query: String, limit: Int = 10): List<AniListSearchResult> = withContext(Dispatchers.IO) {
+        try {
+            val graphQLQuery = """
+                query (${'$'}search: String) {
+                  Page(page: 1, perPage: $limit) {
+                    media(search: ${'$'}search, type: ANIME) {
+                      title {
+                        native
+                        romaji
+                        english
+                      }
+                      coverImage {
+                        extraLarge
+                        large
+                      }
+                      description(asHtml: false)
+                      episodes
+                      status
+                    }
+                  }
+                }
+            """.trimIndent()
+
+            val variables = JSONObject().apply {
+                put("search", query)
+            }
+            val requestBodyJson = JSONObject().apply {
+                put("query", graphQLQuery)
+                put("variables", variables)
+            }
+
+            val requestBody = requestBodyJson.toString()
+                .toRequestBody("application/json; charset=utf-8".toMediaType())
+
+            val request = Request.Builder()
+                .url("https://graphql.anilist.co/")
+                .post(requestBody)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@withContext emptyList()
+                val bodyStr = response.body?.string() ?: return@withContext emptyList()
+                val json = JSONObject(bodyStr)
+                val data = json.optJSONObject("data") ?: return@withContext emptyList()
+                val page = data.optJSONObject("Page") ?: return@withContext emptyList()
+                val mediaArr = page.optJSONArray("media") ?: return@withContext emptyList()
+
+                val results = mutableListOf<AniListSearchResult>()
+                for (i in 0 until mediaArr.length()) {
+                    val media = mediaArr.getJSONObject(i)
+                    val titles = media.optJSONObject("title")
+                    val english = titles?.optString("english")?.takeIf { it.isNotEmpty() && it != "null" }
+                    val romaji = titles?.optString("romaji")?.takeIf { it.isNotEmpty() && it != "null" }
+                    val native = titles?.optString("native")?.takeIf { it.isNotEmpty() && it != "null" }
+
+                    val mainTitle = english ?: romaji ?: native ?: "Unknown Title"
+
+                    val coverImage = media.optJSONObject("coverImage")
+                    val imageUrl = coverImage?.optString("extraLarge")?.takeIf { it.isNotEmpty() } ?: coverImage?.optString("large")
+
+                    val description = media.optString("description", "")
+                        .replace(Regex("<[^>]*>"), "")
+
+                    val episodes = media.optInt("episodes", 0)
+                    val statusStr = media.optString("status", "").lowercase()
+                    val status = when (statusStr) {
+                        "releasing" -> "ongoing"
+                        "finished" -> "completed"
+                        "cancelled" -> "stopped"
+                        else -> "ongoing"
+                    }
+
+                    results.add(
+                        AniListSearchResult(
+                            title = mainTitle,
+                            titleZh = native,
+                            synopsis = description.takeIf { it.isNotEmpty() && it != "null" },
+                            poster = imageUrl?.takeIf { it.isNotEmpty() && it != "null" },
+                            totalEp = episodes,
+                            status = status
+                        )
+                    )
+                }
+                results
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
 }

@@ -67,6 +67,9 @@ fun SearchScreen(
     val results by viewModel.filteredShows.collectAsState()
     val filters by viewModel.activeFilters.collectAsState()
     val genres by viewModel.distinctGenres.collectAsState()
+    val onlineResults by viewModel.onlineResults.collectAsState()
+    val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
+    var showToAdd by remember { mutableStateOf<Show?>(null) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
@@ -211,7 +214,7 @@ fun SearchScreen(
         Spacer(modifier = Modifier.height(Spacing.xs))
 
         // 2. Results List
-        if (results.isEmpty()) {
+        if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
             Box(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 80.dp),
                 contentAlignment = Alignment.Center
@@ -245,21 +248,101 @@ fun SearchScreen(
                 modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                items(results, key = { it.id }) { show ->
-                    ShowCard(
-                        show = show,
-                        onWatchClick = onWatchClick,
-                        onEditClick = { onShowClick(it.id) },
-                        onDeleteClick = { showsViewModel.deleteShow(it.id) },
-                        onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
-                        onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
-                        onEpIncrement = { showsViewModel.incrementEpisode(it) },
-                        onEpDecrement = { showsViewModel.decrementEpisode(it) },
-                        onCardClick = { onShowClick(it.id) }
-                    )
+                if (results.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "My Library",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+                        )
+                    }
+                    items(results, key = { it.id }) { show ->
+                        ShowCard(
+                            show = show,
+                            onWatchClick = onWatchClick,
+                            onEditClick = { onShowClick(it.id) },
+                            onDeleteClick = { showsViewModel.deleteShow(it.id) },
+                            onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
+                            onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
+                            onEpIncrement = { showsViewModel.incrementEpisode(it) },
+                            onEpDecrement = { showsViewModel.decrementEpisode(it) },
+                            onCardClick = { onShowClick(it.id) }
+                        )
+                    }
+                }
+                
+                if (isSearchingOnline) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = Spacing.md),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                } else if (onlineResults.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Online Results (AniList)",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+                        )
+                    }
+                    items(onlineResults, key = { it.id }) { show ->
+                        ShowCard(
+                            show = show,
+                            onWatchClick = { showToAdd = show },
+                            onEditClick = { showToAdd = show },
+                            onDeleteClick = {},
+                            onFavoriteToggle = {},
+                            onNotifyToggle = {},
+                            onEpIncrement = {},
+                            onEpDecrement = {},
+                            onCardClick = { showToAdd = show }
+                        )
+                    }
                 }
             }
         }
+    }
+
+    if (showToAdd != null) {
+        AlertDialog(
+            onDismissRequest = { showToAdd = null },
+            title = { Text("Add to Library") },
+            text = { Text("Would you like to add \"${showToAdd?.title}\" to your library?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val s = showToAdd!!
+                        val newShow = s.copy(
+                            id = java.util.UUID.randomUUID().toString(),
+                            dateAdded = System.currentTimeMillis()
+                        )
+                        showsViewModel.insertOrUpdateShow(newShow)
+                        showToAdd = null
+                        onShowClick(newShow.id)
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showToAdd = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showGenreDialog) {

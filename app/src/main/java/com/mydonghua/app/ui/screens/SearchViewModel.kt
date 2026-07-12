@@ -77,7 +77,6 @@ class SearchViewModel @Inject constructor(
                     val displayText = when {
                         titleLower.contains(qLower) -> show.title
                         titleZhLower.contains(qLower) || fuzzyMatch(show.titleZh, q) -> show.titleZh ?: show.title
-                        show.notes != null && fuzzyMatch(show.notes, q) -> show.title
                         else -> show.title
                     }
                     scored.add(SearchSuggestion.ShowMatch(show, displayText, score))
@@ -87,6 +86,54 @@ class SearchViewModel @Inject constructor(
             scored.take(8)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _onlineResults = MutableStateFlow<List<Show>>(emptyList())
+    val onlineResults: StateFlow<List<Show>> = _onlineResults.asStateFlow()
+
+    private val _isSearchingOnline = MutableStateFlow(false)
+    val isSearchingOnline: StateFlow<Boolean> = _isSearchingOnline.asStateFlow()
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val onlineSearchJob = searchQuery
+        .debounce(600)
+        .flatMapLatest { q ->
+            flow {
+                if (q.trim().length < 2) {
+                    emit(emptyList())
+                    return@flow
+                }
+                _isSearchingOnline.value = true
+                try {
+                    val searchResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
+                    val localTitles = allShows.value.map { it.title.lowercase().trim() }
+                    val mapped = searchResults.mapNotNull { result ->
+                        val isAlreadyAdded = localTitles.contains(result.title.lowercase().trim()) || 
+                                             (result.titleZh != null && localTitles.contains(result.titleZh.lowercase().trim()))
+                        if (isAlreadyAdded) return@mapNotNull null
+                        
+                        Show(
+                            id = "online_${result.title.hashCode()}",
+                            title = result.title,
+                            titleZh = result.titleZh,
+                            status = result.status ?: "ongoing",
+                            totalEp = result.totalEp,
+                            poster = result.poster,
+                            notes = result.synopsis,
+                            genres = null,
+                            studio = null,
+                            releaseYear = 0
+                        )
+                    }
+                    emit(mapped)
+                } catch (e: Exception) {
+                    emit(emptyList())
+                } finally {
+                    _isSearchingOnline.value = false
+                }
+            }
+        }
+        .onEach { _onlineResults.value = it }
+        .launchIn(viewModelScope)
 
     val filteredShows: StateFlow<List<Show>> = combine(
         searchQuery,
@@ -236,6 +283,8 @@ class SearchViewModel @Inject constructor(
 
     private fun scoreShow(show: Show, query: String): Int {
         val q = query.lowercase().trim()
+        if (q.isEmpty()) return 0
+
         val title = (show.title ?: "").lowercase().trim()
         val titleZh = (show.titleZh ?: "").lowercase().trim()
 
@@ -243,8 +292,11 @@ class SearchViewModel @Inject constructor(
         if (title.startsWith(q)) return 80
         if (title.contains(q)) return 60
         if (titleZh.contains(q)) return 50
-        if (fuzzyMatch(titleZh, q)) return 40
-        if (show.notes != null && fuzzyMatch(show.notes, q)) return 20
+        
+        if (fuzzyMatch(title, q)) return 40
+        if (fuzzyMatch(titleZh, q)) return 30
+        
+        if (show.notes != null && show.notes.lowercase().contains(q)) return 20
         return 0
     }
 }
