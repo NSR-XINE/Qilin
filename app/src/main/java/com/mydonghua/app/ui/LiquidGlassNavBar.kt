@@ -253,7 +253,7 @@ fun LiquidGlassNavBar(
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
-                            translationX = dampedDrag.value * (barWidthPx - with(density) { 8.dp.toPx() } - pillWidthPx) / (totalSlots - 1f) + with(density) { 4.dp.toPx() }
+                            translationX = (dampedDrag.value + 0.5f) * slotWidthPx - pillWidthPx / 2f
                         }
                         .drawBackdrop(
                             backdrop = backdrop,
