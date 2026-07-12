@@ -81,6 +81,13 @@ fun SearchScreen(
     var showRatingDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearQuery()
+            viewModel.updateFilters(SearchFilters())
+        }
+    }
+
     BackHandler(enabled = true) {
         if (isSearchActive) {
             focusManager.clearFocus()
