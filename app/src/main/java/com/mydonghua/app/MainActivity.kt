@@ -13,6 +13,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -357,8 +362,20 @@ class MainActivity : ComponentActivity() {
 
             AnimatedVisibility(
                 visible = isSearchOpen,
-                enter = slideInHorizontally { it } + fadeIn(),
-                exit = slideOutHorizontally { it } + fadeOut(),
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = spring(
+                        stiffness = Spring.StiffnessMediumLow,
+                        dampingRatio = Spring.DampingRatioLowBouncy
+                    )
+                ) + fadeIn(animationSpec = tween(300)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = spring(
+                        stiffness = Spring.StiffnessMediumLow,
+                        dampingRatio = 1.0f
+                    )
+                ) + fadeOut(animationSpec = tween(300)),
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -402,91 +419,113 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                if (isDrawerOpen) {
+                AnimatedVisibility(
+                    visible = isDrawerOpen,
+                    enter = fadeIn(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300))
+                ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
                             .clickable(onClick = { isDrawerOpen = false })
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .fillMaxHeight()
-                                .width(280.dp)
-                                .hazeChild(state = hazeState)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
+                        AnimatedVisibility(
+                            visible = isDrawerOpen,
+                            enter = slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = spring(
+                                    stiffness = Spring.StiffnessMediumLow,
+                                    dampingRatio = Spring.DampingRatioLowBouncy
                                 )
-                                .clickable(enabled = false) {}
-                                .statusBarsPadding()
-                                .navigationBarsPadding()
-                                .padding(horizontal = Spacing.xl, vertical = Spacing.xl),
-                            verticalArrangement = Arrangement.SpaceBetween
+                            ),
+                            exit = slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = spring(
+                                    stiffness = Spring.StiffnessMediumLow,
+                                    dampingRatio = 1.0f
+                                )
+                            ),
+                            modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Menu",
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(280.dp)
+                                    .hazeChild(state = hazeState)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
                                     )
-                                    IconButton(onClick = { isDrawerOpen = false }) {
-                                        Text("\u2715", fontSize = IconSize.xs.value.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    .clickable(enabled = false) {}
+                                    .statusBarsPadding()
+                                    .navigationBarsPadding()
+                                    .padding(horizontal = Spacing.xl, vertical = Spacing.xl),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Menu",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
+                                        IconButton(onClick = { isDrawerOpen = false }) {
+                                            Text("\u2715", fontSize = IconSize.xs.value.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
                                     }
+
+                                    Spacer(modifier = Modifier.height(Spacing.sm))
+
+                                    DrawerItem(
+                                        iconRes = R.drawable.ic_stats,
+                                        label = "Statistics",
+                                        onClick = { isDrawerOpen = false; navController.navigate("stats") }
+                                    )
+                                    DrawerItem(
+                                        iconRes = R.drawable.ic_calendar,
+                                        label = "Calendar",
+                                        onClick = { isDrawerOpen = false; navController.navigate("calendar") }
+                                    )
+                                    DrawerItem(
+                                        iconRes = R.drawable.ic_collections,
+                                        label = "Collections",
+                                        onClick = { isDrawerOpen = false; navController.navigate("collections") }
+                                    )
+                                    DrawerItem(
+                                        iconRes = R.drawable.ic_history,
+                                        label = "Watch History",
+                                        onClick = { isDrawerOpen = false; navController.navigate("history") }
+                                    )
+                                    DrawerItem(
+                                        iconRes = R.drawable.ic_seasonal,
+                                        label = "Seasonal View",
+                                        onClick = { isDrawerOpen = false }
+                                    )
+
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        modifier = Modifier.padding(vertical = Spacing.sm)
+                                    )
+
+                                    DrawerItem(
+                                        iconRes = R.drawable.ic_settings,
+                                        label = "Settings",
+                                        onClick = { isDrawerOpen = false; navController.navigate("settings") }
+                                    )
                                 }
 
-                                Spacer(modifier = Modifier.height(Spacing.sm))
-
-                                DrawerItem(
-                                    iconRes = R.drawable.ic_stats,
-                                    label = "Statistics",
-                                    onClick = { isDrawerOpen = false; navController.navigate("stats") }
-                                )
-                                DrawerItem(
-                                    iconRes = R.drawable.ic_calendar,
-                                    label = "Calendar",
-                                    onClick = { isDrawerOpen = false; navController.navigate("calendar") }
-                                )
-                                DrawerItem(
-                                    iconRes = R.drawable.ic_collections,
-                                    label = "Collections",
-                                    onClick = { isDrawerOpen = false; navController.navigate("collections") }
-                                )
-                                DrawerItem(
-                                    iconRes = R.drawable.ic_history,
-                                    label = "Watch History",
-                                    onClick = { isDrawerOpen = false; navController.navigate("history") }
-                                )
-                                DrawerItem(
-                                    iconRes = R.drawable.ic_seasonal,
-                                    label = "Seasonal View",
-                                    onClick = { isDrawerOpen = false }
-                                )
-
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    modifier = Modifier.padding(vertical = Spacing.sm)
-                                )
-
-                                DrawerItem(
-                                    iconRes = R.drawable.ic_settings,
-                                    label = "Settings",
-                                    onClick = { isDrawerOpen = false; navController.navigate("settings") }
+                                Text(
+                                    text = "My Donghua",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
                                 )
                             }
-
-                            Text(
-                                text = "My Donghua",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
                         }
                     }
                 }

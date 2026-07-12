@@ -18,6 +18,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
@@ -26,6 +28,12 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
@@ -556,7 +564,7 @@ private fun GenreFilterDialog(
 ) {
     var localSelected by remember { mutableStateOf(selected) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Genre", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -616,9 +624,9 @@ private fun GenreFilterDialog(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
                     Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { onApply(localSelected) }) { Text("Apply") }
+                    Button(onClick = { dismissWithAction { onApply(localSelected) } }) { Text("Apply") }
                 }
             }
         }
@@ -633,7 +641,7 @@ private fun StudioFilterDialog(
 ) {
     var text by remember { mutableStateOf(initial) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Studio", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -650,9 +658,9 @@ private fun StudioFilterDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
                     Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { onApply(text) }) { Text("Apply") }
+                    Button(onClick = { dismissWithAction { onApply(text) } }) { Text("Apply") }
                 }
             }
         }
@@ -667,7 +675,7 @@ private fun YearFilterDialog(
 ) {
     var text by remember { mutableStateOf(initial) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Year", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -684,9 +692,9 @@ private fun YearFilterDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
                     Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { onApply(text) }) { Text("Apply") }
+                    Button(onClick = { dismissWithAction { onApply(text) } }) { Text("Apply") }
                 }
             }
         }
@@ -701,7 +709,7 @@ private fun RatingFilterDialog(
 ) {
     var sliderValue by remember { mutableStateOf(initial) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Minimum Rating", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -734,9 +742,9 @@ private fun RatingFilterDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
                     Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { onApply(sliderValue) }) { Text("Apply") }
+                    Button(onClick = { dismissWithAction { onApply(sliderValue) } }) { Text("Apply") }
                 }
             }
         }
@@ -757,7 +765,7 @@ private fun SortFilterDialog(
         "last_updated" to "Last Updated"
     )
 
-    Dialog(onDismissRequest = onDismiss) {
+    AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Sort Order", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -798,11 +806,53 @@ private fun SortFilterDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
                     Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { onApply(selected) }) { Text("Apply") }
+                    Button(onClick = { dismissWithAction { onApply(selected) } }) { Text("Apply") }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AnimatedDialog(
+    onDismissRequest: () -> Unit,
+    content: @Composable (dismissWithAction: (action: () -> Unit) -> Unit) -> Unit
+) {
+    var animateTrigger by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        animateTrigger = true
+    }
+
+    val coroutineScope = rememberCoroutineScope()
+    val dismissWithAction = { action: () -> Unit ->
+        animateTrigger = false
+        coroutineScope.launch {
+            delay(150) // matches exit animation duration
+            action()
+        }
+    }
+
+    Dialog(
+        onDismissRequest = { dismissWithAction(onDismissRequest) },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        AnimatedVisibility(
+            visible = animateTrigger,
+            enter = scaleIn(
+                initialScale = 0.9f,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = Spring.DampingRatioLowBouncy
+                )
+            ) + fadeIn(animationSpec = tween(150)),
+            exit = scaleOut(
+                targetScale = 0.9f,
+                animationSpec = tween(150)
+            ) + fadeOut(animationSpec = tween(150))
+        ) {
+            content(dismissWithAction)
         }
     }
 }
