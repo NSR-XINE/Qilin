@@ -76,95 +76,35 @@ fun SearchScreen(
     var showRatingDialog by remember { mutableStateOf(false) }
     var showSortDialog by remember { mutableStateOf(false) }
 
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
-    val imePadding = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-    val topOffset = 76.dp
-    val targetHeight = screenHeight - imePadding - topOffset
-    val suggestionsBoxHeight by animateDpAsState(
-        targetValue = targetHeight,
-        label = "suggestionsHeight"
-    )
-
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        // 1. Background Results List
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 76.dp)
-        ) {
-            if (results.isEmpty()) {
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 80.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.hero),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.md))
-                        Text(
-                            text = if (query.isEmpty()) "Search your shows" else "No matching shows found",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                        if (query.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(Spacing.xs))
-                            Text(
-                                text = "Try adjusting your search or filters",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                            )
-                        }
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding(),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(results, key = { it.id }) { show ->
-                        ShowCard(
-                            show = show,
-                            onWatchClick = onWatchClick,
-                            onEditClick = { onShowClick(it.id) },
-                            onDeleteClick = { showsViewModel.deleteShow(it.id) },
-                            onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
-                            onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
-                            onEpIncrement = { showsViewModel.incrementEpisode(it) },
-                            onEpDecrement = { showsViewModel.decrementEpisode(it) },
-                            onCardClick = { onShowClick(it.id) }
-                        )
-                    }
-                }
-            }
-        }
-
-        // 2. Docked Search Bar (drawn on top of the results list)
-        DockedSearchBar(
+        // 1. Search Bar Input Field (visually identical to M3 SearchBar, focusable/editable, no popup)
+        SearchBarDefaults.InputField(
             query = query,
             onQueryChange = { viewModel.searchQuery.value = it },
             onSearch = {
                 viewModel.selectQuery(it)
-                isSearchActive = false
                 focusManager.clearFocus()
             },
-            active = isSearchActive,
-            onActiveChange = { isSearchActive = it },
+            expanded = false,
+            onExpandedChange = { isSearchActive = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg)
+                .padding(top = Spacing.xs)
+                .clip(RoundedCornerShape(CornerRadius.lg))
+                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
+                .onFocusChanged { focusState ->
+                    isSearchActive = focusState.isFocused
+                },
             placeholder = { Text("Search shows, genres, studios...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             leadingIcon = {
                 IconButton(
                     onClick = {
                         if (isSearchActive) {
-                            isSearchActive = false
                             focusManager.clearFocus()
                         } else {
                             onNavigateBack()
@@ -256,82 +196,58 @@ fun SearchScreen(
                         }
                     }
                 }
-            },
-            shape = RoundedCornerShape(CornerRadius.lg),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.lg)
-                .padding(top = Spacing.xs)
-                .align(Alignment.TopCenter)
-        ) {
+            }
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.xs))
+
+        // 2. Results List
+        if (results.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(suggestionsBoxHeight)
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 80.dp),
+                contentAlignment = Alignment.Center
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(Spacing.md)
-                ) {
-                    if (suggestions.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = Spacing.lg),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (query.isEmpty()) "Recent searches will show here" else "No matching suggestions",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    fontSize = 14.sp,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                    } else {
-                        suggestions.forEach { suggestion ->
-                            when (suggestion) {
-                                is SearchSuggestion.Popular -> {
-                                    item {
-                                        SuggestionItem(
-                                            text = suggestion.text,
-                                            onClick = {
-                                                viewModel.selectQuery(suggestion.text)
-                                                isSearchActive = false
-                                                focusManager.clearFocus()
-                                            }
-                                        )
-                                    }
-                                }
-                                is SearchSuggestion.Recent -> {
-                                    item {
-                                        SuggestionItem(
-                                            text = suggestion.text,
-                                            onClick = {
-                                                viewModel.selectQuery(suggestion.text)
-                                                isSearchActive = false
-                                                focusManager.clearFocus()
-                                            }
-                                        )
-                                    }
-                                }
-                                is SearchSuggestion.ShowMatch -> {
-                                    item {
-                                        SuggestionItem(
-                                            text = suggestion.displayText,
-                                            onClick = {
-                                                viewModel.selectQuery(suggestion.displayText)
-                                                isSearchActive = false
-                                                focusManager.clearFocus()
-                                                onShowClick(suggestion.show.id)
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.hero),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    Text(
+                        text = if (query.isEmpty()) "Search your shows" else "No matching shows found",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    if (query.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Text(
+                            text = "Try adjusting your search or filters",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
                     }
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding(),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(results, key = { it.id }) { show ->
+                    ShowCard(
+                        show = show,
+                        onWatchClick = onWatchClick,
+                        onEditClick = { onShowClick(it.id) },
+                        onDeleteClick = { showsViewModel.deleteShow(it.id) },
+                        onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
+                        onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
+                        onEpIncrement = { showsViewModel.incrementEpisode(it) },
+                        onEpDecrement = { showsViewModel.decrementEpisode(it) },
+                        onCardClick = { onShowClick(it.id) }
+                    )
                 }
             }
         }
