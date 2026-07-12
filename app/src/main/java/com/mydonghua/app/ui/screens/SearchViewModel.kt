@@ -102,6 +102,10 @@ class SearchViewModel @Inject constructor(
                     emit(emptyList())
                     return@flow
                 }
+                if (filteredShows.value.isNotEmpty()) {
+                    emit(emptyList())
+                    return@flow
+                }
                 _isSearchingOnline.value = true
                 try {
                     val searchResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
