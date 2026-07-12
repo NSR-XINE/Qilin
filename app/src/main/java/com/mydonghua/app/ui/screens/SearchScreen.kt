@@ -826,7 +826,7 @@ private fun AnimatedDialog(
     }
 
     val coroutineScope = rememberCoroutineScope()
-    val dismissWithAction = { action: () -> Unit ->
+    val dismissWithAction: (action: () -> Unit) -> Unit = { action ->
         animateTrigger = false
         coroutineScope.launch {
             delay(150) // matches exit animation duration
