@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -76,8 +77,10 @@ fun SearchScreen(
     var showSortDialog by remember { mutableStateOf(false) }
 
     val isKeyboardOpen = WindowInsets.isImeVisible
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
     val suggestionsBoxHeight by animateDpAsState(
-        targetValue = if (isKeyboardOpen) 180.dp else 360.dp,
+        targetValue = if (isKeyboardOpen) 180.dp else (screenHeight - 140.dp),
         label = "suggestionsHeight"
     )
 
