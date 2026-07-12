@@ -77,8 +77,10 @@ import java.nio.IntBuffer
 import kotlin.time.Duration.Companion.seconds
 
 private val navRoutes = listOf("home", "airing", "complete", "stopped")
-private val CapsuleShape = RoundedCornerShape(26.dp)
 private val BlobHeight = NavBarHeight.blob
+private val BarShape = RoundedCornerShape(CornerRadius.pill)
+private val PillCornerRadius = CornerRadius.pill - (NavBarHeight.bar - BlobHeight) / 2
+private val CapsuleShape = RoundedCornerShape(PillCornerRadius)
 
 @Composable
 fun LiquidGlassNavBar(
@@ -181,23 +183,23 @@ fun LiquidGlassNavBar(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(RoundedCornerShape(CornerRadius.pill))
+                        .clip(BarShape)
                         .drawBackdropCustomShape(
                             backdrop = backdrop,
                             layer = layer,
                             luminanceAnimation = luminanceAnimation.value,
-                            shape = RoundedCornerShape(CornerRadius.pill),
+                            shape = BarShape,
                             interaction = barInteraction,
                             pressedScale = 1.12f,
                         )
                         .background(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                            shape = RoundedCornerShape(CornerRadius.pill),
+                            shape = BarShape,
                         )
                         .border(
                             width = 0.5.dp,
                             color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(CornerRadius.pill),
+                            shape = BarShape,
                         )
                 )
             val dampedDrag =
