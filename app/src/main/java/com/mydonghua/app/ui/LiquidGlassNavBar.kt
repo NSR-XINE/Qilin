@@ -174,28 +174,32 @@ fun LiquidGlassNavBar(
                     .graphicsLayer {
                         alpha = capsuleAlpha
                     }
-                .clip(RoundedCornerShape(CornerRadius.pill))
-                .drawBackdropCustomShape(
-                    backdrop = backdrop,
-                    layer = layer,
-                    luminanceAnimation = luminanceAnimation.value,
-                    shape = RoundedCornerShape(CornerRadius.pill),
-                    interaction = barInteraction,
-                    pressedScale = 1.0f,
+                    .onSizeChanged { barWidthPx = it.width }
+                    .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(CornerRadius.pill))
+                        .drawBackdropCustomShape(
+                            backdrop = backdrop,
+                            layer = layer,
+                            luminanceAnimation = luminanceAnimation.value,
+                            shape = RoundedCornerShape(CornerRadius.pill),
+                            interaction = barInteraction,
+                            pressedScale = 1.12f,
+                        )
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                            shape = RoundedCornerShape(CornerRadius.pill),
+                        )
+                        .border(
+                            width = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            shape = RoundedCornerShape(CornerRadius.pill),
+                        )
                 )
-                .background(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(CornerRadius.pill),
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(CornerRadius.pill),
-                )
-                .onSizeChanged { barWidthPx = it.width }
-                .pointerInput(barInteraction) { barInteraction.detectPress(this) },
-            contentAlignment = Alignment.CenterStart,
-        ) {
             val dampedDrag =
                 remember(coroutineScope, navRoutes.size) {
                     DampedDragAnimation(
