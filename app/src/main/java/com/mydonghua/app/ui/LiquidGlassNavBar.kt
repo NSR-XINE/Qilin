@@ -258,14 +258,7 @@ fun LiquidGlassNavBar(
             if (capsuleAlpha > 0.15f) {
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
-                val progress = dampedDrag.pressProgress
-                val restWidth = slotWidthPx - with(density) { Spacing.sm.toPx() }
-                val pressedWidth = with(density) { 84.dp.toPx() }
-                val pillWidthPx = lerp(restWidth, pressedWidth, progress)
-
-                val restHeight = restWidth
-                val pressedHeight = with(density) { 76.dp.toPx() }
-                val pillHeightPx = lerp(restHeight, pressedHeight, progress)
+                val pillWidthPx = with(density) { NavBarHeight.blob.toPx() }
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
@@ -295,8 +288,8 @@ fun LiquidGlassNavBar(
                                 InnerShadow(radius = 8f.dp * pressProg, alpha = pressProg)
                             },
                             layerBlock = {
-                                scaleX = 1f
-                                scaleY = 1f
+                                scaleX = dampedDrag.scaleX
+                                scaleY = dampedDrag.scaleY
                                 val velocity = dampedDrag.velocity / 10f
                                 scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                                 scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
@@ -306,8 +299,8 @@ fun LiquidGlassNavBar(
                                 drawRect(Color.Black.copy(alpha = darken))
                             },
                         )
-                        .width(with(density) { pillWidthPx.toDp() })
-                        .height(with(density) { pillHeightPx.toDp() })
+                        .width(NavBarHeight.blob)
+                        .height(NavBarHeight.icon)
                         .clip(CapsuleShape),
                 )
             }
