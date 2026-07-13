@@ -577,7 +577,7 @@ class DampedDragAnimation(
             mutatorMutex.mutate {
                 press()
                 val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
-                launch { valueAnimation.animateTo(target, smoothAnimationSpec) }
+                launch { valueAnimation.animateTo(target, valueAnimationSpec) }
                 if (velocity != 0f) {
                     launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
                 }
