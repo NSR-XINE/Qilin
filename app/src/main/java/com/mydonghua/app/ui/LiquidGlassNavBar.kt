@@ -137,7 +137,6 @@ fun LiquidGlassNavBar(
     val coroutineScope = rememberCoroutineScope()
     val barInteraction = rememberGlassInteraction()
     var currentTabIndex by remember { mutableIntStateOf(navIndex) }
-    val draggedFlag = remember { booleanArrayOf(false) }
 
     fun navToValue(index: Int): Float =
         if (index < 2) index.toFloat() else (index + 1).toFloat()
@@ -161,6 +160,50 @@ fun LiquidGlassNavBar(
                 dampingRatio = Spring.DampingRatioNoBouncy
             )
         )
+
+        val draggedFlag = remember { booleanArrayOf(false) }
+        val dampedDrag =
+            remember(coroutineScope, navRoutes.size) {
+                DampedDragAnimation(
+                    animationScope = coroutineScope,
+                    initialValue = navToValue(navIndex),
+                    valueRange = 0f..(totalSlots - 1f),
+                    visibilityThreshold = 0.001f,
+                    initialScale = 1f,
+                    pressedScale = 76f / 56f,
+                    onDragStarted = { draggedFlag[0] = false },
+                    onDragStopped = {
+                        if (draggedFlag[0]) {
+                            val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                            val targetIndex = when {
+                                snapped <= 1 -> snapped
+                                snapped == 2 -> if (targetValue > 2.5f) 2 else 1
+                                else -> snapped - 1
+                            }
+                            val safeIndex =
+                                if (targetIndex in navRoutes.indices) targetIndex else currentTabIndex
+                            if (safeIndex != currentTabIndex) {
+                                currentTabIndex = safeIndex
+                            }
+                            updateValue(navToValue(currentTabIndex))
+                        }
+                    },
+                    onDrag = { _, dragAmount ->
+                        if (dragAmount.x != 0f) draggedFlag[0] = true
+                        val slotWidth = barWidthPx / totalSlots
+                        updateValue(
+                            (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f),
+                        )
+                    },
+                )
+            }
+
+        val unifiedPressProgress = maxOf(barInteraction.pressProgress, dampedDrag.pressProgress)
+        val unifiedTouchPosition = if (dampedDrag.pressProgress > barInteraction.pressProgress) {
+            Offset(dampedDrag.value * slotWidthPx + slotWidthPx / 2f, with(density) { NavBarHeight.bar.toPx() } / 2f)
+        } else {
+            barInteraction.touchPosition
+        }
 
         Row(
             modifier = Modifier
@@ -189,45 +232,11 @@ fun LiquidGlassNavBar(
                             layer = layer,
                             luminanceAnimation = luminanceAnimation.value,
                             shape = BarShape,
-                            interaction = barInteraction,
+                            pressProgress = unifiedPressProgress,
+                            touchPosition = unifiedTouchPosition,
                             pressedScale = 1.12f,
                         )
                 )
-            val dampedDrag =
-                remember(coroutineScope, navRoutes.size) {
-                    DampedDragAnimation(
-                        animationScope = coroutineScope,
-                        initialValue = navToValue(navIndex),
-                        valueRange = 0f..(totalSlots - 1f),
-                        visibilityThreshold = 0.001f,
-                        initialScale = 1f,
-                        pressedScale = 76f / 56f,
-                        onDragStarted = { draggedFlag[0] = false },
-                        onDragStopped = {
-                            if (draggedFlag[0]) {
-                                val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
-                                val targetIndex = when {
-                                    snapped <= 1 -> snapped
-                                    snapped == 2 -> if (targetValue > 2.5f) 2 else 1
-                                    else -> snapped - 1
-                                }
-                                val safeIndex =
-                                    if (targetIndex in navRoutes.indices) targetIndex else currentTabIndex
-                                if (safeIndex != currentTabIndex) {
-                                    currentTabIndex = safeIndex
-                                }
-                                updateValue(navToValue(currentTabIndex))
-                            }
-                        },
-                        onDrag = { _, dragAmount ->
-                            if (dragAmount.x != 0f) draggedFlag[0] = true
-                            val slotWidth = barWidthPx / totalSlots
-                            updateValue(
-                                (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f),
-                            )
-                        },
-                    )
-                }
 
             LaunchedEffect(navIndex) {
                 currentTabIndex = navIndex
@@ -365,7 +374,8 @@ fun LiquidGlassNavBar(
                 layer = searchLayer,
                 luminanceAnimation = luminanceAnimation.value,
                 shape = CircleShape,
-                interaction = searchInteraction,
+                pressProgress = searchInteraction.pressProgress,
+                touchPosition = searchInteraction.touchPosition,
             )
             .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
             .clickable(
@@ -419,7 +429,8 @@ private fun Modifier.drawBackdropCustomShape(
     layer: GraphicsLayer,
     luminanceAnimation: Float,
     shape: Shape,
-    interaction: GlassInteraction? = null,
+    pressProgress: Float = 0f,
+    touchPosition: Offset = Offset.Zero,
     pressedScale: Float = 1.12f,
 ): Modifier =
     this.drawBackdrop(
@@ -427,7 +438,7 @@ private fun Modifier.drawBackdropCustomShape(
         shape = { shape },
         effects = {
             val l = (luminanceAnimation * 2f - 1f).let { sign(it) * it * it }
-            val press = interaction?.pressProgress ?: 0f
+            val press = pressProgress
             vibrancy()
             colorControls(
                 brightness = 0.05f,
@@ -454,7 +465,7 @@ private fun Modifier.drawBackdropCustomShape(
                 color = Color.Black.copy(alpha = darken),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
             )
-            val press = interaction?.pressProgress ?: 0f
+            val press = pressProgress
             if (press > 0f) {
                 drawRect(
                     brush = Brush.radialGradient(
@@ -462,20 +473,18 @@ private fun Modifier.drawBackdropCustomShape(
                             Color.White.copy(alpha = 0.18f * press),
                             Color.Transparent,
                         ),
-                        center = interaction?.touchPosition ?: Offset(size.width / 2f, size.height / 2f),
+                        center = if (touchPosition != Offset.Zero) touchPosition else Offset(size.width / 2f, size.height / 2f),
                         radius = size.minDimension * 1.2f,
                     ),
                     blendMode = BlendMode.Plus,
                 )
             }
         },
-        layerBlock = if (interaction != null) {
-            {
-                val scale = lerp(1f, pressedScale, interaction.pressProgress)
-                scaleX = scale
-                scaleY = scale
-            }
-        } else null,
+        layerBlock = {
+            val scale = lerp(1f, pressedScale, pressProgress)
+            scaleX = scale
+            scaleY = scale
+        },
     )
 
 class DampedDragAnimation(
