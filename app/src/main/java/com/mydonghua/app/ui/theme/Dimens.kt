@@ -54,9 +54,9 @@ object TopBarHeight {
 }
 
 object NavBarHeight {
-    val bar = 56.dp
-    val blob = 48.dp
-    val icon = 40.dp
-    val searchButton = 40.dp
-    val addButton = 40.dp
+    val bar = 50.dp
+    val blob = 43.dp
+    val icon = 36.dp
+    val searchButton = 36.dp
+    val addButton = 36.dp
 }
