@@ -286,8 +286,8 @@ fun LiquidGlassNavBar(
                                 InnerShadow(radius = 8f.dp * pressProg, alpha = pressProg)
                             },
                             layerBlock = {
-                                scaleX = dampedDrag.scaleX
-                                scaleY = dampedDrag.scaleY
+                                scaleX = 1f
+                                scaleY = 1f
                                 val velocity = dampedDrag.velocity / 10f
                                 scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                                 scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
