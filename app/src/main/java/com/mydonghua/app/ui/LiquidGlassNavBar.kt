@@ -350,6 +350,12 @@ fun LiquidGlassNavBar(
     Box(
         modifier = Modifier
             .offset(x = searchButtonOffset)
+            .graphicsLayer {
+                val scale = 1f - unifiedPressProgress * 0.15f
+                scaleX = scale
+                scaleY = scale
+                translationX = unifiedPressProgress * 12.dp.toPx()
+            }
             .size(searchButtonSize)
             .clip(CircleShape)
             .drawBackdropCustomShape(
