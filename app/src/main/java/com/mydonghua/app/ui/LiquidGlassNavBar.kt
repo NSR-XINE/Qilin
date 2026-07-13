@@ -514,8 +514,8 @@ class DampedDragAnimation(
         velocityTracker.resetTracking()
         animationScope.launch {
             launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
-            launch { scaleXAnimation.animateTo(pressedScale * 1.15f, scaleXAnimationSpec) }
-            launch { scaleYAnimation.animateTo(pressedScale * 0.85f, scaleYAnimationSpec) }
+            launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
+            launch { scaleYAnimation.animateTo(pressedScale, scaleYAnimationSpec) }
         }
     }
 
