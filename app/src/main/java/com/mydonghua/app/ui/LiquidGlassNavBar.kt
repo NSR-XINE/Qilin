@@ -263,7 +263,7 @@ fun LiquidGlassNavBar(
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
                 val restHeight = restWidth
-                val pressedHeight = with(density) { 40.dp.toPx() }
+                val pressedHeight = with(density) { 44.dp.toPx() }
                 val pillHeightPx = lerp(restHeight, pressedHeight, progress)
                 Box(
                     modifier = Modifier
