@@ -206,7 +206,7 @@ fun LiquidGlassNavBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            Spacer(modifier = Modifier.width(Spacing.md))
+            Spacer(modifier = Modifier.width(24.dp))
             Box(
                 modifier = Modifier
                     .width(maxCapsuleWidth)
