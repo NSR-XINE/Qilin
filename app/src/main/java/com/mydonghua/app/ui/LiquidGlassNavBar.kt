@@ -251,11 +251,11 @@ fun LiquidGlassNavBar(
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val progress = dampedDrag.pressProgress
                 val restWidth = slotWidthPx - with(density) { Spacing.sm.toPx() }
-                val pressedWidth = with(density) { 84.dp.toPx() }
+                val pressedWidth = with(density) { 64.dp.toPx() }
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
                 val restHeight = restWidth
-                val pressedHeight = with(density) { 76.dp.toPx() }
+                val pressedHeight = with(density) { 52.dp.toPx() }
                 val pillHeightPx = lerp(restHeight, pressedHeight, progress)
                 Box(
                     modifier = Modifier
