@@ -301,8 +301,7 @@ fun LiquidGlassNavBar(
                             },
                         )
                         .width(with(density) { pillWidthPx.toDp() })
-                        .height(with(density) { pillHeightPx.toDp() })
-                        .clip(CapsuleShape),
+                        .height(with(density) { pillHeightPx.toDp() }),
                 )
             }
 
