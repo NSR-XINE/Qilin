@@ -132,14 +132,13 @@ fun LiquidGlassNavBar(
     val density = LocalDensity.current
     var barWidthPx by remember { mutableIntStateOf(0) }
     val navIndex = navRoutes.indexOf(currentRoute).coerceAtLeast(0)
-    val totalSlots = 5f
+    val totalSlots = 4f
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
     val coroutineScope = rememberCoroutineScope()
     val barInteraction = rememberGlassInteraction()
     var currentTabIndex by remember { mutableIntStateOf(navIndex) }
 
-    fun navToValue(index: Int): Float =
-        if (index < 2) index.toFloat() else (index + 1).toFloat()
+    fun navToValue(index: Int): Float = index.toFloat()
 
     BoxWithConstraints(
         modifier = modifier
@@ -175,13 +174,8 @@ fun LiquidGlassNavBar(
                     onDragStopped = {
                         if (draggedFlag[0]) {
                             val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
-                            val targetIndex = when {
-                                snapped <= 1 -> snapped
-                                snapped == 2 -> if (targetValue > 2.5f) 2 else 1
-                                else -> snapped - 1
-                            }
                             val safeIndex =
-                                if (targetIndex in navRoutes.indices) targetIndex else currentTabIndex
+                                if (snapped in navRoutes.indices) snapped else currentTabIndex
                             if (safeIndex != currentTabIndex) {
                                 currentTabIndex = safeIndex
                             }
@@ -330,31 +324,6 @@ fun LiquidGlassNavBar(
                                 onNavigate(route)
                             },
                         )
-                    }
-                    if (route == "airing") {
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            Box(
-                                modifier = Modifier
-                                    .size(NavBarHeight.addButton)
-                                    .clip(CircleShape)
-                                    .background(
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                                        shape = CircleShape,
-                                    )
-                                    .clickable(
-                                        interactionSource = null,
-                                        indication = null,
-                                    ) { onNavigate("add_edit_show") },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Add,
-                                    contentDescription = "Add",
-                                    modifier = Modifier.size(IconSize.xxl),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
                     }
                 }
             }
