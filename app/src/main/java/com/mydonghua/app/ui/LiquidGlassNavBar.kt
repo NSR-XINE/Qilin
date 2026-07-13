@@ -226,7 +226,6 @@ fun LiquidGlassNavBar(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(BarShape)
                         .drawBackdropCustomShape(
                             backdrop = backdrop,
                             layer = layer,
