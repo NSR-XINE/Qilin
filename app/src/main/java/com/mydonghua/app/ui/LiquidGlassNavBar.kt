@@ -169,7 +169,7 @@ fun LiquidGlassNavBar(
                     valueRange = 0f..(totalSlots - 1f),
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
-                    pressedScale = 76f / 56f,
+                    pressedScale = 1.1f,
                     onDragStarted = { draggedFlag[0] = false },
                     onDragStopped = {
                         if (draggedFlag[0]) {
@@ -253,16 +253,16 @@ fun LiquidGlassNavBar(
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val progress = dampedDrag.pressProgress
-                val restWidth = with(density) { 56.dp.toPx() }
-                val pressedWidth = with(density) { 96.dp.toPx() }
+                val restWidth = with(density) { 48.dp.toPx() }
+                val pressedWidth = with(density) { 88.dp.toPx() }
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
                 val restHeight = restWidth
-                val pressedHeight = with(density) { 44.2.dp.toPx() }
+                val pressedHeight = with(density) { 56.dp.toPx() }
                 val pillHeightPx = lerp(restHeight, pressedHeight, progress)
                 val scaleXValue = dampedDrag.scaleX
-                val minTranslationX = with(density) { 2.dp.toPx() } + pillWidthPx * (scaleXValue - 1f) / 2f
-                val maxTranslationX = barWidthPx - with(density) { 2.dp.toPx() } - pillWidthPx - pillWidthPx * (scaleXValue - 1f) / 2f
+                val minTranslationX = with(density) { 1.2.dp.toPx() } + pillWidthPx * (scaleXValue - 1f) / 2f
+                val maxTranslationX = barWidthPx - with(density) { 1.2.dp.toPx() } - pillWidthPx - pillWidthPx * (scaleXValue - 1f) / 2f
 
                 val startCenter = with(density) { 32.dp.toPx() }
                 val endCenter = barWidthPx - startCenter
