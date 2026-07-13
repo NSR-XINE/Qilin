@@ -359,6 +359,7 @@ fun LiquidGlassNavBar(
         modifier = Modifier
             .offset(x = searchButtonOffset)
             .size(searchButtonSize)
+            .clip(CircleShape)
             .drawBackdropCustomShape(
                 backdrop = backdrop,
                 layer = searchLayer,
