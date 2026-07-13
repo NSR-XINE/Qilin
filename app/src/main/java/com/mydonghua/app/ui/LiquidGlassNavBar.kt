@@ -258,7 +258,7 @@ fun LiquidGlassNavBar(
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
                 val restHeight = restWidth
-                val pressedHeight = with(density) { 44.dp.toPx() }
+                val pressedHeight = with(density) { 41.27.dp.toPx() }
                 val pillHeightPx = lerp(restHeight, pressedHeight, progress)
                 val scaleXValue = dampedDrag.scaleX
                 val minTranslationX = with(density) { 4.dp.toPx() } + pillWidthPx * (scaleXValue - 1f) / 2f
