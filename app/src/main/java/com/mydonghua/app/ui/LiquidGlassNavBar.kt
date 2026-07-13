@@ -254,21 +254,17 @@ fun LiquidGlassNavBar(
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val progress = dampedDrag.pressProgress
                 val restWidth = with(density) { 56.dp.toPx() }
-                val pressedWidth = with(density) { 88.dp.toPx() }
+                val pressedWidth = with(density) { 76.dp.toPx() }
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
                 val restHeight = restWidth
-                val pressedHeight = with(density) { 44.2.dp.toPx() }
+                val pressedHeight = with(density) { 56.dp.toPx() }
                 val pillHeightPx = lerp(restHeight, pressedHeight, progress)
-                val scaleXValue = dampedDrag.scaleX
-                val currentMarginGap = lerp(with(density) { 4.dp.toPx() }, with(density) { 2.dp.toPx() }, progress)
-                val minTranslationX = currentMarginGap - (barWidthPx - pillWidthPx) * (scaleXValue - 1f) / 2f
-                val maxTranslationX = barWidthPx - currentMarginGap - pillWidthPx + (barWidthPx - pillWidthPx) * (scaleXValue - 1f) / 2f
 
                 val startCenter = with(density) { 32.dp.toPx() }
                 val endCenter = barWidthPx - startCenter
                 val pillCenterPx = lerp(startCenter, endCenter, dampedDrag.value / (totalSlots - 1f))
-                val translationX = (pillCenterPx - pillWidthPx / 2f).coerceIn(minTranslationX, maxTranslationX)
+                val translationX = pillCenterPx - pillWidthPx / 2f
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
