@@ -253,7 +253,7 @@ fun LiquidGlassNavBar(
                 if (barWidthPx > 0) {
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val progress = dampedDrag.pressProgress
-                val restWidth = slotWidthPx - with(density) { Spacing.sm.toPx() }
+                val restWidth = with(density) { 56.dp.toPx() }
                 val pressedWidth = with(density) { 76.dp.toPx() }
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
@@ -263,7 +263,11 @@ fun LiquidGlassNavBar(
                 val scaleXValue = dampedDrag.scaleX
                 val minTranslationX = with(density) { 4.dp.toPx() } + pillWidthPx * (scaleXValue - 1f) / 2f
                 val maxTranslationX = barWidthPx - with(density) { 4.dp.toPx() } - pillWidthPx - pillWidthPx * (scaleXValue - 1f) / 2f
-                val translationX = ((dampedDrag.value + 0.5f) * slotWidthPx - pillWidthPx / 2f).coerceIn(minTranslationX, maxTranslationX)
+
+                val startCenter = with(density) { 32.dp.toPx() }
+                val endCenter = barWidthPx - startCenter
+                val pillCenterPx = lerp(startCenter, endCenter, dampedDrag.value / (totalSlots - 1f))
+                val translationX = (pillCenterPx - pillWidthPx / 2f).coerceIn(minTranslationX, maxTranslationX)
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
@@ -293,8 +297,8 @@ fun LiquidGlassNavBar(
                                 InnerShadow(radius = 8f.dp * pressProg, alpha = pressProg)
                             },
                             layerBlock = {
-                                scaleX = 1f
-                                scaleY = 1f
+                                scaleX = dampedDrag.scaleX
+                                scaleY = dampedDrag.scaleY
                                 val velocity = dampedDrag.velocity / 10f
                                 scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                                 scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
@@ -309,12 +313,22 @@ fun LiquidGlassNavBar(
                 )
             }
 
-            Row(
+            Box(
                 modifier = Modifier.matchParentSize().then(dampedDrag.modifier),
-                verticalAlignment = Alignment.CenterVertically,
             ) {
                 navRoutes.forEachIndexed { position, route ->
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    val startCenter = with(density) { 32.dp.toPx() }
+                    val endCenter = barWidthPx - startCenter
+                    val iconCenterPx = lerp(startCenter, endCenter, position / (totalSlots - 1f))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(with(density) { slotWidthPx.toDp() })
+                            .graphicsLayer {
+                                translationX = iconCenterPx - slotWidthPx / 2f
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
                         NavBarIcon(
                             iconRes = when (route) {
                                 "home" -> R.drawable.ic_home
