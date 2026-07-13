@@ -194,7 +194,7 @@ fun LiquidGlassNavBar(
 
         val unifiedPressProgress = maxOf(barInteraction.pressProgress, dampedDrag.pressProgress)
         val unifiedTouchPosition = if (dampedDrag.pressProgress > barInteraction.pressProgress) {
-            Offset(dampedDrag.value * slotWidthPx + slotWidthPx / 2f, with(density) { NavBarHeight.bar.toPx() } / 2f)
+            dampedDrag.touchPosition
         } else {
             barInteraction.touchPosition
         }
@@ -502,6 +502,8 @@ class DampedDragAnimation(
 
     private val mutatorMutex = MutatorMutex()
     private val velocityTracker = VelocityTracker()
+    var touchPosition by mutableStateOf(Offset.Zero)
+        private set
 
     val value: Float get() = valueAnimation.value
     val targetValue: Float get() = valueAnimation.targetValue
@@ -514,18 +516,22 @@ class DampedDragAnimation(
         Modifier.pointerInput(Unit) {
             inspectDragGestures(
                 onDragStart = { down ->
+                    touchPosition = down.position
                     onDragStarted(down.position)
                     press()
                 },
                 onDragEnd = {
+                    touchPosition = Offset.Zero
                     onDragStopped()
                     release()
                 },
                 onDragCancel = {
+                    touchPosition = Offset.Zero
                     onDragStopped()
                     release()
                 },
-            ) { _, dragAmount ->
+            ) { change, dragAmount ->
+                touchPosition = change.position
                 onDrag(size, dragAmount)
             }
         }
