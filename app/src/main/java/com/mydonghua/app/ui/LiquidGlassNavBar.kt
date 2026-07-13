@@ -151,9 +151,9 @@ fun LiquidGlassNavBar(
         val configuration = LocalConfiguration.current
         val screenWidth = configuration.screenWidthDp.dp
         val horizontalPadding = Spacing.sm * 2
-        val maxCapsuleWidth = screenWidth - horizontalPadding - searchButtonSize - Spacing.sm
+        val maxCapsuleWidth = (screenWidth - horizontalPadding - searchButtonSize - Spacing.sm) * 0.9f
         val searchButtonOffset by animateDpAsState(
-            targetValue = if (isSearchOpen) - (maxCapsuleWidth + Spacing.sm) else 0.dp,
+            targetValue = if (isSearchOpen) - (screenWidth - horizontalPadding - searchButtonSize) else 0.dp,
             animationSpec = spring(
                 stiffness = Spring.StiffnessLow,
                 dampingRatio = Spring.DampingRatioNoBouncy
@@ -253,7 +253,7 @@ fun LiquidGlassNavBar(
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val progress = dampedDrag.pressProgress
                 val restWidth = slotWidthPx - with(density) { Spacing.sm.toPx() }
-                val pressedWidth = with(density) { 68.dp.toPx() }
+                val pressedWidth = with(density) { 60.dp.toPx() }
                 val pillWidthPx = lerp(restWidth, pressedWidth, progress)
 
                 val restHeight = restWidth
@@ -330,7 +330,7 @@ fun LiquidGlassNavBar(
     }
 }
 
-    Spacer(modifier = Modifier.width(Spacing.sm * capsuleAlpha))
+    Spacer(modifier = Modifier.weight(1f))
 
     Box(
         modifier = Modifier
