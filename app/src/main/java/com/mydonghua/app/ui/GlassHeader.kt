@@ -58,7 +58,7 @@ fun GlassHeader(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = Spacing.xl, vertical = Spacing.sm)
+            .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = Spacing.sm)
     ) {
         Box(
             modifier = Modifier
