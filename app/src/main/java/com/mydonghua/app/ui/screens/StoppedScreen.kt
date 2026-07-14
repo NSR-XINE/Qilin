@@ -20,7 +20,8 @@ fun StoppedScreen(
     onWatchClick: (String) -> Unit,
     onEditClick: (com.mydonghua.app.domain.model.Show) -> Unit,
     onCardClick: (com.mydonghua.app.domain.model.Show) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topPadding: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val shows by viewModel.stoppedShows.collectAsState()
     val context = LocalContext.current
@@ -33,7 +34,7 @@ fun StoppedScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(top = topPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -45,9 +46,8 @@ fun StoppedScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .navigationBarsPadding(),
-                contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.sm)
+                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = Spacing.sm)
             ) {
                 item {
                     Row(

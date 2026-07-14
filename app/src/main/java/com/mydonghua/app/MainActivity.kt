@@ -159,7 +159,6 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(top = innerPadding.calculateTopPadding())
                                     .layerBackdrop(backdrop)
                             ) {
                             NavHost(
@@ -182,6 +181,7 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                                 HomeScreen(
                                 viewModel = homeViewModel,
+                                topPadding = innerPadding.calculateTopPadding(),
                                 onSearchClick = {
                                     isSearchOpen = true
                                 },
@@ -202,6 +202,7 @@ class MainActivity : ComponentActivity() {
                         composable("airing") {
                                 AiringScreen(
                                 viewModel = showsViewModel,
+                                topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)
@@ -219,6 +220,7 @@ class MainActivity : ComponentActivity() {
                         composable("complete") {
                                 CompletedScreen(
                                 viewModel = showsViewModel,
+                                topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)
@@ -236,6 +238,7 @@ class MainActivity : ComponentActivity() {
                         composable("stopped") {
                                 StoppedScreen(
                                 viewModel = showsViewModel,
+                                topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)

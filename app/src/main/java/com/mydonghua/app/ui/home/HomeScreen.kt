@@ -46,7 +46,8 @@ fun HomeScreen(
     onSettingsClick: () -> Unit,
     onShowClick: (String) -> Unit,
     onWatchClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topPadding: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -55,7 +56,7 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.Transparent)
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(bottom = Spacing.sm)
+        contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = Spacing.sm)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }
