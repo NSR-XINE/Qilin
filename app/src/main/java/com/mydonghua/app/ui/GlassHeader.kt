@@ -24,6 +24,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.util.lerp
+import com.kyant.backdrop.effects.refraction
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -59,6 +65,15 @@ fun GlassHeader(
     val menuBtnPressBg = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.12f)
     val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
 
+    val headerInteraction = remember { MutableInteractionSource() }
+    val isHeaderPressed by headerInteraction.collectIsPressedAsState()
+    val headerPressProgress by animateFloatAsState(
+        targetValue = if (isHeaderPressed) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        label = "headerPressProgress"
+    )
+    var headerTouchPosition by remember { mutableStateOf(Offset.Zero) }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -69,14 +84,64 @@ fun GlassHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            val firstPressed = event.changes.firstOrNull { it.pressed }
+                            if (firstPressed != null) {
+                                headerTouchPosition = firstPressed.position
+                            } else {
+                                headerTouchPosition = Offset.Zero
+                            }
+                        }
+                    }
+                }
+                .clickable(
+                    interactionSource = headerInteraction,
+                    indication = null,
+                    onClick = {}
+                )
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { CircleShape },
                     effects = {
-                        blur(12f.dp.toPx())
+                        vibrancy()
+                        colorControls(
+                            brightness = 0.05f,
+                            contrast = 1f,
+                            saturation = 1.5f
+                        )
+                        blur((12f + 2f * headerPressProgress).dp.toPx())
+                        refraction(size.minDimension / 4f + 2f.dp.toPx() * headerPressProgress, size.minDimension / 2f, false)
                     },
                     highlight = { Highlight.Default.copy(alpha = 0.35f) },
-                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) }
+                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
+                    onDrawSurface = {
+                        val baseColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
+                        val radius = size.height / 2f
+                        drawRoundRect(
+                            color = baseColor,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
+                        )
+                        val press = headerPressProgress
+                        if (press > 0f) {
+                            val lightColor = if (isDark) Color.White.copy(alpha = 0.18f * press) else Color.White.copy(alpha = 0.35f * press)
+                              drawRect(
+                                  brush = Brush.radialGradient(
+                                      colors = listOf(lightColor, Color.Transparent),
+                                      center = if (headerTouchPosition != Offset.Zero) headerTouchPosition else Offset(size.width / 2f, size.height / 2f),
+                                      radius = size.minDimension * 1.2f,
+                                  ),
+                                  blendMode = BlendMode.Plus,
+                              )
+                        }
+                    },
+                    layerBlock = {
+                        val scale = lerp(1f, 1.05f, headerPressProgress)
+                        scaleX = scale
+                        scaleY = scale
+                    }
                 )
                 .border(
                     width = 0.5.dp,
