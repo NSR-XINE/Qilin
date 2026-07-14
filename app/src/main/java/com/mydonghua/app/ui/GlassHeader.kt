@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,13 +19,22 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.Highlight
+import com.kyant.backdrop.Shadow
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.drawBackdrop
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
 
 @Composable
 fun GlassHeader(
+    title: String,
+    backdrop: LayerBackdrop,
     isDark: Boolean,
     onDrawerOpen: () -> Unit,
     modifier: Modifier = Modifier,
@@ -40,50 +50,90 @@ fun GlassHeader(
     val density = LocalDensity.current
     val glowRadius = with(density) { (NavBarHeight.icon * 1.2f).toPx() }
 
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = Spacing.xl, vertical = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = Spacing.xl, vertical = Spacing.sm)
     ) {
-        Spacer(Modifier.weight(1f))
-
         Box(
             modifier = Modifier
-                .size(NavBarHeight.icon)
-                .scale(menuScale)
-                .clip(CircleShape)
-                .background(Color.DarkGray.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = menuInteraction,
-                    indication = null,
-                    onClick = onDrawerOpen
+                .fillMaxWidth()
+                .height(56.dp)
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { CircleShape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = 0.05f,
+                            contrast = 1f,
+                            saturation = 1.5f
+                        )
+                        blur(12f.dp.toPx())
+                    },
+                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
+                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) }
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.CenterStart
         ) {
-            if (isMenuPressed) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = TextStyle(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.White, Color.White.copy(alpha = 0.75f))
+                        ),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        letterSpacing = 0.25.sp
+                    )
+                )
+
+                Spacer(Modifier.weight(1f))
+
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
+                        .size(40.dp)
+                        .scale(menuScale)
                         .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.18f),
-                                    Color.Transparent
-                                ),
-                                radius = glowRadius
-                            )
+                        .background(Color.White.copy(alpha = 0.1f))
+                        .clickable(
+                            interactionSource = menuInteraction,
+                            indication = null,
+                            onClick = onDrawerOpen
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isMenuPressed) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.18f),
+                                            Color.Transparent
+                                        ),
+                                        radius = glowRadius
+                                    )
+                                )
                         )
-                )
+                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_menu),
+                        contentDescription = "Menu",
+                        tint = Color.White,
+                        modifier = Modifier.size(IconSize.md)
+                    )
+                }
             }
-            Icon(
-                painter = painterResource(id = R.drawable.ic_menu),
-                contentDescription = "Menu",
-                tint = Color.White,
-                modifier = Modifier.size(IconSize.lg)
-            )
         }
     }
 }

@@ -138,12 +138,21 @@ class MainActivity : ComponentActivity() {
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
                             topBar = {
-                                if (showGlobalHeader && !isSearchOpen) {
-                                    GlassHeader(
-                                        isDark = settingsState.themeMode.lowercase() != "light",
-                                        onDrawerOpen = { isDrawerOpen = true },
-                                    )
-                                }
+                                 if (showGlobalHeader && !isSearchOpen) {
+                                     val headerTitle = when (currentRoute) {
+                                         "home" -> "My Donghua"
+                                         "airing" -> "Airing Schedule"
+                                         "complete" -> "Completed"
+                                         "stopped" -> "Stopped"
+                                         else -> ""
+                                     }
+                                     GlassHeader(
+                                         title = headerTitle,
+                                         backdrop = backdrop,
+                                         isDark = settingsState.themeMode.lowercase() != "light",
+                                         onDrawerOpen = { isDrawerOpen = true },
+                                     )
+                                 }
                             }
                         ) { innerPadding ->
                             Box(
