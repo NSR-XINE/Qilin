@@ -76,7 +76,15 @@ fun GlassHeader(
                         blur(12f.dp.toPx())
                     },
                     highlight = { Highlight.Default.copy(alpha = 0.35f) },
-                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) }
+                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
+                    onDrawSurface = {
+                        val tintColor = if (isDark) {
+                            Color.Black.copy(alpha = 0.28f)
+                        } else {
+                            Color.White.copy(alpha = 0.45f)
+                        }
+                        drawRect(tintColor)
+                    }
                 ),
             contentAlignment = Alignment.CenterStart
         ) {
