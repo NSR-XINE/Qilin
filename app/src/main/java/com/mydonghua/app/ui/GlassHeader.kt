@@ -75,7 +75,24 @@ fun GlassHeader(
     var headerTouchPosition by remember { mutableStateOf(Offset.Zero) }
 
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .drawBackdrop(
+                backdrop = backdrop,
+                effects = {
+                    vibrancy()
+                    colorControls(
+                        brightness = 0.05f,
+                        contrast = 1f,
+                        saturation = 1.5f
+                    )
+                    blur(12f.dp.toPx())
+                },
+                onDrawSurface = {
+                    val baseColor = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.25f)
+                    drawRect(color = baseColor)
+                }
+            )
     ) {
         Box(
             modifier = Modifier
