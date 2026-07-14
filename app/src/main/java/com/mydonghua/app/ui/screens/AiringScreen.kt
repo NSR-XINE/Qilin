@@ -21,7 +21,7 @@ fun AiringScreen(
     onEditClick: (com.mydonghua.app.domain.model.Show) -> Unit,
     onCardClick: (com.mydonghua.app.domain.model.Show) -> Unit,
     modifier: Modifier = Modifier,
-    topPadding: androidx.compose.ui.unit.Dp = 0.dp,
+    topPadding: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp(0f),
 ) {
     val shows by viewModel.airingShows.collectAsState()
     val context = LocalContext.current
