@@ -209,7 +209,7 @@ fun GlassHeader(
                         modifier = Modifier.size(IconSize.md)
                     )
                 }
-            }
+        }
         }
         
         Box(
