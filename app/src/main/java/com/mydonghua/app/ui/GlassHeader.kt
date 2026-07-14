@@ -74,12 +74,15 @@ fun GlassHeader(
     )
     var headerTouchPosition by remember { mutableStateOf(Offset.Zero) }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = Spacing.sm)
+    Column(
+        modifier = modifier.fillMaxWidth()
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = Spacing.sm)
+        ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -208,5 +211,14 @@ fun GlassHeader(
                 }
             }
         }
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(0.5.dp)
+                .background(
+                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
+                )
+        )
     }
 }
