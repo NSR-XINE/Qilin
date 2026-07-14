@@ -85,6 +85,8 @@ fun GlassHeader(
     )
     var headerTouchPosition by remember { mutableStateOf(Offset.Zero) }
 
+    val capsuleScale = lerp(1f, 1.05f, headerPressProgress)
+
     val statusBarHeightPx = WindowInsets.statusBars.getTop(density).toFloat()
     val bottomCornerRadiusPx = with(density) { 16.dp.toPx() }
     val capsulePaddingStartPx = with(density) { Spacing.xl.toPx() }
@@ -92,14 +94,15 @@ fun GlassHeader(
     val capsuleTopPaddingPx = with(density) { 2.dp.toPx() }
     val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
-    val cutoutShape = remember(statusBarHeightPx, bottomCornerRadiusPx, capsulePaddingStartPx, capsulePaddingEndPx, capsuleTopPaddingPx, capsuleHeightPx) {
+    val cutoutShape = remember(statusBarHeightPx, bottomCornerRadiusPx, capsulePaddingStartPx, capsulePaddingEndPx, capsuleTopPaddingPx, capsuleHeightPx, capsuleScale) {
         CutoutHeaderShape(
             statusBarHeightPx = statusBarHeightPx,
             bottomCornerRadiusPx = bottomCornerRadiusPx,
             capsulePaddingStartPx = capsulePaddingStartPx,
             capsulePaddingEndPx = capsulePaddingEndPx,
             capsuleTopPaddingPx = capsuleTopPaddingPx,
-            capsuleHeightPx = capsuleHeightPx
+            capsuleHeightPx = capsuleHeightPx,
+            scale = capsuleScale
         )
     }
 
@@ -204,9 +207,8 @@ fun GlassHeader(
                         }
                     },
                     layerBlock = {
-                        val scale = lerp(1f, 1.05f, headerPressProgress)
-                        scaleX = scale
-                        scaleY = scale
+                        scaleX = capsuleScale
+                        scaleY = capsuleScale
                     }
                 )
                 .border(
@@ -284,7 +286,8 @@ class CutoutHeaderShape(
     private val capsulePaddingStartPx: Float,
     private val capsulePaddingEndPx: Float,
     private val capsuleTopPaddingPx: Float,
-    private val capsuleHeightPx: Float
+    private val capsuleHeightPx: Float,
+    private val scale: Float
 ) : Shape {
     override fun createOutline(
         size: Size,
@@ -305,10 +308,22 @@ class CutoutHeaderShape(
             val top = statusBarHeightPx + capsuleTopPaddingPx
             val right = size.width - capsulePaddingEndPx
             val bottom = top + capsuleHeightPx
+            
+            val centerX = (left + right) / 2f
+            val centerY = (top + bottom) / 2f
+            val halfWidth = (right - left) / 2f
+            val halfHeight = (bottom - top) / 2f
+            
+            val scaledLeft = centerX - halfWidth * scale
+            val scaledRight = centerX + halfWidth * scale
+            val scaledTop = centerY - halfHeight * scale
+            val scaledBottom = centerY + halfHeight * scale
+            val scaledHeight = scaledBottom - scaledTop
+            
             addRoundRect(
                 RoundRect(
-                    rect = Rect(left, top, right, bottom),
-                    cornerRadius = CornerRadius(capsuleHeightPx / 2f, capsuleHeightPx / 2f)
+                    rect = Rect(scaledLeft, scaledTop, scaledRight, scaledBottom),
+                    cornerRadius = CornerRadius(scaledHeight / 2f, scaledHeight / 2f)
                 )
             )
         }
