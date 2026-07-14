@@ -88,73 +88,62 @@ fun GlassHeader(
                 }
             )
             .statusBarsPadding()
-            .padding(horizontal = Spacing.xl, vertical = Spacing.sm),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.08f)),
-            contentAlignment = Alignment.CenterStart
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = TextStyle(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color.White, Color.White.copy(alpha = 0.85f))
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        letterSpacing = 0.25.sp
-                    )
+            Text(
+                text = title,
+                style = TextStyle(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.White, Color.White.copy(alpha = 0.8f))
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    letterSpacing = 0.25.sp
                 )
+            )
 
-                Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f))
 
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .scale(menuScale)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.1f))
-                        .clickable(
-                            interactionSource = menuInteraction,
-                            indication = null,
-                            onClick = onDrawerOpen
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isMenuPressed) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.18f),
-                                            Color.Transparent
-                                        ),
-                                        radius = glowRadius
-                                    )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .scale(menuScale)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.1f))
+                    .clickable(
+                        interactionSource = menuInteraction,
+                        indication = null,
+                        onClick = onDrawerOpen
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isMenuPressed) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.18f),
+                                        Color.Transparent
+                                    ),
+                                    radius = glowRadius
                                 )
-                        )
-                    }
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_menu),
-                        contentDescription = "Menu",
-                        tint = Color.White,
-                        modifier = Modifier.size(IconSize.md)
+                            )
                     )
                 }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_menu),
+                    contentDescription = "Menu",
+                    tint = Color.White,
+                    modifier = Modifier.size(IconSize.md)
+                )
             }
         }
     }
