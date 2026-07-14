@@ -192,12 +192,8 @@ fun LiquidGlassNavBar(
                 )
             }
 
+        var activeTouchPosition by remember { mutableStateOf(Offset.Zero) }
         val unifiedPressProgress = maxOf(barInteraction.pressProgress, dampedDrag.pressProgress)
-        val unifiedTouchPosition = if (dampedDrag.pressProgress > barInteraction.pressProgress) {
-            dampedDrag.touchPosition
-        } else {
-            barInteraction.touchPosition
-        }
 
         Row(
             modifier = Modifier
@@ -215,7 +211,20 @@ fun LiquidGlassNavBar(
                         alpha = capsuleAlpha
                     }
                     .onSizeChanged { barWidthPx = it.width }
-                    .pointerInput(barInteraction) { barInteraction.detectPress(this) },
+                    .pointerInput(barInteraction) { barInteraction.detectPress(this) }
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                val firstPressed = event.changes.firstOrNull { it.pressed }
+                                if (firstPressed != null) {
+                                    activeTouchPosition = firstPressed.position
+                                } else {
+                                    activeTouchPosition = Offset.Zero
+                                }
+                            }
+                        }
+                    },
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Box(
@@ -227,7 +236,7 @@ fun LiquidGlassNavBar(
                             luminanceAnimation = luminanceAnimation.value,
                             shape = BarShape,
                             pressProgress = unifiedPressProgress,
-                            touchPosition = unifiedTouchPosition,
+                            touchPosition = activeTouchPosition,
                             pressedScale = 1.12f,
                         )
                 )
@@ -502,8 +511,6 @@ class DampedDragAnimation(
 
     private val mutatorMutex = MutatorMutex()
     private val velocityTracker = VelocityTracker()
-    var touchPosition by mutableStateOf(Offset.Zero)
-        private set
 
     val value: Float get() = valueAnimation.value
     val targetValue: Float get() = valueAnimation.targetValue
@@ -516,22 +523,18 @@ class DampedDragAnimation(
         Modifier.pointerInput(Unit) {
             inspectDragGestures(
                 onDragStart = { down ->
-                    touchPosition = down.position
                     onDragStarted(down.position)
                     press()
                 },
                 onDragEnd = {
-                    touchPosition = Offset.Zero
                     onDragStopped()
                     release()
                 },
                 onDragCancel = {
-                    touchPosition = Offset.Zero
                     onDragStopped()
                     release()
                 },
-            ) { change, dragAmount ->
-                touchPosition = change.position
+            ) { _, dragAmount ->
                 onDrag(size, dragAmount)
             }
         }
