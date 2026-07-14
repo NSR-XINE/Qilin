@@ -220,8 +220,10 @@ fun LiquidGlassNavBar(
                                 val firstPressed = event.changes.firstOrNull { it.pressed }
                                 if (firstPressed != null) {
                                     activeTouchPosition = firstPressed.position
+                                    android.util.Log.d("LiquidGlass", "activeTouchPosition: ${firstPressed.position}")
                                 } else {
                                     activeTouchPosition = Offset.Zero
+                                    android.util.Log.d("LiquidGlass", "activeTouchPosition: Zero")
                                 }
                             }
                         }
@@ -237,7 +239,7 @@ fun LiquidGlassNavBar(
                             luminanceAnimation = luminanceAnimation.value,
                             shape = BarShape,
                             pressProgress = unifiedPressProgress,
-                            touchPosition = activeTouchPosition,
+                            touchPosition = { activeTouchPosition },
                             pressedScale = 1.12f,
                         )
                 )
@@ -374,7 +376,7 @@ fun LiquidGlassNavBar(
                 luminanceAnimation = luminanceAnimation.value,
                 shape = CircleShape,
                 pressProgress = searchInteraction.pressProgress,
-                touchPosition = searchInteraction.touchPosition,
+                touchPosition = { searchInteraction.touchPosition },
             )
             .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
             .clickable(
@@ -429,7 +431,7 @@ private fun Modifier.drawBackdropCustomShape(
     luminanceAnimation: Float,
     shape: Shape,
     pressProgress: Float = 0f,
-    touchPosition: Offset = Offset.Zero,
+    touchPosition: () -> Offset = { Offset.Zero },
     pressedScale: Float = 1.12f,
 ): Modifier =
     this.drawBackdrop(
@@ -472,7 +474,10 @@ private fun Modifier.drawBackdropCustomShape(
                             Color.White.copy(alpha = 0.18f * press),
                             Color.Transparent,
                         ),
-                        center = if (touchPosition != Offset.Zero) touchPosition else Offset(size.width / 2f, size.height / 2f),
+                        center = let {
+                            val pos = touchPosition()
+                            if (pos != Offset.Zero) pos else Offset(size.width / 2f, size.height / 2f)
+                        },
                         radius = size.minDimension * 1.2f,
                     ),
                     blendMode = BlendMode.Plus,
