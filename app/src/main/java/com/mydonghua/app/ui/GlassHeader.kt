@@ -25,6 +25,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -75,13 +85,30 @@ fun GlassHeader(
     )
     var headerTouchPosition by remember { mutableStateOf(Offset.Zero) }
 
+    val statusBarHeightPx = WindowInsets.statusBars.getTop(density).toFloat()
+    val bottomCornerRadiusPx = with(density) { 16.dp.toPx() }
+    val capsulePaddingStartPx = with(density) { Spacing.xl.toPx() }
+    val capsulePaddingEndPx = with(density) { Spacing.xl.toPx() }
+    val capsuleTopPaddingPx = with(density) { 2.dp.toPx() }
+    val capsuleHeightPx = with(density) { 56.dp.toPx() }
+
+    val cutoutShape = remember(statusBarHeightPx, bottomCornerRadiusPx, capsulePaddingStartPx, capsulePaddingEndPx, capsuleTopPaddingPx, capsuleHeightPx) {
+        CutoutHeaderShape(
+            statusBarHeightPx = statusBarHeightPx,
+            bottomCornerRadiusPx = bottomCornerRadiusPx,
+            capsulePaddingStartPx = capsulePaddingStartPx,
+            capsulePaddingEndPx = capsulePaddingEndPx,
+            capsuleTopPaddingPx = capsuleTopPaddingPx,
+            capsuleHeightPx = capsuleHeightPx
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
             .drawBackdrop(
                 backdrop = backdrop,
-                shape = { RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp) },
+                shape = { cutoutShape },
                 effects = {
                     vibrancy()
                     colorControls(
@@ -237,5 +264,48 @@ fun GlassHeader(
             }
         }
         }
+    }
+}
+
+class CutoutHeaderShape(
+    private val statusBarHeightPx: Float,
+    private val bottomCornerRadiusPx: Float,
+    private val capsulePaddingStartPx: Float,
+    private val capsulePaddingEndPx: Float,
+    private val capsuleTopPaddingPx: Float,
+    private val capsuleHeightPx: Float
+) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        val outerPath = Path().apply {
+            addRoundRect(
+                RoundRect(
+                    rect = Rect(0f, 0f, size.width, size.height),
+                    bottomLeft = CornerRadius(bottomCornerRadiusPx, bottomCornerRadiusPx),
+                    bottomRight = CornerRadius(bottomCornerRadiusPx, bottomCornerRadiusPx)
+                )
+            )
+        }
+        val innerPath = Path().apply {
+            val left = capsulePaddingStartPx
+            val top = statusBarHeightPx + capsuleTopPaddingPx
+            val right = size.width - capsulePaddingEndPx
+            val bottom = top + capsuleHeightPx
+            addRoundRect(
+                RoundRect(
+                    rect = Rect(left, top, right, bottom),
+                    cornerRadius = CornerRadius(capsuleHeightPx / 2f, capsuleHeightPx / 2f)
+                )
+            )
+        }
+        val resultPath = Path.combine(
+            PathOperation.Difference,
+            outerPath,
+            innerPath
+        )
+        return Outline.Generic(resultPath)
     }
 }
