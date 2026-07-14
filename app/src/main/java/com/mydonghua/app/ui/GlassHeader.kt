@@ -3,6 +3,7 @@ package com.mydonghua.app.ui
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -71,6 +72,11 @@ fun GlassHeader(
                     },
                     highlight = { Highlight.Default.copy(alpha = 0.35f) },
                     shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) }
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = Color.White.copy(alpha = 0.12f),
+                    shape = CircleShape
                 ),
             contentAlignment = Alignment.CenterStart
         ) {
