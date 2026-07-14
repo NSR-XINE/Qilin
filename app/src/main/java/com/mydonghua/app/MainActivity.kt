@@ -277,8 +277,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         ) { backStackEntry ->
-                                val showIdArg = backStackEntry.arguments?.getString("showId")
-                                AddEditShowScreen(
+                            val showIdArg = backStackEntry.arguments?.getString("showId")
+                            AddEditShowScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
@@ -340,7 +340,6 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
-                        }
                     }
                 }
 
