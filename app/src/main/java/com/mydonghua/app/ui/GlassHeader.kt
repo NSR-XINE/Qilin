@@ -79,6 +79,7 @@ fun GlassHeader(
             .fillMaxWidth()
             .drawBackdrop(
                 backdrop = backdrop,
+                shape = { androidx.compose.ui.graphics.RectangleShape },
                 effects = {
                     vibrancy()
                     colorControls(
