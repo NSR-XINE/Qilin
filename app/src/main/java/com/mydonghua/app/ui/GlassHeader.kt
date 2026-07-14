@@ -103,32 +103,43 @@ fun GlassHeader(
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { cutoutShape },
-                effects = {
-                    vibrancy()
-                    colorControls(
-                        brightness = 0.05f,
-                        contrast = 1f,
-                        saturation = 1.5f
-                    )
-                    blur(12f.dp.toPx())
-                },
-                onDrawSurface = {
-                    val baseColor = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.25f)
-                    drawRect(color = baseColor)
-                }
-            )
-            .border(
-                width = 0.5.dp,
-                color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
-            )
+    Box(
+        modifier = modifier.fillMaxWidth()
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { cutoutShape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = 0.05f,
+                            contrast = 1f,
+                            saturation = 1.5f
+                        )
+                        blur(12f.dp.toPx())
+                    },
+                    onDrawSurface = {
+                        val baseColor = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.25f)
+                        drawRect(color = baseColor)
+                    }
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                )
+        ) {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(72.dp)
+            )
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
