@@ -54,6 +54,11 @@ fun GlassHeader(
     val density = LocalDensity.current
     val glowRadius = with(density) { (NavBarHeight.icon * 1.2f).toPx() }
 
+    val contentColor = if (isDark) Color.White else Color(0xFF1E1E1E)
+    val menuBtnBg = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.06f)
+    val menuBtnPressBg = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.12f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -75,7 +80,7 @@ fun GlassHeader(
                 )
                 .border(
                     width = 0.5.dp,
-                    color = Color.White.copy(alpha = 0.12f),
+                    color = borderColor,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.CenterStart
@@ -90,7 +95,7 @@ fun GlassHeader(
                     text = title,
                     style = TextStyle(
                         brush = Brush.verticalGradient(
-                            colors = listOf(Color.White, Color.White.copy(alpha = 0.75f))
+                            colors = listOf(contentColor, contentColor.copy(alpha = 0.75f))
                         ),
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
@@ -105,7 +110,7 @@ fun GlassHeader(
                         .size(40.dp)
                         .scale(menuScale)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.1f))
+                        .background(menuBtnBg)
                         .clickable(
                             interactionSource = menuInteraction,
                             indication = null,
@@ -121,7 +126,7 @@ fun GlassHeader(
                                 .background(
                                     Brush.radialGradient(
                                         colors = listOf(
-                                            Color.White.copy(alpha = 0.18f),
+                                            menuBtnPressBg,
                                             Color.Transparent
                                         ),
                                         radius = glowRadius
@@ -132,7 +137,7 @@ fun GlassHeader(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_menu),
                         contentDescription = "Menu",
-                        tint = Color.White,
+                        tint = contentColor,
                         modifier = Modifier.size(IconSize.md)
                     )
                 }
