@@ -77,9 +77,10 @@ fun GlassHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .clip(androidx.compose.shape.RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
             .drawBackdrop(
                 backdrop = backdrop,
-                shape = { androidx.compose.ui.graphics.RectangleShape },
+                shape = { androidx.compose.shape.RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp) },
                 effects = {
                     vibrancy()
                     colorControls(
@@ -94,12 +95,17 @@ fun GlassHeader(
                     drawRect(color = baseColor)
                 }
             )
+            .border(
+                width = 0.5.dp,
+                color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
+                shape = androidx.compose.shape.RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+            )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = Spacing.sm)
+                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp)
         ) {
         Box(
             modifier = Modifier
@@ -230,14 +236,5 @@ fun GlassHeader(
             }
         }
         }
-        
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(0.5.dp)
-                .background(
-                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
-                )
-        )
     }
 }
