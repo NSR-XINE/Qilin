@@ -67,12 +67,6 @@ fun GlassHeader(
                     backdrop = backdrop,
                     shape = { CircleShape },
                     effects = {
-                        vibrancy()
-                        colorControls(
-                            brightness = 0.05f,
-                            contrast = 1f,
-                            saturation = 1.5f
-                        )
                         blur(12f.dp.toPx())
                     },
                     highlight = { Highlight.Default.copy(alpha = 0.35f) },
