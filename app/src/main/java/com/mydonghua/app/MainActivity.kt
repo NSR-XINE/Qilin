@@ -13,6 +13,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.spring
@@ -174,67 +176,103 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
                                      val initialRoute = initialState.destination.route
                                      val targetRoute = targetState.destination.route
-                                     val initialIndex = navRoutes.indexOf(initialRoute)
-                                     val targetIndex = navRoutes.indexOf(targetRoute)
-                                     if (initialIndex != -1 && targetIndex != -1) {
-                                         if (initialIndex < targetIndex) {
-                                             slideInHorizontally { it } + fadeIn()
-                                         } else {
-                                             slideInHorizontally { -it } + fadeIn()
-                                         }
+                                     if (initialRoute == targetRoute) {
+                                         EnterTransition.None
                                      } else {
-                                         slideInHorizontally { it } + fadeIn()
+                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                         val initialIndex = navRoutes.indexOf(initialRoute)
+                                         val targetIndex = navRoutes.indexOf(targetRoute)
+                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
+                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
+                                         )
+                                         val fadeSpec = tween<Float>(durationMillis = 200)
+                                         if (initialIndex != -1 && targetIndex != -1) {
+                                             if (initialIndex < targetIndex) {
+                                                 slideInHorizontally(animationSpec = slideSpec) { it } + fadeIn(animationSpec = fadeSpec)
+                                             } else {
+                                                 slideInHorizontally(animationSpec = slideSpec) { -it } + fadeIn(animationSpec = fadeSpec)
+                                             }
+                                         } else {
+                                             slideInHorizontally(animationSpec = slideSpec) { it } + fadeIn(animationSpec = fadeSpec)
+                                         }
                                      }
                                  },
                                  exitTransition = {
-                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
                                      val initialRoute = initialState.destination.route
                                      val targetRoute = targetState.destination.route
-                                     val initialIndex = navRoutes.indexOf(initialRoute)
-                                     val targetIndex = navRoutes.indexOf(targetRoute)
-                                     if (initialIndex != -1 && targetIndex != -1) {
-                                         if (initialIndex < targetIndex) {
-                                             slideOutHorizontally { -it } + fadeOut()
-                                         } else {
-                                             slideOutHorizontally { it } + fadeOut()
-                                         }
+                                     if (initialRoute == targetRoute) {
+                                         ExitTransition.None
                                      } else {
-                                         slideOutHorizontally { -it } + fadeOut()
+                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                         val initialIndex = navRoutes.indexOf(initialRoute)
+                                         val targetIndex = navRoutes.indexOf(targetRoute)
+                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
+                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
+                                         )
+                                         val fadeSpec = tween<Float>(durationMillis = 200)
+                                         if (initialIndex != -1 && targetIndex != -1) {
+                                             if (initialIndex < targetIndex) {
+                                                 slideOutHorizontally(animationSpec = slideSpec) { -it } + fadeOut(animationSpec = fadeSpec)
+                                             } else {
+                                                 slideOutHorizontally(animationSpec = slideSpec) { it } + fadeOut(animationSpec = fadeSpec)
+                                             }
+                                         } else {
+                                             slideOutHorizontally(animationSpec = slideSpec) { -it } + fadeOut(animationSpec = fadeSpec)
+                                         }
                                      }
                                  },
                                  popEnterTransition = {
-                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
                                      val initialRoute = initialState.destination.route
                                      val targetRoute = targetState.destination.route
-                                     val initialIndex = navRoutes.indexOf(initialRoute)
-                                     val targetIndex = navRoutes.indexOf(targetRoute)
-                                     if (initialIndex != -1 && targetIndex != -1) {
-                                         if (initialIndex < targetIndex) {
-                                             slideInHorizontally { it } + fadeIn()
-                                         } else {
-                                             slideInHorizontally { -it } + fadeIn()
-                                         }
+                                     if (initialRoute == targetRoute) {
+                                         EnterTransition.None
                                      } else {
-                                         slideInHorizontally { -it } + fadeIn()
+                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                         val initialIndex = navRoutes.indexOf(initialRoute)
+                                         val targetIndex = navRoutes.indexOf(targetRoute)
+                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
+                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
+                                         )
+                                         val fadeSpec = tween<Float>(durationMillis = 200)
+                                         if (initialIndex != -1 && targetIndex != -1) {
+                                             if (initialIndex < targetIndex) {
+                                                 slideInHorizontally(animationSpec = slideSpec) { it } + fadeIn(animationSpec = fadeSpec)
+                                             } else {
+                                                 slideInHorizontally(animationSpec = slideSpec) { -it } + fadeIn(animationSpec = fadeSpec)
+                                             }
+                                         } else {
+                                             slideInHorizontally(animationSpec = slideSpec) { -it } + fadeIn(animationSpec = fadeSpec)
+                                         }
                                      }
                                  },
                                  popExitTransition = {
-                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
                                      val initialRoute = initialState.destination.route
                                      val targetRoute = targetState.destination.route
-                                     val initialIndex = navRoutes.indexOf(initialRoute)
-                                     val targetIndex = navRoutes.indexOf(targetRoute)
-                                     if (initialIndex != -1 && targetIndex != -1) {
-                                         if (initialIndex < targetIndex) {
-                                             slideOutHorizontally { -it } + fadeOut()
-                                         } else {
-                                             slideOutHorizontally { it } + fadeOut()
-                                         }
+                                     if (initialRoute == targetRoute) {
+                                         ExitTransition.None
                                      } else {
-                                         slideOutHorizontally { it } + fadeOut()
+                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                         val initialIndex = navRoutes.indexOf(initialRoute)
+                                         val targetIndex = navRoutes.indexOf(targetRoute)
+                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
+                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
+                                         )
+                                         val fadeSpec = tween<Float>(durationMillis = 200)
+                                         if (initialIndex != -1 && targetIndex != -1) {
+                                             if (initialIndex < targetIndex) {
+                                                 slideOutHorizontally(animationSpec = slideSpec) { -it } + fadeOut(animationSpec = fadeSpec)
+                                             } else {
+                                                 slideOutHorizontally(animationSpec = slideSpec) { it } + fadeOut(animationSpec = fadeSpec)
+                                             }
+                                         } else {
+                                             slideOutHorizontally(animationSpec = slideSpec) { it } + fadeOut(animationSpec = fadeSpec)
+                                         }
                                      }
                                  },
                             ) {
