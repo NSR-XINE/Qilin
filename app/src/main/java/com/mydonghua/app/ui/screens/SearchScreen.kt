@@ -105,8 +105,10 @@ fun SearchScreen(
         }
     }
 
+    val isKeyboardVisible = WindowInsets.isImeVisible
+
     BackHandler(enabled = true) {
-        if (isSearchActive) {
+        if (isKeyboardVisible) {
             focusManager.clearFocus()
         } else {
             onNavigateBack()
