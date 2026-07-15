@@ -47,7 +47,7 @@ fun StoppedScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding(),
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = Spacing.sm)
+                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
                 item {
                     Row(

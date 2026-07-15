@@ -88,24 +88,7 @@ class MainActivity : ComponentActivity() {
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
             val backdrop = rememberLayerBackdrop()
 
-            val density = LocalDensity.current
-            val navBarHeightPx = remember { with(density) { 88.dp.toPx() } }
-            var navBarOffsetHeightPx by remember { mutableStateOf(0f) }
 
-            val nestedScrollConnection = remember {
-                object : NestedScrollConnection {
-                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                        val delta = available.y
-                        val newOffset = navBarOffsetHeightPx - delta
-                        navBarOffsetHeightPx = newOffset.coerceIn(0f, navBarHeightPx)
-                        return Offset.Zero
-                    }
-                }
-            }
-
-            LaunchedEffect(currentRoute, isSearchOpen) {
-                navBarOffsetHeightPx = 0f
-            }
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -184,7 +167,6 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .nestedScroll(nestedScrollConnection)
                                     .layerBackdrop(backdrop)
                             ) {
                             NavHost(
@@ -432,7 +414,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .offset { IntOffset(0, navBarOffsetHeightPx.roundToInt()) }
                             .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm),
                     )
                 }
