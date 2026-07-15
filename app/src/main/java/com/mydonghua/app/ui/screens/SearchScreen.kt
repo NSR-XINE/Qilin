@@ -141,11 +141,7 @@ fun SearchScreen(
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                 },
-            colors = SearchBarDefaults.inputFieldColors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
+            colors = SearchBarDefaults.inputFieldColors(),
             placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             leadingIcon = {
                 IconButton(
