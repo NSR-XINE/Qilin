@@ -79,8 +79,6 @@ fun SearchScreen(
     val query by viewModel.searchQuery.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
     val results by viewModel.filteredShows.collectAsState()
-    val filters by viewModel.activeFilters.collectAsState()
-    val genres by viewModel.distinctGenres.collectAsState()
     val onlineResults by viewModel.onlineResults.collectAsState()
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
@@ -92,11 +90,6 @@ fun SearchScreen(
 
 
     var isSearchActive by remember { mutableStateOf(false) }
-    var showGenreDialog by remember { mutableStateOf(false) }
-    var showStudioDialog by remember { mutableStateOf(false) }
-    var showYearDialog by remember { mutableStateOf(false) }
-    var showRatingDialog by remember { mutableStateOf(false) }
-    var showSortDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -159,81 +152,12 @@ fun SearchScreen(
                 }
             },
             trailingIcon = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(end = Spacing.sm)
-                ) {
-                    if (query.isNotEmpty()) {
-                        IconButton(
-                            onClick = { viewModel.clearQuery() },
-                            modifier = Modifier.clip(CircleShape)
-                        ) {
-                            Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
-                    var showMenu by remember { mutableStateOf(false) }
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Filters",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Genre") },
-                                onClick = {
-                                    showMenu = false
-                                    showGenreDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Studio") },
-                                onClick = {
-                                    showMenu = false
-                                    showStudioDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Year") },
-                                onClick = {
-                                    showMenu = false
-                                    showYearDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Rating") },
-                                onClick = {
-                                    showMenu = false
-                                    showRatingDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Sort") },
-                                onClick = {
-                                    showMenu = false
-                                    showSortDialog = true
-                                }
-                            )
-                            val hasActiveFilters = filters.selectedGenre != null ||
-                                    filters.selectedStudio != null ||
-                                    filters.selectedYear != null ||
-                                    filters.minRating > 0
-                            if (hasActiveFilters) {
-                                HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("Clear Filters", color = MaterialTheme.colorScheme.error) },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.updateFilters(SearchFilters())
-                                    }
-                                )
-                            }
-                        }
+                if (query.isNotEmpty()) {
+                    IconButton(
+                        onClick = { viewModel.clearQuery() },
+                        modifier = Modifier.clip(CircleShape)
+                    ) {
+                        Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -465,57 +389,7 @@ fun SearchScreen(
         )
     }
 
-    if (showGenreDialog) {
-        GenreFilterDialog(
-            genres = genres,
-            selected = filters.selectedGenre,
-            onDismiss = { showGenreDialog = false },
-            onApply = { genre ->
-                viewModel.updateFilters(filters.copy(selectedGenre = genre))
-                showGenreDialog = false
-            }
-        )
-    }
-    if (showStudioDialog) {
-        StudioFilterDialog(
-            initial = filters.selectedStudio ?: "",
-            onDismiss = { showStudioDialog = false },
-            onApply = { studio ->
-                viewModel.updateFilters(filters.copy(selectedStudio = studio.takeIf { it.isNotEmpty() }))
-                showStudioDialog = false
-            }
-        )
-    }
-    if (showYearDialog) {
-        YearFilterDialog(
-            initial = filters.selectedYear?.toString() ?: "",
-            onDismiss = { showYearDialog = false },
-            onApply = { year ->
-                viewModel.updateFilters(filters.copy(selectedYear = year.toIntOrNull()))
-                showYearDialog = false
-            }
-        )
-    }
-    if (showRatingDialog) {
-        RatingFilterDialog(
-            initial = filters.minRating.toFloat(),
-            onDismiss = { showRatingDialog = false },
-            onApply = { rating ->
-                viewModel.updateFilters(filters.copy(minRating = rating.toInt()))
-                showRatingDialog = false
-            }
-        )
-    }
-    if (showSortDialog) {
-        SortFilterDialog(
-            initial = filters.sortBy,
-            onDismiss = { showSortDialog = false },
-            onApply = { sort ->
-                viewModel.updateFilters(filters.copy(sortBy = sort))
-                showSortDialog = false
-            }
-        )
-    }
+
 }
 
 @Composable
