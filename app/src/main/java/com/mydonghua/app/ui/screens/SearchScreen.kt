@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.LocalHazeState
+import dev.chrisbanes.haze.hazeChild
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
@@ -76,6 +78,7 @@ fun SearchScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hazeState = LocalHazeState.current
     val query by viewModel.searchQuery.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
     val results by viewModel.filteredShows.collectAsState()
@@ -128,11 +131,19 @@ fun SearchScreen(
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xs)
                 .clip(RoundedCornerShape(CornerRadius.lg))
+                .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.lg))
+                .background(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
+                    shape = RoundedCornerShape(CornerRadius.lg)
+                )
                 .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
                 .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                 },
+            colors = SearchBarDefaults.inputFieldColors(
+                containerColor = Color.Transparent
+            ),
             placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             leadingIcon = {
                 IconButton(
