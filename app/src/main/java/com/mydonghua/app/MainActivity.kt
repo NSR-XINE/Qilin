@@ -174,17 +174,69 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                    fadeIn() + slideInHorizontally { -it }
-                                },
-                                exitTransition = {
-                                    fadeOut() + slideOutHorizontally { it }
-                                },
-                                popEnterTransition = {
-                                    fadeIn() + slideInHorizontally { -it }
-                                },
-                                popExitTransition = {
-                                    fadeOut() + slideOutHorizontally { it }
-                                },
+                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                     val initialRoute = initialState.destination.route
+                                     val targetRoute = targetState.destination.route
+                                     val initialIndex = navRoutes.indexOf(initialRoute)
+                                     val targetIndex = navRoutes.indexOf(targetRoute)
+                                     if (initialIndex != -1 && targetIndex != -1) {
+                                         if (initialIndex < targetIndex) {
+                                             slideInHorizontally { it } + fadeIn()
+                                         } else {
+                                             slideInHorizontally { -it } + fadeIn()
+                                         }
+                                     } else {
+                                         slideInHorizontally { it } + fadeIn()
+                                     }
+                                 },
+                                 exitTransition = {
+                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                     val initialRoute = initialState.destination.route
+                                     val targetRoute = targetState.destination.route
+                                     val initialIndex = navRoutes.indexOf(initialRoute)
+                                     val targetIndex = navRoutes.indexOf(targetRoute)
+                                     if (initialIndex != -1 && targetIndex != -1) {
+                                         if (initialIndex < targetIndex) {
+                                             slideOutHorizontally { -it } + fadeOut()
+                                         } else {
+                                             slideOutHorizontally { it } + fadeOut()
+                                         }
+                                     } else {
+                                         slideOutHorizontally { -it } + fadeOut()
+                                     }
+                                 },
+                                 popEnterTransition = {
+                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                     val initialRoute = initialState.destination.route
+                                     val targetRoute = targetState.destination.route
+                                     val initialIndex = navRoutes.indexOf(initialRoute)
+                                     val targetIndex = navRoutes.indexOf(targetRoute)
+                                     if (initialIndex != -1 && targetIndex != -1) {
+                                         if (initialIndex < targetIndex) {
+                                             slideInHorizontally { it } + fadeIn()
+                                         } else {
+                                             slideInHorizontally { -it } + fadeIn()
+                                         }
+                                     } else {
+                                         slideInHorizontally { -it } + fadeIn()
+                                     }
+                                 },
+                                 popExitTransition = {
+                                     val navRoutes = listOf("home", "airing", "complete", "stopped")
+                                     val initialRoute = initialState.destination.route
+                                     val targetRoute = targetState.destination.route
+                                     val initialIndex = navRoutes.indexOf(initialRoute)
+                                     val targetIndex = navRoutes.indexOf(targetRoute)
+                                     if (initialIndex != -1 && targetIndex != -1) {
+                                         if (initialIndex < targetIndex) {
+                                             slideOutHorizontally { -it } + fadeOut()
+                                         } else {
+                                             slideOutHorizontally { it } + fadeOut()
+                                         }
+                                     } else {
+                                         slideOutHorizontally { it } + fadeOut()
+                                     }
+                                 },
                             ) {
                         composable("home") {
                                 HomeScreen(
