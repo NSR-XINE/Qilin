@@ -19,11 +19,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +39,7 @@ fun CollectionsScreen(
     modifier: Modifier = Modifier
 ) {
     val collectionsMap by showsViewModel.collections.collectAsState()
+    val context = LocalContext.current
     val sortedCollections = remember(collectionsMap) {
         collectionsMap.entries.sortedBy { it.key.lowercase() }
     }
@@ -45,7 +51,12 @@ fun CollectionsScreen(
                 title = { Text("Collections folders", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(IconSize.md)
+                        )
                     }
                 }
             )
@@ -87,7 +98,7 @@ fun CollectionsScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg),
                 contentPadding = PaddingValues(bottom = Spacing.sm)
             ) {
-                items(sortedCollections) { (collectionName, showsList) ->
+                items(sortedCollections, key = { it.key }) { (collectionName, showsList) ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -162,7 +173,15 @@ fun CollectionsScreen(
                                     ) {
                                         if (!show.poster.isNullOrEmpty()) {
                                             AsyncImage(
-                                                model = show.poster,
+                                                model = ImageRequest.Builder(context)
+                                                    .data(show.poster)
+                                                    .placeholder(R.drawable.ic_tv)
+                                                    .error(R.drawable.ic_tv)
+                                                    .fallback(R.drawable.ic_tv)
+                                                    .crossfade(true)
+                                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                                    .memoryCachePolicy(CachePolicy.ENABLED)
+                                                    .build(),
                                                 contentDescription = show.title,
                                                 contentScale = ContentScale.Crop,
                                                 modifier = Modifier.fillMaxSize()

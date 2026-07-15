@@ -19,6 +19,8 @@ import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +62,12 @@ fun CalendarScreen(
                 title = { Text("$monthName $yearName", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(IconSize.md)
+                        )
                     }
                 }
             )

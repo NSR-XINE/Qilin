@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Star
@@ -22,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.mydonghua.app.AlarmScheduler
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
@@ -101,7 +104,10 @@ fun AddEditShowScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -364,7 +370,15 @@ fun AddEditShowScreen(
                             if (poster.isNotBlank()) {
                                 Spacer(Modifier.height(Spacing.sm))
                                 AsyncImage(
-                                    model = poster,
+                                    model = ImageRequest.Builder(context)
+                                        .data(poster)
+                                        .placeholder(R.drawable.ic_tv)
+                                        .error(R.drawable.ic_tv)
+                                        .fallback(R.drawable.ic_tv)
+                                        .crossfade(true)
+                                        .diskCachePolicy(CachePolicy.ENABLED)
+                                        .memoryCachePolicy(CachePolicy.ENABLED)
+                                        .build(),
                                     contentDescription = "Poster preview",
                                     modifier = Modifier
                                         .size(56.dp)

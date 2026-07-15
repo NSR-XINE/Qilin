@@ -74,7 +74,12 @@ fun ShowDetailScreen(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", fontSize = IconSize.xxl.value.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(IconSize.md)
+                        )
                     }
                 },
                 actions = {
@@ -106,8 +111,12 @@ fun ShowDetailScreen(
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data(show.poster)
+                        .placeholder(R.drawable.ic_tv)
+                        .error(R.drawable.ic_tv)
+                        .fallback(R.drawable.ic_tv)
                         .crossfade(true)
                         .diskCachePolicy(CachePolicy.ENABLED)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
                         .build(),
                     contentDescription = show.title,
                     modifier = Modifier.fillMaxSize(),

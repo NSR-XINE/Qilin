@@ -20,7 +20,8 @@ fun FavoritesScreen(
     onWatchClick: (String) -> Unit,
     onEditClick: (com.mydonghua.app.domain.model.Show) -> Unit,
     onCardClick: (com.mydonghua.app.domain.model.Show) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topPadding: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp(0f)
 ) {
     val shows by viewModel.favoriteShows.collectAsState()
     val context = LocalContext.current
@@ -33,7 +34,7 @@ fun FavoritesScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(top = topPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -45,9 +46,8 @@ fun FavoritesScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .navigationBarsPadding(),
-                contentPadding = PaddingValues(top = Spacing.sm, bottom = Spacing.sm)
+                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = Spacing.sm)
             ) {
                 items(shows, key = { it.id }) { show ->
                     ShowCard(

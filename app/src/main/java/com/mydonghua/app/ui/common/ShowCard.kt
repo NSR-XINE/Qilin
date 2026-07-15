@@ -75,18 +75,18 @@ fun ShowCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.card))
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-                shape = RoundedCornerShape(CornerRadius.md)
+                shape = RoundedCornerShape(CornerRadius.card)
             )
             .border(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(CornerRadius.md)
+                shape = RoundedCornerShape(CornerRadius.card)
             )
             .clickable { onCardClick(show) },
-        shape = RoundedCornerShape(CornerRadius.md),
+        shape = RoundedCornerShape(CornerRadius.card),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column {
@@ -94,11 +94,14 @@ fun ShowCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(CornerRadius.md))
+                    .clip(RoundedCornerShape(topStart = CornerRadius.card, topEnd = CornerRadius.card))
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data(show.poster)
+                        .placeholder(R.drawable.ic_tv)
+                        .error(R.drawable.ic_tv)
+                        .fallback(R.drawable.ic_tv)
                         .crossfade(true)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .memoryCachePolicy(CachePolicy.ENABLED)

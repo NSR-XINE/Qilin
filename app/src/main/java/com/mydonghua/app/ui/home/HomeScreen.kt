@@ -102,14 +102,18 @@ fun HeroBanner(
             .fillMaxWidth()
             .padding(Spacing.lg)
             .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(CornerRadius.md))
+            .clip(RoundedCornerShape(CornerRadius.banner))
             .clickable { onBannerClick() }
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(show.poster)
+                .placeholder(R.drawable.ic_tv)
+                .error(R.drawable.ic_tv)
+                .fallback(R.drawable.ic_tv)
                 .crossfade(true)
                 .diskCachePolicy(CachePolicy.ENABLED)
+                .memoryCachePolicy(CachePolicy.ENABLED)
                 .build(),
             contentDescription = "Hero Banner",
             modifier = Modifier.fillMaxSize(),
@@ -222,7 +226,15 @@ fun ContinueWatchingRow(
                             .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
                         AsyncImage(
-                            model = ImageRequest.Builder(context).data(show.poster).crossfade(true).build(),
+                            model = ImageRequest.Builder(context)
+                                .data(show.poster)
+                                .placeholder(R.drawable.ic_tv)
+                                .error(R.drawable.ic_tv)
+                                .fallback(R.drawable.ic_tv)
+                                .crossfade(true)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                .build(),
                             contentDescription = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -291,7 +303,15 @@ fun RecentlyUpdatedRow(
                             .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
                         AsyncImage(
-                            model = ImageRequest.Builder(context).data(show.poster).crossfade(true).build(),
+                            model = ImageRequest.Builder(context)
+                                .data(show.poster)
+                                .placeholder(R.drawable.ic_tv)
+                                .error(R.drawable.ic_tv)
+                                .fallback(R.drawable.ic_tv)
+                                .crossfade(true)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                .build(),
                             contentDescription = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -354,22 +374,20 @@ fun WeeklyScheduleSection(
     val filteredShows = remember(shows, selectedDay) {
         shows.filter { it.status == "ongoing" && it.releaseDay == selectedDay }
             .sortedWith(compareBy { it.releaseTime ?: "" })
-    }
-
-    Box(
+    }    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg)
-            .clip(RoundedCornerShape(CornerRadius.md))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
+            .clip(RoundedCornerShape(CornerRadius.card))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.card))
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-                shape = RoundedCornerShape(CornerRadius.md)
+                shape = RoundedCornerShape(CornerRadius.card)
             )
             .border(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(CornerRadius.md)
+                shape = RoundedCornerShape(CornerRadius.card)
             )
             .padding(Spacing.md)
     ) {
@@ -383,14 +401,14 @@ fun WeeklyScheduleSection(
                     val isSelected = day == selectedDay
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(CornerRadius.sm))
+                            .clip(RoundedCornerShape(CornerRadius.chip))
                             .background(
                                 color = if (isSelected) MaterialTheme.colorScheme.primary
                                 else Color.Transparent,
-                                shape = RoundedCornerShape(CornerRadius.sm)
+                                shape = RoundedCornerShape(CornerRadius.chip)
                             )
                             .clickable { selectedDay = day }
-                            .padding(horizontal = Spacing.md, vertical = 7.dp),
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -402,7 +420,7 @@ fun WeeklyScheduleSection(
                         )
                     }
                 }
-            }
+            } }
 
             Spacer(modifier = Modifier.height(Spacing.md))
 

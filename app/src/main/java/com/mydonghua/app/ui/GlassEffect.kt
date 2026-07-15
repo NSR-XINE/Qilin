@@ -58,7 +58,7 @@ fun GlassBackground(
 @Composable
 fun GlassSection(
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.md),
+    shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.card),
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current

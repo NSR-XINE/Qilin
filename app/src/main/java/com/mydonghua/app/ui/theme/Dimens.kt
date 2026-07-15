@@ -11,6 +11,13 @@ object CornerRadius {
     val xl = 20.dp
     val pill = 30.dp
     val full = RoundedCornerShape(percent = 50)
+
+    // Design System Tokens
+    val chip = md       // 12.dp
+    val card = lg       // 16.dp
+    val banner = 24.dp  // 24.dp
+    val sheet = 28.dp   // 28.dp
+    val dialog = 28.dp  // 28.dp
 }
 
 object IconSize {

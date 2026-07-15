@@ -19,9 +19,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,6 +39,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     val historyList by showsViewModel.history.collectAsState()
+    val context = LocalContext.current
 
     val groupedHistory = remember(historyList) {
         historyList.groupBy { item ->
@@ -48,7 +54,12 @@ fun HistoryScreen(
                 title = { Text("Watch History Log", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", fontSize = IconSize.xxl.value.sp)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(IconSize.md)
+                        )
                     }
                 }
             )
@@ -88,7 +99,7 @@ fun HistoryScreen(
                         )
                     }
 
-                    items(items) { item ->
+                    items(items, key = { "${it.showId}_${it.watchedAt}" }) { item ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -113,7 +124,15 @@ fun HistoryScreen(
                             ) {
                                 if (!item.poster.isNullOrEmpty()) {
                                     AsyncImage(
-                                        model = item.poster,
+                                        model = ImageRequest.Builder(context)
+                                            .data(item.poster)
+                                            .placeholder(R.drawable.ic_tv)
+                                            .error(R.drawable.ic_tv)
+                                            .fallback(R.drawable.ic_tv)
+                                            .crossfade(true)
+                                            .diskCachePolicy(CachePolicy.ENABLED)
+                                            .memoryCachePolicy(CachePolicy.ENABLED)
+                                            .build(),
                                         contentDescription = item.showTitle,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()

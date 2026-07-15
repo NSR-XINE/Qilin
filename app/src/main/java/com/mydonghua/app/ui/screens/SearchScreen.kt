@@ -60,6 +60,11 @@ import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.TrendingUp
+import com.mydonghua.app.ui.screens.SearchSuggestion
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -81,6 +86,13 @@ fun SearchScreen(
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        delay(150)
+        focusRequester.requestFocus()
+    }
 
     var isSearchActive by remember { mutableStateOf(false) }
     var showGenreDialog by remember { mutableStateOf(false) }
@@ -125,6 +137,7 @@ fun SearchScreen(
                 .padding(top = Spacing.xs)
                 .clip(RoundedCornerShape(CornerRadius.lg))
                 .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
+                .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                 },
@@ -229,103 +242,195 @@ fun SearchScreen(
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
-        // 2. Results List
-        if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
-            Box(
-                modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = 80.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(IconSize.hero),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.md))
-                    Text(
-                        text = if (query.isEmpty()) "Search your shows" else "No matching shows found",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    if (query.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(Spacing.xs))
-                        Text(
-                            text = "Try adjusting your search or filters",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        )
+        // 2. Redesigned Suggestions / Results List
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            if (query.isEmpty()) {
+                val suggestionsList = suggestions
+                if (suggestionsList.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+                        contentPadding = PaddingValues(bottom = 80.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        val recents = suggestionsList.filterIsInstance<SearchSuggestion.Recent>()
+                        val populars = suggestionsList.filterIsInstance<SearchSuggestion.Popular>()
+
+                        if (recents.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Recent Searches",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
+                                )
+                            }
+                            items(recents) { item ->
+                                SuggestionRow(text = item.text, isRecent = true, onClick = { viewModel.selectQuery(item.text) })
+                            }
+                        }
+
+                        if (populars.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Popular Searches",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.padding(horizontal = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
+                                )
+                            }
+                            items(populars) { item ->
+                                SuggestionRow(text = item.text, isRecent = false, onClick = { viewModel.selectQuery(item.text) })
+                            }
+                        }
                     }
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f).fillMaxWidth().navigationBarsPadding(),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                if (results.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "My Library",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-                        )
-                    }
-                    items(results, key = { it.id }) { show ->
-                        ShowCard(
-                            show = show,
-                            onWatchClick = onWatchClick,
-                            onEditClick = { onShowClick(it.id) },
-                            onDeleteClick = { showsViewModel.deleteShow(it.id) },
-                            onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
-                            onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
-                            onEpIncrement = { showsViewModel.incrementEpisode(it) },
-                            onEpDecrement = { showsViewModel.decrementEpisode(it) },
-                            onCardClick = { onShowClick(it.id) }
-                        )
-                    }
-                }
-                
-                if (isSearchingOnline) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = Spacing.md),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.primary
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(bottom = 80.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.hero),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.md))
+                            Text(
+                                text = "Search your shows",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
                     }
-                } else if (onlineResults.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "Online Results (AniList / MyAnimeList)",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-                        )
+                }
+            } else {
+                val showMatches = suggestions.filterIsInstance<SearchSuggestion.ShowMatch>()
+
+                if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(bottom = 80.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.hero),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.md))
+                            Text(
+                                text = "No matching shows found",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                            Text(
+                                text = "Try adjusting your search or filters",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                        }
                     }
-                    items(onlineResults, key = { it.id }) { show ->
-                        ShowCard(
-                            show = show,
-                            onWatchClick = { showToAdd = show },
-                            onEditClick = { showToAdd = show },
-                            onDeleteClick = {},
-                            onFavoriteToggle = {},
-                            onNotifyToggle = {},
-                            onEpIncrement = {},
-                            onEpDecrement = {},
-                            onCardClick = { showToAdd = show }
-                        )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+                        contentPadding = PaddingValues(bottom = 80.dp)
+                    ) {
+                        if (isSearchActive && showMatches.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Suggestions",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
+                                )
+                            }
+                            items(showMatches) { match ->
+                                SuggestionMatchRow(
+                                    match = match,
+                                    onClick = {
+                                        viewModel.selectQuery(match.displayText)
+                                        focusManager.clearFocus()
+                                        onShowClick(match.show.id)
+                                    }
+                                )
+                            }
+                            item {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.sm, horizontal = Spacing.lg))
+                            }
+                        }
+
+                        if (results.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "My Library",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+                                )
+                            }
+                            items(results, key = { it.id }) { show ->
+                                ShowCard(
+                                    show = show,
+                                    onWatchClick = onWatchClick,
+                                    onEditClick = { onShowClick(it.id) },
+                                    onDeleteClick = { showsViewModel.deleteShow(it.id) },
+                                    onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
+                                    onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
+                                    onEpIncrement = { showsViewModel.incrementEpisode(it) },
+                                    onEpDecrement = { showsViewModel.decrementEpisode(it) },
+                                    onCardClick = { onShowClick(it.id) }
+                                )
+                            }
+                        }
+
+                        if (isSearchingOnline) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = Spacing.md),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        } else if (onlineResults.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Online Results (AniList / MyAnimeList)",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+                                )
+                            }
+                            items(onlineResults, key = { it.id }) { show ->
+                                ShowCard(
+                                    show = show,
+                                    onWatchClick = { showToAdd = show },
+                                    onEditClick = { showToAdd = show },
+                                    onDeleteClick = {},
+                                    onFavoriteToggle = {},
+                                    onNotifyToggle = {},
+                                    onEpIncrement = {},
+                                    onEpDecrement = {},
+                                    onCardClick = { showToAdd = show }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -415,7 +520,7 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SuggestionItem(text: String, onClick: () -> Unit) {
+private fun SuggestionRow(text: String, isRecent: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -424,7 +529,41 @@ private fun SuggestionItem(text: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        Text(text, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+        Icon(
+            imageVector = if (isRecent) Icons.Rounded.History else Icons.Rounded.TrendingUp,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun SuggestionMatchRow(match: SearchSuggestion.ShowMatch, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+        Text(
+            text = match.displayText,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -565,7 +704,7 @@ private fun GenreFilterDialog(
     var localSelected by remember { mutableStateOf(selected) }
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Genre", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -642,7 +781,7 @@ private fun StudioFilterDialog(
     var text by remember { mutableStateOf(initial) }
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Studio", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -676,7 +815,7 @@ private fun YearFilterDialog(
     var text by remember { mutableStateOf(initial) }
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Filter by Year", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
@@ -710,7 +849,7 @@ private fun RatingFilterDialog(
     var sliderValue by remember { mutableStateOf(initial) }
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Minimum Rating", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.lg))
@@ -766,7 +905,7 @@ private fun SortFilterDialog(
     )
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.lg), tonalElevation = 6.dp) {
+        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
                 Text("Sort Order", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
