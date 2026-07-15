@@ -475,43 +475,7 @@ fun AddEditShowScreen(
                 }
             }
 
-            GlassSection {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    Text(
-                        text = "Rating",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                    ) {
-                        Icon(
-                            Icons.Rounded.Star,
-                            contentDescription = null,
-                            tint = if (rating > 0) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.size(IconSize.xl)
-                        )
-                        Slider(
-                            value = rating,
-                            onValueChange = { rating = it },
-                            valueRange = 0f..10f,
-                            steps = 19,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "${rating.toInt()}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.width(28.dp)
-                        )
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 

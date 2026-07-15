@@ -133,7 +133,7 @@ fun SearchScreen(
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                 },
-            placeholder = { Text("Search shows, genres, studios...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
+            placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             leadingIcon = {
                 IconButton(
                     onClick = {
@@ -254,7 +254,7 @@ fun SearchScreen(
                             )
                             Spacer(modifier = Modifier.height(Spacing.xs))
                             Text(
-                                text = "Try adjusting your search or filters",
+                                text = "Try searching for another title",
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                             )
