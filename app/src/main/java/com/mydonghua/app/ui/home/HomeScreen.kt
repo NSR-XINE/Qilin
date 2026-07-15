@@ -420,7 +420,7 @@ fun WeeklyScheduleSection(
                         )
                     }
                 }
-            } }
+            }
 
             Spacer(modifier = Modifier.height(Spacing.md))
 
