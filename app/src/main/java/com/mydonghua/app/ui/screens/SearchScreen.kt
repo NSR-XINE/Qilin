@@ -262,7 +262,7 @@ fun SearchScreen(
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
+                                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
                                 )
                             }
                             items(recents) { item ->
@@ -277,7 +277,7 @@ fun SearchScreen(
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.padding(horizontal = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
+                                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
                                 )
                             }
                             items(populars) { item ->
@@ -349,7 +349,7 @@ fun SearchScreen(
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
+                                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
                                 )
                             }
                             items(showMatches) { match ->

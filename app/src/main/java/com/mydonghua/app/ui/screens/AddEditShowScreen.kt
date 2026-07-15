@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.mydonghua.app.R
 import com.mydonghua.app.AlarmScheduler
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show

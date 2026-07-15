@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
@@ -374,7 +375,8 @@ fun WeeklyScheduleSection(
     val filteredShows = remember(shows, selectedDay) {
         shows.filter { it.status == "ongoing" && it.releaseDay == selectedDay }
             .sortedWith(compareBy { it.releaseTime ?: "" })
-    }    Box(
+    }
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg)
