@@ -24,6 +24,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,6 +86,25 @@ class MainActivity : ComponentActivity() {
             var isSearchOpen by remember { mutableStateOf(false) }
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
             val backdrop = rememberLayerBackdrop()
+
+            val density = LocalDensity.current
+            val navBarHeightPx = remember { with(density) { 88.dp.toPx() } }
+            var navBarOffsetHeightPx by remember { mutableStateOf(0f) }
+
+            val nestedScrollConnection = remember {
+                object : NestedScrollConnection {
+                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                        val delta = available.y
+                        val newOffset = navBarOffsetHeightPx - delta
+                        navBarOffsetHeightPx = newOffset.coerceIn(0f, navBarHeightPx)
+                        return Offset.Zero
+                    }
+                }
+            }
+
+            LaunchedEffect(currentRoute, isSearchOpen) {
+                navBarOffsetHeightPx = 0f
+            }
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -159,6 +183,7 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
+                                    .nestedScroll(nestedScrollConnection)
                                     .layerBackdrop(backdrop)
                             ) {
                             NavHost(
@@ -406,6 +431,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
+                            .offset { IntOffset(0, navBarOffsetHeightPx.roundToInt()) }
                             .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm),
                     )
                 }
