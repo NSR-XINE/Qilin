@@ -535,18 +535,18 @@ class MainActivity : ComponentActivity() {
                             visible = isDrawerOpen,
                             enter = slideInHorizontally(
                                 initialOffsetX = { it },
-                                animationSpec = spring(
-                                    stiffness = Spring.StiffnessMediumLow,
-                                    dampingRatio = Spring.DampingRatioLowBouncy
+                                animationSpec = tween(
+                                    durationMillis = 350,
+                                    easing = androidx.compose.animation.core.FastOutSlowInEasing
                                 )
-                            ),
+                            ) + fadeIn(animationSpec = tween(300)),
                             exit = slideOutHorizontally(
                                 targetOffsetX = { it },
-                                animationSpec = spring(
-                                    stiffness = Spring.StiffnessMediumLow,
-                                    dampingRatio = 1.0f
+                                animationSpec = tween(
+                                    durationMillis = 300,
+                                    easing = androidx.compose.animation.core.FastOutSlowInEasing
                                 )
-                            ),
+                            ) + fadeOut(animationSpec = tween(300)),
                             modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
                              val drawerShape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
