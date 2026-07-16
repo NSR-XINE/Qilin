@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -109,34 +111,51 @@ fun SettingsScreen(
 
             SectionHeader("Theme Mode Options")
             GlassSection {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    val themesList = listOf("light" to "Light Mode", "dark" to "Dark Mode", "amoled" to "AMOLED Black")
-                    themesList.forEachIndexed { index, (modeKey, modeName) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Spacing.md, horizontal = Spacing.md),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val themesList = listOf(
+                        Triple("light", "Light", Color.White),
+                        Triple("dark", "Dark", Color(0xFF2C2C2C)),
+                        Triple("amoled", "AMOLED", Color.Black)
+                    )
+                    themesList.forEach { (modeKey, modeName, circleColor) ->
                         val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
-                        Row(
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                    else Color.Transparent
-                                )
+                                .clip(RoundedCornerShape(CornerRadius.sm))
                                 .clickable { viewModel.setThemeMode(modeKey) }
-                                .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(horizontal = Spacing.md, vertical = Spacing.xs)
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(circleColor)
+                                    .border(
+                                        width = if (isSelected) 2.5.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                        shape = androidx.compose.foundation.shape.CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSelected) {
+                                    val checkColor = if (modeKey == "light") Color.Black else Color.White
+                                    Text("\u2713", color = checkColor, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                }
+                            }
                             Text(
                                 text = modeName,
-                                fontSize = 13.sp,
+                                fontSize = 11.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
-                            if (isSelected) {
-                                Text("\u2713", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            }
-                        }
-                        if (index < themesList.lastIndex) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                         }
                     }
                 }
@@ -144,55 +163,67 @@ fun SettingsScreen(
 
             SectionHeader("Accent Themes Colors")
             GlassSection {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(Spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        .horizontalScroll(rememberScrollState())
+                        .padding(vertical = Spacing.md, horizontal = Spacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     val accentPresets = listOf(
-                        "default" to "Default", "dynamic" to "Dynamic", "cyan" to "Cyan", "purple" to "Purple",
-                        "rose" to "Rose", "green" to "Green", "orange" to "Orange", "blue" to "Blue",
-                        "teal" to "Teal", "pink" to "Pink"
+                        Triple("default", "Default", Color(0xFF6750A4)),
+                        Triple("dynamic", "Dynamic", Color.Transparent),
+                        Triple("cyan", "Cyan", Color(0xFF00B4D8)),
+                        Triple("purple", "Purple", Color(0xFF7F3DFF)),
+                        Triple("rose", "Rose", Color(0xFFE56B6F)),
+                        Triple("green", "Green", Color(0xFF40916C)),
+                        Triple("orange", "Orange", Color(0xFFF77F00)),
+                        Triple("blue", "Blue", Color(0xFF0096C7)),
+                        Triple("teal", "Teal", Color(0xFF009688)),
+                        Triple("pink", "Pink", Color(0xFFE91E63))
                     )
-                    accentPresets.chunked(3).forEach { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    accentPresets.forEach { (accentKey, accentName, presetColor) ->
+                        val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(CornerRadius.sm))
+                                .clickable { viewModel.setAccentColor(accentKey) }
+                                .padding(horizontal = Spacing.xs, vertical = Spacing.xs)
                         ) {
-                            rowItems.forEach { (accentKey, accentName) ->
-                                val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
-                                val itemShape = RoundedCornerShape(CornerRadius.xs)
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(itemShape)
-                                        .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                            else Color.Transparent
-                                        )
-                                        .border(
-                                            width = if (isSelected) 1.dp else 0.5.dp,
-                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                                            shape = itemShape
-                                        )
-                                        .clickable { viewModel.setAccentColor(accentKey) }
-                                        .padding(vertical = Spacing.md),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = accentName,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(
+                                        if (accentKey == "dynamic") {
+                                            Brush.sweepGradient(
+                                                listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+                                            )
+                                        } else {
+                                            Brush.solidColor(presetColor)
+                                        }
                                     )
+                                    .border(
+                                        width = if (isSelected) 2.5.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                        shape = androidx.compose.foundation.shape.CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSelected) {
+                                    val checkColor = if (accentKey == "cyan" || accentKey == "rose" || accentKey == "orange" || accentKey == "dynamic") Color.Black else Color.White
+                                    Text("\u2713", color = checkColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
-                            if (rowItems.size < 3) {
-                                repeat(3 - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
+                            Text(
+                                text = accentName,
+                                fontSize = 10.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
@@ -340,7 +371,7 @@ private fun TogglePreferenceItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+            .padding(horizontal = Spacing.md, vertical = Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -366,7 +397,7 @@ private fun SettingsActionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
