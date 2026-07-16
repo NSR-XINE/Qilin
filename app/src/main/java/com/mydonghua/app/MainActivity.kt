@@ -528,7 +528,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f))
+                            .background(Color.Transparent)
                             .clickable(onClick = { isDrawerOpen = false })
                     ) {
                         AnimatedVisibility(
