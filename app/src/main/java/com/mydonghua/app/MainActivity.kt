@@ -94,10 +94,7 @@ class MainActivity : ComponentActivity() {
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = false }
-                        launchSingleTop = true
-                    }
+                    navController.popBackStack("home", inclusive = false)
                 } else {
                     showExitDialog = true
                 }
@@ -499,10 +496,7 @@ class MainActivity : ComponentActivity() {
                                 "home" -> {
                                     val currentDest = navController.currentBackStackEntry?.destination?.route
                                     if (currentDest != "home") {
-                                        navController.navigate("home") {
-                                            popUpTo("home") { inclusive = false }
-                                            launchSingleTop = true
-                                        }
+                                        navController.popBackStack("home", inclusive = false)
                                     }
                                 }
                                 "add_edit_show" -> navController.navigate("add_edit_show")
