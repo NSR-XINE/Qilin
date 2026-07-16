@@ -497,7 +497,8 @@ class MainActivity : ComponentActivity() {
                         onNavigate = { route ->
                             when (route) {
                                 "home" -> {
-                                    if (currentRoute != "home") {
+                                    val currentDest = navController.currentBackStackEntry?.destination?.route
+                                    if (currentDest != "home") {
                                         navController.navigate("home") {
                                             popUpTo("home") { inclusive = false }
                                             launchSingleTop = true

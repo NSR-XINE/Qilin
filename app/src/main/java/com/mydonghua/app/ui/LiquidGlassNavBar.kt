@@ -95,6 +95,7 @@ fun LiquidGlassNavBar(
 ) {
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
+    val currentOnNavigate by rememberUpdatedState(onNavigate)
 
     val capsuleAlpha by animateFloatAsState(
         targetValue = if (isSearchOpen) 0f else 1f,
@@ -256,7 +257,7 @@ fun LiquidGlassNavBar(
                     .drop(1)
                     .collectLatest { index ->
                         if (draggedFlag[0]) {
-                            onNavigate(navRoutes[index])
+                            currentOnNavigate(navRoutes[index])
                         }
                     }
             }
