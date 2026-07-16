@@ -131,17 +131,25 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val hazeState = remember { HazeState() }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .haze(hazeState, style = HazeMaterials.ultraThin())
-                    ) {
-                        if (settingsState.themeMode.lowercase() != "light") {
-                            StarsBackground()
+                    val appHazeState = remember { HazeState() }
+                    val drawerHazeState = remember { HazeState() }
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .haze(appHazeState, style = HazeMaterials.ultraThin())
+                        ) {
+                            if (settingsState.themeMode.lowercase() != "light") {
+                                StarsBackground()
+                            }
                         }
-                        CompositionLocalProvider(LocalHazeState provides hazeState) {
-                        GlassBackground(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .haze(drawerHazeState, style = HazeMaterials.ultraThin())
+                        ) {
+                            CompositionLocalProvider(LocalHazeState provides appHazeState) {
+                            GlassBackground(modifier = Modifier.fillMaxSize()) {
                         Scaffold(
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
@@ -509,6 +517,8 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm),
                     )
                 }
+                            }
+                        }
 
                 AnimatedVisibility(
                     visible = isDrawerOpen,
@@ -539,13 +549,13 @@ class MainActivity : ComponentActivity() {
                             ),
                             modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
-                            val drawerShape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .width(280.dp)
-                                    .clip(drawerShape)
-                                    .hazeChild(state = hazeState, shape = drawerShape)
+                             val drawerShape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
+                             Column(
+                                 modifier = Modifier
+                                     .fillMaxHeight()
+                                     .width(280.dp)
+                                     .clip(drawerShape)
+                                     .hazeChild(state = drawerHazeState, shape = drawerShape)
                                     .background(
                                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f),
                                         shape = drawerShape
@@ -627,13 +637,12 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-    }
-}
-    }
+                 }
+             }
+         }
+     }
+ }
+     }
  
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
