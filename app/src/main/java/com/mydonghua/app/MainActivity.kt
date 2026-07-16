@@ -496,7 +496,14 @@ class MainActivity : ComponentActivity() {
                         onSearchClick = { isSearchOpen = !isSearchOpen },
                         onNavigate = { route ->
                             when (route) {
-                                "home" -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }
+                                "home" -> {
+                                    if (currentRoute != "home") {
+                                        navController.navigate("home") {
+                                            popUpTo("home") { inclusive = false }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
                                 "add_edit_show" -> navController.navigate("add_edit_show")
                                 else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
                             }
