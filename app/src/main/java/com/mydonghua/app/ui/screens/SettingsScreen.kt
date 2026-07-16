@@ -300,7 +300,7 @@ fun SettingsScreen(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .height(ButtonHeight.lg),
+                            .heightIn(min = ButtonHeight.lg),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                             contentColor = MaterialTheme.colorScheme.primary
@@ -309,7 +309,8 @@ fun SettingsScreen(
                             width = 0.5.dp,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                         ),
-                        shape = buttonShape
+                        shape = buttonShape,
+                        contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xs)
                     ) {
                         Text("Export Backup JSON", fontWeight = FontWeight.Bold, fontSize = 11.sp)
                     }
@@ -320,7 +321,7 @@ fun SettingsScreen(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .height(ButtonHeight.lg),
+                            .heightIn(min = ButtonHeight.lg),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
@@ -328,7 +329,8 @@ fun SettingsScreen(
                             width = 0.5.dp,
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                         ),
-                        shape = buttonShape
+                        shape = buttonShape,
+                        contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = Spacing.xs)
                     ) {
                         Text("Import Backup JSON", fontWeight = FontWeight.Bold, fontSize = 11.sp)
                     }
