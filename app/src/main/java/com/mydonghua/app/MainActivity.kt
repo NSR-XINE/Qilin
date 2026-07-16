@@ -21,6 +21,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -129,16 +130,14 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        val hazeState = remember { HazeState() }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .haze(hazeState, style = HazeMaterials.ultraThin())
-                        ) {
-                            if (settingsState.themeMode.lowercase() != "light") {
-                                StarsBackground()
-                            }
+                    val hazeState = remember { HazeState() }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .haze(hazeState, style = HazeMaterials.ultraThin())
+                    ) {
+                        if (settingsState.themeMode.lowercase() != "light") {
+                            StarsBackground()
                         }
                         CompositionLocalProvider(LocalHazeState provides hazeState) {
                         GlassBackground(modifier = Modifier.fillMaxSize()) {
@@ -539,13 +538,21 @@ class MainActivity : ComponentActivity() {
                             ),
                             modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
+                            val drawerShape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
                             Column(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .width(280.dp)
-                                    .hazeChild(state = hazeState)
+                                    .clip(drawerShape)
+                                    .hazeChild(state = hazeState, shape = drawerShape)
                                     .background(
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
+                                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f),
+                                        shape = drawerShape
+                                    )
+                                    .border(
+                                        width = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                                        shape = drawerShape
                                     )
                                     .clickable(enabled = false) {}
                                     .statusBarsPadding()
