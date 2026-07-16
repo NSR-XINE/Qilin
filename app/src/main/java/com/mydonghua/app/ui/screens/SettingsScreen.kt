@@ -9,9 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
-import com.mydonghua.app.ui.Spacing
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,13 +20,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import com.mydonghua.app.R
+import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +50,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
+    val hazeState = LocalHazeState.current
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -69,7 +73,7 @@ fun SettingsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("App Settings", fontWeight = FontWeight.Bold) },
+                title = { Text("App Settings", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -79,7 +83,16 @@ fun SettingsScreen(
                             modifier = Modifier.size(IconSize.md)
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.06f),
+                ),
+                modifier = Modifier
+                    .hazeChild(state = hazeState)
+                    .border(
+                        width = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
+                    )
             )
         },
         modifier = modifier
@@ -92,82 +105,93 @@ fun SettingsScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
             SectionHeader("Theme Mode Options")
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-            ) {
-                listOf("light" to "Light Mode", "dark" to "Dark Mode", "amoled" to "AMOLED Black").forEach { (modeKey, modeName) ->
-                    val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(CornerRadius.sm))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                else MaterialTheme.colorScheme.surface
+            GlassSection {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    val themesList = listOf("light" to "Light Mode", "dark" to "Dark Mode", "amoled" to "AMOLED Black")
+                    themesList.forEachIndexed { index, (modeKey, modeName) ->
+                        val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                    else Color.Transparent
+                                )
+                                .clickable { viewModel.setThemeMode(modeKey) }
+                                .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = modeName,
+                                fontSize = 13.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
-                            .border(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(CornerRadius.sm)
-                            )
-                            .clickable { viewModel.setThemeMode(modeKey) }
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(modeName, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                        if (isSelected) {
-                            Text("\u2713", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            if (isSelected) {
+                                Text("\u2713", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            }
+                        }
+                        if (index < themesList.lastIndex) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                         }
                     }
                 }
             }
 
             SectionHeader("Accent Themes Colors")
-            Column(modifier = Modifier.fillMaxWidth()) {
-                val accentPresets = listOf(
-                    "default" to "Default", "dynamic" to "Dynamic", "cyan" to "Cyan", "purple" to "Purple",
-                    "rose" to "Rose", "green" to "Green", "orange" to "Orange", "blue" to "Blue",
-                    "teal" to "Teal", "pink" to "Pink"
-                )
-                val rows = accentPresets.chunked(3)
-                rows.forEach { rowItems ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
-                        rowItems.forEach { (accentKey, accentName) ->
-                            val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(CornerRadius.sm))
-                                    .background(
-                                        if (isSelected) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.surface
+            GlassSection {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                ) {
+                    val accentPresets = listOf(
+                        "default" to "Default", "dynamic" to "Dynamic", "cyan" to "Cyan", "purple" to "Purple",
+                        "rose" to "Rose", "green" to "Green", "orange" to "Orange", "blue" to "Blue",
+                        "teal" to "Teal", "pink" to "Pink"
+                    )
+                    accentPresets.chunked(3).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            rowItems.forEach { (accentKey, accentName) ->
+                                val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
+                                val itemShape = RoundedCornerShape(CornerRadius.xs)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(itemShape)
+                                        .background(
+                                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                            else Color.Transparent
+                                        )
+                                        .border(
+                                            width = if (isSelected) 1.dp else 0.5.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                                            shape = itemShape
+                                        )
+                                        .clickable { viewModel.setAccentColor(accentKey) }
+                                        .padding(vertical = Spacing.md),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = accentName,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
-                                    .border(
-                                        width = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                        shape = RoundedCornerShape(CornerRadius.sm)
-                                    )
-                                    .clickable { viewModel.setAccentColor(accentKey) }
-                                    .padding(vertical = Spacing.md),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = accentName,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                                )
+                                }
                             }
-                        }
-                        if (rowItems.size < 3) {
-                            repeat(3 - rowItems.size) {
-                                Spacer(modifier = Modifier.weight(1f))
+                            if (rowItems.size < 3) {
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -175,119 +199,136 @@ fun SettingsScreen(
             }
 
             SectionHeader("Smart Home Dashboard Elements")
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(CornerRadius.sm))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(CornerRadius.sm)
+            GlassSection {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TogglePreferenceItem(
+                        title = "Show Hero Countdown Banner",
+                        checked = uiState.showBanner,
+                        onCheckedChange = { viewModel.setShowBanner(it) }
                     )
-                    .padding(Spacing.sm),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
-                TogglePreferenceItem(
-                    title = "Show Hero Countdown Banner",
-                    checked = uiState.showBanner,
-                    onCheckedChange = { viewModel.setShowBanner(it) }
-                )
-                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                TogglePreferenceItem(
-                    title = "Show Continue Watching",
-                    checked = uiState.showContinue,
-                    onCheckedChange = { viewModel.setShowContinue(it) }
-                )
-                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                TogglePreferenceItem(
-                    title = "Show Recently Updated",
-                    checked = uiState.showRecent,
-                    onCheckedChange = { viewModel.setShowRecent(it) }
-                )
-                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                TogglePreferenceItem(
-                    title = "Show Weekly Schedule",
-                    checked = uiState.showSchedule,
-                    onCheckedChange = { viewModel.setShowSchedule(it) }
-                )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    TogglePreferenceItem(
+                        title = "Show Continue Watching",
+                        checked = uiState.showContinue,
+                        onCheckedChange = { viewModel.setShowContinue(it) }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    TogglePreferenceItem(
+                        title = "Show Recently Updated",
+                        checked = uiState.showRecent,
+                        onCheckedChange = { viewModel.setShowRecent(it) }
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    TogglePreferenceItem(
+                        title = "Show Weekly Schedule",
+                        checked = uiState.showSchedule,
+                        onCheckedChange = { viewModel.setShowSchedule(it) }
+                    )
+                }
             }
 
             SectionHeader("App Tools & Features")
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(CornerRadius.sm))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(CornerRadius.sm)
-                    )
-                    .padding(Spacing.sm),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
-                SettingsActionItem("Detailed Stats & Analytics", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
-                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsActionItem("Scheduled Releases Calendar", iconRes = R.drawable.ic_calendar, onClick = onNavigateToCalendar)
-                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsActionItem("Date-Grouped Watch History", iconRes = R.drawable.ic_history, onClick = onNavigateToHistory)
-                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsActionItem("Grouped Show Collections", iconRes = R.drawable.ic_collections, onClick = onNavigateToCollections)
+            GlassSection {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    SettingsActionItem("Detailed Stats & Analytics", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    SettingsActionItem("Scheduled Releases Calendar", iconRes = R.drawable.ic_calendar, onClick = onNavigateToCalendar)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    SettingsActionItem("Date-Grouped Watch History", iconRes = R.drawable.ic_history, onClick = onNavigateToHistory)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    SettingsActionItem("Grouped Show Collections", iconRes = R.drawable.ic_collections, onClick = onNavigateToCollections)
+                }
             }
 
             SectionHeader("Data Backups Management")
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.xxxl),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-            ) {
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                        val file = viewModel.exportBackup(context)
-                        if (file != null) {
-                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "application/json"
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            GlassSection {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                ) {
+                    val buttonShape = RoundedCornerShape(CornerRadius.sm)
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                val file = viewModel.exportBackup(context)
+                                if (file != null) {
+                                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "application/json"
+                                        putExtra(Intent.EXTRA_STREAM, uri)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, "Share Backup JSON"))
+                                } else {
+                                    Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, "Share Backup JSON"))
-                        } else {
-                            Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
-                        }
-                        }
-                    },
-                    modifier = Modifier.weight(1f).height(ButtonHeight.lg),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(CornerRadius.sm)
-                ) {
-                    Text("Export Backup JSON", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(ButtonHeight.lg),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 0.5.dp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        ),
+                        shape = buttonShape
+                    ) {
+                        Text("Export Backup JSON", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    }
 
-                OutlinedButton(
-                    onClick = {
-                        filePickerLauncher.launch("application/json")
-                    },
-                    modifier = Modifier.weight(1f).height(ButtonHeight.lg),
-                    shape = RoundedCornerShape(CornerRadius.sm)
-                ) {
-                    Text("Import Backup JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    OutlinedButton(
+                        onClick = {
+                            filePickerLauncher.launch("application/json")
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(ButtonHeight.lg),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        ),
+                        shape = buttonShape
+                    ) {
+                        Text("Import Backup JSON", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(Spacing.xxl))
         }
     }
 }
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = Spacing.sm)
-    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        modifier = Modifier.padding(top = Spacing.sm, start = Spacing.xs)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 14.dp)
+                .clip(RoundedCornerShape(CornerRadius.xs))
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Text(
+            text = title.uppercase(),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.primary,
+            letterSpacing = 1.sp
+        )
+    }
 }
 
 @Composable
@@ -299,11 +340,11 @@ private fun TogglePreferenceItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -325,7 +366,7 @@ private fun SettingsActionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = Spacing.sm, vertical = Spacing.md),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -338,11 +379,11 @@ private fun SettingsActionItem(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
                     modifier = Modifier.size(IconSize.sm),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
-            Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         }
-        Text("\u2192", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("\u2192", fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
     }
 }
