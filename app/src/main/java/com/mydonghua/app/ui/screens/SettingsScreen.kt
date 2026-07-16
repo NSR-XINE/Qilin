@@ -115,7 +115,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = Spacing.md, horizontal = Spacing.md),
+                        .padding(vertical = Spacing.md, horizontal = Spacing.lg),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -168,7 +168,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(vertical = Spacing.md, horizontal = Spacing.md),
+                        .padding(vertical = Spacing.md, horizontal = Spacing.lg),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -277,7 +277,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(Spacing.md),
+                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     val buttonShape = RoundedCornerShape(CornerRadius.sm)
@@ -345,7 +345,7 @@ private fun SectionHeader(title: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-        modifier = Modifier.padding(top = Spacing.sm, start = Spacing.xs)
+        modifier = Modifier.padding(top = Spacing.sm)
     ) {
         Box(
             modifier = Modifier
@@ -372,7 +372,7 @@ private fun TogglePreferenceItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -398,7 +398,7 @@ private fun SettingsActionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
