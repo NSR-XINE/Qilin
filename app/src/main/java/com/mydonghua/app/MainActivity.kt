@@ -528,7 +528,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
                             .clickable(onClick = { isDrawerOpen = false })
                     ) {
                         AnimatedVisibility(
@@ -553,7 +553,7 @@ class MainActivity : ComponentActivity() {
                              Column(
                                  modifier = Modifier
                                      .fillMaxHeight()
-                                     .width(280.dp)
+                                     .width(240.dp)
                                      .clip(drawerShape)
                                      .hazeChild(state = drawerHazeState, shape = drawerShape)
                                     .background(
