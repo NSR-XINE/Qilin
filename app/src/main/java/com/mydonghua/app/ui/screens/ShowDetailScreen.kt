@@ -83,61 +83,75 @@ fun ShowDetailScreen(
         ) {
             Spacer(modifier = Modifier.height(72.dp))
             // Hero Backdrop & Title Block
-            Box(
+            val detailBannerShape = RoundedCornerShape(24.dp)
+            Card(
+                shape = detailBannerShape,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.45f),
+                            Color.White.copy(alpha = 0.12f)
+                        )
+                    )
+                ),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
                     .height(340.dp)
             ) {
-                // Background Poster Art
-                DonghuaPoster(
-                    posterUrl = show.poster,
-                    title = show.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    showAcronym = false
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Background Poster Art
+                    DonghuaPoster(
+                        posterUrl = show.poster,
+                        title = show.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        showAcronym = false
+                    )
 
-                // Liquid Gradient Overlays for smooth blend & text readability
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to Color.Black.copy(alpha = 0.5f),
-                                0.4f to Color.Transparent,
-                                0.75f to MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
-                                1.0f to MaterialTheme.colorScheme.background
-                            )
-                        )
-                )
-
-                // Content Overlay in Hero
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart)
-                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    // Floating Poster Thumbnail Card
+                    // Liquid Gradient Overlays for smooth blend & text readability
                     Box(
                         modifier = Modifier
-                            .size(width = 96.dp, height = 132.dp)
-                            .clip(RoundedCornerShape(CornerRadius.md))
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.25f),
-                                shape = RoundedCornerShape(CornerRadius.md)
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    0.0f to Color.Black.copy(alpha = 0.5f),
+                                    0.4f to Color.Transparent,
+                                    0.75f to MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                                    1.0f to MaterialTheme.colorScheme.background
+                                )
                             )
+                    )
+
+                    // Content Overlay in Hero
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomStart)
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                        verticalAlignment = Alignment.Bottom
                     ) {
-                        DonghuaPoster(
-                            posterUrl = show.poster,
-                            title = show.title,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            fontSize = 12.sp
-                        )
-                    }
+                        // Floating Poster Thumbnail Card
+                        val thumbnailShape = RoundedCornerShape(16.dp)
+                        Card(
+                            shape = thumbnailShape,
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.35f)
+                            ),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                            modifier = Modifier.size(width = 96.dp, height = 132.dp)
+                        ) {
+                            DonghuaPoster(
+                                posterUrl = show.poster,
+                                title = show.title,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                fontSize = 12.sp
+                            )
+                        }
 
                     Spacer(modifier = Modifier.width(Spacing.md))
 
