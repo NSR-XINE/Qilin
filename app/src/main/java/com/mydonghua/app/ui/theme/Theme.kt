@@ -21,7 +21,7 @@ val JustSansFamily = FontFamily(
     Font(R.font.just_sans_regular, FontWeight.Normal),
     Font(R.font.just_sans_regular, FontWeight.Medium),
     Font(R.font.just_sans_regular, FontWeight.SemiBold),
-    Font(R.font.just_sans_exbold, FontWeight.Bold),
+    Font(R.font.just_sans_regular, FontWeight.Bold),
     Font(R.font.just_sans_exbold, FontWeight.ExtraBold)
 )
 

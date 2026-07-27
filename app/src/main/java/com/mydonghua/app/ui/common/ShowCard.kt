@@ -148,7 +148,7 @@ fun ShowCard(
                     Text(
                         text = show.title,
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.White,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
