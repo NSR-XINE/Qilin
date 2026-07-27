@@ -5,7 +5,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Light Liquid Glass Background Surface (Inspired by sK.webp reference) -->
+    <!-- Soft Clean White / Off-White Liquid Glass Background Surface (Matching sK.webp) -->
     <path
         android:pathData="M0,0 h108 v108 h-108 z">
         <aapt:attr name="android:fillColor">
@@ -21,7 +21,7 @@
         </aapt:attr>
     </path>
 
-    <!-- Subtle Ambient Shadow under Dragon Glyph -->
+    <!-- Subtle Ambient Cyan Drop Shadow under Dragon Silhouette -->
     <group
         android:scaleX="0.09"
         android:scaleY="0.09"
@@ -36,14 +36,14 @@
                     android:endX="512"
                     android:endY="512"
                     android:type="linear">
-                    <item android:color="#25D1A53D" android:offset="0.0" />
-                    <item android:color="#108A661C" android:offset="1.0" />
+                    <item android:color="#3000B4D8" android:offset="0.0" />
+                    <item android:color="#100077B6" android:offset="1.0" />
                 </gradient>
             </aapt:attr>
         </path>
     </group>
 
-    <!-- Original Gold Dragon Silhouette Centered on Liquid Glass Surface -->
+    <!-- Vibrant Cyan / Ocean Blue Dragon Silhouette (Matching sK.webp color palette) -->
     <group
         android:scaleX="0.09"
         android:scaleY="0.09"
@@ -58,9 +58,9 @@
                     android:endX="512"
                     android:endY="512"
                     android:type="linear">
-                    <item android:color="#FFE5A3" android:offset="0.0" />
-                    <item android:color="#D1A53D" android:offset="0.5" />
-                    <item android:color="#8A661C" android:offset="1.0" />
+                    <item android:color="#00F2FE" android:offset="0.0" />
+                    <item android:color="#00B4D8" android:offset="0.5" />
+                    <item android:color="#0077B6" android:offset="1.0" />
                 </gradient>
             </aapt:attr>
         </path>
