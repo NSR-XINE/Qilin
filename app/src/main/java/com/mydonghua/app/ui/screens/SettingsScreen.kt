@@ -125,15 +125,6 @@ fun SettingsScreen(
                         shape = iconCardShape,
                         color = Color.White.copy(alpha = 0.9f),
                         shadowElevation = 6.dp,
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 1.dp,
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White,
-                                    Color.White.copy(alpha = 0.4f)
-                                )
-                            )
-                        ),
                         modifier = Modifier.size(62.dp)
                     ) {
                         Box(
