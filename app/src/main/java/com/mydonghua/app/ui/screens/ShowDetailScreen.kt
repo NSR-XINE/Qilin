@@ -447,10 +447,13 @@ fun ShowDetailScreen(
     }
 }
 
+import androidx.compose.ui.graphics.luminance
+
 @Composable
 private fun DetailCountdownBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
     val shape = RoundedCornerShape(10.dp)
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = Modifier
             .width(48.dp)
@@ -459,18 +462,24 @@ private fun DetailCountdownBox(value: Long, label: String) {
             .hazeChild(state = hazeState, shape = shape)
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
+                    colors = if (isDark) listOf(
                         Color.Black.copy(alpha = 0.38f),
                         Color.Black.copy(alpha = 0.22f)
+                    ) else listOf(
+                        Color.White.copy(alpha = 0.65f),
+                        Color.White.copy(alpha = 0.35f)
                     )
                 )
             )
             .border(
                 width = 0.75.dp,
                 brush = Brush.verticalGradient(
-                    colors = listOf(
+                    colors = if (isDark) listOf(
                         Color.White.copy(alpha = 0.45f),
                         Color.White.copy(alpha = 0.12f)
+                    ) else listOf(
+                        Color.Black.copy(alpha = 0.18f),
+                        Color.Black.copy(alpha = 0.08f)
                     )
                 ),
                 shape = shape
@@ -486,14 +495,14 @@ private fun DetailCountdownBox(value: Long, label: String) {
                 text = String.format("%02d", value),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = label,
                 fontSize = 8.5.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
@@ -503,17 +512,18 @@ private fun DetailCountdownBox(value: Long, label: String) {
 @Composable
 private fun DetailGlassChip(label: String, value: String, modifier: Modifier = Modifier) {
     val hazeState = LocalHazeState.current
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(CornerRadius.md))
             .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
             .background(
-                color = Color.White.copy(alpha = 0.06f),
+                color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.04f),
                 shape = RoundedCornerShape(CornerRadius.md)
             )
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.12f),
+                color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(CornerRadius.md)
             )
             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
