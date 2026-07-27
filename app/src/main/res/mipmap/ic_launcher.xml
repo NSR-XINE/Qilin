@@ -5,57 +5,23 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Frosted Glass Surface Background -->
+    <!-- Light Liquid Glass Background Surface (Inspired by sK.webp reference) -->
     <path
         android:pathData="M0,0 h108 v108 h-108 z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="0"
+                android:startX="54"
                 android:startY="0"
-                android:endX="108"
+                android:endX="54"
                 android:endY="108"
                 android:type="linear">
                 <item android:color="#FFFFFF" android:offset="0.0" />
-                <item android:color="#E6ECF5" android:offset="1.0" />
+                <item android:color="#F2F5F9" android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Specular Glass Glare Sheen (Diagonal Top-Left Light Beam) -->
-    <path
-        android:pathData="M0,0 L108,0 L0,108 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="0"
-                android:startY="0"
-                android:endX="70"
-                android:endY="70"
-                android:type="linear">
-                <item android:color="#70FFFFFF" android:offset="0.0" />
-                <item android:color="#20FFFFFF" android:offset="0.4" />
-                <item android:color="#00FFFFFF" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- Translucent Cyan-Gold Dual Ambient Glass Reflection Glow -->
-    <path
-        android:pathData="M 18,18 H 90 V 90 H 18 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="20"
-                android:startY="20"
-                android:endX="88"
-                android:endY="88"
-                android:type="linear">
-                <item android:color="#3500E5FF" android:offset="0.0" />
-                <item android:color="#15D1A53D" android:offset="0.5" />
-                <item android:color="#250077B6" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- Gold Dragon Ambient Drop Shadow -->
+    <!-- Subtle Ambient Shadow under Dragon Glyph -->
     <group
         android:scaleX="0.09"
         android:scaleY="0.09"
@@ -70,8 +36,8 @@
                     android:endX="512"
                     android:endY="512"
                     android:type="linear">
-                    <item android:color="#35D1A53D" android:offset="0.0" />
-                    <item android:color="#158A661C" android:offset="1.0" />
+                    <item android:color="#25D1A53D" android:offset="0.0" />
+                    <item android:color="#108A661C" android:offset="1.0" />
                 </gradient>
             </aapt:attr>
         </path>
@@ -99,10 +65,4 @@
             </aapt:attr>
         </path>
     </group>
-
-    <!-- Frosted Glass Specular Rim Border -->
-    <path
-        android:pathData="M2,2 h104 v104 h-104 z"
-        android:strokeWidth="1.5"
-        android:strokeColor="#80FFFFFF" />
 </vector>
