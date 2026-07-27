@@ -96,17 +96,9 @@ fun ShowCard(
                     .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(topStart = CornerRadius.card, topEnd = CornerRadius.card))
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(show.poster)
-                        .placeholder(R.drawable.ic_tv)
-                        .error(R.drawable.ic_tv)
-                        .fallback(R.drawable.ic_tv)
-                        .crossfade(true)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .build(),
-                    contentDescription = show.title,
+                DonghuaPoster(
+                    posterUrl = show.poster,
+                    title = show.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )

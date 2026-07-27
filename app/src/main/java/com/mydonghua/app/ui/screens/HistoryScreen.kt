@@ -122,28 +122,13 @@ fun HistoryScreen(
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (!item.poster.isNullOrEmpty()) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(context)
-                                            .data(item.poster)
-                                            .placeholder(R.drawable.ic_tv)
-                                            .error(R.drawable.ic_tv)
-                                            .fallback(R.drawable.ic_tv)
-                                            .crossfade(true)
-                                            .diskCachePolicy(CachePolicy.ENABLED)
-                                            .memoryCachePolicy(CachePolicy.ENABLED)
-                                            .build(),
-                                        contentDescription = item.showTitle,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Text(
-                                        text = item.showTitle.take(1).uppercase(),
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                com.mydonghua.app.ui.common.DonghuaPoster(
+                                    posterUrl = item.poster,
+                                    title = item.showTitle,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                    fontSize = 13.sp
+                                )
                             }
 
                             Column(modifier = Modifier.weight(1f)) {

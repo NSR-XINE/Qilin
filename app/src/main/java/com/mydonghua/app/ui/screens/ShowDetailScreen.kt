@@ -108,19 +108,12 @@ fun ShowDetailScreen(
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(show.poster)
-                        .placeholder(R.drawable.ic_tv)
-                        .error(R.drawable.ic_tv)
-                        .fallback(R.drawable.ic_tv)
-                        .crossfade(true)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .build(),
-                    contentDescription = show.title,
+                com.mydonghua.app.ui.common.DonghuaPoster(
+                    posterUrl = show.poster,
+                    title = show.title,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    fontSize = 32.sp
                 )
                 Box(
                     modifier = Modifier

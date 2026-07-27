@@ -171,28 +171,13 @@ fun CollectionsScreen(
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (!show.poster.isNullOrEmpty()) {
-                                            AsyncImage(
-                                                model = ImageRequest.Builder(context)
-                                                    .data(show.poster)
-                                                    .placeholder(R.drawable.ic_tv)
-                                                    .error(R.drawable.ic_tv)
-                                                    .fallback(R.drawable.ic_tv)
-                                                    .crossfade(true)
-                                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                                    .memoryCachePolicy(CachePolicy.ENABLED)
-                                                    .build(),
-                                                contentDescription = show.title,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize()
-                                            )
-                                        } else {
-                                            Text(
-                                                text = show.title.take(1).uppercase(),
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
+                                        com.mydonghua.app.ui.common.DonghuaPoster(
+                                            posterUrl = show.poster,
+                                            title = show.title,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop,
+                                            fontSize = 11.sp
+                                        )
                                     }
 
                                     Text(

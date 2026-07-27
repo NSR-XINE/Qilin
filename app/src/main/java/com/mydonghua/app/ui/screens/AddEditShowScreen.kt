@@ -368,25 +368,16 @@ fun AddEditShowScreen(
                                 Text("Scrape", fontSize = 13.sp)
                             }
 
-                            if (poster.isNotBlank()) {
-                                Spacer(Modifier.height(Spacing.sm))
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
-                                        .data(poster)
-                                        .placeholder(R.drawable.ic_tv)
-                                        .error(R.drawable.ic_tv)
-                                        .fallback(R.drawable.ic_tv)
-                                        .crossfade(true)
-                                        .diskCachePolicy(CachePolicy.ENABLED)
-                                        .memoryCachePolicy(CachePolicy.ENABLED)
-                                        .build(),
-                                    contentDescription = "Poster preview",
-                                    modifier = Modifier
-                                        .size(56.dp)
-                                        .clip(RoundedCornerShape(CornerRadius.sm)),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
+                            Spacer(Modifier.height(Spacing.sm))
+                            com.mydonghua.app.ui.common.DonghuaPoster(
+                                posterUrl = poster,
+                                title = title.ifBlank { "New Show" },
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(CornerRadius.sm)),
+                                contentScale = ContentScale.Crop,
+                                fontSize = 16.sp
+                            )
                         }
                     }
 

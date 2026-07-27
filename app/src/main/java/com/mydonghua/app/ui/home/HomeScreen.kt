@@ -32,6 +32,7 @@ import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -106,19 +107,12 @@ fun HeroBanner(
             .clip(RoundedCornerShape(CornerRadius.banner))
             .clickable { onBannerClick() }
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(show.poster)
-                .placeholder(R.drawable.ic_tv)
-                .error(R.drawable.ic_tv)
-                .fallback(R.drawable.ic_tv)
-                .crossfade(true)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .build(),
-            contentDescription = "Hero Banner",
+        DonghuaPoster(
+            posterUrl = show.poster,
+            title = show.title,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            fontSize = 32.sp
         )
 
         Box(
@@ -226,19 +220,12 @@ fun ContinueWatchingRow(
                             .size(width = 52.dp, height = 72.dp)
                             .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(show.poster)
-                                .placeholder(R.drawable.ic_tv)
-                                .error(R.drawable.ic_tv)
-                                .fallback(R.drawable.ic_tv)
-                                .crossfade(true)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .memoryCachePolicy(CachePolicy.ENABLED)
-                                .build(),
-                            contentDescription = show.title,
+                        DonghuaPoster(
+                            posterUrl = show.poster,
+                            title = show.title,
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
+                            fontSize = 16.sp
                         )
                     }
                     Spacer(modifier = Modifier.width(Spacing.sm))
@@ -303,19 +290,12 @@ fun RecentlyUpdatedRow(
                             .size(width = 52.dp, height = 72.dp)
                             .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(show.poster)
-                                .placeholder(R.drawable.ic_tv)
-                                .error(R.drawable.ic_tv)
-                                .fallback(R.drawable.ic_tv)
-                                .crossfade(true)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .memoryCachePolicy(CachePolicy.ENABLED)
-                                .build(),
-                            contentDescription = show.title,
+                        DonghuaPoster(
+                            posterUrl = show.poster,
+                            title = show.title,
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
+                            fontSize = 16.sp
                         )
                     }
                     Spacer(modifier = Modifier.width(Spacing.sm))
