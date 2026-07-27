@@ -148,11 +148,11 @@ fun HeroBanner(
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(Spacing.md))
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                BannerTimeBox(value = remainingTime.days, label = "d")
-                BannerTimeBox(value = remainingTime.hours, label = "h")
-                BannerTimeBox(value = remainingTime.minutes, label = "m")
-                BannerTimeBox(value = remainingTime.seconds, label = "s")
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)) {
+                BannerTimeBox(value = remainingTime.days, label = "day")
+                BannerTimeBox(value = remainingTime.hours, label = "hour")
+                BannerTimeBox(value = remainingTime.minutes, label = "mins")
+                BannerTimeBox(value = remainingTime.seconds, label = "secs")
             }
         }
     }
@@ -162,22 +162,25 @@ fun HeroBanner(
 private fun BannerTimeBox(value: Long, label: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .size(48.dp)
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f), RoundedCornerShape(CornerRadius.sm))
+            .width(56.dp)
+            .height(50.dp)
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f), RoundedCornerShape(CornerRadius.sm))
+            .padding(vertical = 2.dp)
     ) {
-        Spacer(modifier = Modifier.height(Spacing.sm))
         Text(
             text = String.format("%02d", value),
-            fontSize = 18.sp,
+            fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             textAlign = TextAlign.Center
         )
         Text(
             text = label,
-            fontSize = 9.sp,
-            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 9.5.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.75f),
             textAlign = TextAlign.Center
         )
     }
