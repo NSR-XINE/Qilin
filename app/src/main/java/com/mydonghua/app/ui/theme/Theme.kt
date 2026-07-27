@@ -46,37 +46,70 @@ val AppTypography = Typography(
 private val DarkColorScheme = darkColorScheme(
     primary = AccentCyan,
     onPrimary = Color.Black,
+    primaryContainer = AccentCyan.copy(alpha = 0.18f),
+    onPrimaryContainer = AccentCyan,
+    secondary = Color(0xFF00B4D8),
+    onSecondary = Color.Black,
+    secondaryContainer = Color(0xFF00B4D8).copy(alpha = 0.15f),
+    onSecondaryContainer = Color(0xFF00B4D8),
+    tertiary = Color(0xFF0077B6),
+    onTertiary = Color.White,
     background = DarkBg,
     surface = DarkSurface,
     surfaceVariant = DarkSurfaceVariant,
+    surfaceTint = DarkSurfaceTint,
     outline = DarkOutline,
+    outlineVariant = DarkOutline.copy(alpha = 0.5f),
     onBackground = TextPrimaryDark,
     onSurface = TextPrimaryDark,
-    onSurfaceVariant = TextSecondaryDark
+    onSurfaceVariant = TextSecondaryDark,
+    scrim = Color.Black
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = AccentCyanLight,
     onPrimary = Color.White,
+    primaryContainer = AccentCyanLight.copy(alpha = 0.12f),
+    onPrimaryContainer = AccentCyanLight,
+    secondary = Color(0xFF0077B6),
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFF0077B6).copy(alpha = 0.10f),
+    onSecondaryContainer = Color(0xFF0077B6),
+    tertiary = Color(0xFF009688),
+    onTertiary = Color.White,
     background = LightBg,
     surface = LightSurface,
     surfaceVariant = LightSurfaceVariant,
+    surfaceTint = LightSurfaceTint,
     outline = LightOutline,
+    outlineVariant = LightOutline.copy(alpha = 0.5f),
     onBackground = TextPrimaryLight,
     onSurface = TextPrimaryLight,
-    onSurfaceVariant = TextSecondaryLight
+    onSurfaceVariant = TextSecondaryLight,
+    scrim = Color.Black
 )
 
 private val AmoledColorScheme = darkColorScheme(
     primary = AccentCyan,
     onPrimary = Color.Black,
+    primaryContainer = AccentCyan.copy(alpha = 0.20f),
+    onPrimaryContainer = AccentCyan,
+    secondary = Color(0xFF00B4D8),
+    onSecondary = Color.Black,
+    secondaryContainer = Color(0xFF00B4D8).copy(alpha = 0.15f),
+    onSecondaryContainer = Color(0xFF00B4D8),
+    tertiary = Color(0xFF0077B6),
+    onTertiary = Color.White,
     background = AmoledBg,
     surface = AmoledSurface,
     surfaceVariant = AmoledSurfaceVariant,
+    surfaceTint = AmoledSurfaceTint,
     outline = AmoledOutline,
+    outlineVariant = AmoledOutline.copy(alpha = 0.5f),
     onBackground = TextPrimaryDark,
     onSurface = TextPrimaryDark,
-    onSurfaceVariant = TextSecondaryDark
+    onSurfaceVariant = TextSecondaryDark,
+    scrim = Color.Black
 )
 
 fun getAccentColor(accentKey: String, isLight: Boolean): Color {
