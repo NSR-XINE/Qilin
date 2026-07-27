@@ -102,71 +102,73 @@ fun HeroBanner(
         }
     }
 
-    val bannerShape = RoundedCornerShape(CornerRadius.banner)
-    Box(
+    val bannerShape = RoundedCornerShape(24.dp)
+    Card(
+        shape = bannerShape,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.5f),
+                    Color.White.copy(alpha = 0.15f)
+                )
+            )
+        ),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(216.dp)
-            .clip(bannerShape)
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.45f),
-                        Color.White.copy(alpha = 0.12f)
-                    )
-                ),
-                shape = bannerShape
-            )
             .clickable { onBannerClick() }
     ) {
-        DonghuaPoster(
-            posterUrl = show.poster,
-            title = show.title,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            showAcronym = false
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            DonghuaPoster(
+                posterUrl = show.poster,
+                title = show.title,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                showAcronym = false
+            )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0.2f to Color.Transparent,
-                        1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0.2f to Color.Transparent,
+                            1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f)
+                        )
                     )
-                )
-        )
+            )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = Spacing.lg, end = Spacing.lg, bottom = 18.dp, top = 12.dp)
-        ) {
-            Text(
-                text = show.title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(
-                text = if (remainingTime.airingNow) "New episode available now"
-                else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                fontSize = 12.5.sp,
-                color = Color.White.copy(alpha = 0.85f),
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                BannerTimeBox(value = remainingTime.days, label = "days")
-                BannerTimeBox(value = remainingTime.hours, label = "hours")
-                BannerTimeBox(value = remainingTime.minutes, label = "mins")
-                BannerTimeBox(value = remainingTime.seconds, label = "secs")
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = Spacing.lg, end = Spacing.lg, bottom = 18.dp, top = 12.dp)
+            ) {
+                Text(
+                    text = show.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = if (remainingTime.airingNow) "New episode available now"
+                    else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
+                    fontSize = 12.5.sp,
+                    color = Color.White.copy(alpha = 0.85f),
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    BannerTimeBox(value = remainingTime.days, label = "days")
+                    BannerTimeBox(value = remainingTime.hours, label = "hours")
+                    BannerTimeBox(value = remainingTime.minutes, label = "mins")
+                    BannerTimeBox(value = remainingTime.seconds, label = "secs")
+                }
             }
         }
     }
