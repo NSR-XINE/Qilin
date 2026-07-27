@@ -11,6 +11,8 @@ import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.EnterTransition
@@ -181,105 +183,17 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                     val initialRoute = initialState.destination.route
-                                     val targetRoute = targetState.destination.route
-                                     if (initialRoute == targetRoute) {
-                                         EnterTransition.None
-                                     } else {
-                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
-                                         val initialIndex = navRoutes.indexOf(initialRoute)
-                                         val targetIndex = navRoutes.indexOf(targetRoute)
-                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
-                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
-                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
-                                         )
-                                         val fadeSpec = tween<Float>(durationMillis = 200)
-                                         if (initialIndex != -1 && targetIndex != -1) {
-                                             if (initialIndex < targetIndex) {
-                                                 slideInHorizontally(animationSpec = slideSpec) { it } + fadeIn(animationSpec = fadeSpec)
-                                             } else {
-                                                 slideInHorizontally(animationSpec = slideSpec) { -it } + fadeIn(animationSpec = fadeSpec)
-                                             }
-                                         } else {
-                                             slideInHorizontally(animationSpec = slideSpec) { it } + fadeIn(animationSpec = fadeSpec)
-                                         }
-                                     }
-                                 },
-                                 exitTransition = {
-                                     val initialRoute = initialState.destination.route
-                                     val targetRoute = targetState.destination.route
-                                     if (initialRoute == targetRoute) {
-                                         ExitTransition.None
-                                     } else {
-                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
-                                         val initialIndex = navRoutes.indexOf(initialRoute)
-                                         val targetIndex = navRoutes.indexOf(targetRoute)
-                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
-                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
-                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
-                                         )
-                                         val fadeSpec = tween<Float>(durationMillis = 200)
-                                         if (initialIndex != -1 && targetIndex != -1) {
-                                             if (initialIndex < targetIndex) {
-                                                 slideOutHorizontally(animationSpec = slideSpec) { -it } + fadeOut(animationSpec = fadeSpec)
-                                             } else {
-                                                 slideOutHorizontally(animationSpec = slideSpec) { it } + fadeOut(animationSpec = fadeSpec)
-                                             }
-                                         } else {
-                                             slideOutHorizontally(animationSpec = slideSpec) { -it } + fadeOut(animationSpec = fadeSpec)
-                                         }
-                                     }
-                                 },
-                                 popEnterTransition = {
-                                     val initialRoute = initialState.destination.route
-                                     val targetRoute = targetState.destination.route
-                                     if (initialRoute == targetRoute) {
-                                         EnterTransition.None
-                                     } else {
-                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
-                                         val initialIndex = navRoutes.indexOf(initialRoute)
-                                         val targetIndex = navRoutes.indexOf(targetRoute)
-                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
-                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
-                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
-                                         )
-                                         val fadeSpec = tween<Float>(durationMillis = 200)
-                                         if (initialIndex != -1 && targetIndex != -1) {
-                                             if (initialIndex < targetIndex) {
-                                                 slideInHorizontally(animationSpec = slideSpec) { it } + fadeIn(animationSpec = fadeSpec)
-                                             } else {
-                                                 slideInHorizontally(animationSpec = slideSpec) { -it } + fadeIn(animationSpec = fadeSpec)
-                                             }
-                                         } else {
-                                             slideInHorizontally(animationSpec = slideSpec) { -it } + fadeIn(animationSpec = fadeSpec)
-                                         }
-                                     }
-                                 },
-                                 popExitTransition = {
-                                     val initialRoute = initialState.destination.route
-                                     val targetRoute = targetState.destination.route
-                                     if (initialRoute == targetRoute) {
-                                         ExitTransition.None
-                                     } else {
-                                         val navRoutes = listOf("home", "airing", "complete", "stopped")
-                                         val initialIndex = navRoutes.indexOf(initialRoute)
-                                         val targetIndex = navRoutes.indexOf(targetRoute)
-                                         val slideSpec = spring<androidx.compose.ui.unit.IntOffset>(
-                                             stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
-                                             dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy
-                                         )
-                                         val fadeSpec = tween<Float>(durationMillis = 200)
-                                         if (initialIndex != -1 && targetIndex != -1) {
-                                             if (initialIndex < targetIndex) {
-                                                 slideOutHorizontally(animationSpec = slideSpec) { -it } + fadeOut(animationSpec = fadeSpec)
-                                             } else {
-                                                 slideOutHorizontally(animationSpec = slideSpec) { it } + fadeOut(animationSpec = fadeSpec)
-                                             }
-                                         } else {
-                                             slideOutHorizontally(animationSpec = slideSpec) { it } + fadeOut(animationSpec = fadeSpec)
-                                         }
-                                     }
-                                 },
+                                    fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.96f, animationSpec = tween(220))
+                                },
+                                exitTransition = {
+                                    fadeOut(animationSpec = tween(180)) + scaleOut(targetScale = 0.98f, animationSpec = tween(180))
+                                },
+                                popEnterTransition = {
+                                    fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.98f, animationSpec = tween(220))
+                                },
+                                popExitTransition = {
+                                    fadeOut(animationSpec = tween(180)) + scaleOut(targetScale = 0.96f, animationSpec = tween(180))
+                                }
                             ) {
                         composable("home") {
                                 HomeScreen(
