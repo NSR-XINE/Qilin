@@ -160,16 +160,18 @@ fun HeroBanner(
 
 @Composable
 private fun BannerTimeBox(value: Long, label: String) {
+    val hazeState = LocalHazeState.current
     Box(
         modifier = Modifier
             .width(58.dp)
             .height(52.dp)
             .clip(RoundedCornerShape(CornerRadius.sm))
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.sm))
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.22f),
-                        Color.White.copy(alpha = 0.07f)
+                        Color.White.copy(alpha = 0.25f),
+                        Color.White.copy(alpha = 0.10f)
                     )
                 )
             )
@@ -177,8 +179,8 @@ private fun BannerTimeBox(value: Long, label: String) {
                 width = 1.dp,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.45f),
-                        Color.White.copy(alpha = 0.12f)
+                        Color.White.copy(alpha = 0.55f),
+                        Color.White.copy(alpha = 0.15f)
                     )
                 ),
                 shape = RoundedCornerShape(CornerRadius.sm)
