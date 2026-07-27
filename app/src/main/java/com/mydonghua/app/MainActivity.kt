@@ -324,6 +324,7 @@ class MainActivity : ComponentActivity() {
                                 ShowDetailScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
+                                topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)

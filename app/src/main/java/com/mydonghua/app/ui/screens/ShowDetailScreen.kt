@@ -48,7 +48,8 @@ fun ShowDetailScreen(
     onWatchClick: (String) -> Unit,
     onEditClick: (Show) -> Unit,
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topPadding: Dp = 0.dp
 ) {
     val context = LocalContext.current
     val allShows by viewModel.allShows.collectAsState()
@@ -81,7 +82,7 @@ fun ShowDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(84.dp))
+            Spacer(modifier = Modifier.height(if (topPadding > 0.dp) topPadding + 12.dp else 88.dp))
             // Hero Backdrop & Title Block
             val detailBannerShape = RoundedCornerShape(24.dp)
             Card(
@@ -98,15 +99,21 @@ fun ShowDetailScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = 6.dp)
-                    .height(250.dp)
+                    .padding(horizontal = Spacing.lg, vertical = 4.dp)
+                    .height(220.dp)
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(detailBannerShape)
+                ) {
                     // Background Poster Art
                     DonghuaPoster(
                         posterUrl = show.poster,
                         title = show.title,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(detailBannerShape),
                         contentScale = ContentScale.Crop,
                         showAcronym = false
                     )
