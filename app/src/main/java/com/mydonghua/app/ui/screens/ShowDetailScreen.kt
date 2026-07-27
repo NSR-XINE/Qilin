@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
@@ -82,7 +83,7 @@ fun ShowDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(if (topPadding > 0.dp) topPadding + 12.dp else 88.dp))
+            Spacer(modifier = Modifier.height(if (topPadding.value > 0f) topPadding + 12.dp else 88.dp))
             // Hero Backdrop & Title Block
             val detailBannerShape = RoundedCornerShape(24.dp)
             Card(
