@@ -120,19 +120,36 @@ fun SettingsScreen(
                         .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = R.mipmap.ic_launcher),
-                        contentDescription = "App Icon",
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(CornerRadius.md))
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(CornerRadius.md)
-                            ),
-                        contentScale = ContentScale.Crop
-                    )
+                    val iconCardShape = RoundedCornerShape(20.dp)
+                    Surface(
+                        shape = iconCardShape,
+                        color = Color.White.copy(alpha = 0.9f),
+                        shadowElevation = 6.dp,
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White,
+                                    Color.White.copy(alpha = 0.4f)
+                                )
+                            )
+                        ),
+                        modifier = Modifier.size(62.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.mipmap.ic_launcher),
+                                contentDescription = "App Icon",
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.width(Spacing.md))
 
