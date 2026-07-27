@@ -149,8 +149,8 @@ fun HeroBanner(
             )
             Spacer(modifier = Modifier.height(Spacing.md))
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)) {
-                BannerTimeBox(value = remainingTime.days, label = "day")
-                BannerTimeBox(value = remainingTime.hours, label = "hour")
+                BannerTimeBox(value = remainingTime.days, label = "days")
+                BannerTimeBox(value = remainingTime.hours, label = "hours")
                 BannerTimeBox(value = remainingTime.minutes, label = "mins")
                 BannerTimeBox(value = remainingTime.seconds, label = "secs")
             }
