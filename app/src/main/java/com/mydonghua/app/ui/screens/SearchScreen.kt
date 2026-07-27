@@ -90,7 +90,10 @@ fun SearchScreen(
 
     val focusRequester = remember { FocusRequester() }
 
-
+    LaunchedEffect(Unit) {
+        delay(150)
+        focusRequester.requestFocus()
+    }
 
     var isSearchActive by remember { mutableStateOf(false) }
 
