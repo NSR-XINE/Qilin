@@ -53,13 +53,18 @@ fun DonghuaPoster(
     val context = LocalContext.current
     val initials = remember(title) { getTitleInitials(title) }
 
-    SubcomposeAsyncImage(
-        model = ImageRequest.Builder(context)
+    val imageRequest = remember(posterUrl, context) {
+        ImageRequest.Builder(context)
             .data(posterUrl?.takeIf { it.isNotBlank() && it != "null" })
-            .crossfade(true)
-            .diskCachePolicy(CachePolicy.ENABLED)
+            .crossfade(250)
             .memoryCachePolicy(CachePolicy.ENABLED)
-            .build(),
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .networkCachePolicy(CachePolicy.ENABLED)
+            .build()
+    }
+
+    SubcomposeAsyncImage(
+        model = imageRequest,
         contentDescription = title,
         modifier = modifier,
         contentScale = contentScale
