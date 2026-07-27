@@ -20,6 +20,8 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 
+import com.mydonghua.app.ui.theme.JustSansFamily
+
 /**
  * Extracts initials acronym from title (e.g. "Renegade Immortal" -> "RI", "Soul Land" -> "SL")
  */
@@ -103,6 +105,7 @@ fun PosterAcronymPlaceholder(
         if (showAcronym) {
             Text(
                 text = initials,
+                fontFamily = JustSansFamily,
                 fontSize = if (fontSize != TextUnit.Unspecified) fontSize else 7.5.sp,
                 fontWeight = FontWeight.Black,
                 color = primaryColor.copy(alpha = 0.9f),

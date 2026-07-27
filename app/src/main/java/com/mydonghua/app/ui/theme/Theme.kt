@@ -129,7 +129,12 @@ fun MyDonghuaTheme(
 
     MaterialTheme(
         colorScheme = finalScheme,
-        typography = AppTypography,
-        content = content
-    )
+        typography = AppTypography
+    ) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalTextStyle provides TextStyle(fontFamily = JustSansFamily)
+        ) {
+            content()
+        }
+    }
 }
