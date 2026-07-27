@@ -2,38 +2,45 @@ package com.mydonghua.app.ui.theme
 
 import android.os.Build
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.Typography
+import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
 
-val UbuntuSansFamily = FontFamily(
-    Font(R.font.ubuntu_sans_regular, FontWeight.Normal),
-    Font(R.font.ubuntu_sans_bold, FontWeight.Bold),
-    Font(R.font.ubuntu_sans_bold, FontWeight.ExtraBold)
+val JustSansFamily = FontFamily(
+    Font(R.font.just_sans_regular, FontWeight.Normal),
+    Font(R.font.just_sans_regular, FontWeight.Medium),
+    Font(R.font.just_sans_exbold, FontWeight.SemiBold),
+    Font(R.font.just_sans_exbold, FontWeight.Bold),
+    Font(R.font.just_sans_exbold, FontWeight.ExtraBold)
 )
 
 val AppTypography = Typography(
-    headlineLarge = Typography().headlineLarge.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
-    headlineMedium = Typography().headlineMedium.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
-    headlineSmall = Typography().headlineSmall.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
-    titleLarge = Typography().titleLarge.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Bold),
-    titleMedium = Typography().titleMedium.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.SemiBold),
-    titleSmall = Typography().titleSmall.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Medium),
-    bodyLarge = Typography().bodyLarge.copy(fontFamily = UbuntuSansFamily),
-    bodyMedium = Typography().bodyMedium.copy(fontFamily = UbuntuSansFamily),
-    bodySmall = Typography().bodySmall.copy(fontFamily = UbuntuSansFamily),
-    labelLarge = Typography().labelLarge.copy(fontFamily = UbuntuSansFamily, fontWeight = FontWeight.Medium),
-    labelMedium = Typography().labelMedium.copy(fontFamily = UbuntuSansFamily),
-    labelSmall = Typography().labelSmall.copy(fontFamily = UbuntuSansFamily)
+    displayLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 57.sp, lineHeight = 64.sp),
+    displayMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 45.sp, lineHeight = 52.sp),
+    displaySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 36.sp, lineHeight = 44.sp),
+    headlineLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 32.sp, lineHeight = 40.sp),
+    headlineMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 36.sp),
+    headlineSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 32.sp),
+    titleLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 28.sp),
+    titleMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 24.sp),
+    titleSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+    bodyLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp),
+    bodySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
+    labelLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+    labelMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 16.sp),
+    labelSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp)
 )
 
 private val DarkColorScheme = darkColorScheme(
