@@ -44,7 +44,6 @@ import com.kyant.backdrop.backdrops.LayerBackdrop
 fun ShowDetailScreen(
     showId: String,
     viewModel: ShowsViewModel,
-    backdrop: LayerBackdrop,
     onWatchClick: (String) -> Unit,
     onEditClick: (Show) -> Unit,
     onNavigateBack: () -> Unit,
@@ -396,14 +395,14 @@ fun ShowDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            show.genres!!.split(",").forEach { genre ->
+                            show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.forEach { genre ->
                                 Surface(
                                     shape = RoundedCornerShape(CornerRadius.xs),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                                 ) {
                                     Text(
-                                        text = genre.trim(),
+                                        text = genre,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -445,15 +444,6 @@ fun ShowDetailScreen(
                 Spacer(modifier = Modifier.height(Spacing.xxl))
             }
         }
-
-        // Top Header Bar (Exact Home Screen Header Bar with Back & Edit Buttons)
-        com.mydonghua.app.ui.GlassHeader(
-            title = show.title,
-            backdrop = backdrop,
-            isDark = true,
-            onBackClick = onNavigateBack,
-            onEditClick = { onEditClick(show) }
-        )
     }
 }
 
