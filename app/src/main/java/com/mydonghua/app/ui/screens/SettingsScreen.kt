@@ -120,41 +120,19 @@ fun SettingsScreen(
                         .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val iconShape = RoundedCornerShape(CornerRadius.md)
-                    Box(
+                    Image(
+                        painter = painterResource(id = R.mipmap.ic_launcher),
+                        contentDescription = "App Icon",
                         modifier = Modifier
                             .size(56.dp)
-                            .clip(iconShape)
-                            .hazeChild(state = hazeState, shape = iconShape)
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                                    )
-                                )
-                            )
+                            .clip(RoundedCornerShape(CornerRadius.md))
                             .border(
                                 width = 1.dp,
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.5f),
-                                        Color.White.copy(alpha = 0.15f)
-                                    )
-                                ),
-                                shape = iconShape
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(CornerRadius.md)
                             ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher),
-                            contentDescription = "App Icon",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(CornerRadius.sm)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
+                        contentScale = ContentScale.Crop
+                    )
 
                     Spacer(modifier = Modifier.width(Spacing.md))
 
