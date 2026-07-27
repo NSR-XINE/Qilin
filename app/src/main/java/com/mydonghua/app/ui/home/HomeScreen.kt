@@ -102,30 +102,36 @@ fun HeroBanner(
         }
     }
 
-    val bannerShape = RoundedCornerShape(24.dp)
+    val bannerShape = RoundedCornerShape(CornerRadius.card)
     Card(
         shape = bannerShape,
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.5f),
-                    Color.White.copy(alpha = 0.15f)
+                    Color.White.copy(alpha = 0.45f),
+                    Color.White.copy(alpha = 0.12f)
                 )
             )
         ),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(190.dp)
             .clickable { onBannerClick() }
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(bannerShape)
+        ) {
             DonghuaPoster(
                 posterUrl = show.poster,
                 title = show.title,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(bannerShape),
                 contentScale = ContentScale.Crop,
                 showAcronym = false
             )
