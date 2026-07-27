@@ -102,12 +102,23 @@ fun HeroBanner(
         }
     }
 
+    val bannerShape = RoundedCornerShape(CornerRadius.banner)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(216.dp)
-            .clip(RoundedCornerShape(CornerRadius.banner))
+            .clip(bannerShape)
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.45f),
+                        Color.White.copy(alpha = 0.12f)
+                    )
+                ),
+                shape = bannerShape
+            )
             .clickable { onBannerClick() }
     ) {
         DonghuaPoster(
@@ -164,7 +175,7 @@ fun HeroBanner(
 @Composable
 private fun BannerTimeBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
             .width(48.dp)

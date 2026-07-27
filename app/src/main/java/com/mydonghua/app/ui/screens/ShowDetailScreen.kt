@@ -453,7 +453,7 @@ fun ShowDetailScreen(
 @Composable
 private fun DetailCountdownBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(12.dp)
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = Modifier
