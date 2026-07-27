@@ -444,31 +444,40 @@ fun WeeklyScheduleSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = Spacing.xs)
-                        .padding(bottom = Spacing.sm)
+                        .padding(bottom = Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     filteredShows.forEach { show ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(CornerRadius.sm))
+                                .clip(RoundedCornerShape(CornerRadius.chip))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f))
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                                    shape = RoundedCornerShape(CornerRadius.chip)
+                                )
                                 .clickable { onShowClick(show.id) }
-                                .padding(horizontal = Spacing.sm, vertical = Spacing.md),
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = show.title,
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
+                            Spacer(modifier = Modifier.width(Spacing.sm))
                             Text(
                                 text = show.releaseTime ?: "",
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
