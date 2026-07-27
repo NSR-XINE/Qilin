@@ -133,7 +133,7 @@ fun SettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_launcher),
+                            painter = painterResource(id = R.mipmap.ic_launcher),
                             contentDescription = "App Icon",
                             tint = Color.Unspecified,
                             modifier = Modifier.size(40.dp)
