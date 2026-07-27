@@ -138,7 +138,7 @@ fun AddEditShowScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         OutlinedTextField(
@@ -146,9 +146,7 @@ fun AddEditShowScreen(
                             onValueChange = { title = it },
                             label = { Text("English Title *") },
                             singleLine = true,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(CornerRadius.sm)
                         )
 
@@ -345,7 +343,7 @@ fun AddEditShowScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         OutlinedTextField(
@@ -353,9 +351,7 @@ fun AddEditShowScreen(
                             onValueChange = { poster = it },
                             label = { Text("Poster URL") },
                             singleLine = true,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(CornerRadius.sm)
                         )
 
