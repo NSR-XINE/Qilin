@@ -339,6 +339,12 @@ fun LiquidGlassNavBar(
                             },
                         contentAlignment = Alignment.Center,
                     ) {
+                        val tabDescription = when (route) {
+                            "home" -> "Home tab"
+                            "airing" -> "Airing shows tab"
+                            "complete" -> "Completed shows tab"
+                            else -> "Upcoming and stopped shows tab"
+                        }
                         NavBarIcon(
                             iconRes = when (route) {
                                 "home" -> R.drawable.ic_home
@@ -346,6 +352,7 @@ fun LiquidGlassNavBar(
                                 "complete" -> R.drawable.ic_complete
                                 else -> R.drawable.ic_stopped
                             },
+                            contentDescription = tabDescription,
                             selected = currentTabIndex == position,
                             onClick = {
                                 currentTabIndex = position
@@ -401,6 +408,7 @@ fun LiquidGlassNavBar(
 @Composable
 private fun NavBarIcon(
     iconRes: Int,
+    contentDescription: String,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -418,7 +426,7 @@ private fun NavBarIcon(
     ) {
         Icon(
             painter = painterResource(id = iconRes),
-            contentDescription = null,
+            contentDescription = contentDescription,
             modifier = Modifier.size(IconSize.xl),
             tint = if (selected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurfaceVariant,
