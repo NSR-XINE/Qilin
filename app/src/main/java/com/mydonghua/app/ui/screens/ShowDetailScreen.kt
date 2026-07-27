@@ -119,16 +119,15 @@ fun ShowDetailScreen(
                         showAcronym = false
                     )
 
-                    // Liquid Gradient Overlays for smooth blend & text readability
+                    // Liquid Gradient Overlays for high poster clarity & text readability
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
                                 Brush.verticalGradient(
-                                    0.0f to Color.Black.copy(alpha = 0.5f),
+                                    0.0f to Color.Black.copy(alpha = 0.35f),
                                     0.4f to Color.Transparent,
-                                    0.75f to MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
-                                    1.0f to MaterialTheme.colorScheme.background
+                                    1.0f to Color.Black.copy(alpha = 0.75f)
                                 )
                             )
                     )
