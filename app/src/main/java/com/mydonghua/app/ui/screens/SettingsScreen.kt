@@ -120,35 +120,41 @@ fun SettingsScreen(
                         .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val iconCardShape = RoundedCornerShape(20.dp)
-                    Surface(
-                        shape = iconCardShape,
-                        color = Color.White.copy(alpha = 0.9f),
-                        shadowElevation = 6.dp,
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 1.dp,
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White,
-                                    Color.White.copy(alpha = 0.4f)
+                    val iconCardShape = RoundedCornerShape(22.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(iconCardShape)
+                            .hazeChild(state = hazeState, shape = iconCardShape)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.65f),
+                                        Color.White.copy(alpha = 0.25f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                    )
                                 )
                             )
-                        ),
-                        modifier = Modifier.size(62.dp)
+                            .border(
+                                width = 1.5.dp,
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.3f)
+                                    )
+                                ),
+                                shape = iconCardShape
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.mipmap.ic_launcher),
-                                contentDescription = "App Icon",
-                                modifier = Modifier
-                                    .size(52.dp)
-                                    .clip(RoundedCornerShape(16.dp)),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
+                        Image(
+                            painter = painterResource(id = R.mipmap.ic_launcher),
+                            contentDescription = "App Icon",
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentScale = ContentScale.Fit
+                        )
                     }
 
                     Spacer(modifier = Modifier.width(Spacing.md))
