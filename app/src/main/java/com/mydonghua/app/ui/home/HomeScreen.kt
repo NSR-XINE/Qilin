@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -298,55 +300,61 @@ fun RecentlyUpdatedRow(
     onShowClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val lazyListState = rememberLazyListState()
+    val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
+
     LazyRow(
+        state = lazyListState,
+        flingBehavior = snapFlingBehavior,
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = Spacing.lg),
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         items(shows, key = { it.id }) { show ->
-            GlassSection(modifier = Modifier.width(265.dp)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onShowClick(show.id) }
-                        .padding(Spacing.md),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+            Box(modifier = Modifier.fillParentMaxWidth()) {
+                GlassSection(modifier = Modifier.fillMaxWidth()) {
+                    Row(
                         modifier = Modifier
-                            .size(width = 64.dp, height = 88.dp)
-                            .clip(RoundedCornerShape(CornerRadius.sm))
+                            .fillMaxWidth()
+                            .clickable { onShowClick(show.id) }
+                            .padding(Spacing.md),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        DonghuaPoster(
-                            posterUrl = show.poster,
-                            title = show.title,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            fontSize = 7.5.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(Spacing.md))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = show.title,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        val relativeTime = if (show.lastUpdated != null) {
-                            DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
-                        } else ""
-                        if (relativeTime.isNotEmpty()) {
-                            Text(
-                                text = relativeTime,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp),
-                                maxLines = 1
+                        Box(
+                            modifier = Modifier
+                                .size(width = 64.dp, height = 88.dp)
+                                .clip(RoundedCornerShape(CornerRadius.sm))
+                        ) {
+                            DonghuaPoster(
+                                posterUrl = show.poster,
+                                title = show.title,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                fontSize = 7.5.sp
                             )
+                        }
+                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = show.title,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            val relativeTime = if (show.lastUpdated != null) {
+                                DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
+                            } else ""
+                            if (relativeTime.isNotEmpty()) {
+                                Text(
+                                    text = relativeTime,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
