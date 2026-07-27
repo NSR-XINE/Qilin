@@ -160,29 +160,51 @@ fun HeroBanner(
 
 @Composable
 private fun BannerTimeBox(value: Long, label: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
-            .width(56.dp)
-            .height(50.dp)
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f), RoundedCornerShape(CornerRadius.sm))
-            .padding(vertical = 2.dp)
+            .width(58.dp)
+            .height(52.dp)
+            .clip(RoundedCornerShape(CornerRadius.sm))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.22f),
+                        Color.White.copy(alpha = 0.07f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.45f),
+                        Color.White.copy(alpha = 0.12f)
+                    )
+                ),
+                shape = RoundedCornerShape(CornerRadius.sm)
+            )
+            .padding(vertical = 3.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = String.format("%02d", value),
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = label,
-            fontSize = 9.5.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.White.copy(alpha = 0.75f),
-            textAlign = TextAlign.Center
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = String.format("%02d", value),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = label,
+                fontSize = 9.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
