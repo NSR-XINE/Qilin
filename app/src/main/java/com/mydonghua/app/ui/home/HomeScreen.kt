@@ -118,7 +118,7 @@ fun HeroBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(190.dp)
+            .height(210.dp)
             .clickable { onBannerClick() }
     ) {
         Box(
