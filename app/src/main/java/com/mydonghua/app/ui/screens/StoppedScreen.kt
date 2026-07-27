@@ -27,10 +27,9 @@ fun StoppedScreen(
     val shows by viewModel.stoppedShows.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        modifier = modifier
-    ) { paddingValues ->
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
         if (shows.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -59,7 +58,7 @@ fun StoppedScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Upcoming & On Hiatus",
+                            text = "Hiatus / Upcoming",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onBackground
                         )

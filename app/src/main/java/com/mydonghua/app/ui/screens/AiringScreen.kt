@@ -27,10 +27,9 @@ fun AiringScreen(
     val shows by viewModel.airingShows.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        modifier = modifier
-    ) { paddingValues ->
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
         if (shows.isEmpty()) {
             Box(
                 modifier = Modifier

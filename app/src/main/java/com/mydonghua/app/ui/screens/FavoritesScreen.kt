@@ -26,10 +26,9 @@ fun FavoritesScreen(
     val shows by viewModel.favoriteShows.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        modifier = modifier
-    ) { paddingValues ->
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
         if (shows.isEmpty()) {
             Box(
                 modifier = Modifier
