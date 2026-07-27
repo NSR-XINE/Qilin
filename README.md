@@ -1,173 +1,159 @@
 # 东画 My Donghua (Android App)
 
-A sleek, high-aesthetic dark-themed native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, and receive native push notifications.
+A sleek, high-aesthetic dark-themed native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, install home screen widgets, and receive native push notifications.
 
 ---
 
-## Folder Structure
+## 🌟 Tech Stack & Key Technologies
+
+- **Language & Runtime**: 100% Native Kotlin 2.0.0 (JVM 17)
+- **UI Framework**: Jetpack Compose (BOM `2024.09.00`), Material 3, Navigation-Compose
+- **Visual Design**: 
+  - **Haze 0.7.3** — Real-time backdrop blur & glassmorphism
+  - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
+- **Architecture**: Clean Architecture + MVVM + Dagger Hilt Dependency Injection
+- **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries, Jetpack DataStore Preferences
+- **Network & Parsing**: Retrofit 2.11 + OkHttp 4.12 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
+- **Media Playback**: ExoPlayer / Media3 1.3.1 (Supports `.mp4`, `.m3u8`, `.mkv` direct streaming & custom web player fallback)
+- **Background & Scheduling**: Android `AlarmManager` (DST-aware exact alarms), `PowerManager.WakeLock` boot receivers, App Widgets
+
+---
+
+## 📁 Folder Structure
 
 ```
 my_donghua/
 ├── app/
-│   ├── build.gradle
+│   ├── build.gradle                          # Dependencies, Kotlin 2.0 Compose compiler, Hilt config
 │   ├── proguard-rules.pro
 │   └── src/main/
-│       ├── AndroidManifest.xml
-│       └── java/com/mydonghua/app/
-│           ├── MainActivity.kt           # NavHost, entry activity, permission requester
-│           ├── WatchActivity.kt          # ExoPlayer/Media3 media playback player with browser fallback
-│           ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
-│           ├── BootReceiver.kt           # Re-schedules alarms on boot or package replace (30s WakeLock)
-│           ├── NotificationReceiver.kt   # High-priority Heads-up Notification creator & de-duplicator
-│           ├── data/
-│           │   ├── db/
-│           │   │   ├── AppDatabase.kt    # Room database (v3 Schema) with singleton provider
-│           │   │   ├── ShowDao.kt        # Show CRUD queries
-│           │   │   ├── SettingsDao.kt    # Setting CRUD queries
-│           │   │   ├── WatchHistoryDao.kt# Watch history CRUD queries
-│           │   │   ├── ShowEntity.kt     # Room entity matching legacy v2 SQLite shows table
-│           │   │   ├── SettingEntity.kt  # Room entity matching legacy v2 SQLite settings table
-│           │   │   ├── WatchHistoryEntity.kt # Room entity matching watch_history table
-│           │   │   └── RoomSyncHelper.kt # Blocking bridge for legacy SQLite imports/conversions
-│           │   ├── pref/
-│           │   │   └── ThemePreference.kt# Jetpack DataStore preferences for theme/accent/elements toggles
-│           │   └── service/
-│           │       └── PosterFetchService.kt # Retrofit MAL, AniList GraphQL, and scrapers
-│           ├── domain/
-│           │   └── model/
-│           │       ├── CountdownCalculator.kt # DST-safe countdown ticks calculations
-│           │       └── StatsCalculator.kt # Analytics builder for total episodes, streak, hours watched
-│           └── ui/
-│               ├── common/
-│               │   └── ShowCard.kt       # Card grid element with ticking coroutine countdown timer
-│               ├── home/
-│               │   └── HomeScreen.kt     # Branded header, Hero banner, scroll rows, weekly schedule
-│               ├── theme/
-│               │   ├── Color.kt          # Preset light, dark, and AMOLED color tokens
-│               │   └── Theme.kt          # MaterialTheme with dynamic wallpaper matching on API 31+
-│               └── screens/
-│                   ├── AiringScreen.kt   # Filtered list of currently airing shows
-│                   ├── CompletedScreen.kt# Filtered list of completed shows
-│                   ├── StoppedScreen.kt  # Filtered list of hiatus/stopped shows
-│                   ├── FavoritesScreen.kt# Filtered list of user-favorited shows
-│                   ├── AddEditShowScreen.kt # Form editing / creation screen with poster auto-fill
-│                   ├── ShowDetailScreen.kt # Full-bleed hero banner, episode controllers, notes
-│                   ├── SearchScreen.kt   # Subsequence fuzzy search bar with dropdown suggestions
-│                   ├── SettingsScreen.kt # Theme mode, accent selectors, visibility toggles, SAF sharing
-│                   ├── StatsScreen.kt    # 8-card statistics panel + genre/studio tag lists
-│                   ├── CalendarScreen.kt # Monthly release calendar grid with indicator dots
-│                   ├── CollectionsScreen.kt # Show group folders backed by collection_id field
-│                   ├── HistoryScreen.kt  # Date-grouped watch log listing thumbnails
-│                   └── ShowsViewModel.kt # Unified view state flow manager
+│       ├── AndroidManifest.xml               # Permissions, receivers, activities, widget providers
+│       └── java/
+│           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system (22 files)
+│           └── com/mydonghua/app/
+│               ├── DonghuaApp.kt             # Application class (@HiltAndroidApp)
+│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav
+│               ├── WatchActivity.kt          # ExoPlayer / Media3 full-screen video player
+│               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
+│               ├── BootReceiver.kt           # Re-schedules alarms on boot or app update (WakeLock)
+│               ├── NotificationReceiver.kt   # High-priority Heads-up Notification creator
+│               ├── CountdownWidget.kt        # App Widget provider for Home Screen release countdowns
+│               ├── di/                       # Dagger Hilt Modules
+│               │   ├── DatabaseModule.kt     # Room AppDatabase & DAO injection
+│               │   └── RepositoryModule.kt   # Repository interface bindings
+│               ├── data/
+│               │   ├── db/
+│               │   │   ├── AppDatabase.kt    # Room database (v3 Schema)
+│               │   │   ├── ShowDao.kt        # Show CRUD reactive queries
+│               │   │   ├── SettingsDao.kt    # Key-value setting queries
+│               │   │   ├── WatchHistoryDao.kt# Episode progress history queries
+│               │   │   ├── ShowEntity.kt     # Room show entity
+│               │   │   ├── SettingEntity.kt  # Room setting entity
+│               │   │   ├── WatchHistoryEntity.kt # Room watch history entity
+│               │   │   └── RoomSyncHelper.kt # Legacy SQLite import & conversion bridge
+│               │   ├── pref/
+│               │   │   └── ThemePreference.kt# DataStore preferences for theme & UI visibility
+│               │   ├── repository/
+│               │   │   ├── ShowRepository.kt # Repository interface
+│               │   │   └── ShowRepositoryImpl.kt # Room & state data source implementation
+│               │   └── service/
+│               │       └── PosterFetchService.kt # Jikan, AniList GraphQL & HTML scrapers
+│               ├── domain/
+│               │   └── model/
+│               │       ├── Show.kt           # Domain entity
+│               │       ├── CountdownCalculator.kt # DST-safe countdown tick logic
+│               │       └── StatsCalculator.kt # Analytics & statistics builder
+│               └── ui/
+│                   ├── LiquidGlassNavBar.kt  # Custom liquid glass bottom navigation bar
+│                   ├── common/               # ShowCard, GlassCard, search bars, tags
+│                   ├── home/                 # HomeScreen layout, hero banner, weekly schedule
+│                   ├── theme/                # Color palettes, Material 3 theme & dynamic wallpaper matching
+│                   └── screens/              # Airing, Completed, Stopped, Favorites, Detail, Search, Settings, Stats, Calendar, Collections, History
+├── AGENTS.md
 └── README.md
 ```
 
 ---
 
-## Features
+## ✨ Features
 
-- **Track shows** by status: Airing, Completed, Stopped
-- **Hero countdown banner** for the next releasing show (full-cover poster)
-- **Live countdown clocks** on every show card (D/H/M/S tick every second via coroutines)
-- **Weekly schedule calendar** with day tabs, today highlighting, time-sorted items
-- **Calendar view** — monthly grid with release-day dots, week preview
-- **Favorites** — heart-toggle on any show, dedicated Favorites tab
-- **Watch History** — chronological date-grouped log of episode progress changes
-- **Statistics dashboard** — totals, airing/completed/stopped counts, episodes, hours watched, completion rate, day streak, weekly/monthly activity, top genres & studios, average rating, longest series
-- **Continue Watching** — horizontal scroll section showing in-progress shows with progress bars; sorted by most recently opened
-- **Recently Updated** — horizontal scroll section showing the 10 most recently modified shows
-- **Collections** — group related shows by collection folders
-- **Native push notifications** via Android AlarmManager (DST-aware); configurable quiet hours
-- **Poster auto-fill** from Jikan (MyAnimeList), AniList GraphQL, DonghuaStream, AnimeCountdown
-- **Export/Import** watchlist as JSON backup via Storage Access Framework (SAF) and native share intents
-- **Streaming media** — ExoPlayer / Media3 direct video playback (`.mp4`, `.m3u8`, `.mkv`) with safe system browser fallback for external streaming sites
-- **Multiple themes**: Dark, AMOLED (true black), Light; dynamic accent colors
-- **Advanced filtering** — filter by genre, studio, year, rating, max episodes, sort by countdown/alphabetical/progress/last-updated
-- **Advanced search** — recent searches, trending suggestions, subsequence fuzzy matching, highlighted matches
-- **Smart Home Dashboard** — toggle visibility of countdown banner, continue watching, recently updated, and weekly schedule sections
-- **Material You dynamic colors** — accent color auto-selected from system wallpaper on Android 12+
-- **Bottom navigation**: Home, Airing, Add, Complete, Stopped, Favorites
+- 📺 **Watchlist Tracking**: Categorize shows into Airing (`ongoing`), Completed (`completed`), and Stopped/Hiatus (`stopped`).
+- ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
+- 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
+- 🎨 **Kyant Liquid Glass & Haze Backgrounds**: Ultra-sleek glassmorphism UI with liquid refraction, adaptive brightness/saturation, and real-time backdrop blur.
+- 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
+- 🔔 **Native Push Notifications**: Automatic DST-aware heads-up notifications when a new episode releases.
+- 📊 **Statistics Dashboard**: 8-card analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.
+- 🎬 **Native Media Playback**: ExoPlayer / Media3 video player supporting direct streams (`.mp4`, `.m3u8`, `.mkv`) and external web stream browser fallbacks.
+- 🖼️ **Automated Poster Fetching**: Auto-fills high-res cover art from Jikan (MyAnimeList), AniList GraphQL, DonghuaStream, and AnimeCountdown.
+- 📁 **Collections & Favorites**: Group related donghua series into collection folders and bookmark favorites with one tap.
+- 💾 **JSON Backup & SAF Integration**: Export and import full watchlists via Android Storage Access Framework (SAF).
+- 🌓 **Multiple Themes**: Dark Mode, AMOLED (True Black), Light Mode, and Material You dynamic color extraction on Android 12+.
 
 ---
 
-## Room Database Schema (v3)
+## 🗄️ Database Schema (Room v3)
 
-All watchlist records are stored in a native Room SQLite database (`mydonghua.db`) with three tables:
+All records are stored locally in native SQLite (`mydonghua.db`):
 
 ### 1. `shows`
-
 | Column | Type | Description |
 |---|---|---|
-| `id` | TEXT PK | Show identifier |
-| `title` | TEXT NOT NULL | English/Romaji title |
+| `id` | TEXT (PK) | Unique show identifier |
+| `title` | TEXT (NOT NULL) | English / Romaji title |
 | `title_zh` | TEXT | Chinese title |
 | `status` | TEXT | `ongoing`, `completed`, `stopped` |
 | `release_day` | TEXT | `Monday` – `Sunday` |
-| `release_time` | TEXT | `HH:MM` |
-| `current_ep` | INTEGER | Watched episodes |
+| `release_time` | TEXT | `HH:MM` release time |
+| `current_ep` | INTEGER | Watched episode count |
 | `total_ep` | INTEGER | Total episodes (0 = unknown) |
 | `poster` | TEXT | Poster image URL |
-| `watch_url` | TEXT | DonghuaStream or custom URL |
+| `watch_url` | TEXT | Streaming video URL |
 | `countdown_url` | TEXT | AnimeCountdown page URL |
-| `notes` | TEXT | Synopsis and personal notes |
-| `is_favorite` | INTEGER | 0 or 1 |
-| `rating` | INTEGER | User rating 1–10 |
+| `notes` | TEXT | Synopsis & personal notes |
+| `is_favorite` | INTEGER | Favorite flag (`0` or `1`) |
+| `rating` | INTEGER | User rating (1–10) |
 | `last_updated` | INTEGER | Unix ms timestamp |
 | `date_added` | INTEGER | Unix ms timestamp |
-| `alarm_request_code` | INTEGER | Unique alarm identifier |
+| `alarm_request_code` | INTEGER | Unique notification request code |
 | `genres` | TEXT | Comma-separated genres |
-| `studio` | TEXT | Animation studio |
+| `studio` | TEXT | Animation studio name |
 | `release_year` | INTEGER | Year of release |
-| `language` | TEXT | Language (e.g. Chinese, Japanese) |
-| `collection_id` | TEXT | Collection/group name |
-
-Indexes: `idx_shows_status`, `idx_shows_release_day`, `idx_shows_favorite`, `idx_genres`, `idx_collection`, `idx_last_updated`
+| `language` | TEXT | Language |
+| `collection_id` | TEXT | Collection folder name |
 
 ### 2. `settings`
-
-| Column | Type |
-|---|---|
-| `key` | TEXT PK |
-| `value` | TEXT |
+| Column | Type | Description |
+|---|---|---|
+| `key` | TEXT (PK) | Setting key |
+| `value` | TEXT | Setting value |
 
 ### 3. `watch_history`
-
-| Column | Type |
-|---|---|
-| `id` | INTEGER PK AUTOINCREMENT |
-| `show_id` | TEXT NOT NULL |
-| `episode_num` | INTEGER NOT NULL |
-| `watched_timestamp` | INTEGER NOT NULL |
-
-Capped at 500 entries (oldest removed).
+| Column | Type | Description |
+|---|---|---|
+| `id` | INTEGER (PK AUTO) | History entry ID |
+| `show_id` | TEXT (NOT NULL) | Show ID reference |
+| `episode_num` | INTEGER (NOT NULL) | Watched episode number |
+| `watched_timestamp` | INTEGER (NOT NULL) | Log timestamp |
 
 ---
 
-## Notification Alarm Flow
+## 🛠️ Building & Compilation
 
-1. Show details or episode progress adjustments trigger alarm updates.
-2. Calls `AlarmScheduler.schedule` → registers `AlarmManager` intent with `FLAG_IMMUTABLE` (API 23+).
-3. `AlarmScheduler` calculates next release time with DST-aware calendar calendar logic.
-4. `BootReceiver` uses `PowerManager.WakeLock` (30s) to query Room database and reschedule all alarms after reboot or package upgrade.
-5. `NotificationReceiver` de-duplicates by alarm code hash and auto-reschedules after firing.
-6. Alarm fires at release time → high-priority heads-up notification.
-7. Tapping notification opens the app and navigates to the show's detail screen.
+### Requirements
+- **JDK**: Java 17+
+- **Android SDK**: `compileSdk 36`, `targetSdk 35`, `minSdk 29`
+- **Gradle**: 8.6+ with Kotlin 2.0.0
 
----
-
-## Compilation
+### Build Commands
 
 ```bash
+# Build Debug APK
 ./gradlew assembleDebug
+
+# Build Release APK
 ./gradlew assembleRelease
+
+# Run Unit Tests
+./gradlew test
 ```
-
----
-
-## Architecture Notes
-
-- **Pure Native Stack** — 100% written in Kotlin using Jetpack Compose, Material 3, and Navigation-Compose.
-- **Data Persistence** — Room Database handles shows, history logs, and settings. Jetpack DataStore manages theme, color presets, and dashboard UI toggles.
-- **Network & Parsing** — Retrofit + OkHttp handles API calls to Jikan (MyAnimeList) and AniList GraphQL endpoints.
-- **Media Playback** — ExoPlayer/Media3 plays direct streams (`.mp4`, `.m3u8`, `.mkv`) natively with full screen controls.
-- **Auto-Sync** — WorkManager schedules background synchronization workers periodically.
