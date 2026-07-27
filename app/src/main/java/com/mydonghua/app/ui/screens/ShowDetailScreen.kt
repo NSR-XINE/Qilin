@@ -250,9 +250,9 @@ fun ShowDetailScreen(
                             }
 
                             if (!countdownTime.airingNow && !countdownTime.elapsed) {
-                                Spacer(modifier = Modifier.height(Spacing.md))
+                                Spacer(modifier = Modifier.height(Spacing.sm))
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     DetailCountdownBox(value = countdownTime.days, label = "days")

@@ -104,8 +104,8 @@ fun HeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(Spacing.lg)
-            .aspectRatio(16f / 9f)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+            .height(210.dp)
             .clip(RoundedCornerShape(CornerRadius.banner))
             .clickable { onBannerClick() }
     ) {
@@ -122,8 +122,8 @@ fun HeroBanner(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        0.4f to Color.Transparent,
-                        1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
+                        0.2f to Color.Transparent,
+                        1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f)
                     )
                 )
         )
@@ -131,26 +131,26 @@ fun HeroBanner(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(Spacing.lg)
+                .padding(horizontal = Spacing.lg, vertical = Spacing.md)
         ) {
             Text(
                 text = show.title,
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(Spacing.xs))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = if (remainingTime.airingNow) "New episode available now"
                 else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                fontSize = 13.sp,
-                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 12.5.sp,
+                color = Color.White.copy(alpha = 0.85f),
                 maxLines = 1
             )
-            Spacer(modifier = Modifier.height(Spacing.md))
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 BannerTimeBox(value = remainingTime.days, label = "days")
                 BannerTimeBox(value = remainingTime.hours, label = "hours")
                 BannerTimeBox(value = remainingTime.minutes, label = "mins")
