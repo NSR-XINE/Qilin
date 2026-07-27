@@ -419,6 +419,34 @@ fun SettingsScreen(
                 }
             }
 
+            SectionHeader("About My Donghua")
+            GlassSection {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    SettingsInfoItem(
+                        title = "App Version",
+                        value = "v2.4.0 (Build 2026.07)"
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+                    SettingsInfoItem(
+                        title = "Developer & License",
+                        value = "NSR-XINE • Open Source"
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+                    SettingsActionItem(
+                        title = "GitHub Repository",
+                        subtitle = "github.com/NSR-XINE/my_donguha",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE/my_donguha"))
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(Spacing.xxl))
         }
     }
@@ -526,5 +554,22 @@ private fun SettingsActionItem(
             }
         }
         Text("\u2192", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+private fun SettingsInfoItem(
+    title: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(title, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+        Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
     }
 }
