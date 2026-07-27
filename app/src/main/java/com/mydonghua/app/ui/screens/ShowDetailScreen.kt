@@ -211,6 +211,8 @@ fun ShowDetailScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Main Body Content
             Column(
                 modifier = Modifier
@@ -251,7 +253,7 @@ fun ShowDetailScreen(
                             }
 
                             if (!countdownTime.airingNow && !countdownTime.elapsed) {
-                                Spacer(modifier = Modifier.height(Spacing.sm))
+                                Spacer(modifier = Modifier.height(12.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                                     verticalAlignment = Alignment.CenterVertically
