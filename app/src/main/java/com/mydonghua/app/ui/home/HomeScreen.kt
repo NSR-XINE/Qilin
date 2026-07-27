@@ -148,7 +148,7 @@ fun HeroBanner(
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(Spacing.md))
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs + 2.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 BannerTimeBox(value = remainingTime.days, label = "days")
                 BannerTimeBox(value = remainingTime.hours, label = "hours")
                 BannerTimeBox(value = remainingTime.minutes, label = "mins")
@@ -161,11 +161,11 @@ fun HeroBanner(
 @Composable
 private fun BannerTimeBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(10.dp)
     Box(
         modifier = Modifier
-            .width(58.dp)
-            .height(52.dp)
+            .width(48.dp)
+            .height(42.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
@@ -186,7 +186,7 @@ private fun BannerTimeBox(value: Long, label: String) {
                 ),
                 shape = shape
             )
-            .padding(vertical = 3.dp),
+            .padding(vertical = 2.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -195,14 +195,14 @@ private fun BannerTimeBox(value: Long, label: String) {
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 17.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = label,
-                fontSize = 9.5.sp,
+                fontSize = 8.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center
