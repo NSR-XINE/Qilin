@@ -112,7 +112,7 @@ fun HeroBanner(
             title = show.title,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            fontSize = 32.sp
+            showAcronym = false
         )
 
         Box(

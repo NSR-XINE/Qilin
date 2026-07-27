@@ -1,23 +1,18 @@
 package com.mydonghua.app.ui.common
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
@@ -50,6 +45,7 @@ fun DonghuaPoster(
     title: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
+    showAcronym: Boolean = true,
     fontSize: TextUnit = TextUnit.Unspecified
 ) {
     val context = LocalContext.current
@@ -72,6 +68,7 @@ fun DonghuaPoster(
         } else {
             PosterAcronymPlaceholder(
                 initials = initials,
+                showAcronym = showAcronym,
                 fontSize = fontSize
             )
         }
@@ -81,6 +78,7 @@ fun DonghuaPoster(
 @Composable
 fun PosterAcronymPlaceholder(
     initials: String,
+    showAcronym: Boolean = true,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified
 ) {
@@ -94,37 +92,20 @@ fun PosterAcronymPlaceholder(
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        primaryColor.copy(alpha = 0.3f),
+                        primaryColor.copy(alpha = 0.25f),
                         surfaceVariant.copy(alpha = 0.85f),
-                        secondaryColor.copy(alpha = 0.25f)
+                        secondaryColor.copy(alpha = 0.2f)
                     )
                 )
-            )
-            .border(
-                width = 1.dp,
-                color = primaryColor.copy(alpha = 0.35f)
             ),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = primaryColor.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        if (showAcronym) {
             Text(
                 text = initials,
-                fontSize = if (fontSize != TextUnit.Unspecified) fontSize else 22.sp,
+                fontSize = if (fontSize != TextUnit.Unspecified) fontSize else 18.sp,
                 fontWeight = FontWeight.Black,
-                color = primaryColor,
+                color = primaryColor.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center
             )
         }
