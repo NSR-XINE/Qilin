@@ -98,7 +98,7 @@ fun ShowDetailScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .padding(horizontal = Spacing.lg, vertical = 8.dp)
                     .height(340.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
