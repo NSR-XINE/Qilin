@@ -57,7 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 @Composable
 fun GlassHeader(
     title: String,
-    backdrop: LayerBackdrop? = null,
+    backdrop: LayerBackdrop,
     isDark: Boolean = true,
     onDrawerOpen: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,

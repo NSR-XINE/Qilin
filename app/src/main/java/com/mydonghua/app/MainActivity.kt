@@ -309,6 +309,7 @@ class MainActivity : ComponentActivity() {
                                 ShowDetailScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
+                                backdrop = backdrop,
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)

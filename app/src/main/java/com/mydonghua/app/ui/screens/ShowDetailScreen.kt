@@ -38,10 +38,13 @@ import com.mydonghua.app.ui.theme.JustSansFamily
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 
+import com.kyant.backdrop.backdrops.LayerBackdrop
+
 @Composable
 fun ShowDetailScreen(
     showId: String,
     viewModel: ShowsViewModel,
+    backdrop: LayerBackdrop,
     onWatchClick: (String) -> Unit,
     onEditClick: (Show) -> Unit,
     onNavigateBack: () -> Unit,
@@ -446,6 +449,7 @@ fun ShowDetailScreen(
         // Top Header Bar (Exact Home Screen Header Bar with Back & Edit Buttons)
         com.mydonghua.app.ui.GlassHeader(
             title = show.title,
+            backdrop = backdrop,
             isDark = true,
             onBackClick = onNavigateBack,
             onEditClick = { onEditClick(show) }
