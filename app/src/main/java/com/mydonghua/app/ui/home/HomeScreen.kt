@@ -64,6 +64,7 @@ fun HomeScreen(
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }
+            item { Spacer(modifier = Modifier.height(Spacing.sm)) }
         }
 
         if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
@@ -104,8 +105,8 @@ fun HeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-            .height(210.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
+            .height(216.dp)
             .clip(RoundedCornerShape(CornerRadius.banner))
             .clickable { onBannerClick() }
     ) {
@@ -131,7 +132,7 @@ fun HeroBanner(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(horizontal = Spacing.lg, vertical = Spacing.md)
+                .padding(start = Spacing.lg, end = Spacing.lg, bottom = 18.dp, top = 12.dp)
         ) {
             Text(
                 text = show.title,
@@ -141,7 +142,7 @@ fun HeroBanner(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = if (remainingTime.airingNow) "New episode available now"
                 else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
@@ -149,7 +150,7 @@ fun HeroBanner(
                 color = Color.White.copy(alpha = 0.85f),
                 maxLines = 1
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 BannerTimeBox(value = remainingTime.days, label = "days")
                 BannerTimeBox(value = remainingTime.hours, label = "hours")
