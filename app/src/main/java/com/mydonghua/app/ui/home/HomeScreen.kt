@@ -63,23 +63,29 @@ fun HomeScreen(
         contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
-            item { HeroBanner(show = state.nextUpShow!!, onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") }, onBannerClick = { onShowClick(state.nextUpShow!!.id) }) }
-            item { Spacer(modifier = Modifier.height(Spacing.sm)) }
+            item(key = "hero_banner_${state.nextUpShow!!.id}") {
+                HeroBanner(
+                    show = state.nextUpShow!!,
+                    onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") },
+                    onBannerClick = { onShowClick(state.nextUpShow!!.id) }
+                )
+            }
+            item(key = "hero_banner_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
         }
 
         if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
-            item { SectionHeader(title = "Continue Watching") }
-            item { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
+            item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
+            item(key = "section_continue_row") { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
         }
 
         if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
-            item { SectionHeader(title = "Recently Updated") }
-            item { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
+            item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
+            item(key = "section_recent_row") { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
         }
 
         if (state.showWeeklySchedule) {
-            item { SectionHeader(title = "Weekly Schedule") }
-            item { WeeklyScheduleSection(shows = state.allShows, onShowClick = onShowClick, onWatchClick = onWatchClick, viewModel = viewModel) }
+            item(key = "section_schedule_header") { SectionHeader(title = "Weekly Schedule") }
+            item(key = "section_schedule_row") { WeeklyScheduleSection(shows = state.allShows, onShowClick = onShowClick, onWatchClick = onWatchClick, viewModel = viewModel) }
         }
     }
 }
