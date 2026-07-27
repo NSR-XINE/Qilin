@@ -274,20 +274,20 @@ fun RecentlyUpdatedRow(
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = Spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         items(shows, key = { it.id }) { show ->
-            GlassSection(modifier = Modifier.width(240.dp)) {
+            GlassSection(modifier = Modifier.width(265.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onShowClick(show.id) }
-                        .padding(Spacing.sm),
+                        .padding(Spacing.md),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 52.dp, height = 72.dp)
+                            .size(width = 64.dp, height = 88.dp)
                             .clip(RoundedCornerShape(CornerRadius.sm))
                     ) {
                         DonghuaPoster(
@@ -295,14 +295,14 @@ fun RecentlyUpdatedRow(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 11.sp
+                            fontSize = 13.sp
                         )
                     }
-                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Spacer(modifier = Modifier.width(Spacing.md))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 2,
@@ -314,7 +314,7 @@ fun RecentlyUpdatedRow(
                         if (relativeTime.isNotEmpty()) {
                             Text(
                                 text = relativeTime,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 4.dp),
                                 maxLines = 1
