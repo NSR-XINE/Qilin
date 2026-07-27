@@ -117,8 +117,8 @@ fun HeroBanner(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(216.dp)
+            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .height(190.dp)
             .clickable { onBannerClick() }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -144,25 +144,25 @@ fun HeroBanner(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = Spacing.lg, end = Spacing.lg, bottom = 18.dp, top = 12.dp)
+                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp, top = 8.dp)
             ) {
                 Text(
                     text = show.title,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = if (remainingTime.airingNow) "New episode available now"
                     else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                    fontSize = 12.5.sp,
+                    fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.85f),
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     BannerTimeBox(value = remainingTime.days, label = "days")
                     BannerTimeBox(value = remainingTime.hours, label = "hours")
@@ -180,8 +180,8 @@ private fun BannerTimeBox(value: Long, label: String) {
     val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
-            .width(48.dp)
-            .height(42.dp)
+            .width(44.dp)
+            .height(38.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
