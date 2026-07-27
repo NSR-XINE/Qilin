@@ -15,7 +15,7 @@ object CornerRadius {
     // Design System Tokens
     val chip = md       // 12.dp
     val card = lg       // 16.dp
-    val banner = 24.dp  // 24.dp
+    val banner = 28.dp  // 28.dp
     val sheet = 28.dp   // 28.dp
     val dialog = 28.dp  // 28.dp
 }
