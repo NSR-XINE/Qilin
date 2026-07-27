@@ -146,7 +146,9 @@ fun AddEditShowScreen(
                             onValueChange = { title = it },
                             label = { Text("English Title *") },
                             singleLine = true,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
                             shape = RoundedCornerShape(CornerRadius.sm)
                         )
 
@@ -177,10 +179,8 @@ fun AddEditShowScreen(
                             },
                             enabled = !isAutoFilling,
                             shape = RoundedCornerShape(CornerRadius.sm),
-                            modifier = Modifier
-                                .height(52.dp)
-                                .padding(top = 4.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            modifier = Modifier.height(56.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp)
                         ) {
                             if (isAutoFilling) {
                                 CircularProgressIndicator(
@@ -345,7 +345,7 @@ fun AddEditShowScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Top,
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         OutlinedTextField(
@@ -353,50 +353,47 @@ fun AddEditShowScreen(
                             onValueChange = { poster = it },
                             label = { Text("Poster URL") },
                             singleLine = true,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
                             shape = RoundedCornerShape(CornerRadius.sm)
                         )
 
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            FilledTonalButton(
-                                onClick = {
-                                    val sourceUrl = watchUrl.takeIf { it.isNotEmpty() } ?: countdownUrl
-                                    if (sourceUrl.isBlank()) {
-                                        Toast.makeText(context, "Enter watch or countdown URL first", Toast.LENGTH_SHORT).show()
-                                        return@FilledTonalButton
+                        FilledTonalButton(
+                            onClick = {
+                                val sourceUrl = watchUrl.takeIf { it.isNotEmpty() } ?: countdownUrl
+                                if (sourceUrl.isBlank()) {
+                                    Toast.makeText(context, "Enter watch or countdown URL first", Toast.LENGTH_SHORT).show()
+                                    return@FilledTonalButton
+                                }
+                                coroutineScope.launch {
+                                    val scraped = PosterFetchService.scrapePoster(sourceUrl)
+                                    if (scraped != null) {
+                                        poster = scraped
+                                        Toast.makeText(context, "Poster extracted!", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Could not scrape image", Toast.LENGTH_SHORT).show()
                                     }
-                                    coroutineScope.launch {
-                                        val scraped = PosterFetchService.scrapePoster(sourceUrl)
-                                        if (scraped != null) {
-                                            poster = scraped
-                                            Toast.makeText(context, "Poster extracted!", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            Toast.makeText(context, "Could not scrape image", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                },
-                                shape = RoundedCornerShape(CornerRadius.sm),
-                                modifier = Modifier
-                                    .height(52.dp)
-                                    .padding(top = 4.dp),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-                            ) {
-                                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Scrape", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            }
-
-                            Spacer(Modifier.height(Spacing.sm))
-                            com.mydonghua.app.ui.common.DonghuaPoster(
-                                posterUrl = poster,
-                                title = title.ifBlank { "New Show" },
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(CornerRadius.sm)),
-                                contentScale = ContentScale.Crop,
-                                fontSize = 16.sp
-                            )
+                                }
+                            },
+                            shape = RoundedCornerShape(CornerRadius.sm),
+                            modifier = Modifier.height(56.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp)
+                        ) {
+                            Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Scrape", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
+
+                        com.mydonghua.app.ui.common.DonghuaPoster(
+                            posterUrl = poster,
+                            title = title.ifBlank { "New Show" },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(CornerRadius.sm)),
+                            contentScale = ContentScale.Crop,
+                            fontSize = 16.sp
+                        )
                     }
 
                     OutlinedTextField(
