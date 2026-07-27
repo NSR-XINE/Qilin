@@ -225,7 +225,7 @@ fun ContinueWatchingRow(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 11.sp
+                            fontSize = 9.5.sp
                         )
                     }
                     Spacer(modifier = Modifier.width(Spacing.sm))
@@ -295,7 +295,7 @@ fun RecentlyUpdatedRow(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 13.sp
+                            fontSize = 10.sp
                         )
                     }
                     Spacer(modifier = Modifier.width(Spacing.md))
