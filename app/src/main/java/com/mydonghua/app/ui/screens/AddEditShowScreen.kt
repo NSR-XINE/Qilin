@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
@@ -175,9 +176,23 @@ fun AddEditShowScreen(
                                 }
                             },
                             enabled = !isAutoFilling,
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.sm),
+                            modifier = Modifier
+                                .height(52.dp)
+                                .padding(top = 4.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                         ) {
-                            Text(if (isAutoFilling) "\u2026" else "Auto-Fill", fontSize = 13.sp)
+                            if (isAutoFilling) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Auto-Fill", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
 
@@ -361,11 +376,14 @@ fun AddEditShowScreen(
                                     }
                                 },
                                 shape = RoundedCornerShape(CornerRadius.sm),
-                                contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.sm)
+                                modifier = Modifier
+                                    .height(52.dp)
+                                    .padding(top = 4.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                             ) {
-                                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(IconSize.xs))
-                                Spacer(Modifier.width(Spacing.xs))
-                                Text("Scrape", fontSize = 13.sp)
+                                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Scrape", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             }
 
                             Spacer(Modifier.height(Spacing.sm))
