@@ -173,17 +173,17 @@ private fun BannerTimeBox(value: Long, label: String) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.28f),
-                        Color.White.copy(alpha = 0.08f)
+                        Color.Black.copy(alpha = 0.38f),
+                        Color.Black.copy(alpha = 0.22f)
                     )
                 )
             )
             .border(
-                width = 1.dp,
+                width = 0.75.dp,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.65f),
-                        Color.White.copy(alpha = 0.15f)
+                        Color.White.copy(alpha = 0.45f),
+                        Color.White.copy(alpha = 0.12f)
                     )
                 ),
                 shape = shape
