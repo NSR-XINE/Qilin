@@ -155,35 +155,20 @@ class MainActivity : ComponentActivity() {
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
                             topBar = {
-                                 if (!isSearchOpen) {
-                                     val isDetailRoute = currentRoute.startsWith("detail/")
-                                     if (showGlobalHeader || isDetailRoute) {
-                                         if (isDetailRoute) {
-                                             val detailShowId = navBackStackEntry?.arguments?.getString("showId")
-                                             val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
-                                             GlassHeader(
-                                                 title = detailShow?.title ?: "Donghua Details",
-                                                 backdrop = backdrop,
-                                                 isDark = settingsState.themeMode.lowercase() != "light",
-                                                 onBackClick = { navController.popBackStack() },
-                                                 onEditClick = detailShow?.let { s -> { navController.navigate("edit/${s.id}") } }
-                                             )
-                                         } else {
-                                             val headerTitle = when (currentRoute) {
-                                                 "home" -> "My Donghua"
-                                                 "airing" -> "Airing Schedule"
-                                                 "complete" -> "Completed"
-                                                 "stopped" -> "Stopped"
-                                                 else -> ""
-                                             }
-                                             GlassHeader(
-                                                 title = headerTitle,
-                                                 backdrop = backdrop,
-                                                 isDark = settingsState.themeMode.lowercase() != "light",
-                                                 onDrawerOpen = { isDrawerOpen = true },
-                                             )
-                                         }
+                                 if (showGlobalHeader && !isSearchOpen) {
+                                     val headerTitle = when (currentRoute) {
+                                         "home" -> "My Donghua"
+                                         "airing" -> "Airing Schedule"
+                                         "complete" -> "Completed"
+                                         "stopped" -> "Stopped"
+                                         else -> ""
                                      }
+                                     GlassHeader(
+                                         title = headerTitle,
+                                         backdrop = backdrop,
+                                         isDark = settingsState.themeMode.lowercase() != "light",
+                                         onDrawerOpen = { isDrawerOpen = true },
+                                     )
                                  }
                             }
                         ) { innerPadding ->

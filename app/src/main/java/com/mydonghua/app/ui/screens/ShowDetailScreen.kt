@@ -442,6 +442,14 @@ fun ShowDetailScreen(
                 Spacer(modifier = Modifier.height(Spacing.xxl))
             }
         }
+
+        // Top Header Bar (Exact Home Screen Header Bar with Back & Edit Buttons)
+        com.mydonghua.app.ui.GlassHeader(
+            title = show.title,
+            isDark = true,
+            onBackClick = onNavigateBack,
+            onEditClick = { onEditClick(show) }
+        )
     }
 }
 
