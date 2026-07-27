@@ -118,7 +118,7 @@ fun HeroBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(230.dp)
+            .height(250.dp)
             .clickable { onBannerClick() }
     ) {
         Box(
@@ -150,25 +150,25 @@ fun HeroBanner(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp, top = 8.dp)
+                    .padding(start = 18.dp, end = 18.dp, bottom = 16.dp, top = 10.dp)
             ) {
                 Text(
                     text = show.title,
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = if (remainingTime.airingNow) "New episode available now"
                     else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = Color.White.copy(alpha = 0.85f),
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     BannerTimeBox(value = remainingTime.days, label = "days")
                     BannerTimeBox(value = remainingTime.hours, label = "hours")
@@ -186,8 +186,8 @@ private fun BannerTimeBox(value: Long, label: String) {
     val shape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
-            .width(44.dp)
-            .height(38.dp)
+            .width(52.dp)
+            .height(44.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
@@ -217,14 +217,14 @@ private fun BannerTimeBox(value: Long, label: String) {
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 14.sp,
+                fontSize = 15.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = label,
-                fontSize = 8.5.sp,
+                fontSize = 9.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center
