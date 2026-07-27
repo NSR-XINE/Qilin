@@ -78,6 +78,7 @@ fun ShowDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(72.dp))
             // Hero Backdrop & Title Block
             Box(
                 modifier = Modifier
@@ -439,54 +440,6 @@ fun ShowDetailScreen(
                 }
 
                 Spacer(modifier = Modifier.height(Spacing.xxl))
-            }
-        }
-
-        // Floating Glass Top Navigation Buttons (Back & Edit)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Back Button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .hazeChild(state = hazeState, shape = CircleShape)
-                    .background(Color.Black.copy(alpha = 0.35f))
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                    .clickable { onNavigateBack() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_back),
-                    contentDescription = "Back",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            // Edit Button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .hazeChild(state = hazeState, shape = CircleShape)
-                    .background(Color.Black.copy(alpha = 0.35f))
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                    .clickable { onEditClick(show) },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_edit),
-                    contentDescription = "Edit",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
             }
         }
     }

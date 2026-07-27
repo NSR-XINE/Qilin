@@ -85,6 +85,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val state by homeViewModel.uiState.collectAsState()
             val settingsState by settingsViewModel.uiState.collectAsState()
+            val allShows by showsViewModel.allShows.collectAsState()
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
@@ -93,8 +94,6 @@ class MainActivity : ComponentActivity() {
             var isSearchOpen by remember { mutableStateOf(false) }
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
             val backdrop = rememberLayerBackdrop()
-
-
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -156,20 +155,35 @@ class MainActivity : ComponentActivity() {
                             containerColor = Color.Transparent,
                             modifier = Modifier.fillMaxSize(),
                             topBar = {
-                                 if (showGlobalHeader && !isSearchOpen) {
-                                     val headerTitle = when (currentRoute) {
-                                         "home" -> "My Donghua"
-                                         "airing" -> "Airing Schedule"
-                                         "complete" -> "Completed"
-                                         "stopped" -> "Stopped"
-                                         else -> ""
+                                 if (!isSearchOpen) {
+                                     val isDetailRoute = currentRoute.startsWith("detail/")
+                                     if (showGlobalHeader || isDetailRoute) {
+                                         if (isDetailRoute) {
+                                             val detailShowId = navBackStackEntry?.arguments?.getString("showId")
+                                             val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
+                                             GlassHeader(
+                                                 title = detailShow?.title ?: "Donghua Details",
+                                                 backdrop = backdrop,
+                                                 isDark = settingsState.themeMode.lowercase() != "light",
+                                                 onBackClick = { navController.popBackStack() },
+                                                 onEditClick = detailShow?.let { s -> { navController.navigate("edit/${s.id}") } }
+                                             )
+                                         } else {
+                                             val headerTitle = when (currentRoute) {
+                                                 "home" -> "My Donghua"
+                                                 "airing" -> "Airing Schedule"
+                                                 "complete" -> "Completed"
+                                                 "stopped" -> "Stopped"
+                                                 else -> ""
+                                             }
+                                             GlassHeader(
+                                                 title = headerTitle,
+                                                 backdrop = backdrop,
+                                                 isDark = settingsState.themeMode.lowercase() != "light",
+                                                 onDrawerOpen = { isDrawerOpen = true },
+                                             )
+                                         }
                                      }
-                                     GlassHeader(
-                                         title = headerTitle,
-                                         backdrop = backdrop,
-                                         isDark = settingsState.themeMode.lowercase() != "light",
-                                         onDrawerOpen = { isDrawerOpen = true },
-                                     )
                                  }
                             }
                         ) { innerPadding ->

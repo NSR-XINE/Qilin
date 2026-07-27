@@ -52,12 +52,16 @@ import com.mydonghua.app.R
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
 
+import androidx.compose.ui.text.style.TextOverflow
+
 @Composable
 fun GlassHeader(
     title: String,
     backdrop: LayerBackdrop,
     isDark: Boolean,
-    onDrawerOpen: () -> Unit,
+    onDrawerOpen: (() -> Unit)? = null,
+    onBackClick: (() -> Unit)? = null,
+    onEditClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val menuInteraction = remember { MutableInteractionSource() }
@@ -221,9 +225,28 @@ fun GlassHeader(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 24.dp, end = 8.dp),
+                    .padding(start = if (onBackClick != null) 8.dp else 24.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (onBackClick != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(menuBtnBg)
+                            .clickable(onClick = onBackClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            contentDescription = "Back",
+                            tint = contentColor,
+                            modifier = Modifier.size(IconSize.md)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
                 Text(
                     text = title,
                     style = TextStyle(
@@ -231,48 +254,71 @@ fun GlassHeader(
                             colors = listOf(contentColor, contentColor.copy(alpha = 0.75f))
                         ),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         letterSpacing = 0.25.sp
-                    )
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Spacer(Modifier.weight(1f))
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .scale(menuScale)
-                        .clip(CircleShape)
-                        .background(menuBtnBg)
-                        .clickable(
-                            interactionSource = menuInteraction,
-                            indication = null,
-                            onClick = onDrawerOpen
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isMenuPressed) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(
-                                            menuBtnPressBg,
-                                            Color.Transparent
-                                        ),
-                                        radius = glowRadius
-                                    )
-                                )
+                if (onEditClick != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(menuBtnBg)
+                            .clickable(onClick = onEditClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_edit),
+                            contentDescription = "Edit",
+                            tint = contentColor,
+                            modifier = Modifier.size(IconSize.md)
                         )
                     }
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_menu),
-                        contentDescription = "Menu",
-                        tint = contentColor,
-                        modifier = Modifier.size(IconSize.md)
-                    )
+                }
+
+                if (onDrawerOpen != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .scale(menuScale)
+                            .clip(CircleShape)
+                            .background(menuBtnBg)
+                            .clickable(
+                                interactionSource = menuInteraction,
+                                indication = null,
+                                onClick = onDrawerOpen
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isMenuPressed) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                menuBtnPressBg,
+                                                Color.Transparent
+                                            ),
+                                            radius = glowRadius
+                                        )
+                                    )
+                            )
+                        }
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_menu),
+                            contentDescription = "Menu",
+                            tint = contentColor,
+                            modifier = Modifier.size(IconSize.md)
+                        )
+                    }
                 }
             }
         }
