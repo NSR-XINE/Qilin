@@ -81,7 +81,7 @@ fun ShowDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(84.dp))
             // Hero Backdrop & Title Block
             val detailBannerShape = RoundedCornerShape(24.dp)
             Card(
@@ -98,8 +98,8 @@ fun ShowDetailScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = 8.dp)
-                    .height(340.dp)
+                    .padding(horizontal = Spacing.lg, vertical = 6.dp)
+                    .height(250.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // Background Poster Art
@@ -134,7 +134,7 @@ fun ShowDetailScreen(
                         verticalAlignment = Alignment.Bottom
                     ) {
                         // Floating Poster Thumbnail Card
-                        val thumbnailShape = RoundedCornerShape(16.dp)
+                        val thumbnailShape = RoundedCornerShape(14.dp)
                         Card(
                             shape = thumbnailShape,
                             border = androidx.compose.foundation.BorderStroke(
@@ -142,14 +142,14 @@ fun ShowDetailScreen(
                                 color = Color.White.copy(alpha = 0.35f)
                             ),
                             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                            modifier = Modifier.size(width = 96.dp, height = 132.dp)
+                            modifier = Modifier.size(width = 84.dp, height = 116.dp)
                         ) {
                             DonghuaPoster(
                                 posterUrl = show.poster,
                                 title = show.title,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
-                                fontSize = 12.sp
+                                fontSize = 11.sp
                             )
                         }
 
