@@ -156,7 +156,7 @@ fun HeroBanner(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(horizontal = Spacing.lg, vertical = Spacing.lg)
+                    .padding(start = 18.dp, end = 18.dp, bottom = 16.dp, top = 10.dp)
             ) {
                 Text(
                     text = show.title,
@@ -166,7 +166,7 @@ fun HeroBanner(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(Spacing.xs))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = if (remainingTime.airingNow) "New episode available now"
                     else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
@@ -174,7 +174,7 @@ fun HeroBanner(
                     color = Color.White.copy(alpha = 0.85f),
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(Spacing.md))
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     BannerTimeBox(value = remainingTime.days, label = "days")
                     BannerTimeBox(value = remainingTime.hours, label = "hours")
