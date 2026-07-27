@@ -8,9 +8,9 @@ object AnimDuration {
     val instant = 0
     val fast = 100
     val normal = 200
-    val medium = 300
-    val slow = 500
-    val extraSlow = 800
+    val medium = 250
+    val slow = 300
+    val extraSlow = 300
 }
 
 object AnimSpec {
