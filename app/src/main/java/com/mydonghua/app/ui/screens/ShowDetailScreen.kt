@@ -347,6 +347,36 @@ fun ShowDetailScreen(
                     }
                 }
 
+                // Primary Watch Online Glass Button (Placed directly below Language/Info Chips)
+                Button(
+                    onClick = { onWatchClick(show.watchUrl ?: "") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(CornerRadius.md),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_tv),
+                            contentDescription = null,
+                            modifier = Modifier.size(IconSize.sm),
+                            tint = Color.White
+                        )
+                        Text(
+                            text = "Watch Online",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+
                 // Genres Pill Chips
                 if (!show.genres.isNullOrEmpty()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
@@ -405,36 +435,6 @@ fun ShowDetailScreen(
                                 fontFamily = JustSansFamily
                             )
                         }
-                    }
-                }
-
-                // Primary Watch Online Glass Button
-                Button(
-                    onClick = { onWatchClick(show.watchUrl ?: "") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(CornerRadius.md),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_tv),
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.sm),
-                            tint = Color.White
-                        )
-                        Text(
-                            text = "Watch Online",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            color = Color.White
-                        )
                     }
                 }
 
