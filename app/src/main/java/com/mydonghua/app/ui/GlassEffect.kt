@@ -248,50 +248,84 @@ fun GlassSection(
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current
+    val layerBackdrop = LocalLayerBackdrop.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
 
-    // Exact LiquidGlassNavBar crystal transparency & 3D specular glass refraction border
-    val baseSurfaceColor = Color.Black.copy(alpha = if (isDark) 0.08f else 0.15f)
-    val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.15f)
-    val specularGlassBorder = Brush.verticalGradient(
-        colors = if (isDark) listOf(
-            Color.White.copy(alpha = 0.45f), // Top light glint (3D specular glass reflection)
-            Color.White.copy(alpha = 0.15f), // Side translucent glass reflection
-            Color.White.copy(alpha = 0.05f)  // Bottom subtle light taper
-        ) else listOf(
-            Color.White.copy(alpha = 0.65f), // Light mode top specular shine
-            Color.Black.copy(alpha = 0.15f), // Side dark contrast rim
-            Color.Black.copy(alpha = 0.08f)  // Bottom edge rim
+    if (layerBackdrop != null) {
+        val glassFillColor = Color.Black.copy(alpha = if (isDark) 0.12f else 0.45f)
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .drawBackdrop(
+                    backdrop = layerBackdrop,
+                    shape = { shape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = 0.05f,
+                            contrast = 1f,
+                            saturation = 1.5f
+                        )
+                        blur(12.dp.toPx())
+                        refraction(size.minDimension / 4f, size.minDimension / 2f, false)
+                    },
+                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
+                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
+                    onDrawSurface = {
+                        drawRoundRect(
+                            color = glassFillColor,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(16f.dp.toPx(), 16f.dp.toPx())
+                        )
+                    }
+                )
+        ) {
+            Box(modifier = Modifier.padding(Spacing.md)) {
+                content()
+            }
+        }
+    } else {
+        val baseSurfaceColor = Color.Black.copy(alpha = if (isDark) 0.08f else 0.15f)
+        val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.15f)
+        val specularGlassBorder = Brush.verticalGradient(
+            colors = if (isDark) listOf(
+                Color.White.copy(alpha = 0.45f),
+                Color.White.copy(alpha = 0.15f),
+                Color.White.copy(alpha = 0.05f)
+            ) else listOf(
+                Color.White.copy(alpha = 0.65f),
+                Color.Black.copy(alpha = 0.15f),
+                Color.Black.copy(alpha = 0.08f)
+            )
         )
-    )
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .hazeChild(state = hazeState, shape = shape)
-            .background(
-                color = baseSurfaceColor,
-                shape = shape
-            )
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        topRefractionHighlight,
-                        Color.Transparent
-                    )
-                ),
-                shape = shape
-            )
-            .border(
-                width = 1.2.dp,
-                brush = specularGlassBorder,
-                shape = shape
-            )
-    ) {
-        Box(modifier = Modifier.padding(Spacing.md)) {
-            content()
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .hazeChild(state = hazeState, shape = shape)
+                .background(
+                    color = baseSurfaceColor,
+                    shape = shape
+                )
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            topRefractionHighlight,
+                            Color.Transparent
+                        )
+                    ),
+                    shape = shape
+                )
+                .border(
+                    width = 1.2.dp,
+                    brush = specularGlassBorder,
+                    shape = shape
+                )
+        ) {
+            Box(modifier = Modifier.padding(Spacing.md)) {
+                content()
+            }
         }
     }
 }
