@@ -244,17 +244,17 @@ fun GlassBackground(
 @Composable
 fun GlassSection(
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(percent = 50),
+    shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.card),
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
 
-    // Exact LiquidGlassNavBar crystal transparency formulation (LiquidGlassNavBar.kt:L472-477 & L82)
+    // Exact LiquidGlassNavBar crystal transparency formulation with restored card borders
     val baseSurfaceColor = Color.Black.copy(alpha = if (isDark) 0.08f else 0.15f)
     val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.15f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.10f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f)
 
     Box(
         modifier = modifier
@@ -275,7 +275,7 @@ fun GlassSection(
                 shape = shape
             )
             .border(
-                width = 0.5.dp,
+                width = 1.2.dp,
                 color = borderColor,
                 shape = shape
             )
