@@ -116,73 +116,42 @@ fun GlassSection(
     shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.card),
     content: @Composable () -> Unit
 ) {
-    val backdrop = LocalLayerBackdrop.current
     val hazeState = LocalHazeState.current
-    val density = LocalDensity.current
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val surfaceTint = MaterialTheme.colorScheme.surfaceTint
     val isDark = surfaceColor.luminance() < 0.5f
 
-    val baseSurfaceColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
-    val blurPx = with(density) { 12.dp.toPx() }
-    val cardCornerRadiusPx = with(density) { CornerRadius.card.toPx() }
+    val baseGlassColor = if (isDark) Color.Black.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.45f)
+    val highlightBorderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.10f)
 
-    if (backdrop != null) {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { shape },
-                    effects = {
-                        vibrancy()
-                        colorControls(
-                            brightness = 0.05f,
-                            contrast = 1f,
-                            saturation = 1.5f
-                        )
-                        blur(blurPx)
-                        refraction(size.minDimension / 6f, size.minDimension / 3f, false)
-                    },
-                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
-                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
-                    onDrawSurface = {
-                        drawRoundRect(
-                            color = baseSurfaceColor,
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cardCornerRadiusPx, cardCornerRadiusPx)
-                        )
-                    }
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = borderColor,
-                    shape = shape
-                )
-        ) {
-            Box(modifier = Modifier.padding(Spacing.md)) {
-                content()
-            }
-        }
-    } else {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .hazeChild(state = hazeState, shape = shape)
-                .background(
-                    color = baseSurfaceColor,
-                    shape = shape
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = borderColor,
-                    shape = shape
-                )
-        ) {
-            Box(modifier = Modifier.padding(Spacing.md)) {
-                content()
-            }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .hazeChild(state = hazeState, shape = shape)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        baseGlassColor,
+                        surfaceTint.copy(alpha = if (isDark) 0.08f else 0.05f),
+                        baseGlassColor.copy(alpha = if (isDark) 0.18f else 0.35f)
+                    )
+                ),
+                shape = shape
+            )
+            .border(
+                width = 0.5.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        highlightBorderColor,
+                        highlightBorderColor.copy(alpha = 0.05f)
+                    )
+                ),
+                shape = shape
+            )
+    ) {
+        Box(modifier = Modifier.padding(Spacing.md)) {
+            content()
         }
     }
 }
