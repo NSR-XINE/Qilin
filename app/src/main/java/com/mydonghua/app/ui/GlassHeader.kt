@@ -139,7 +139,7 @@ fun GlassHeader(
                     }
                 )
                 .border(
-                    width = 1.2.dp,
+                    width = 2.dp,
                     color = headerBorderStrokeColor,
                     shape = RoundedCornerShape(topStart = displayCornerRadius, topEnd = displayCornerRadius, bottomStart = 16.dp, bottomEnd = 16.dp)
                 )

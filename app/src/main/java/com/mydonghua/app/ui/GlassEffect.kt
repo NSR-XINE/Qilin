@@ -123,7 +123,8 @@ fun GlassSection(
 
     val topGlassFill = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.30f)
     val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.15f)
-    val headerBorderColor = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.18f)
+    val topBorderHighlight = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.30f)
+    val bottomBorderColor = if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.15f)
 
     Box(
         modifier = modifier
@@ -141,8 +142,13 @@ fun GlassSection(
                 shape = shape
             )
             .border(
-                width = 1.2.dp,
-                color = headerBorderColor,
+                width = 2.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        topBorderHighlight,
+                        bottomBorderColor
+                    )
+                ),
                 shape = shape
             )
     ) {
