@@ -1,28 +1,39 @@
 package com.mydonghua.app.ui
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import com.mydonghua.app.ui.theme.CornerRadius
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.refraction
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
+import com.mydonghua.app.ui.theme.CornerRadius
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
 val LocalHazeState = staticCompositionLocalOf<HazeState> { error("No HazeState provided") }
+val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 
 object Spacing {
     val xs = 4.dp
@@ -36,6 +47,7 @@ object Spacing {
 }
 
 private val GlassTintAlpha = 0.04f
+
 @Composable
 fun GlassBackground(
     modifier: Modifier = Modifier,
@@ -106,11 +118,14 @@ fun GlassSection(
 ) {
     val backdrop = LocalLayerBackdrop.current
     val hazeState = LocalHazeState.current
+    val density = LocalDensity.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
 
     val baseSurfaceColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
     val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
+    val blurPx = with(density) { 12.dp.toPx() }
+    val cardCornerRadiusPx = with(density) { CornerRadius.card.toPx() }
 
     if (backdrop != null) {
         Box(
@@ -127,7 +142,7 @@ fun GlassSection(
                             contrast = 1f,
                             saturation = 1.5f
                         )
-                        blur(12f.dp.toPx())
+                        blur(blurPx)
                         refraction(size.minDimension / 6f, size.minDimension / 3f, false)
                     },
                     highlight = { Highlight.Default.copy(alpha = 0.35f) },
@@ -135,7 +150,7 @@ fun GlassSection(
                     onDrawSurface = {
                         drawRoundRect(
                             color = baseSurfaceColor,
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(CornerRadius.card.toPx(), CornerRadius.card.toPx())
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cardCornerRadiusPx, cardCornerRadiusPx)
                         )
                     }
                 )
