@@ -101,19 +101,6 @@ fun GlassHeader(
     val capsuleTopPaddingPx = with(density) { 2.dp.toPx() }
     val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
-    val cutoutShape = remember(statusBarHeightPx, topCornerRadiusPx, bottomCornerRadiusPx, capsulePaddingStartPx, capsulePaddingEndPx, capsuleTopPaddingPx, capsuleHeightPx, capsuleScale) {
-        CutoutHeaderShape(
-            statusBarHeightPx = statusBarHeightPx,
-            topCornerRadiusPx = topCornerRadiusPx,
-            bottomCornerRadiusPx = bottomCornerRadiusPx,
-            capsulePaddingStartPx = capsulePaddingStartPx,
-            capsulePaddingEndPx = capsulePaddingEndPx,
-            capsuleTopPaddingPx = capsuleTopPaddingPx,
-            capsuleHeightPx = capsuleHeightPx,
-            scale = capsuleScale
-        )
-    }
-
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -122,7 +109,18 @@ fun GlassHeader(
                 .fillMaxWidth()
                 .drawBackdrop(
                     backdrop = backdrop,
-                    shape = { cutoutShape },
+                    shape = {
+                        CutoutHeaderShape(
+                            statusBarHeightPx = statusBarHeightPx,
+                            topCornerRadiusPx = topCornerRadiusPx,
+                            bottomCornerRadiusPx = bottomCornerRadiusPx,
+                            capsulePaddingStartPx = capsulePaddingStartPx,
+                            capsulePaddingEndPx = capsulePaddingEndPx,
+                            capsuleTopPaddingPx = capsuleTopPaddingPx,
+                            capsuleHeightPx = capsuleHeightPx,
+                            scale = capsuleScale
+                        )
+                    },
                     effects = {
                         vibrancy()
                         colorControls(
