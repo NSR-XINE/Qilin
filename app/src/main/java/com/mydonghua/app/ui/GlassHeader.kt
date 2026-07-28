@@ -122,7 +122,7 @@ fun GlassHeader(
                             capsulePaddingEndPx = capsulePaddingEndPx,
                             capsuleTopPaddingPx = capsuleTopPaddingPx,
                             capsuleHeightPx = capsuleHeightPx,
-                            scale = capsuleScale
+                            scale = lerp(1f, 1.05f, headerPressProgress)
                         )
                     },
                     effects = {
@@ -132,7 +132,7 @@ fun GlassHeader(
                             contrast = 1f,
                             saturation = 1.5f
                         )
-                        blur(12f.dp.toPx())
+                        blur((12f + 0.01f * headerPressProgress).dp.toPx())
                     },
                     onDrawSurface = {
                         val baseColor = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.25f)
