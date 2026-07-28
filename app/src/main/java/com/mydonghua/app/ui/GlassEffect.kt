@@ -15,6 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.foundation.layout.height
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -247,29 +249,56 @@ fun GlassSection(
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val surfaceTint = MaterialTheme.colorScheme.surfaceTint
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
+
+    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.35f)
+    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.20f)
+    val topSpecularSheen = if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.45f)
+    val shadowSpotColor = if (isDark) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.25f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .shadow(
+                elevation = 8.dp,
+                shape = shape,
+                clip = false,
+                ambientColor = shadowSpotColor,
+                spotColor = shadowSpotColor
+            )
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        surfaceColor.copy(alpha = 0.55f),
-                        surfaceTint.copy(alpha = 0.08f),
-                        surfaceColor.copy(alpha = 0.40f)
+                        topGlassFill,
+                        primaryContainer.copy(alpha = if (isDark) 0.08f else 0.05f),
+                        bottomGlassFill
                     )
                 ),
                 shape = shape
             )
             .border(
                 width = 1.2.dp,
-                color = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f),
+                color = borderColor,
                 shape = shape
             )
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(36.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            topSpecularSheen,
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
         Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
