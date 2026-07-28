@@ -359,10 +359,14 @@ class CutoutHeaderShape(
             )
         }
         val innerPath = Path().apply {
+            val topPaddingPx = with(density) { 2.dp.toPx() }
+            val bottomPaddingPx = with(density) { 14.dp.toPx() }
+            val capsuleHeightPx = with(density) { 56.dp.toPx() }
+
             val left = capsulePaddingStartPx
-            val top = statusBarHeightPx + capsuleTopPaddingPx
             val right = size.width - capsulePaddingEndPx
-            val bottom = top + capsuleHeightPx
+            val bottom = size.height - bottomPaddingPx
+            val top = bottom - capsuleHeightPx
             
             val centerX = (left + right) / 2f
             val centerY = (top + bottom) / 2f
