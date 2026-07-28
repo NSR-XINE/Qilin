@@ -583,6 +583,8 @@ AnimatedVisibility(
 }
 }
 }
+}
+}
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         requestNotificationPermission()
@@ -632,6 +634,8 @@ AnimatedVisibility(
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
     }
+}
+
 @Composable
 private fun StarsBackground(modifier: Modifier = Modifier) {
     val starsColor = MaterialTheme.colorScheme.onBackground
