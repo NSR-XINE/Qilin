@@ -255,71 +255,73 @@ fun GlassSection(
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val density = LocalDensity.current
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
 
-    val cornerRadiusPx = with(density) { CornerRadius.card.toPx() }
-    val baseSurfaceColor = Color.Black.copy(alpha = if (isDark) 0.08f else 0.15f)
-    val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.15f)
+    // Premium 3D Liquid Glass Design System Tokens
+    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.40f)
+    val centerGlassFill = primaryContainer.copy(alpha = if (isDark) 0.10f else 0.06f)
+    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.20f)
+
+    val topSpecularGlare = if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.55f)
+    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.25f)
+
     val specularGlassBorder = Brush.verticalGradient(
         colors = if (isDark) listOf(
-            Color.White.copy(alpha = 0.45f),
-            Color.White.copy(alpha = 0.15f),
-            Color.White.copy(alpha = 0.05f)
+            Color.White.copy(alpha = 0.60f), // Bright 3D top specular glint
+            Color.White.copy(alpha = 0.25f), // Translucent side reflection
+            Color.White.copy(alpha = 0.10f), // Lower edge glass rim
+            Color.White.copy(alpha = 0.05f)  // Bottom edge light taper
         ) else listOf(
-            Color.White.copy(alpha = 0.65f),
-            Color.Black.copy(alpha = 0.15f),
-            Color.Black.copy(alpha = 0.08f)
+            Color.White.copy(alpha = 0.80f), // Light mode top specular shine
+            Color.White.copy(alpha = 0.40f), // Light mode side glint
+            Color.Black.copy(alpha = 0.15f), // Side contrast rim
+            Color.Black.copy(alpha = 0.08f)  // Bottom contrast rim
         )
     )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .shadow(
+                elevation = 10.dp,
+                shape = shape,
+                clip = false,
+                ambientColor = shadowColor,
+                spotColor = shadowColor
+            )
             .clip(shape)
+            .hazeChild(state = hazeState, shape = shape)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        topGlassFill,
+                        centerGlassFill,
+                        bottomGlassFill
+                    )
+                ),
+                shape = shape
+            )
+            .border(
+                width = 1.5.dp,
+                brush = specularGlassBorder,
+                shape = shape
+            )
     ) {
-        // Layer 1: Background GPU Refraction Shader (Refracts background wallpaper ONLY)
+        // 3D Top Specular Glare Sheen Overlay
         Box(
             modifier = Modifier
-                .matchParentSize()
-                .graphicsLayer {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && size.width > 0f && size.height > 0f) {
-                        try {
-                            val shader = RuntimeShader(RoundedRectRefractionShaderString).apply {
-                                setFloatUniform("size", size.width, size.height)
-                                setFloatUniform("cornerRadii", cornerRadiusPx, cornerRadiusPx, cornerRadiusPx, cornerRadiusPx)
-                                val refHeight = minOf(size.width, size.height) / 4f
-                                setFloatUniform("refractionHeight", refHeight)
-                                setFloatUniform("refractionAmount", -refHeight)
-                                setFloatUniform("depthEffect", 0f)
-                            }
-                            renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
-                        } catch (_: Exception) {
-                        }
-                    }
-                }
-                .hazeChild(state = hazeState, shape = shape)
-                .background(
-                    color = baseSurfaceColor,
-                    shape = shape
-                )
+                .fillMaxWidth()
+                .height(32.dp)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            topRefractionHighlight,
+                            topSpecularGlare,
                             Color.Transparent
                         )
-                    ),
-                    shape = shape
-                )
-                .border(
-                    width = 1.2.dp,
-                    brush = specularGlassBorder,
-                    shape = shape
+                    )
                 )
         )
-
-        // Layer 2: Clean Foreground Content Layer (Un-warped, crisp text and posters)
         Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
