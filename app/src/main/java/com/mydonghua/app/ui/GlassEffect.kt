@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -248,8 +249,12 @@ fun GlassSection(
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val surfaceTint = MaterialTheme.colorScheme.surfaceTint
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
+
+    val baseGlassColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.40f)
+    val accentTint = primaryContainer.copy(alpha = if (isDark) 0.12f else 0.08f)
+    val fullBoxGlassColor = baseGlassColor.compositeOver(accentTint)
 
     Box(
         modifier = modifier
@@ -257,13 +262,7 @@ fun GlassSection(
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        surfaceColor.copy(alpha = 0.55f),
-                        surfaceTint.copy(alpha = 0.08f),
-                        surfaceColor.copy(alpha = 0.40f)
-                    )
-                ),
+                color = fullBoxGlassColor,
                 shape = shape
             )
             .border(
