@@ -94,15 +94,17 @@ fun GlassHeader(
 
     val displayCornerRadius = LocalDisplayCornerRadius.current
     val statusBarHeightPx = WindowInsets.statusBars.getTop(density).toFloat()
-    val bottomCornerRadiusPx = with(density) { displayCornerRadius.toPx() }
+    val topCornerRadiusPx = with(density) { displayCornerRadius.toPx() }
+    val bottomCornerRadiusPx = with(density) { 16.dp.toPx() }
     val capsulePaddingStartPx = with(density) { Spacing.xl.toPx() }
     val capsulePaddingEndPx = with(density) { Spacing.xl.toPx() }
     val capsuleTopPaddingPx = with(density) { 2.dp.toPx() }
     val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
-    val cutoutShape = remember(statusBarHeightPx, bottomCornerRadiusPx, capsulePaddingStartPx, capsulePaddingEndPx, capsuleTopPaddingPx, capsuleHeightPx, capsuleScale) {
+    val cutoutShape = remember(statusBarHeightPx, topCornerRadiusPx, bottomCornerRadiusPx, capsulePaddingStartPx, capsulePaddingEndPx, capsuleTopPaddingPx, capsuleHeightPx, capsuleScale) {
         CutoutHeaderShape(
             statusBarHeightPx = statusBarHeightPx,
+            topCornerRadiusPx = topCornerRadiusPx,
             bottomCornerRadiusPx = bottomCornerRadiusPx,
             capsulePaddingStartPx = capsulePaddingStartPx,
             capsulePaddingEndPx = capsulePaddingEndPx,
@@ -138,7 +140,7 @@ fun GlassHeader(
                 .border(
                     width = 0.5.dp,
                     color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(bottomStart = displayCornerRadius, bottomEnd = displayCornerRadius)
+                    shape = RoundedCornerShape(topStart = displayCornerRadius, topEnd = displayCornerRadius, bottomStart = 16.dp, bottomEnd = 16.dp)
                 )
         ) {
             Spacer(
@@ -330,6 +332,7 @@ fun GlassHeader(
 
 class CutoutHeaderShape(
     private val statusBarHeightPx: Float,
+    private val topCornerRadiusPx: Float,
     private val bottomCornerRadiusPx: Float,
     private val capsulePaddingStartPx: Float,
     private val capsulePaddingEndPx: Float,
@@ -346,6 +349,8 @@ class CutoutHeaderShape(
             addRoundRect(
                 RoundRect(
                     rect = Rect(0f, 0f, size.width, size.height),
+                    topLeft = CornerRadius(topCornerRadiusPx, topCornerRadiusPx),
+                    topRight = CornerRadius(topCornerRadiusPx, topCornerRadiusPx),
                     bottomLeft = CornerRadius(bottomCornerRadiusPx, bottomCornerRadiusPx),
                     bottomRight = CornerRadius(bottomCornerRadiusPx, bottomCornerRadiusPx)
                 )
