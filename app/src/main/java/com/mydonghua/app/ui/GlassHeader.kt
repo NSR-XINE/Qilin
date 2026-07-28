@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -101,26 +102,29 @@ fun GlassHeader(
     val capsuleTopPaddingPx = with(density) { 2.dp.toPx() }
     val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
+    val cutoutShape = CutoutHeaderShape(
+        statusBarHeightPx = statusBarHeightPx,
+        topCornerRadiusPx = topCornerRadiusPx,
+        bottomCornerRadiusPx = bottomCornerRadiusPx,
+        capsulePaddingStartPx = capsulePaddingStartPx,
+        capsulePaddingEndPx = capsulePaddingEndPx,
+        capsuleTopPaddingPx = capsuleTopPaddingPx,
+        capsuleHeightPx = capsuleHeightPx,
+        scale = capsuleScale
+    )
+
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .graphicsLayer {
+                    val animScale = capsuleScale
+                }
                 .drawBackdrop(
                     backdrop = backdrop,
-                    shape = {
-                        CutoutHeaderShape(
-                            statusBarHeightPx = statusBarHeightPx,
-                            topCornerRadiusPx = topCornerRadiusPx,
-                            bottomCornerRadiusPx = bottomCornerRadiusPx,
-                            capsulePaddingStartPx = capsulePaddingStartPx,
-                            capsulePaddingEndPx = capsulePaddingEndPx,
-                            capsuleTopPaddingPx = capsuleTopPaddingPx,
-                            capsuleHeightPx = capsuleHeightPx,
-                            scale = capsuleScale
-                        )
-                    },
+                    shape = { cutoutShape },
                     effects = {
                         vibrancy()
                         colorControls(
