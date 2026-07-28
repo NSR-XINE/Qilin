@@ -104,39 +104,70 @@ fun GlassSection(
     shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.card),
     content: @Composable () -> Unit
 ) {
+    val backdrop = LocalLayerBackdrop.current
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val surfaceTint = MaterialTheme.colorScheme.surfaceTint
-    val borderColor = MaterialTheme.colorScheme.outlineVariant
+    val isDark = surfaceColor.luminance() < 0.5f
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .hazeChild(state = hazeState, shape = shape)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        surfaceColor.copy(alpha = 0.18f),
-                        surfaceTint.copy(alpha = 0.08f),
-                        surfaceColor.copy(alpha = 0.10f)
-                    )
-                ),
-                shape = shape
-            )
-            .border(
-                width = 0.5.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        borderColor.copy(alpha = 0.50f),
-                        borderColor.copy(alpha = 0.15f)
-                    )
-                ),
-                shape = shape
-            )
-    ) {
-        Box(modifier = Modifier.padding(Spacing.md)) {
-            content()
+    val baseSurfaceColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
+
+    if (backdrop != null) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { shape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = 0.05f,
+                            contrast = 1f,
+                            saturation = 1.5f
+                        )
+                        blur(12f.dp.toPx())
+                        refraction(size.minDimension / 6f, size.minDimension / 3f, false)
+                    },
+                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
+                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
+                    onDrawSurface = {
+                        drawRoundRect(
+                            color = baseSurfaceColor,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(CornerRadius.card.toPx(), CornerRadius.card.toPx())
+                        )
+                    }
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = borderColor,
+                    shape = shape
+                )
+        ) {
+            Box(modifier = Modifier.padding(Spacing.md)) {
+                content()
+            }
+        }
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .hazeChild(state = hazeState, shape = shape)
+                .background(
+                    color = baseSurfaceColor,
+                    shape = shape
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = borderColor,
+                    shape = shape
+                )
+        ) {
+            Box(modifier = Modifier.padding(Spacing.md)) {
+                content()
+            }
         }
     }
 }

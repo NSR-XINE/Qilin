@@ -61,6 +61,7 @@ import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.LocalLayerBackdrop
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
@@ -149,7 +150,10 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .haze(drawerHazeState, style = HazeMaterials.ultraThin())
                         ) {
-                            CompositionLocalProvider(LocalHazeState provides appHazeState) {
+                            CompositionLocalProvider(
+                                LocalHazeState provides appHazeState,
+                                LocalLayerBackdrop provides backdrop
+                            ) {
                             GlassBackground(modifier = Modifier.fillMaxSize()) {
                         Scaffold(
                             containerColor = Color.Transparent,
