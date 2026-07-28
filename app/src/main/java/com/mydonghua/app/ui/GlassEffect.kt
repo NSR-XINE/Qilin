@@ -107,6 +107,7 @@ fun GlassSection(
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val surfaceTint = MaterialTheme.colorScheme.surfaceTint
+    val borderColor = MaterialTheme.colorScheme.outlineVariant
 
     Box(
         modifier = modifier
@@ -116,9 +117,9 @@ fun GlassSection(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        surfaceColor.copy(alpha = 0.55f),
+                        surfaceColor.copy(alpha = 0.18f),
                         surfaceTint.copy(alpha = 0.08f),
-                        surfaceColor.copy(alpha = 0.40f)
+                        surfaceColor.copy(alpha = 0.10f)
                     )
                 ),
                 shape = shape
@@ -127,8 +128,8 @@ fun GlassSection(
                 width = 0.5.dp,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                        borderColor.copy(alpha = 0.50f),
+                        borderColor.copy(alpha = 0.15f)
                     )
                 ),
                 shape = shape
