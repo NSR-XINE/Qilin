@@ -416,22 +416,10 @@ fun WeeklyScheduleSection(
         shows.filter { it.status == "ongoing" && it.releaseDay == selectedDay }
             .sortedWith(compareBy { it.releaseTime ?: "" })
     }
-    Box(
+    GlassSection(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg)
-            .clip(RoundedCornerShape(CornerRadius.card))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.card))
-            .background(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-                shape = RoundedCornerShape(CornerRadius.card)
-            )
-            .border(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(CornerRadius.card)
-            )
-            .padding(Spacing.md)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             LazyRow(

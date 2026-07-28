@@ -37,6 +37,7 @@ import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.refraction
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.ui.theme.CornerRadius
 import dev.chrisbanes.haze.HazeState
@@ -246,7 +247,6 @@ fun GlassBackground(
         content()
     }
 }
-
 @Composable
 fun GlassSection(
     modifier: Modifier = Modifier,
@@ -254,54 +254,86 @@ fun GlassSection(
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current
+    val backdrop = LocalLayerBackdrop.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
 
-    // Premium 3D Liquid Glass Design System Tokens
-    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.40f)
-    val centerGlassFill = primaryContainer.copy(alpha = if (isDark) 0.10f else 0.06f)
-    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.20f)
+    // Liquid Glass Specs matching Bottom Nav Bar
+    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.35f)
+    val centerGlassFill = primaryContainer.copy(alpha = if (isDark) 0.08f else 0.04f)
+    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f)
 
     val topSpecularGlare = if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.55f)
-    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.65f) else Color.Black.copy(alpha = 0.25f)
+    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.20f)
 
     val specularGlassBorder = Brush.verticalGradient(
         colors = if (isDark) listOf(
-            Color.White.copy(alpha = 0.60f), // Bright 3D top specular glint
-            Color.White.copy(alpha = 0.25f), // Translucent side reflection
-            Color.White.copy(alpha = 0.10f), // Lower edge glass rim
-            Color.White.copy(alpha = 0.05f)  // Bottom edge light taper
+            Color.White.copy(alpha = 0.70f), // Bright 3D top liquid glass glint
+            Color.White.copy(alpha = 0.30f), // Translucent side reflection
+            Color.White.copy(alpha = 0.15f), // Lower edge glass rim
+            Color.White.copy(alpha = 0.06f)  // Bottom edge light taper
         ) else listOf(
-            Color.White.copy(alpha = 0.80f), // Light mode top specular shine
-            Color.White.copy(alpha = 0.40f), // Light mode side glint
-            Color.Black.copy(alpha = 0.15f), // Side contrast rim
-            Color.Black.copy(alpha = 0.08f)  // Bottom contrast rim
+            Color.White.copy(alpha = 0.85f), // Light mode top specular shine
+            Color.White.copy(alpha = 0.45f), // Light mode side glint
+            Color.Black.copy(alpha = 0.18f), // Side contrast rim
+            Color.Black.copy(alpha = 0.10f)  // Bottom contrast rim
         )
     )
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = 10.dp,
-                shape = shape,
-                clip = false,
-                ambientColor = shadowColor,
-                spotColor = shadowColor
-            )
+    val baseModifier = modifier
+        .fillMaxWidth()
+        .shadow(
+            elevation = 8.dp,
+            shape = shape,
+            clip = false,
+            ambientColor = shadowColor,
+            spotColor = shadowColor
+        )
+
+    val liquidGlassModifier = if (backdrop != null) {
+        baseModifier.drawBackdrop(
+            backdrop = backdrop,
+            shape = { shape },
+            effects = {
+                vibrancy()
+                colorControls(
+                    brightness = if (isDark) 0.04f else 0.08f,
+                    contrast = 1f,
+                    saturation = 1.4f
+                )
+                blur(12f.dp.toPx())
+                refraction(size.minDimension / 4f, size.minDimension / 2f, false)
+            },
+            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.6f else 0.75f) },
+            shadow = { Shadow(radius = 6f.dp, alpha = if (isDark) 0.45f else 0.20f) },
+            innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isDark) 0.30f else 0.15f) },
+            onDrawSurface = {
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(topGlassFill, centerGlassFill, bottomGlassFill)
+                    ),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(
+                        shape.topStart.toPx(size, density = this),
+                        shape.topStart.toPx(size, density = this)
+                    )
+                )
+            }
+        )
+    } else {
+        baseModifier
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        topGlassFill,
-                        centerGlassFill,
-                        bottomGlassFill
-                    )
+                    colors = listOf(topGlassFill, centerGlassFill, bottomGlassFill)
                 ),
                 shape = shape
             )
+    }
+
+    Box(
+        modifier = liquidGlassModifier
             .border(
                 width = 1.5.dp,
                 brush = specularGlassBorder,
