@@ -121,7 +121,8 @@ fun GlassSection(
     val isDark = surfaceColor.luminance() < 0.5f
 
     val baseSurfaceColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
+    val topHighlightColor = if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.65f)
+    val bottomBorderColor = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
 
     Box(
         modifier = modifier
@@ -134,7 +135,12 @@ fun GlassSection(
             )
             .border(
                 width = 0.5.dp,
-                color = borderColor,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        topHighlightColor,
+                        bottomBorderColor
+                    )
+                ),
                 shape = shape
             )
     ) {
