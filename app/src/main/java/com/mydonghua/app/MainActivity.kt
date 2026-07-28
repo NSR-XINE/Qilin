@@ -626,13 +626,13 @@ AnimatedVisibility(
                 )
             }
         }
-    }
 
     companion object {
         const val FILE_CHOOSER_REQUEST_CODE = 1001
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
     }
+}
 
 @Composable
 private fun StarsBackground(modifier: Modifier = Modifier) {
