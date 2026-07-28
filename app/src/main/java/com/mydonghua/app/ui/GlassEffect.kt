@@ -251,40 +251,34 @@ fun GlassBackground(
 fun GlassSection(
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.card),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit = {}
 ) {
     val hazeState = LocalHazeState.current
     val backdrop = LocalLayerBackdrop.current
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
 
-    // Liquid Glass Specs matching Bottom Nav Bar
-    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.22f)
-    val centerGlassFill = primaryContainer.copy(alpha = if (isDark) 0.04f else 0.02f)
-    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.08f)
-
-    val topSpecularGlare = if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.40f)
-    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.15f)
+    val surfaceTint = if (isDark) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.25f)
+    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.30f) else Color.Black.copy(alpha = 0.10f)
 
     val specularGlassBorder = Brush.verticalGradient(
         colors = if (isDark) listOf(
-            Color.White.copy(alpha = 0.70f), // Bright 3D top liquid glass glint
-            Color.White.copy(alpha = 0.30f), // Translucent side reflection
-            Color.White.copy(alpha = 0.15f), // Lower edge glass rim
-            Color.White.copy(alpha = 0.06f)  // Bottom edge light taper
+            Color.White.copy(alpha = 0.50f),
+            Color.White.copy(alpha = 0.20f),
+            Color.White.copy(alpha = 0.10f),
+            Color.White.copy(alpha = 0.04f)
         ) else listOf(
-            Color.White.copy(alpha = 0.85f), // Light mode top specular shine
-            Color.White.copy(alpha = 0.45f), // Light mode side glint
-            Color.Black.copy(alpha = 0.18f), // Side contrast rim
-            Color.Black.copy(alpha = 0.10f)  // Bottom contrast rim
+            Color.White.copy(alpha = 0.75f),
+            Color.White.copy(alpha = 0.35f),
+            Color.Black.copy(alpha = 0.12f),
+            Color.Black.copy(alpha = 0.06f)
         )
     )
 
     val baseModifier = modifier
         .fillMaxWidth()
         .shadow(
-            elevation = 8.dp,
+            elevation = 6.dp,
             shape = shape,
             clip = false,
             ambientColor = shadowColor,
@@ -299,24 +293,20 @@ fun GlassSection(
                 vibrancy()
                 colorControls(
                     brightness = if (isDark) 0.05f else 0.10f,
-                    contrast = 1.05f,
-                    saturation = 1.6f
+                    contrast = 1.0f,
+                    saturation = 1.5f
                 )
-                blur(14f.dp.toPx())
+                blur(12f.dp.toPx())
                 refraction(size.minDimension / 4f, size.minDimension / 2f, false)
             },
-            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.70f else 0.85f) },
-            shadow = { Shadow(radius = 6f.dp, alpha = if (isDark) 0.45f else 0.20f) },
-            innerShadow = { InnerShadow(radius = 8f.dp, alpha = if (isDark) 0.35f else 0.20f) },
+            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.50f else 0.70f) },
+            shadow = { Shadow(radius = 4f.dp, alpha = if (isDark) 0.30f else 0.15f) },
+            innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isDark) 0.25f else 0.15f) },
             onDrawSurface = {
+                val radius = shape.topStart.toPx(size, density = this)
                 drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(topGlassFill, centerGlassFill, bottomGlassFill)
-                    ),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                        shape.topStart.toPx(size, density = this),
-                        shape.topStart.toPx(size, density = this)
-                    )
+                    color = surfaceTint,
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
                 )
             }
         )
@@ -325,9 +315,7 @@ fun GlassSection(
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(topGlassFill, centerGlassFill, bottomGlassFill)
-                ),
+                color = surfaceTint,
                 shape = shape
             )
     }
@@ -335,25 +323,11 @@ fun GlassSection(
     Box(
         modifier = liquidGlassModifier
             .border(
-                width = 1.5.dp,
+                width = 1.dp,
                 brush = specularGlassBorder,
                 shape = shape
             )
     ) {
-        // 3D Top Specular Glare Sheen Overlay
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(32.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            topSpecularGlare,
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
         Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
