@@ -79,8 +79,7 @@ fun GlassHeader(
     val contentColor = if (isDark) Color.White else Color(0xFF1E1E1E)
     val menuBtnBg = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.06f)
     val menuBtnPressBg = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.12f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.18f)
-    val headerBorderStrokeColor = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.18f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
 
     val headerInteraction = remember { MutableInteractionSource() }
     val isHeaderPressed by headerInteraction.collectIsPressedAsState()
@@ -115,20 +114,6 @@ fun GlassHeader(
         )
     }
 
-    val glassBorderBrush = Brush.linearGradient(
-        colors = if (isDark) listOf(
-            Color.White.copy(alpha = 0.60f),
-            Color.White.copy(alpha = 0.20f),
-            Color.White.copy(alpha = 0.08f)
-        ) else listOf(
-            Color.White.copy(alpha = 0.85f),
-            Color.White.copy(alpha = 0.35f),
-            Color.Black.copy(alpha = 0.15f)
-        ),
-        start = Offset(0f, 0f),
-        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-    )
-
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -153,8 +138,8 @@ fun GlassHeader(
                     }
                 )
                 .border(
-                    width = 1.5.dp,
-                    brush = glassBorderBrush,
+                    width = 0.5.dp,
+                    color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
                     shape = RoundedCornerShape(topStart = displayCornerRadius, topEnd = displayCornerRadius, bottomStart = 16.dp, bottomEnd = 16.dp)
                 )
         ) {
