@@ -94,7 +94,8 @@ class MainActivity : ComponentActivity() {
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
-            val backdrop = rememberLayerBackdrop()
+            val navBackdrop = rememberLayerBackdrop()
+            val contentBackdrop = rememberLayerBackdrop()
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -152,50 +153,56 @@ class MainActivity : ComponentActivity() {
                         ) {
                             CompositionLocalProvider(
                                 LocalHazeState provides appHazeState,
-                                LocalLayerBackdrop provides backdrop
+                                LocalLayerBackdrop provides contentBackdrop
                             ) {
-                            GlassBackground(modifier = Modifier.fillMaxSize()) {
-                        Scaffold(
-                            containerColor = Color.Transparent,
-                            modifier = Modifier.fillMaxSize(),
-                            topBar = {
-                                 if (!isSearchOpen) {
-                                     val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
-                                     if (showGlobalHeader || isDetailRoute) {
-                                         if (isDetailRoute) {
-                                             val detailShowId = navBackStackEntry?.arguments?.getString("showId")
-                                             val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
-                                             GlassHeader(
-                                                 title = detailShow?.title ?: "Donghua Details",
-                                                 backdrop = backdrop,
-                                                 isDark = settingsState.themeMode.lowercase() != "light",
-                                                 onBackClick = { navController.popBackStack() },
-                                                 onEditClick = detailShow?.let { s -> { navController.navigate("add_edit_show?showId=${s.id}") } }
-                                             )
-                                         } else {
-                                             val headerTitle = when (currentRoute) {
-                                                 "home" -> "My Donghua"
-                                                 "airing" -> "Airing Schedule"
-                                                 "complete" -> "Completed"
-                                                 "stopped" -> "Stopped"
-                                                 else -> ""
-                                             }
-                                             GlassHeader(
-                                                 title = headerTitle,
-                                                 backdrop = backdrop,
-                                                 isDark = settingsState.themeMode.lowercase() != "light",
-                                                 onDrawerOpen = { isDrawerOpen = true },
-                                             )
-                                         }
-                                     }
-                                 }
-                            }
-                        ) { innerPadding ->
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .layerBackdrop(backdrop)
+                                    .layerBackdrop(contentBackdrop)
                             ) {
+                                GlassBackground(modifier = Modifier.fillMaxSize())
+                            }
+                            Scaffold(
+                                containerColor = Color.Transparent,
+                                modifier = Modifier.fillMaxSize(),
+                                topBar = {
+                                     if (!isSearchOpen) {
+                                         val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
+                                         if (showGlobalHeader || isDetailRoute) {
+                                             if (isDetailRoute) {
+                                                 val detailShowId = navBackStackEntry?.arguments?.getString("showId")
+                                                 val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
+                                                 GlassHeader(
+                                                     title = detailShow?.title ?: "Donghua Details",
+                                                     backdrop = contentBackdrop,
+                                                     isDark = settingsState.themeMode.lowercase() != "light",
+                                                     onBackClick = { navController.popBackStack() },
+                                                     onEditClick = detailShow?.let { s -> { navController.navigate("add_edit_show?showId=${s.id}") } }
+                                                 )
+                                             } else {
+                                                 val headerTitle = when (currentRoute) {
+                                                     "home" -> "My Donghua"
+                                                     "airing" -> "Airing Schedule"
+                                                     "complete" -> "Completed"
+                                                     "stopped" -> "Stopped"
+                                                     else -> ""
+                                                 }
+                                                 GlassHeader(
+                                                     title = headerTitle,
+                                                     backdrop = contentBackdrop,
+                                                     isDark = settingsState.themeMode.lowercase() != "light",
+                                                     onDrawerOpen = { isDrawerOpen = true },
+                                                 )
+                                             }
+                                         }
+                                     }
+                                }
+                            ) { innerPadding ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .layerBackdrop(navBackdrop)
+                                ) {
                             NavHost(
                                 navController = navController,
                                 startDestination = "home",
@@ -429,7 +436,7 @@ class MainActivity : ComponentActivity() {
                     LiquidGlassNavBar(
                         currentRoute = currentRoute,
                         isDark = settingsState.themeMode.lowercase() != "light",
-                        backdrop = backdrop,
+                        backdrop = navBackdrop,
                         isSearchOpen = isSearchOpen,
                         onSearchClick = { isSearchOpen = !isSearchOpen },
                         onNavigate = { route ->
