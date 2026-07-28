@@ -62,7 +62,7 @@ private val GlassTintAlpha = 0.04f
 @Composable
 fun GlassBackground(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit = {}
 ) {
     val hazeState = LocalHazeState.current
     val backgroundColor = MaterialTheme.colorScheme.background

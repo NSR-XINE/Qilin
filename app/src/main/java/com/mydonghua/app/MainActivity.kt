@@ -96,6 +96,8 @@ class MainActivity : ComponentActivity() {
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
+            val appHazeState = remember { HazeState() }
+            val drawerHazeState = remember { HazeState() }
 
             androidx.activity.compose.BackHandler(enabled = true) {
                 if (currentRoute != "home") {
@@ -134,8 +136,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val appHazeState = remember { HazeState() }
-                    val drawerHazeState = remember { HazeState() }
                     Box(modifier = Modifier.fillMaxSize()) {
                         Box(
                             modifier = Modifier
