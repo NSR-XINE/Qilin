@@ -583,7 +583,9 @@ AnimatedVisibility(
 }
 }
 }
- 
+}
+}
+
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         requestNotificationPermission()
