@@ -55,7 +55,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    val effectiveTopPadding = if (topPadding > 60.dp) topPadding + Spacing.md else 112.dp
+    val effectiveTopPadding = if (topPadding.value > 0f) topPadding + Spacing.md else 88.dp
 
     LazyColumn(
         modifier = modifier
