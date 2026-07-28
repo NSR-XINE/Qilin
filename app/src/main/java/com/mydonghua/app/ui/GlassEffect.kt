@@ -286,19 +286,6 @@ fun GlassSection(
                 shape = shape
             )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(36.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            topSpecularSheen,
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
         Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
