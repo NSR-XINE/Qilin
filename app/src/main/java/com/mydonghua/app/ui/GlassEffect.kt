@@ -39,18 +39,14 @@ fun GlassBackground(
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current
-    val tint = MaterialTheme.colorScheme.onSurface
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(color = backgroundColor)
             .hazeChild(state = hazeState)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(color = tint.copy(alpha = GlassTintAlpha))
-        )
         content()
     }
 }
@@ -62,27 +58,23 @@ fun GlassSection(
     content: @Composable () -> Unit
 ) {
     val hazeState = LocalHazeState.current
-    val tint = MaterialTheme.colorScheme.onSurface
+    val surfaceColor = MaterialTheme.colorScheme.surface
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
+            .background(
+                color = surfaceColor.copy(alpha = 0.45f),
+                shape = shape
+            )
             .border(
                 width = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = shape
             )
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    color = tint.copy(alpha = GlassSectionAlpha),
-                    shape = shape
-                )
-        )
         Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
