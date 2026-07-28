@@ -200,6 +200,34 @@ fun buildM3ColorScheme(
     }
 }
 
+import android.view.RoundedCorner
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+
+val LocalDisplayCornerRadius = staticCompositionLocalOf<Dp> { 24.dp }
+
+@Composable
+fun rememberDisplayCornerRadius(): Dp {
+    val density = LocalDensity.current
+    val view = LocalView.current
+    return remember(density, view) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val insets = view.rootWindowInsets
+            val topLeft = insets?.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)
+            val radiusPx = topLeft?.radius ?: 0
+            if (radiusPx > 0) {
+                with(density) { radiusPx.toDp() }
+            } else 24.dp
+        } else {
+            24.dp
+        }
+    }
+}
+
 @Composable
 fun MyDonghuaTheme(
     themeMode: String = "dark",
@@ -208,6 +236,7 @@ fun MyDonghuaTheme(
 ) {
     val context = LocalContext.current
     val isLight = themeMode.lowercase() == "light"
+    val displayCornerRadius = rememberDisplayCornerRadius()
 
     val finalScheme = if (accentColor.lowercase() == "dynamic" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val dynamicScheme = if (isLight) {
@@ -233,6 +262,7 @@ fun MyDonghuaTheme(
         typography = AppTypography
     ) {
         androidx.compose.runtime.CompositionLocalProvider(
+            LocalDisplayCornerRadius provides displayCornerRadius,
             androidx.compose.material3.LocalTextStyle provides TextStyle(fontFamily = JustSansFamily)
         ) {
             content()

@@ -50,6 +50,7 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.LocalDisplayCornerRadius
 import com.mydonghua.app.ui.theme.NavBarHeight
 
 import androidx.compose.ui.text.style.TextOverflow
@@ -91,8 +92,9 @@ fun GlassHeader(
 
     val capsuleScale = lerp(1f, 1.05f, headerPressProgress)
 
+    val displayCornerRadius = LocalDisplayCornerRadius.current
     val statusBarHeightPx = WindowInsets.statusBars.getTop(density).toFloat()
-    val bottomCornerRadiusPx = with(density) { 16.dp.toPx() }
+    val bottomCornerRadiusPx = with(density) { displayCornerRadius.toPx() }
     val capsulePaddingStartPx = with(density) { Spacing.xl.toPx() }
     val capsulePaddingEndPx = with(density) { Spacing.xl.toPx() }
     val capsuleTopPaddingPx = with(density) { 2.dp.toPx() }
@@ -136,7 +138,7 @@ fun GlassHeader(
                 .border(
                     width = 0.5.dp,
                     color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                    shape = RoundedCornerShape(bottomStart = displayCornerRadius, bottomEnd = displayCornerRadius)
                 )
         ) {
             Spacer(
