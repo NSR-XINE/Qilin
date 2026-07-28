@@ -138,8 +138,8 @@ fun GlassSection(
                 shape = shape
             )
             .border(
-                width = 0.5.dp,
-                color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
+                width = 1.2.dp,
+                color = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f),
                 shape = shape
             )
     ) {
