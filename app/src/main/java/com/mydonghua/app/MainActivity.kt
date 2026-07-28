@@ -575,13 +575,9 @@ AnimatedVisibility(
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
             }
         }
     }
-}
-}
-}
 }
 }
 }
