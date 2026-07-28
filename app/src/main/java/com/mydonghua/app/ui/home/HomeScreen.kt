@@ -62,7 +62,7 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.Transparent)
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 120.dp)
+        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 80.dp)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item(key = "hero_banner_${state.nextUpShow!!.id}") {
@@ -85,10 +85,6 @@ fun HomeScreen(
             item(key = "section_recent_row") { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
         }
 
-        if (state.showWeeklySchedule) {
-            item(key = "section_schedule_header") { SectionHeader(title = "Weekly Schedule") }
-            item(key = "section_schedule_row") { WeeklyScheduleSection(shows = state.allShows, onShowClick = onShowClick, onWatchClick = onWatchClick, viewModel = viewModel) }
-        }
     }
 }
 
