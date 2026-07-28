@@ -251,10 +251,12 @@ fun GlassSection(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
 
-    // Exact LiquidGlassNavBar glass parameters (LiquidGlassNavBar.kt:L472-477 & L82)
+    // Exact LiquidGlassNavBar glass & refraction shader parameters (LiquidGlassNavBar.kt:L450-477 & L82)
     val navBarDarkenAlpha = if (isDark) 0.12f else 0.45f
     val baseSurfaceColor = Color.Black.copy(alpha = navBarDarkenAlpha)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.12f)
+    val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.40f)
+    val bottomRefractionShadow = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
 
     Box(
         modifier = modifier
@@ -263,6 +265,16 @@ fun GlassSection(
             .hazeChild(state = hazeState, shape = shape)
             .background(
                 color = baseSurfaceColor,
+                shape = shape
+            )
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        topRefractionHighlight,
+                        Color.Transparent,
+                        bottomRefractionShadow
+                    )
+                ),
                 shape = shape
             )
             .border(
