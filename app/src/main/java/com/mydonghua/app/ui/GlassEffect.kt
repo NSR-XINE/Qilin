@@ -251,10 +251,20 @@ fun GlassSection(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
 
-    // Exact LiquidGlassNavBar crystal transparency formulation with restored card borders
+    // Exact LiquidGlassNavBar crystal transparency & 3D specular glass refraction border
     val baseSurfaceColor = Color.Black.copy(alpha = if (isDark) 0.08f else 0.15f)
     val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.15f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f)
+    val specularGlassBorder = Brush.verticalGradient(
+        colors = if (isDark) listOf(
+            Color.White.copy(alpha = 0.45f), // Top light glint (3D specular glass reflection)
+            Color.White.copy(alpha = 0.15f), // Side translucent glass reflection
+            Color.White.copy(alpha = 0.05f)  // Bottom subtle light taper
+        ) else listOf(
+            Color.White.copy(alpha = 0.65f), // Light mode top specular shine
+            Color.Black.copy(alpha = 0.15f), // Side dark contrast rim
+            Color.Black.copy(alpha = 0.08f)  // Bottom edge rim
+        )
+    )
 
     Box(
         modifier = modifier
@@ -276,7 +286,7 @@ fun GlassSection(
             )
             .border(
                 width = 1.2.dp,
-                color = borderColor,
+                brush = specularGlassBorder,
                 shape = shape
             )
     ) {
