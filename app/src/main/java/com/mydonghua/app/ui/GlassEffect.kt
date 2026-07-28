@@ -249,12 +249,12 @@ fun GlassSection(
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
 
-    val baseGlassColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.40f)
-    val accentTint = primaryContainer.copy(alpha = if (isDark) 0.12f else 0.08f)
-    val fullBoxGlassColor = baseGlassColor.compositeOver(accentTint)
+    // Exact LiquidGlassNavBar glass parameters (LiquidGlassNavBar.kt:L472-477 & L82)
+    val navBarDarkenAlpha = if (isDark) 0.12f else 0.45f
+    val baseSurfaceColor = Color.Black.copy(alpha = navBarDarkenAlpha)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.12f)
 
     Box(
         modifier = modifier
@@ -262,12 +262,12 @@ fun GlassSection(
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
-                color = fullBoxGlassColor,
+                color = baseSurfaceColor,
                 shape = shape
             )
             .border(
-                width = 1.2.dp,
-                color = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.15f),
+                width = 0.5.dp,
+                color = borderColor,
                 shape = shape
             )
     ) {
