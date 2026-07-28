@@ -55,12 +55,14 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val effectiveTopPadding = if (topPadding > 60.dp) topPadding + Spacing.md else 112.dp
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Transparent)
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(top = topPadding + 28.dp, bottom = 80.dp)
+        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 80.dp)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item(key = "hero_banner_${state.nextUpShow!!.id}") {
