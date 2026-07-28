@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.ui.theme.CornerRadius
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
@@ -40,6 +42,8 @@ fun GlassBackground(
 ) {
     val hazeState = LocalHazeState.current
     val backgroundColor = MaterialTheme.colorScheme.background
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+    val surfaceTint = MaterialTheme.colorScheme.surfaceTint
 
     Box(
         modifier = modifier
@@ -47,6 +51,22 @@ fun GlassBackground(
             .background(color = backgroundColor)
             .hazeChild(state = hazeState)
     ) {
+        // Material 3 Ambient Tonal Radial Glow
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            primaryContainer.copy(alpha = 0.18f),
+                            surfaceTint.copy(alpha = 0.08f),
+                            Color.Transparent
+                        ),
+                        center = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        radius = 2000f
+                    )
+                )
+        )
         content()
     }
 }
@@ -59,6 +79,7 @@ fun GlassSection(
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val surfaceTint = MaterialTheme.colorScheme.surfaceTint
 
     Box(
         modifier = modifier
@@ -66,12 +87,23 @@ fun GlassSection(
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
-                color = surfaceColor.copy(alpha = 0.45f),
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        surfaceColor.copy(alpha = 0.55f),
+                        surfaceTint.copy(alpha = 0.08f),
+                        surfaceColor.copy(alpha = 0.40f)
+                    )
+                ),
                 shape = shape
             )
             .border(
                 width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
+                ),
                 shape = shape
             )
     ) {
