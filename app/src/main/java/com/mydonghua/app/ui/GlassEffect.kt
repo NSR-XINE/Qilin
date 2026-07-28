@@ -56,27 +56,66 @@ fun GlassBackground(
 ) {
     val hazeState = LocalHazeState.current
     val backgroundColor = MaterialTheme.colorScheme.background
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val surfaceTint = MaterialTheme.colorScheme.surfaceTint
 
-    val infiniteTransition = rememberInfiniteTransition(label = "ambientGlow")
-    val glowOffsetX by infiniteTransition.animateFloat(
-        initialValue = -0.1f,
-        targetValue = 0.8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(14000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowX"
-    )
-    val glowOffsetY by infiniteTransition.animateFloat(
+    val infiniteTransition = rememberInfiniteTransition(label = "appleMusicFluidGlow")
+
+    // Orb 1: Primary Accent (Top-Left Lissajous Orbit)
+    val orb1X by infiniteTransition.animateFloat(
         initialValue = -0.2f,
         targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(21000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowY"
+        animationSpec = infiniteRepeatable(tween(18000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb1X"
+    )
+    val orb1Y by infiniteTransition.animateFloat(
+        initialValue = -0.3f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(tween(27000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb1Y"
+    )
+    val orb1Scale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.45f,
+        animationSpec = infiniteRepeatable(tween(14000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "orb1Scale"
+    )
+
+    // Orb 2: Secondary / Tertiary Tint (Bottom-Right Orbit)
+    val orb2X by infiniteTransition.animateFloat(
+        initialValue = 1.1f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(tween(23000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb2X"
+    )
+    val orb2Y by infiniteTransition.animateFloat(
+        initialValue = 1.2f,
+        targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(tween(16000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb2Y"
+    )
+    val orb2Scale by infiniteTransition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 1.35f,
+        animationSpec = infiniteRepeatable(tween(19000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "orb2Scale"
+    )
+
+    // Orb 3: Complementary Floating Glare (Center-Right Drift)
+    val orb3X by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = -0.1f,
+        animationSpec = infiniteRepeatable(tween(31000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb3X"
+    )
+    val orb3Y by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(tween(22000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb3Y"
     )
 
     Box(
@@ -88,8 +127,24 @@ fun GlassBackground(
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val widthPx = constraints.maxWidth.toFloat()
             val heightPx = constraints.maxHeight.toFloat()
-            val centerX = widthPx * glowOffsetX
-            val centerY = heightPx * glowOffsetY
+            val baseRadius = (widthPx * 1.5f).coerceAtLeast(1400f)
+
+            // Canvas rendering Apple Music multi-orb fluid mesh movement
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.32f),
+                                primaryContainer.copy(alpha = 0.15f),
+                                Color.Transparent
+                            ),
+                            center = Offset(widthPx * orb1X, heightPx * orb1Y),
+                            radius = baseRadius * orb1Scale
+                        )
+                    )
+            )
 
             Box(
                 modifier = Modifier
@@ -97,12 +152,28 @@ fun GlassBackground(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                primaryContainer.copy(alpha = 0.18f),
-                                surfaceTint.copy(alpha = 0.07f),
+                                tertiaryColor.copy(alpha = 0.28f),
+                                surfaceTint.copy(alpha = 0.12f),
                                 Color.Transparent
                             ),
-                            center = androidx.compose.ui.geometry.Offset(centerX, centerY),
-                            radius = (widthPx * 1.6f).coerceAtLeast(1500f)
+                            center = Offset(widthPx * orb2X, heightPx * orb2Y),
+                            radius = baseRadius * orb2Scale
+                        )
+                    )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                secondaryColor.copy(alpha = 0.22f),
+                                primaryColor.copy(alpha = 0.08f),
+                                Color.Transparent
+                            ),
+                            center = Offset(widthPx * orb3X, heightPx * orb3Y),
+                            radius = baseRadius * 1.2f
                         )
                     )
             )
