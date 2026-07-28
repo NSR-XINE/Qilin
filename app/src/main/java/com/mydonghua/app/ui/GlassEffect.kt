@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.mydonghua.app.ui.theme.CornerRadius
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import dev.chrisbanes.haze.HazeState
@@ -33,8 +36,6 @@ object Spacing {
 }
 
 private val GlassTintAlpha = 0.04f
-private val GlassSectionAlpha = 0.05f
-
 @Composable
 fun GlassBackground(
     modifier: Modifier = Modifier,
@@ -45,28 +46,54 @@ fun GlassBackground(
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val surfaceTint = MaterialTheme.colorScheme.surfaceTint
 
+    val infiniteTransition = rememberInfiniteTransition(label = "ambientGlow")
+    val glowOffsetX by infiniteTransition.animateFloat(
+        initialValue = -0.1f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(14000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowX"
+    )
+    val glowOffsetY by infiniteTransition.animateFloat(
+        initialValue = -0.2f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(21000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowY"
+    )
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(color = backgroundColor)
             .hazeChild(state = hazeState)
     ) {
-        // Material 3 Ambient Tonal Radial Glow
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            primaryContainer.copy(alpha = 0.18f),
-                            surfaceTint.copy(alpha = 0.08f),
-                            Color.Transparent
-                        ),
-                        center = androidx.compose.ui.geometry.Offset(0f, 0f),
-                        radius = 2000f
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val widthPx = constraints.maxWidth.toFloat()
+            val heightPx = constraints.maxHeight.toFloat()
+            val centerX = widthPx * glowOffsetX
+            val centerY = heightPx * glowOffsetY
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryContainer.copy(alpha = 0.18f),
+                                surfaceTint.copy(alpha = 0.07f),
+                                Color.Transparent
+                            ),
+                            center = androidx.compose.ui.geometry.Offset(centerX, centerY),
+                            radius = (widthPx * 1.6f).coerceAtLeast(1500f)
+                        )
                     )
-                )
-        )
+            )
+        }
         content()
     }
 }
