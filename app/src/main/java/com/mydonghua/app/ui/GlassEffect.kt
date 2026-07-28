@@ -118,6 +118,26 @@ fun GlassBackground(
         label = "orb3Y"
     )
 
+    // Orb 4: Center Plasma Ambient Core (Swell & Pulse)
+    val orb4X by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(tween(25000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb4X"
+    )
+    val orb4Y by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 0.1f,
+        animationSpec = infiniteRepeatable(tween(33000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "orb4Y"
+    )
+    val orb4Scale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.40f,
+        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "orb4Scale"
+    )
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -129,15 +149,32 @@ fun GlassBackground(
             val heightPx = constraints.maxHeight.toFloat()
             val baseRadius = (widthPx * 1.5f).coerceAtLeast(1400f)
 
-            // Canvas rendering Apple Music multi-orb fluid mesh movement
+            // Linear background mesh sweep
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.12f),
+                                secondaryColor.copy(alpha = 0.08f),
+                                tertiaryColor.copy(alpha = 0.12f)
+                            ),
+                            start = Offset(widthPx * orb1X, 0f),
+                            end = Offset(widthPx * orb2X, heightPx)
+                        )
+                    )
+            )
+
+            // Orb 1: Vibrant Primary Core
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.32f),
-                                primaryContainer.copy(alpha = 0.15f),
+                                primaryColor.copy(alpha = 0.38f),
+                                primaryContainer.copy(alpha = 0.18f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb1X, heightPx * orb1Y),
@@ -146,14 +183,15 @@ fun GlassBackground(
                     )
             )
 
+            // Orb 2: Deep Tertiary Swell
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                tertiaryColor.copy(alpha = 0.28f),
-                                surfaceTint.copy(alpha = 0.12f),
+                                tertiaryColor.copy(alpha = 0.32f),
+                                surfaceTint.copy(alpha = 0.14f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb2X, heightPx * orb2Y),
@@ -162,18 +200,36 @@ fun GlassBackground(
                     )
             )
 
+            // Orb 3: Secondary Floating Flare
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                secondaryColor.copy(alpha = 0.22f),
-                                primaryColor.copy(alpha = 0.08f),
+                                secondaryColor.copy(alpha = 0.28f),
+                                primaryColor.copy(alpha = 0.10f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb3X, heightPx * orb3Y),
-                            radius = baseRadius * 1.2f
+                            radius = baseRadius * 1.25f
+                        )
+                    )
+            )
+
+            // Orb 4: Center Plasma Swell
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.22f),
+                                tertiaryColor.copy(alpha = 0.12f),
+                                Color.Transparent
+                            ),
+                            center = Offset(widthPx * orb4X, heightPx * orb4Y),
+                            radius = baseRadius * orb4Scale
                         )
                     )
             )
