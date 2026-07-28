@@ -118,11 +118,13 @@ fun GlassSection(
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val isDark = surfaceColor.luminance() < 0.5f
 
-    val baseSurfaceColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
-    val topHighlightColor = if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.65f)
-    val bottomBorderColor = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
+    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.30f)
+    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.15f)
+    val topSpecularHighlight = if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.60f)
+    val bottomBorderEdge = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f)
 
     Box(
         modifier = modifier
@@ -130,15 +132,21 @@ fun GlassSection(
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
-                color = baseSurfaceColor,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        topGlassFill,
+                        primaryContainer.copy(alpha = if (isDark) 0.08f else 0.05f),
+                        bottomGlassFill
+                    )
+                ),
                 shape = shape
             )
             .border(
                 width = 0.5.dp,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        topHighlightColor,
-                        bottomBorderColor
+                        topSpecularHighlight,
+                        bottomBorderEdge
                     )
                 ),
                 shape = shape
