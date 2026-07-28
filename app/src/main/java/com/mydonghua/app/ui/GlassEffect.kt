@@ -120,6 +120,7 @@ fun GlassSection(
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val surfaceTint = MaterialTheme.colorScheme.surfaceTint
+    val isDark = surfaceColor.luminance() < 0.5f
 
     Box(
         modifier = modifier
@@ -138,7 +139,7 @@ fun GlassSection(
             )
             .border(
                 width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
+                color = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.08f),
                 shape = shape
             )
     ) {
