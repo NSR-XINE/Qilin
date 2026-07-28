@@ -281,47 +281,16 @@ fun GlassSection(
         )
     )
 
-    val baseModifier = modifier
-        .fillMaxWidth()
-        .shadow(
-            elevation = 8.dp,
-            shape = shape,
-            clip = false,
-            ambientColor = shadowColor,
-            spotColor = shadowColor
-        )
-
-    val liquidGlassModifier = if (backdrop != null) {
-        baseModifier.drawBackdrop(
-            backdrop = backdrop,
-            shape = { shape },
-            effects = {
-                vibrancy()
-                colorControls(
-                    brightness = if (isDark) 0.04f else 0.08f,
-                    contrast = 1f,
-                    saturation = 1.4f
-                )
-                blur(12f.dp.toPx())
-                refraction(size.minDimension / 4f, size.minDimension / 2f, false)
-            },
-            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.6f else 0.75f) },
-            shadow = { Shadow(radius = 6f.dp, alpha = if (isDark) 0.45f else 0.20f) },
-            innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isDark) 0.30f else 0.15f) },
-            onDrawSurface = {
-                drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(topGlassFill, centerGlassFill, bottomGlassFill)
-                    ),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                        shape.topStart.toPx(size, density = this),
-                        shape.topStart.toPx(size, density = this)
-                    )
-                )
-            }
-        )
-    } else {
-        baseModifier
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 8.dp,
+                shape = shape,
+                clip = false,
+                ambientColor = shadowColor,
+                spotColor = shadowColor
+            )
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
@@ -330,10 +299,6 @@ fun GlassSection(
                 ),
                 shape = shape
             )
-    }
-
-    Box(
-        modifier = liquidGlassModifier
             .border(
                 width = 1.5.dp,
                 brush = specularGlassBorder,
