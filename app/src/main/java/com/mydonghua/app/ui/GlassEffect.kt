@@ -260,12 +260,12 @@ fun GlassSection(
     val isDark = surfaceColor.luminance() < 0.5f
 
     // Liquid Glass Specs matching Bottom Nav Bar
-    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.35f)
-    val centerGlassFill = primaryContainer.copy(alpha = if (isDark) 0.08f else 0.04f)
-    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f)
+    val topGlassFill = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.22f)
+    val centerGlassFill = primaryContainer.copy(alpha = if (isDark) 0.04f else 0.02f)
+    val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.08f)
 
-    val topSpecularGlare = if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.55f)
-    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.20f)
+    val topSpecularGlare = if (isDark) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.40f)
+    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.15f)
 
     val specularGlassBorder = Brush.verticalGradient(
         colors = if (isDark) listOf(
