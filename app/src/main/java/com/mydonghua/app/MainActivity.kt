@@ -575,9 +575,11 @@ AnimatedVisibility(
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
         }
     }
+}
 }
 }
 }
@@ -631,7 +633,6 @@ AnimatedVisibility(
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
     }
-}
 
 @Composable
 private fun StarsBackground(modifier: Modifier = Modifier) {
