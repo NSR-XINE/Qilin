@@ -341,12 +341,12 @@ fun RecentlyUpdatedRow(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onShowClick(show.id) }
-                            .padding(Spacing.md),
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(width = 64.dp, height = 88.dp)
+                                .size(width = 52.dp, height = 70.dp)
                                 .clip(RoundedCornerShape(CornerRadius.sm))
                         ) {
                             DonghuaPoster(
