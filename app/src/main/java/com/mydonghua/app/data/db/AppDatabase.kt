@@ -21,10 +21,31 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private fun addColumnIfNotExists(db: SupportSQLiteDatabase, table: String, column: String, typeAndConstraints: String) {
+            val cursor = db.query("PRAGMA table_info(`$table`)")
+            var exists = false
+            val nameIndex = cursor.getColumnIndex("name")
+            while (cursor.moveToNext()) {
+                if (nameIndex != -1 && cursor.getString(nameIndex) == column) {
+                    exists = true
+                    break
+                }
+            }
+            cursor.close()
+            if (!exists) {
+                db.execSQL("ALTER TABLE `$table` ADD COLUMN `$column` $typeAndConstraints")
+            }
+        }
+
         val MIGRATION_1_2 = Migration(1, 2) { db ->
             db.execSQL("CREATE TABLE IF NOT EXISTS `shows` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `title_zh` TEXT, `status` TEXT NOT NULL DEFAULT 'ongoing', `release_day` TEXT, `release_time` TEXT, `current_ep` INTEGER NOT NULL DEFAULT 0, `total_ep` INTEGER NOT NULL DEFAULT 0, `poster` TEXT, `watch_url` TEXT, `countdown_url` TEXT, `notes` TEXT, `is_favorite` INTEGER NOT NULL DEFAULT 0, `rating` INTEGER NOT NULL DEFAULT 0, `last_updated` INTEGER, `date_added` INTEGER, `alarm_request_code` INTEGER, `genres` TEXT, `studio` TEXT, `release_year` INTEGER NOT NULL DEFAULT 0, `language` TEXT DEFAULT 'Chinese', `collection_id` TEXT, PRIMARY KEY(`id`))")
             db.execSQL("CREATE TABLE IF NOT EXISTS `watch_history` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `show_id` TEXT NOT NULL, `episode_num` INTEGER NOT NULL, `watched_timestamp` INTEGER NOT NULL, FOREIGN KEY(`show_id`) REFERENCES `shows`(`id`) ON DELETE CASCADE)")
             db.execSQL("CREATE TABLE IF NOT EXISTS `settings` (`key` TEXT NOT NULL, `value` TEXT, PRIMARY KEY(`key`))")
+
+            addColumnIfNotExists(db, "shows", "last_updated", "INTEGER")
+            addColumnIfNotExists(db, "shows", "date_added", "INTEGER")
+            addColumnIfNotExists(db, "shows", "alarm_request_code", "INTEGER")
+
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_status` ON `shows` (`status`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_favorite` ON `shows` (`is_favorite`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_release_day` ON `shows` (`release_day`)")
@@ -39,6 +60,16 @@ abstract class AppDatabase : RoomDatabase() {
             db.execSQL("CREATE TABLE IF NOT EXISTS `shows` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `title_zh` TEXT, `status` TEXT NOT NULL DEFAULT 'ongoing', `release_day` TEXT, `release_time` TEXT, `current_ep` INTEGER NOT NULL DEFAULT 0, `total_ep` INTEGER NOT NULL DEFAULT 0, `poster` TEXT, `watch_url` TEXT, `countdown_url` TEXT, `notes` TEXT, `is_favorite` INTEGER NOT NULL DEFAULT 0, `rating` INTEGER NOT NULL DEFAULT 0, `last_updated` INTEGER, `date_added` INTEGER, `alarm_request_code` INTEGER, `genres` TEXT, `studio` TEXT, `release_year` INTEGER NOT NULL DEFAULT 0, `language` TEXT DEFAULT 'Chinese', `collection_id` TEXT, PRIMARY KEY(`id`))")
             db.execSQL("CREATE TABLE IF NOT EXISTS `watch_history` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `show_id` TEXT NOT NULL, `episode_num` INTEGER NOT NULL, `watched_timestamp` INTEGER NOT NULL, FOREIGN KEY(`show_id`) REFERENCES `shows`(`id`) ON DELETE CASCADE)")
             db.execSQL("CREATE TABLE IF NOT EXISTS `settings` (`key` TEXT NOT NULL, `value` TEXT, PRIMARY KEY(`key`))")
+
+            addColumnIfNotExists(db, "shows", "genres", "TEXT")
+            addColumnIfNotExists(db, "shows", "studio", "TEXT")
+            addColumnIfNotExists(db, "shows", "release_year", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(db, "shows", "language", "TEXT DEFAULT 'Chinese'")
+            addColumnIfNotExists(db, "shows", "collection_id", "TEXT")
+            addColumnIfNotExists(db, "shows", "last_updated", "INTEGER")
+            addColumnIfNotExists(db, "shows", "date_added", "INTEGER")
+            addColumnIfNotExists(db, "shows", "alarm_request_code", "INTEGER")
+
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_status` ON `shows` (`status`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_favorite` ON `shows` (`is_favorite`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_release_day` ON `shows` (`release_day`)")
@@ -57,6 +88,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "mydonghua.db"
                 )
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
                 INSTANCE = instance
                 instance

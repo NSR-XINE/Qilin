@@ -15,22 +15,22 @@ data class CountdownTime(
 object CountdownCalculator {
 
     private val DAYS_MAP = mapOf(
-        "Sunday" to Calendar.SUNDAY,
-        "Monday" to Calendar.MONDAY,
-        "Tuesday" to Calendar.TUESDAY,
-        "Wednesday" to Calendar.WEDNESDAY,
-        "Thursday" to Calendar.THURSDAY,
-        "Friday" to Calendar.FRIDAY,
-        "Saturday" to Calendar.SATURDAY
+        "sunday" to Calendar.SUNDAY,
+        "monday" to Calendar.MONDAY,
+        "tuesday" to Calendar.TUESDAY,
+        "wednesday" to Calendar.WEDNESDAY,
+        "thursday" to Calendar.THURSDAY,
+        "friday" to Calendar.FRIDAY,
+        "saturday" to Calendar.SATURDAY
     )
 
     fun getNextReleaseDateMs(releaseDay: String?, releaseTime: String?): Long? {
         if (releaseDay == null || releaseTime == null || !releaseTime.contains(":")) return null
         val parts = releaseTime.split(":")
         if (parts.size < 2) return null
-        val hours = parts[0].toIntOrNull() ?: return null
-        val minutes = parts[1].toIntOrNull() ?: return null
-        val targetDayNum = DAYS_MAP[releaseDay] ?: return null
+        val hours = parts[0].trim().toIntOrNull() ?: return null
+        val minutes = parts[1].trim().toIntOrNull() ?: return null
+        val targetDayNum = DAYS_MAP[releaseDay.lowercase().trim()] ?: return null
 
         val tz = TimeZone.getDefault()
         val now = Calendar.getInstance(tz)

@@ -53,15 +53,28 @@ object AlarmScheduler {
         val triggerTime = calculateNextReleaseTime(releaseDay, releaseTime)
         if (triggerTime == 0L) return
 
+        val canExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            am.canScheduleExactAlarms()
+        } else true
+
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (canExact && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pi)
             } else {
-                am.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pi)
+                am.set(AlarmManager.RTC_WAKEUP, triggerTime, pi)
             }
         } catch (se: SecurityException) {
             am.set(AlarmManager.RTC_WAKEUP, triggerTime, pi)
         }
+    }
+
+    @JvmStatic
+    fun canScheduleExactAlarms(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+            return am?.canScheduleExactAlarms() ?: false
+        }
+        return true
     }
 
     @JvmStatic

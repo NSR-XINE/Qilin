@@ -19,7 +19,17 @@ data class AutoFillDetails(
 
 object PosterFetchService {
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val original = chain.request()
+            val request = original.newBuilder()
+                .header("User-Agent", "MyDonghua/6.8 (Android)")
+                .build()
+            chain.proceed(request)
+        }
+        .build()
 
     suspend fun fetchFromJikan(query: String): AutoFillDetails? = withContext(Dispatchers.IO) {
         try {

@@ -42,7 +42,7 @@ object StatsCalculator {
         val avgRating = if (ratings.isNotEmpty()) {
             val sum = ratings.sumOf { it.rating }
             val avg = sum.toDouble() / ratings.size
-            String.format("%.1f", avg)
+            String.format(java.util.Locale.US, "%.1f", avg)
         } else {
             "—"
         }
