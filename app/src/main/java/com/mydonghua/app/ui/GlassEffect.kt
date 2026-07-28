@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -123,8 +124,20 @@ fun GlassSection(
 
     val topGlassFill = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.30f)
     val bottomGlassFill = if (isDark) Color.Black.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.15f)
-    val topBorderHighlight = if (isDark) Color.White.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.30f)
-    val bottomBorderColor = if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.15f)
+
+    val glassBorderBrush = Brush.linearGradient(
+        colors = if (isDark) listOf(
+            Color.White.copy(alpha = 0.60f),
+            Color.White.copy(alpha = 0.20f),
+            Color.White.copy(alpha = 0.08f)
+        ) else listOf(
+            Color.White.copy(alpha = 0.85f),
+            Color.White.copy(alpha = 0.35f),
+            Color.Black.copy(alpha = 0.15f)
+        ),
+        start = Offset(0f, 0f),
+        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+    )
 
     Box(
         modifier = modifier
@@ -142,13 +155,8 @@ fun GlassSection(
                 shape = shape
             )
             .border(
-                width = 2.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        topBorderHighlight,
-                        bottomBorderColor
-                    )
-                ),
+                width = 1.5.dp,
+                brush = glassBorderBrush,
                 shape = shape
             )
     ) {

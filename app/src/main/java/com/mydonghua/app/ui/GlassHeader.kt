@@ -115,6 +115,20 @@ fun GlassHeader(
         )
     }
 
+    val glassBorderBrush = Brush.linearGradient(
+        colors = if (isDark) listOf(
+            Color.White.copy(alpha = 0.60f),
+            Color.White.copy(alpha = 0.20f),
+            Color.White.copy(alpha = 0.08f)
+        ) else listOf(
+            Color.White.copy(alpha = 0.85f),
+            Color.White.copy(alpha = 0.35f),
+            Color.Black.copy(alpha = 0.15f)
+        ),
+        start = Offset(0f, 0f),
+        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+    )
+
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -139,8 +153,8 @@ fun GlassHeader(
                     }
                 )
                 .border(
-                    width = 2.dp,
-                    color = headerBorderStrokeColor,
+                    width = 1.5.dp,
+                    brush = glassBorderBrush,
                     shape = RoundedCornerShape(topStart = displayCornerRadius, topEnd = displayCornerRadius, bottomStart = 16.dp, bottomEnd = 16.dp)
                 )
         ) {
