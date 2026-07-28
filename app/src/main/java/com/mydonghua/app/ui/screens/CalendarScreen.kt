@@ -139,7 +139,7 @@ fun CalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.xxxl))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

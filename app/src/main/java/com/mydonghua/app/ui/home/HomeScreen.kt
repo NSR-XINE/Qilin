@@ -62,7 +62,7 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.Transparent)
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 80.dp)
+        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 120.dp)
     ) {
         if (state.showCountdownBanner && state.nextUpShow != null) {
             item(key = "hero_banner_${state.nextUpShow!!.id}") {
