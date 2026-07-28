@@ -255,8 +255,10 @@ fun GlassSection(
 ) {
     val hazeState = LocalHazeState.current
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val density = LocalDensity.current
     val isDark = surfaceColor.luminance() < 0.5f
 
+    val cornerRadiusPx = with(density) { CornerRadius.card.toPx() }
     val baseSurfaceColor = Color.Black.copy(alpha = if (isDark) 0.08f else 0.15f)
     val topRefractionHighlight = if (isDark) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.15f)
     val specularGlassBorder = Brush.verticalGradient(
@@ -275,26 +277,49 @@ fun GlassSection(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .hazeChild(state = hazeState, shape = shape)
-            .background(
-                color = baseSurfaceColor,
-                shape = shape
-            )
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        topRefractionHighlight,
-                        Color.Transparent
-                    )
-                ),
-                shape = shape
-            )
-            .border(
-                width = 1.2.dp,
-                brush = specularGlassBorder,
-                shape = shape
-            )
     ) {
+        // Layer 1: Background GPU Refraction Shader (Refracts background wallpaper ONLY)
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && size.width > 0f && size.height > 0f) {
+                        try {
+                            val shader = RuntimeShader(RoundedRectRefractionShaderString).apply {
+                                setFloatUniform("size", size.width, size.height)
+                                setFloatUniform("cornerRadii", cornerRadiusPx, cornerRadiusPx, cornerRadiusPx, cornerRadiusPx)
+                                val refHeight = minOf(size.width, size.height) / 4f
+                                setFloatUniform("refractionHeight", refHeight)
+                                setFloatUniform("refractionAmount", -refHeight)
+                                setFloatUniform("depthEffect", 0f)
+                            }
+                            renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                .hazeChild(state = hazeState, shape = shape)
+                .background(
+                    color = baseSurfaceColor,
+                    shape = shape
+                )
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            topRefractionHighlight,
+                            Color.Transparent
+                        )
+                    ),
+                    shape = shape
+                )
+                .border(
+                    width = 1.2.dp,
+                    brush = specularGlassBorder,
+                    shape = shape
+                )
+        )
+
+        // Layer 2: Clean Foreground Content Layer (Un-warped, crisp text and posters)
         Box(modifier = Modifier.padding(Spacing.md)) {
             content()
         }
