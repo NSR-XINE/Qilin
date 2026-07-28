@@ -526,7 +526,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     DrawerItem(
                                         iconRes = R.drawable.ic_calendar,
-                                        label = "Calendar",
+                                        label = "Weekly Schedule",
                                         onClick = { isDrawerOpen = false; navController.navigate("calendar") }
                                     )
                                     DrawerItem(
