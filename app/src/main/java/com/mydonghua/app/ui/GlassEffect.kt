@@ -166,9 +166,9 @@ fun GlassBackground(
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.12f),
-                                secondaryColor.copy(alpha = 0.08f),
-                                tertiaryColor.copy(alpha = 0.12f)
+                                primaryColor.copy(alpha = 0.05f),
+                                secondaryColor.copy(alpha = 0.03f),
+                                tertiaryColor.copy(alpha = 0.05f)
                             ),
                             start = Offset(widthPx * orb1X, 0f),
                             end = Offset(widthPx * orb2X, heightPx)
@@ -183,8 +183,8 @@ fun GlassBackground(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.38f),
-                                primaryContainer.copy(alpha = 0.18f),
+                                primaryColor.copy(alpha = 0.15f),
+                                primaryContainer.copy(alpha = 0.06f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb1X, heightPx * orb1Y),
@@ -200,8 +200,8 @@ fun GlassBackground(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                tertiaryColor.copy(alpha = 0.32f),
-                                surfaceTint.copy(alpha = 0.14f),
+                                tertiaryColor.copy(alpha = 0.12f),
+                                surfaceTint.copy(alpha = 0.05f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb2X, heightPx * orb2Y),
@@ -217,8 +217,8 @@ fun GlassBackground(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                secondaryColor.copy(alpha = 0.28f),
-                                primaryColor.copy(alpha = 0.10f),
+                                secondaryColor.copy(alpha = 0.10f),
+                                primaryColor.copy(alpha = 0.04f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb3X, heightPx * orb3Y),
@@ -234,8 +234,8 @@ fun GlassBackground(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.22f),
-                                tertiaryColor.copy(alpha = 0.12f),
+                                primaryColor.copy(alpha = 0.08f),
+                                tertiaryColor.copy(alpha = 0.04f),
                                 Color.Transparent
                             ),
                             center = Offset(widthPx * orb4X, heightPx * orb4Y),
