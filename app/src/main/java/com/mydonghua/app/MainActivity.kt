@@ -470,8 +470,12 @@ AnimatedVisibility(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Transparent)
-            .clickable(onClick = { isDrawerOpen = false })
+            .background(Color.Black.copy(alpha = 0.50f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { isDrawerOpen = false }
+            )
     ) {
         AnimatedVisibility(
             visible = isDrawerOpen,
@@ -492,25 +496,42 @@ AnimatedVisibility(
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
             val drawerShape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
+            val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
+            val isLightMode = settingsState.themeMode.lowercase() == "light"
+            val drawerBgColor = when {
+                isAmoledMode -> Color(0xFF0A0D14).copy(alpha = 0.96f)
+                isLightMode -> MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+                else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(200.dp)
+                    .width(250.dp)
                     .clip(drawerShape)
                     .hazeChild(state = drawerHazeState, shape = drawerShape)
                     .background(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f),
+                        color = drawerBgColor,
                         shape = drawerShape
                     )
                     .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                        width = 1.dp,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = if (isLightMode) 0.50f else 0.25f),
+                                Color.White.copy(alpha = if (isLightMode) 0.20f else 0.08f),
+                                Color.Transparent
+                            )
+                        ),
                         shape = drawerShape
                     )
-                    .clickable(enabled = false) {}
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {}
                     .statusBarsPadding()
                     .navigationBarsPadding()
-                    .padding(horizontal = Spacing.xl, vertical = Spacing.xl),
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.xl),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
@@ -523,7 +544,7 @@ AnimatedVisibility(
                             text = "Menu",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         IconButton(onClick = { isDrawerOpen = false }) {
                             Text("\u2715", fontSize = IconSize.xs.value.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -559,7 +580,7 @@ AnimatedVisibility(
                     )
 
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                         modifier = Modifier.padding(vertical = Spacing.sm)
                     )
 
@@ -664,28 +685,38 @@ private fun DrawerItem(
     label: String,
     onClick: () -> Unit
 ) {
+    val itemShape = RoundedCornerShape(12.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(itemShape)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() }
-            .padding(vertical = Spacing.sm),
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            modifier = Modifier.size(IconSize.md),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.40f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = label,
+                modifier = Modifier.size(IconSize.sm),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
         Text(
             text = label,
-            fontSize = 15.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
