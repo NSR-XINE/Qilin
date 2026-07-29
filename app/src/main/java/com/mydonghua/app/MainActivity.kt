@@ -206,6 +206,32 @@ class MainActivity : ComponentActivity() {
                                              }
                                          }
                                      }
+                                },
+                                bottomBar = {
+                                    if (showGlobalHeader) {
+                                        LiquidGlassNavBar(
+                                            currentRoute = currentRoute,
+                                            isDark = settingsState.themeMode.lowercase() != "light",
+                                            backdrop = navBackdrop,
+                                            isSearchOpen = isSearchOpen,
+                                            onSearchClick = { isSearchOpen = !isSearchOpen },
+                                            onNavigate = { route ->
+                                                when (route) {
+                                                    "home" -> {
+                                                        val currentDest = navController.currentBackStackEntry?.destination?.route
+                                                        if (currentDest != "home") {
+                                                            navController.popBackStack("home", inclusive = false)
+                                                        }
+                                                    }
+                                                    "add_edit_show" -> navController.navigate("add_edit_show")
+                                                    else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm)
+                                        )
+                                    }
                                 }
                             ) { innerPadding ->
                                 Box(
@@ -437,32 +463,6 @@ class MainActivity : ComponentActivity() {
                             onNavigateBack = { isSearchOpen = false }
                         )
                     }
-                }
-
-                if (showGlobalHeader) {
-                    LiquidGlassNavBar(
-                        currentRoute = currentRoute,
-                        isDark = settingsState.themeMode.lowercase() != "light",
-                        backdrop = navBackdrop,
-                        isSearchOpen = isSearchOpen,
-                        onSearchClick = { isSearchOpen = !isSearchOpen },
-                        onNavigate = { route ->
-                            when (route) {
-                                "home" -> {
-                                    val currentDest = navController.currentBackStackEntry?.destination?.route
-                                    if (currentDest != "home") {
-                                        navController.popBackStack("home", inclusive = false)
-                                    }
-                                }
-                                "add_edit_show" -> navController.navigate("add_edit_show")
-                                else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm),
-                    )
                 }
 
                 AnimatedVisibility(
