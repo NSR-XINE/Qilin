@@ -100,10 +100,9 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.06f),
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                 ),
                 modifier = Modifier
-                    .hazeChild(state = hazeState)
                     .border(
                         width = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
@@ -123,7 +122,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(Spacing.xs))
 
             SectionHeader("Theme Mode Options")
-            GlassSection {
+            SettingsGlassSection {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -239,7 +238,7 @@ fun SettingsScreen(
             }
 
             SectionHeader("Accent Color Palette")
-            GlassSection {
+            SettingsGlassSection {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -396,7 +395,7 @@ fun SettingsScreen(
             }
 
             SectionHeader("Dashboard Display Options")
-            GlassSection {
+            SettingsGlassSection {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     TogglePreferenceItem(
                         title = "Hero Countdown Banner",
@@ -429,7 +428,7 @@ fun SettingsScreen(
             }
 
             SectionHeader("Search & Streaming Options")
-            GlassSection {
+            SettingsGlassSection {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -551,7 +550,7 @@ fun SettingsScreen(
             }
 
             SectionHeader("App Tools & Features")
-            GlassSection {
+            SettingsGlassSection {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     SettingsActionItem("Detailed Stats & Analytics", subtitle = "Viewing metrics, total watch time & status charts", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
@@ -564,7 +563,7 @@ fun SettingsScreen(
             }
 
             SectionHeader("Data Backups Management")
-            GlassSection {
+            SettingsGlassSection {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -641,7 +640,7 @@ fun SettingsScreen(
             }
 
             SectionHeader("About My Donghua")
-            GlassSection {
+            SettingsGlassSection {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier
@@ -835,5 +834,37 @@ private fun SettingsInfoItem(
     ) {
         Text(title, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
         Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+private fun SettingsGlassSection(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val isDark = androidx.compose.ui.graphics.luminance(MaterialTheme.colorScheme.surface) < 0.5f
+    val surfaceBg = if (isDark) {
+        Color(0xFF131B2A).copy(alpha = 0.70f)
+    } else {
+        Color.White.copy(alpha = 0.75f)
+    }
+    val borderColor = if (isDark) {
+        Color.White.copy(alpha = 0.12f)
+    } else {
+        Color.Black.copy(alpha = 0.08f)
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = surfaceBg,
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, borderColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacing.md),
+            content = content
+        )
     }
 }
