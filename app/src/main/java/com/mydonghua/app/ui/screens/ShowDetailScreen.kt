@@ -607,7 +607,7 @@ private fun DetailCountdownBox(value: Long, label: String) {
             Text(
                 text = String.format("%02d", value),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )

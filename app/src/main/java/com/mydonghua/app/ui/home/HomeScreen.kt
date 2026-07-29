@@ -222,7 +222,7 @@ private fun BannerTimeBox(value: Long, label: String) {
             Text(
                 text = String.format("%02d", value),
                 fontSize = 15.5.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
