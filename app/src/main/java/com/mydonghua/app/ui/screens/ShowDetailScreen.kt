@@ -9,6 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -382,53 +384,113 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Info Chips Grid (Language, Episodes, Studio, Year)
+                // Formatted Language Display
+                val formattedLanguage = when (show.language?.trim()?.lowercase()) {
+                    "cn", "zh", "chinese", "mandarin" -> "🇨🇳 Chinese"
+                    "en", "english" -> "🇬🇧 English"
+                    "jp", "ja", "japanese" -> "🇯🇵 Japanese"
+                    null, "" -> "🇨🇳 Chinese"
+                    else -> show.language!!
+                }
+
+                // Info Chips Grid (Language, Episodes, Year)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
-                    DetailGlassChip(label = "Language", value = show.language ?: "CN", modifier = Modifier.weight(1f))
+                    DetailGlassChip(label = "Language", value = formattedLanguage, modifier = Modifier.weight(1.2f))
                     if (show.totalEp > 0) {
-                        DetailGlassChip(label = "Episodes", value = "${show.totalEp}", modifier = Modifier.weight(1f))
+                        DetailGlassChip(label = "Episodes", value = "${show.totalEp}", modifier = Modifier.weight(0.9f))
                     }
                     if (show.releaseYear != null && show.releaseYear!! > 0) {
-                        DetailGlassChip(label = "Year", value = "${show.releaseYear}", modifier = Modifier.weight(1f))
+                        DetailGlassChip(label = "Year", value = "${show.releaseYear}", modifier = Modifier.weight(0.9f))
                     }
                 }
 
-                // Primary Watch Online Glass Button (Placed directly below Language/Info Chips)
-                Button(
-                    onClick = { 
+                // Redesigned Ultra-Premium Watch Online Glass Action Card
+                val providerLabel = when (defaultStreamProvider.lowercase()) {
+                    "luciferdonghua" -> "Streaming via LuciferDonghua ⚡"
+                    "donghuastream" -> "Streaming via DonghuaStream 🎬"
+                    else -> "Streaming via Custom Link 🔗"
+                }
+
+                Surface(
+                    onClick = {
                         val targetUrl = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
                             showTitle = show.title,
                             customWatchUrl = show.watchUrl,
                             providerPreference = defaultStreamProvider
                         )
-                        onWatchClick(targetUrl) 
+                        onWatchClick(targetUrl)
                     },
+                    shape = RoundedCornerShape(CornerRadius.lg),
+                    color = Color.Transparent,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(CornerRadius.md),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(CornerRadius.lg))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
+                                )
+                            )
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(CornerRadius.lg)
+                        )
                 ) {
                     Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = Spacing.lg),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.22f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.PlayArrow,
+                                    contentDescription = "Play",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+
+                            Column(verticalArrangement = Arrangement.Center) {
+                                Text(
+                                    text = "WATCH ONLINE",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = Color.White,
+                                    letterSpacing = 0.5.sp
+                                )
+                                Text(
+                                    text = providerLabel,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+
                         Icon(
                             painter = painterResource(id = R.drawable.ic_tv),
                             contentDescription = null,
-                            modifier = Modifier.size(IconSize.sm),
-                            tint = Color.White
-                        )
-                        Text(
-                            text = "Watch Online",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            color = Color.White
+                            tint = Color.White.copy(alpha = 0.75f),
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
