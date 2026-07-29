@@ -634,7 +634,16 @@ class MainActivity : ComponentActivity() {
                         }
 
                         Text(
-}
+                            text = "My Donghua • v1.0.0",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 }
 }
