@@ -40,6 +40,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -591,7 +593,11 @@ AnimatedVisibility(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         IconButton(onClick = { isDrawerOpen = false }) {
-                            Text("\u2715", fontSize = IconSize.xs.value.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Close Menu",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
@@ -600,26 +606,31 @@ AnimatedVisibility(
                     DrawerItem(
                         iconRes = R.drawable.ic_stats,
                         label = "Statistics",
+                        isSelected = currentRoute == "stats",
                         onClick = { isDrawerOpen = false; navController.navigate("stats") }
                     )
                     DrawerItem(
                         iconRes = R.drawable.ic_calendar,
                         label = "Weekly Schedule",
+                        isSelected = currentRoute == "calendar",
                         onClick = { isDrawerOpen = false; navController.navigate("calendar") }
                     )
                     DrawerItem(
                         iconRes = R.drawable.ic_collections,
                         label = "Collections",
+                        isSelected = currentRoute == "collections",
                         onClick = { isDrawerOpen = false; navController.navigate("collections") }
                     )
                     DrawerItem(
                         iconRes = R.drawable.ic_history,
                         label = "Watch History",
+                        isSelected = currentRoute == "history",
                         onClick = { isDrawerOpen = false; navController.navigate("history") }
                     )
                     DrawerItem(
                         iconRes = R.drawable.ic_seasonal,
                         label = "Seasonal View",
+                        isSelected = currentRoute == "seasonal",
                         onClick = { isDrawerOpen = false }
                     )
 
@@ -631,6 +642,7 @@ AnimatedVisibility(
                     DrawerItem(
                         iconRes = R.drawable.ic_settings,
                         label = "Settings",
+                        isSelected = currentRoute == "settings",
                         onClick = { isDrawerOpen = false; navController.navigate("settings") }
                     )
                 }
@@ -727,40 +739,54 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
 private fun DrawerItem(
     iconRes: Int,
     label: String,
+    isSelected: Boolean = false,
     onClick: () -> Unit
 ) {
-    val itemShape = RoundedCornerShape(12.dp)
-    Row(
+    val pillShape = RoundedCornerShape(28.dp)
+    val containerColor = if (isSelected) {
+        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.85f)
+    } else {
+        Color.Transparent
+    }
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    val iconTint = if (isSelected) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Surface(
+        onClick = onClick,
+        selected = isSelected,
+        shape = pillShape,
+        color = containerColor,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(itemShape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onClick() }
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+            .height(50.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.40f)),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = label,
-                modifier = Modifier.size(IconSize.sm),
-                tint = MaterialTheme.colorScheme.primary
+                modifier = Modifier.size(24.dp),
+                tint = iconTint
+            )
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = contentColor
             )
         }
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
