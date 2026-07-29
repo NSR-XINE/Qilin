@@ -433,50 +433,6 @@ fun ShowDetailScreen(
                     }
                 }
 
-                // Streaming Sources Buttons (DonghuaStream & LuciferDonghua)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            val dsUrl = com.mydonghua.app.data.service.PosterFetchService.getDonghuaStreamUrl(show.title)
-                            onWatchClick(dsUrl)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(CornerRadius.sm),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-                    ) {
-                        Text(
-                            text = "🎬 DonghuaStream",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            val ldUrl = com.mydonghua.app.data.service.PosterFetchService.getLuciferDonghuaUrl(show.title)
-                            onWatchClick(ldUrl)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(CornerRadius.sm),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f))
-                    ) {
-                        Text(
-                            text = "⚡ LuciferDonghua",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                }
-
                 // Genres Pill Chips
                 if (!show.genres.isNullOrEmpty()) {
                     Column(modifier = Modifier.fillMaxWidth()) {
