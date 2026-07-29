@@ -462,185 +462,188 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                AnimatedVisibility(
-                    visible = isDrawerOpen,
-                    enter = slideInVertically(
-                        initialOffsetY = { -it },
-                        animationSpec = tween(
-                            durationMillis = 350,
-                            easing = androidx.compose.animation.core.FastOutSlowInEasing
-                        )
-                    ) + fadeIn(animationSpec = tween(300)),
-                    exit = slideOutVertically(
-                        targetOffsetY = { -it },
-                        animationSpec = tween(
-                            durationMillis = 300,
-                            easing = androidx.compose.animation.core.FastOutSlowInEasing
-                        )
-                    ) + fadeOut(animationSpec = tween(300))
-                ) {
-                    val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                    val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                    val isLightMode = settingsState.themeMode.lowercase() == "light"
-                    val backdrop = LocalLayerBackdrop.current
+                }
+            }
 
-                    val menuSurfaceTint = when {
-                        isAmoledMode -> Color(0xFF060910).copy(alpha = 0.85f)
-                        isLightMode -> Color.White.copy(alpha = 0.82f)
-                        else -> Color(0xFF0B101C).copy(alpha = 0.78f)
-                    }
+            AnimatedVisibility(
+                visible = isDrawerOpen,
+                modifier = Modifier.zIndex(1000f),
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(
+                        durationMillis = 350,
+                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                    )
+                ) + fadeIn(animationSpec = tween(300)),
+                exit = slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                    )
+                ) + fadeOut(animationSpec = tween(300))
+            ) {
+                val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
+                val isLightMode = settingsState.themeMode.lowercase() == "light"
+                val backdrop = LocalLayerBackdrop.current
 
-                    val menuBaseModifier = Modifier.fillMaxSize()
+                val menuSurfaceTint = when {
+                    isAmoledMode -> Color(0xFF060910).copy(alpha = 0.85f)
+                    isLightMode -> Color.White.copy(alpha = 0.82f)
+                    else -> Color(0xFF0B101C).copy(alpha = 0.78f)
+                }
 
-                    val menuGlassModifier = if (backdrop != null) {
-                        menuBaseModifier.drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { menuShape },
-                            effects = {
-                                vibrancy()
-                                colorControls(
-                                    brightness = when {
-                                        isAmoledMode -> -0.04f
-                                        isLightMode -> 0.08f
-                                        else -> 0.02f
-                                    },
-                                    contrast = if (isLightMode) 1.05f else 1.0f,
-                                    saturation = 1.4f
-                                )
-                                blur(if (isAmoledMode) 24f.dp.toPx() else 20f.dp.toPx())
-                                refraction(size.minDimension / 4f, size.minDimension / 2f, false)
-                            },
-                            highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.80f else 0.50f) },
-                            shadow = { Shadow(radius = 12f.dp, alpha = 0.40f) },
-                            onDrawSurface = {
-                                val radius = menuShape.bottomStart.toPx(size, density = this)
-                                drawRoundRect(
-                                    color = menuSurfaceTint,
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
-                                )
-                            }
-                        )
-                    } else {
-                        menuBaseModifier
-                            .clip(menuShape)
-                            .hazeChild(state = drawerHazeState, shape = menuShape)
-                            .background(
-                                color = menuSurfaceTint,
-                                shape = menuShape
+                val menuBaseModifier = Modifier.fillMaxSize()
+
+                val menuGlassModifier = if (backdrop != null) {
+                    menuBaseModifier.drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { menuShape },
+                        effects = {
+                            vibrancy()
+                            colorControls(
+                                brightness = when {
+                                    isAmoledMode -> -0.04f
+                                    isLightMode -> 0.08f
+                                    else -> 0.02f
+                                },
+                                contrast = if (isLightMode) 1.05f else 1.0f,
+                                saturation = 1.4f
                             )
+                            blur(if (isAmoledMode) 24f.dp.toPx() else 20f.dp.toPx())
+                            refraction(size.minDimension / 4f, size.minDimension / 2f, false)
+                        },
+                        highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.80f else 0.50f) },
+                        shadow = { Shadow(radius = 12f.dp, alpha = 0.40f) },
+                        onDrawSurface = {
+                            val radius = menuShape.bottomStart.toPx(size, density = this)
+                            drawRoundRect(
+                                color = menuSurfaceTint,
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
+                            )
+                        }
+                    )
+                } else {
+                    menuBaseModifier
+                        .clip(menuShape)
+                        .hazeChild(state = drawerHazeState, shape = menuShape)
+                        .background(
+                            color = menuSurfaceTint,
+                            shape = menuShape
+                        )
+                }
+
+                Column(
+                    modifier = menuGlassModifier
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = if (isLightMode) 0.60f else 0.35f),
+                                    Color.White.copy(alpha = if (isLightMode) 0.25f else 0.12f),
+                                    Color.Transparent
+                                )
+                            ),
+                            shape = menuShape
+                        )
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Navigation",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "My Donghua App",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.12f))
+                                .clickable { isDrawerOpen = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Close Menu",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
 
                     Column(
-                        modifier = menuGlassModifier
-                            .border(
-                                width = 1.dp,
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = if (isLightMode) 0.60f else 0.35f),
-                                        Color.White.copy(alpha = if (isLightMode) 0.25f else 0.12f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                shape = menuShape
-                            )
-                            .statusBarsPadding()
-                            .navigationBarsPadding()
-                            .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
-                        verticalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Navigation",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "My Donghua App",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        DrawerItem(
+                            iconRes = R.drawable.ic_stats,
+                            label = "Statistics",
+                            isSelected = currentRoute == "stats",
+                            onClick = { isDrawerOpen = false; navController.navigate("stats") }
+                        )
+                        DrawerItem(
+                            iconRes = R.drawable.ic_calendar,
+                            label = "Weekly Schedule",
+                            isSelected = currentRoute == "calendar",
+                            onClick = { isDrawerOpen = false; navController.navigate("calendar") }
+                        )
+                        DrawerItem(
+                            iconRes = R.drawable.ic_collections,
+                            label = "Collections",
+                            isSelected = currentRoute == "collections",
+                            onClick = { isDrawerOpen = false; navController.navigate("collections") }
+                        )
+                        DrawerItem(
+                            iconRes = R.drawable.ic_history,
+                            label = "Watch History",
+                            isSelected = currentRoute == "history",
+                            onClick = { isDrawerOpen = false; navController.navigate("history") }
+                        )
+                        DrawerItem(
+                            iconRes = R.drawable.ic_seasonal,
+                            label = "Seasonal View",
+                            isSelected = currentRoute == "seasonal",
+                            onClick = { isDrawerOpen = false }
+                        )
 
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.12f))
-                                    .clickable { isDrawerOpen = false },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = "Close Menu",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                        }
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.padding(vertical = Spacing.xs)
+                        )
 
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = Spacing.md),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                        ) {
-                            DrawerItem(
-                                iconRes = R.drawable.ic_stats,
-                                label = "Statistics",
-                                isSelected = currentRoute == "stats",
-                                onClick = { isDrawerOpen = false; navController.navigate("stats") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_calendar,
-                                label = "Weekly Schedule",
-                                isSelected = currentRoute == "calendar",
-                                onClick = { isDrawerOpen = false; navController.navigate("calendar") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_collections,
-                                label = "Collections",
-                                isSelected = currentRoute == "collections",
-                                onClick = { isDrawerOpen = false; navController.navigate("collections") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_history,
-                                label = "Watch History",
-                                isSelected = currentRoute == "history",
-                                onClick = { isDrawerOpen = false; navController.navigate("history") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_seasonal,
-                                label = "Seasonal View",
-                                isSelected = currentRoute == "seasonal",
-                                onClick = { isDrawerOpen = false }
-                            )
-
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                                modifier = Modifier.padding(vertical = Spacing.xs)
-                            )
-
-                            DrawerItem(
-                                iconRes = R.drawable.ic_settings,
-                                label = "Settings",
-                                isSelected = currentRoute == "settings",
-                                onClick = { isDrawerOpen = false; navController.navigate("settings") }
-                            )
-                        }
-
-                        Text(
-                            text = "My Donghua • v1.0.0",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        DrawerItem(
+                            iconRes = R.drawable.ic_settings,
+                            label = "Settings",
+                            isSelected = currentRoute == "settings",
+                            onClick = { isDrawerOpen = false; navController.navigate("settings") }
                         )
                     }
+
+                    Text(
+                        text = "My Donghua • v1.0.0",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
                 }
             }
         }
