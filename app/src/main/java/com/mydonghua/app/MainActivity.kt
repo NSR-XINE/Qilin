@@ -487,18 +487,25 @@ class MainActivity : ComponentActivity() {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
 
-                val menuSurfaceTint = if (isAmoledMode) {
-                    Color(0xFF060911).copy(alpha = 0.88f)
-                } else {
-                    Color(0xFF0F172A).copy(alpha = 0.82f)
-                }
+                val glassGradient = Brush.verticalGradient(
+                    colors = if (isAmoledMode) {
+                        listOf(
+                            Color(0xF704060A),
+                            Color(0xF2090D18)
+                        )
+                    } else {
+                        listOf(
+                            Color(0xF70F172A),
+                            Color(0xF21E293B)
+                        )
+                    }
+                )
 
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(menuShape)
-                        .hazeChild(state = drawerHazeState, shape = menuShape)
-                        .background(menuSurfaceTint, menuShape)
+                        .background(brush = glassGradient, shape = menuShape)
                 ) {
                     Column(
                         modifier = Modifier
