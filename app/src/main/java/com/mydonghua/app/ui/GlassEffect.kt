@@ -43,7 +43,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
-val LocalHazeState = staticCompositionLocalOf<HazeState> { error("No HazeState provided") }
+val LocalHazeState = compositionLocalOf { HazeState() }
 val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 
 object Spacing {

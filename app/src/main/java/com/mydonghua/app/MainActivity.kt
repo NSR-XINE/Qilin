@@ -390,57 +390,54 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("collections") {
-                                CollectionsScreen(
+                            CollectionsScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
+                        }
                     }
                 }
 
-            }
-            }
-            }
-
-            AnimatedVisibility(
-                visible = isSearchOpen,
-                enter = slideInVertically(
-                    initialOffsetY = { it },
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessMediumLow,
-                        dampingRatio = Spring.DampingRatioLowBouncy
-                    )
-                ) + fadeIn(animationSpec = tween(300)),
-                exit = slideOutVertically(
-                    targetOffsetY = { it },
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessMediumLow,
-                        dampingRatio = 1.0f
-                    )
-                ) + fadeOut(animationSpec = tween(300)),
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                AnimatedVisibility(
+                    visible = isSearchOpen,
+                    enter = slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = spring(
+                            stiffness = Spring.StiffnessMediumLow,
+                            dampingRatio = Spring.DampingRatioLowBouncy
+                        )
+                    ) + fadeIn(animationSpec = tween(300)),
+                    exit = slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = spring(
+                            stiffness = Spring.StiffnessMediumLow,
+                            dampingRatio = 1.0f
+                        )
+                    ) + fadeOut(animationSpec = tween(300)),
                 ) {
-                    SearchScreen(
-                        viewModel = searchViewModel,
-                        showsViewModel = showsViewModel,
-                        onWatchClick = { url ->
-                            val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                putExtra("watch_url", url)
-                            }
-                            startActivity(intent)
-                        },
-                        onShowClick = { showId ->
-                            navController.navigate("show_detail/$showId")
-                        },
-                        onNavigateBack = { isSearchOpen = false }
-                    )
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        SearchScreen(
+                            viewModel = searchViewModel,
+                            showsViewModel = showsViewModel,
+                            onWatchClick = { url ->
+                                val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                                    putExtra("watch_url", url)
+                                }
+                                startActivity(intent)
+                            },
+                            onShowClick = { showId ->
+                                navController.navigate("show_detail/$showId")
+                            },
+                            onNavigateBack = { isSearchOpen = false }
+                        )
+                    }
                 }
-            }
 
                 if (showGlobalHeader) {
                     LiquidGlassNavBar(
