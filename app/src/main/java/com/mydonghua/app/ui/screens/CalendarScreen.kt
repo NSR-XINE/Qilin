@@ -82,6 +82,7 @@ fun CalendarScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
+            Spacer(modifier = Modifier.height(Spacing.xs))
             if (upcomingWeekList.isEmpty()) {
                 Text(
                     text = "No shows scheduled for release this week",

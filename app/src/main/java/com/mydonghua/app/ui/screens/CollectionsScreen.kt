@@ -96,7 +96,7 @@ fun CollectionsScreen(
                     .padding(horizontal = Spacing.lg)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-                contentPadding = PaddingValues(bottom = Spacing.sm)
+                contentPadding = PaddingValues(top = Spacing.md, bottom = Spacing.sm)
             ) {
                 items(sortedCollections, key = { it.key }) { (collectionName, showsList) ->
                     Column(

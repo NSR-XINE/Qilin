@@ -76,6 +76,7 @@ fun StatsScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
+            Spacer(modifier = Modifier.height(Spacing.xs))
             Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             StatsGrid(
                 items = listOf(
