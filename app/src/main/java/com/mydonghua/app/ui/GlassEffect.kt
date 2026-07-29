@@ -376,7 +376,7 @@ fun MenuGlassPanel(
     isLightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val backdrop = LocalLayerBackdrop.current ?: com.kyant.backdrop.backdrops.EmptyBackdrop
+    val backdrop = LocalLayerBackdrop.current
     val surfaceTint = when {
         isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.78f)
         isLightMode -> Color.White.copy(alpha = 0.76f)
@@ -386,33 +386,41 @@ fun MenuGlassPanel(
     Box(
         modifier = modifier.clip(shape)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { shape },
-                    effects = {
-                        vibrancy()
-                        colorControls(
-                            brightness = when {
-                                isAmoledMode -> -0.02f
-                                isLightMode -> 0.08f
-                                else -> 0.02f
-                            },
-                            contrast = 1.05f,
-                            saturation = 1.35f
-                        )
-                        blur(if (isAmoledMode) 14f.dp.toPx() else 16f.dp.toPx())
-                    },
-                    highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.65f else 0.40f) },
-                    shadow = { Shadow(radius = 6f.dp, alpha = 0.25f) },
-                    innerShadow = { InnerShadow(radius = 8f.dp, alpha = 0.20f) },
-                    onDrawSurface = {
-                        drawRect(color = surfaceTint)
-                    }
-                )
-        )
+        if (backdrop != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { shape },
+                        effects = {
+                            vibrancy()
+                            colorControls(
+                                brightness = when {
+                                    isAmoledMode -> -0.02f
+                                    isLightMode -> 0.08f
+                                    else -> 0.02f
+                                },
+                                contrast = 1.05f,
+                                saturation = 1.35f
+                            )
+                            blur(if (isAmoledMode) 14f.dp.toPx() else 16f.dp.toPx())
+                        },
+                        highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.65f else 0.40f) },
+                        shadow = { Shadow(radius = 6f.dp, alpha = 0.25f) },
+                        innerShadow = { InnerShadow(radius = 8f.dp, alpha = 0.20f) },
+                        onDrawSurface = {
+                            drawRect(color = surfaceTint)
+                        }
+                    )
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(surfaceTint, shape)
+            )
+        }
 
         content()
     }
