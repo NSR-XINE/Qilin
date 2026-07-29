@@ -246,8 +246,8 @@ fun SettingsScreen(
                                     if (isSelected) {
                                         Box(
                                             modifier = Modifier
-                                                .size(18.dp)
-                                                .align(Alignment.TopEnd)
+                                                .size(24.dp)
+                                                .align(Alignment.Center)
                                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                                 .background(MaterialTheme.colorScheme.primary),
                                             contentAlignment = Alignment.Center
@@ -256,7 +256,7 @@ fun SettingsScreen(
                                                 imageVector = Icons.Rounded.Check,
                                                 contentDescription = "Selected",
                                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                                modifier = Modifier.size(12.dp)
+                                                modifier = Modifier.size(15.dp)
                                             )
                                         }
                                     }
