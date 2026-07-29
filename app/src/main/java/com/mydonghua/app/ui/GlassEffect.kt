@@ -377,10 +377,18 @@ fun MenuGlassPanel(
     content: @Composable () -> Unit
 ) {
     val backdrop = LocalLayerBackdrop.current
-    val surfaceTint = when {
-        isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.78f)
-        isLightMode -> Color.White.copy(alpha = 0.76f)
-        else -> Color(0xFF0B101C).copy(alpha = 0.78f)
+    val isDark = !isLightMode
+
+    val baseColor = when {
+        isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.55f)
+        isLightMode -> Color.White.copy(alpha = 0.45f)
+        else -> Color.Black.copy(alpha = 0.35f)
+    }
+
+    val borderColor = if (isDark) {
+        Color.White.copy(alpha = 0.12f)
+    } else {
+        Color.Black.copy(alpha = 0.08f)
     }
 
     Box(
@@ -396,29 +404,40 @@ fun MenuGlassPanel(
                         effects = {
                             vibrancy()
                             colorControls(
-                                brightness = when {
-                                    isAmoledMode -> -0.02f
-                                    isLightMode -> 0.08f
-                                    else -> 0.02f
-                                },
-                                contrast = 1.05f,
-                                saturation = 1.35f
+                                brightness = if (isLightMode) 0.08f else 0.04f,
+                                contrast = 1f,
+                                saturation = 1.5f
                             )
-                            blur(if (isAmoledMode) 14f.dp.toPx() else 16f.dp.toPx())
+                            blur(12f.dp.toPx())
                         },
-                        highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.65f else 0.40f) },
-                        shadow = { Shadow(radius = 6f.dp, alpha = 0.25f) },
-                        innerShadow = { InnerShadow(radius = 8f.dp, alpha = 0.20f) },
+                        highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.60f else 0.35f) },
+                        shadow = { Shadow(radius = 6f.dp, alpha = 0.20f) },
+                        innerShadow = { InnerShadow(radius = 8f.dp, alpha = 0.15f) },
                         onDrawSurface = {
-                            drawRect(color = surfaceTint)
+                            drawRect(color = baseColor)
                         }
+                    )
+                    .border(
+                        width = 0.5.dp,
+                        color = borderColor,
+                        shape = shape
                     )
             )
         } else {
+            val fallbackBg = when {
+                isAmoledMode -> Color(0xFF060912).copy(alpha = 0.92f)
+                isLightMode -> MaterialTheme.colorScheme.surfaceContainerHigh
+                else -> Color(0xFF0F172A).copy(alpha = 0.92f)
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(surfaceTint, shape)
+                    .background(fallbackBg, shape)
+                    .border(
+                        width = 0.5.dp,
+                        color = borderColor,
+                        shape = shape
+                    )
             )
         }
 
