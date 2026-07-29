@@ -284,6 +284,18 @@ fun MyDonghuaTheme(
         buildM3ColorScheme(accentColor, themeMode)
     }
 
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        androidx.compose.runtime.SideEffect {
+            val window = (view.context as? android.app.Activity)?.window
+            if (window != null) {
+                val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, view)
+                insetsController.isAppearanceLightStatusBars = isLight
+                insetsController.isAppearanceLightNavigationBars = isLight
+            }
+        }
+    }
+
     MaterialTheme(
         colorScheme = finalScheme,
         typography = AppTypography
