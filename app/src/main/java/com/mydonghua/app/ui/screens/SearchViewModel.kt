@@ -2,6 +2,7 @@ package com.mydonghua.app.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mydonghua.app.data.pref.ThemePreference
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
@@ -26,8 +27,6 @@ sealed class SearchSuggestion {
     data class Recent(val text: String) : SearchSuggestion()
     data class ShowMatch(val show: Show, val displayText: String, val score: Int) : SearchSuggestion()
 }
-
-import com.mydonghua.app.data.pref.ThemePreference
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
