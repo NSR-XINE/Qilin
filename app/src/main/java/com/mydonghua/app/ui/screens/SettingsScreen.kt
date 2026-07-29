@@ -20,6 +20,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.NightsStay
+import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -168,28 +175,29 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = Spacing.md, horizontal = Spacing.md),
+                        .padding(Spacing.sm),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val themesList = listOf(
-                        Triple("light", "Light Mode", Color.White),
-                        Triple("dark", "Dark Mode", Color(0xFF2C2C2C)),
-                        Triple("amoled", "AMOLED", Color.Black)
+                        Triple("light", "Light Mode", Icons.Rounded.WbSunny to Pair(Color(0xFFF6F7F9), Color(0xFFFFFFFF))),
+                        Triple("dark", "Dark Mode", Icons.Rounded.NightsStay to Pair(Color(0xFF0F141F), Color(0xFF1B2433))),
+                        Triple("amoled", "AMOLED", Icons.Rounded.Contrast to Pair(Color(0xFF000000), Color(0xFF0C0F17)))
                     )
-                    themesList.forEach { (modeKey, modeName, circleColor) ->
+                    themesList.forEach { (modeKey, modeTitle, modeData) ->
+                        val (modeIcon, colors) = modeData
+                        val (bgPreview, cardPreview) = colors
                         val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
+                        val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
+                        val cardBg = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.14f) else Color.Transparent
+
                         Card(
-                            shape = RoundedCornerShape(CornerRadius.md),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = if (isSelected) 1.5.dp else 0.5.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
-                            ),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent
-                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
+                            colors = CardDefaults.cardColors(containerColor = cardBg),
                             modifier = Modifier
                                 .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
                                 .clickable { viewModel.setThemeMode(modeKey) }
                         ) {
                             Column(
@@ -197,31 +205,80 @@ fun SettingsScreen(
                                 verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = Spacing.md, horizontal = Spacing.xs)
+                                    .padding(8.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(androidx.compose.foundation.shape.CircleShape)
-                                        .background(circleColor)
-                                        .border(
-                                            width = if (isSelected) 2.dp else 1.dp,
-                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                                            shape = androidx.compose.foundation.shape.CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(bgPreview)
+                                        .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                                        .padding(5.dp)
                                 ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(8.dp)
+                                                .clip(RoundedCornerShape(3.dp))
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.80f))
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(16.dp)
+                                                .clip(RoundedCornerShape(3.dp))
+                                                .background(cardPreview)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.65f)
+                                                .height(8.dp)
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(cardPreview.copy(alpha = 0.70f))
+                                        )
+                                    }
+
                                     if (isSelected) {
-                                        val checkColor = if (modeKey == "light") Color.Black else Color.White
-                                        Text("\u2713", color = checkColor, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                        Box(
+                                            modifier = Modifier
+                                                .size(18.dp)
+                                                .align(Alignment.TopEnd)
+                                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Check,
+                                                contentDescription = "Selected",
+                                                tint = MaterialTheme.colorScheme.onPrimary,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        }
                                     }
                                 }
-                                Text(
-                                    text = modeName,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = modeIcon,
+                                        contentDescription = modeTitle,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = modeTitle,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
@@ -230,67 +287,156 @@ fun SettingsScreen(
 
             SectionHeader("Accent Color Palette")
             GlassSection {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(vertical = Spacing.md, horizontal = Spacing.lg),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
-                    val accentPresets = listOf(
-                        Triple("default", "Default", Color(0xFF00F2FE)),
-                        Triple("dynamic", "Dynamic", Color.Transparent),
-                        Triple("cyan", "Cyan", Color(0xFF00B4D8)),
-                        Triple("purple", "Purple", Color(0xFF7F3DFF)),
-                        Triple("rose", "Rose", Color(0xFFE56B6F)),
-                        Triple("green", "Green", Color(0xFF40916C)),
-                        Triple("orange", "Orange", Color(0xFFF77F00)),
-                        Triple("blue", "Blue", Color(0xFF0096C7)),
-                        Triple("teal", "Teal", Color(0xFF009688)),
-                        Triple("pink", "Pink", Color(0xFFE91E63))
-                    )
-                    accentPresets.forEach { (accentKey, accentName, presetColor) ->
-                        val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    // Material You Dynamic Palette Card
+                    val isDynamicSelected = uiState.accentColor.equals("dynamic", ignoreCase = true)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = if (isDynamicSelected) 2.dp else 1.dp,
+                            color = if (isDynamicSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDynamicSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f) else Color.Transparent
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { viewModel.setAccentColor("dynamic") }
+                    ) {
+                        Row(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(CornerRadius.sm))
-                                .clickable { viewModel.setAccentColor(accentKey) }
-                                .padding(horizontal = Spacing.xs, vertical = Spacing.xs)
+                                .fillMaxWidth()
+                                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(38.dp)
                                     .clip(androidx.compose.foundation.shape.CircleShape)
                                     .background(
-                                        if (accentKey == "dynamic") {
-                                            Brush.sweepGradient(
-                                                listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
-                                            )
-                                        } else {
-                                            SolidColor(presetColor)
-                                        }
-                                    )
-                                    .border(
-                                        width = if (isSelected) 2.5.dp else 1.dp,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                                        shape = androidx.compose.foundation.shape.CircleShape
+                                        Brush.sweepGradient(
+                                            listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+                                        )
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (isSelected) {
-                                    val checkColor = if (accentKey == "cyan" || accentKey == "rose" || accentKey == "orange" || accentKey == "dynamic") Color.Black else Color.White
-                                    Text("\u2713", color = checkColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Icon(
+                                    imageVector = Icons.Rounded.AutoAwesome,
+                                    contentDescription = "Dynamic Material You",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(Spacing.md))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Material You Dynamic",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Extracts colors from system wallpaper",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (isDynamicSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(13.dp)
+                                    )
                                 }
                             }
-                            Text(
-                                text = accentName,
-                                fontSize = 10.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                            )
+                        }
+                    }
+
+                    // Curated Dual-Tone Presets
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val accentPresets = listOf(
+                            Triple("default", "Cyan", Pair(Color(0xFF00F2FE), Color(0xFF00B4D8))),
+                            Triple("purple", "Purple", Pair(Color(0xFF9D4EDD), Color(0xFF7B2CBF))),
+                            Triple("rose", "Rose", Pair(Color(0xFFFF2A5F), Color(0xFFD90429))),
+                            Triple("green", "Green", Pair(Color(0xFF3FB950), Color(0xFF2EA043))),
+                            Triple("orange", "Orange", Pair(Color(0xFFF0883E), Color(0xFFD97706))),
+                            Triple("blue", "Blue", Pair(Color(0xFF58A6FF), Color(0xFF2563EB))),
+                            Triple("teal", "Teal", Pair(Color(0xFF2DD4BF), Color(0xFF0D9488))),
+                            Triple("pink", "Pink", Pair(Color(0xFFF472B6), Color(0xFFBE185D)))
+                        )
+                        accentPresets.forEach { (accentKey, accentName, colorPair) ->
+                            val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { viewModel.setAccentColor(accentKey) }
+                                    .padding(horizontal = Spacing.xs, vertical = Spacing.xs)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(colorPair.first, colorPair.second)
+                                            )
+                                        )
+                                        .border(
+                                            width = if (isSelected) 2.5.dp else 1.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.25f),
+                                            shape = androidx.compose.foundation.shape.CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (isSelected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                                .background(Color.Black.copy(alpha = 0.40f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Check,
+                                                contentDescription = "Selected",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = accentName,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }
