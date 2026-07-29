@@ -25,7 +25,8 @@ data class SettingsUiState(
     val showBanner: Boolean = true,
     val showContinue: Boolean = true,
     val showRecent: Boolean = true,
-    val showSchedule: Boolean = true
+    val showSchedule: Boolean = true,
+    val autoOpenKeyboard: Boolean = true
 )
 
 data class DashboardPrefs(
@@ -46,6 +47,7 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         themePreference.themeModeFlow,
         themePreference.accentColorFlow,
+        themePreference.autoOpenKeyboardFlow,
         combine(
             themePreference.showBannerFlow,
             themePreference.showContinueFlow,
@@ -54,14 +56,15 @@ class SettingsViewModel @Inject constructor(
         ) { banner, cont, recent, schedule ->
             DashboardPrefs(banner, cont, recent, schedule)
         }
-    ) { theme, accent, prefs ->
+    ) { theme, accent, autoOpen, prefs ->
         SettingsUiState(
             themeMode = theme,
             accentColor = accent,
             showBanner = prefs.showBanner,
             showContinue = prefs.showContinue,
             showRecent = prefs.showRecent,
-            showSchedule = prefs.showSchedule
+            showSchedule = prefs.showSchedule,
+            autoOpenKeyboard = autoOpen
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -87,6 +90,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setShowSchedule(show: Boolean) {
         viewModelScope.launch { themePreference.setShowSchedule(show) }
+    }
+
+    fun setAutoOpenKeyboard(autoOpen: Boolean) {
+        viewModelScope.launch { themePreference.setAutoOpenKeyboard(autoOpen) }
     }
 
     suspend fun exportBackup(context: Context): File? {

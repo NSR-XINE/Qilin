@@ -27,14 +27,19 @@ sealed class SearchSuggestion {
     data class ShowMatch(val show: Show, val displayText: String, val score: Int) : SearchSuggestion()
 }
 
+import com.mydonghua.app.data.pref.ThemePreference
+
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val showRepository: ShowRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val themePreference: ThemePreference
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
     val activeFilters = MutableStateFlow(SearchFilters())
+    val autoOpenKeyboard: StateFlow<Boolean> = themePreference.autoOpenKeyboardFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val allShows = showRepository.getAllShows()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

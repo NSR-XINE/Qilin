@@ -89,12 +89,16 @@ fun SearchScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
+    val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
+
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        delay(250)
-        runCatching {
-            focusRequester.requestFocus()
+    LaunchedEffect(autoOpenKeyboard) {
+        if (autoOpenKeyboard) {
+            delay(250)
+            runCatching {
+                focusRequester.requestFocus()
+            }
         }
     }
 

@@ -25,6 +25,7 @@ class ThemePreference @Inject constructor(
         val SHOW_CONTINUE = booleanPreferencesKey("show_continue")
         val SHOW_RECENT = booleanPreferencesKey("show_recent")
         val SHOW_SCHEDULE = booleanPreferencesKey("show_schedule")
+        val AUTO_OPEN_KEYBOARD = booleanPreferencesKey("auto_open_keyboard")
     }
 
     val themeModeFlow: Flow<String> = context.dataStore.data.map { it[THEME_MODE] ?: "dark" }
@@ -34,6 +35,7 @@ class ThemePreference @Inject constructor(
     val showContinueFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_CONTINUE] ?: true }
     val showRecentFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_RECENT] ?: true }
     val showScheduleFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_SCHEDULE] ?: true }
+    val autoOpenKeyboardFlow: Flow<Boolean> = context.dataStore.data.map { it[AUTO_OPEN_KEYBOARD] ?: true }
 
     suspend fun setThemeMode(mode: String) {
         context.dataStore.edit { it[THEME_MODE] = mode }
@@ -57,5 +59,9 @@ class ThemePreference @Inject constructor(
 
     suspend fun setShowSchedule(show: Boolean) {
         context.dataStore.edit { it[SHOW_SCHEDULE] = show }
+    }
+
+    suspend fun setAutoOpenKeyboard(autoOpen: Boolean) {
+        context.dataStore.edit { it[AUTO_OPEN_KEYBOARD] = autoOpen }
     }
 }

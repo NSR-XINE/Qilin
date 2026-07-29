@@ -425,6 +425,18 @@ fun SettingsScreen(
                 }
             }
 
+            SectionHeader("Search & Input Options")
+            GlassSection {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TogglePreferenceItem(
+                        title = "Auto-open Keyboard",
+                        subtitle = "Automatically open soft keyboard when tapping the search button",
+                        checked = uiState.autoOpenKeyboard,
+                        onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
+                    )
+                }
+            }
+
             SectionHeader("App Tools & Features")
             GlassSection {
                 Column(modifier = Modifier.fillMaxWidth()) {
