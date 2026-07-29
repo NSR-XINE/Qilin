@@ -486,13 +486,12 @@ class MainActivity : ComponentActivity() {
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                val isLightMode = settingsState.themeMode.lowercase() == "light"
                 val backdrop = LocalLayerBackdrop.current
 
-                val menuSurfaceTint = when {
-                    isAmoledMode -> Color(0xFF060910).copy(alpha = 0.90f)
-                    isLightMode -> Color.White.copy(alpha = 0.88f)
-                    else -> Color(0xFF0B101C).copy(alpha = 0.85f)
+                val menuSurfaceTint = if (isAmoledMode) {
+                    Color(0xFF04060A).copy(alpha = 0.96f)
+                } else {
+                    Color(0xFF0B101C).copy(alpha = 0.94f)
                 }
 
                 Box(
@@ -510,18 +509,14 @@ class MainActivity : ComponentActivity() {
                                     effects = {
                                         vibrancy()
                                         colorControls(
-                                            brightness = when {
-                                                isAmoledMode -> -0.04f
-                                                isLightMode -> 0.08f
-                                                else -> 0.02f
-                                            },
-                                            contrast = if (isLightMode) 1.05f else 1.0f,
-                                            saturation = 1.4f
+                                            brightness = 0.0f,
+                                            contrast = 1.05f,
+                                            saturation = 1.3f
                                         )
-                                        blur(if (isAmoledMode) 18f.dp.toPx() else 14f.dp.toPx())
+                                        blur(10f.dp.toPx())
                                     },
-                                    highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.80f else 0.40f) },
-                                    shadow = { Shadow(radius = 12f.dp, alpha = 0.40f) },
+                                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
+                                    shadow = { Shadow(radius = 16f.dp, alpha = 0.50f) },
                                     onDrawSurface = {
                                         val radius = menuShape.bottomStart.toPx(size, density = this)
                                         drawRoundRect(
@@ -550,8 +545,8 @@ class MainActivity : ComponentActivity() {
                                 width = 1.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = if (isLightMode) 0.60f else 0.35f),
-                                        Color.White.copy(alpha = if (isLightMode) 0.25f else 0.12f),
+                                        Color.White.copy(alpha = 0.35f),
+                                        Color.White.copy(alpha = 0.12f),
                                         Color.Transparent
                                     )
                                 ),
@@ -570,14 +565,14 @@ class MainActivity : ComponentActivity() {
                             Column {
                                 Text(
                                     text = "Navigation",
-                                    fontSize = 22.sp,
+                                    fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = Color.White
                                 )
                                 Text(
                                     text = "My Donghua App",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF94A3B8)
                                 )
                             }
 
@@ -585,14 +580,14 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.12f))
+                                    .background(Color.White.copy(alpha = 0.15f))
                                     .clickable { isDrawerOpen = false },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = "Close Menu",
-                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    tint = Color.White,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -636,7 +631,7 @@ class MainActivity : ComponentActivity() {
                             )
 
                             HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                color = Color.White.copy(alpha = 0.15f),
                                 modifier = Modifier.padding(vertical = Spacing.xs)
                             )
 
@@ -651,7 +646,7 @@ class MainActivity : ComponentActivity() {
                         Text(
                             text = "My Donghua • v1.0.0",
                             fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = Color(0xFF64748B),
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                     }
@@ -659,9 +654,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-}
-}
 }
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
@@ -726,7 +718,7 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
                 val x = random.nextFloat() * width
                 val y = random.nextFloat() * height
                 val radius = random.nextFloat() * 1.5f + 0.5f
-                val alpha = random.nextFloat() * 0.4f + 0.1f
+                val alpha = random.nextFloat() * 0.7f + 0.3f
                 drawCircle(
                     color = starsColor,
                     radius = radius,
@@ -747,19 +739,19 @@ private fun DrawerItem(
 ) {
     val pillShape = RoundedCornerShape(28.dp)
     val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.85f)
+        Color(0xFF0EA5E9).copy(alpha = 0.22f)
     } else {
-        Color.Transparent
+        Color.White.copy(alpha = 0.07f)
     }
     val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.onSecondaryContainer
+        Color(0xFF38BDF8)
     } else {
-        MaterialTheme.colorScheme.onSurface
+        Color.White
     }
     val iconTint = if (isSelected) {
-        MaterialTheme.colorScheme.onSecondaryContainer
+        Color(0xFF38BDF8)
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
+        Color(0xFF38BDF8)
     }
 
     Surface(
@@ -767,14 +759,15 @@ private fun DrawerItem(
         selected = isSelected,
         shape = pillShape,
         color = containerColor,
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0EA5E9).copy(alpha = 0.4f)) else null,
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(52.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
@@ -786,8 +779,8 @@ private fun DrawerItem(
             )
             Text(
                 text = label,
-                fontSize = 14.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 15.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                 color = contentColor
             )
         }
