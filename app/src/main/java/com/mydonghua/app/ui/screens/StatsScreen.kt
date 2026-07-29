@@ -12,7 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.IntrinsicSize
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.StatsCalculator
@@ -231,13 +233,16 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
     ) {
         chunked.forEach { rowItems ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 rowItems.forEach { item ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
+                            .fillMaxHeight()
                             .defaultMinSize(minHeight = 64.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
@@ -249,19 +254,26 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Column(verticalArrangement = Arrangement.Center) {
+                        Column(
+                            modifier = Modifier.fillMaxHeight(),
+                            verticalArrangement = Arrangement.Center
+                        ) {
                             Text(
                                 text = item.value,
-                                fontSize = 17.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = item.label,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             if (item.subText != null) {
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -269,7 +281,9 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                                     text = item.subText,
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
