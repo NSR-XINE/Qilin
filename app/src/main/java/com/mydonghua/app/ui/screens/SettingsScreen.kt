@@ -24,7 +24,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.NightsStay
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
@@ -501,27 +503,27 @@ fun SettingsScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                                         ) {
+                                            val providerIcon: ImageVector = when (key) {
+                                                "donghuastream" -> Icons.Rounded.Tv
+                                                "luciferdonghua" -> Icons.Rounded.AutoAwesome
+                                                else -> Icons.Rounded.Link
+                                            }
+
                                             Box(
                                                 modifier = Modifier
-                                                    .size(36.dp)
+                                                    .size(40.dp)
                                                     .clip(androidx.compose.foundation.shape.CircleShape)
                                                     .background(
-                                                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
-                                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
                                                     ),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(
-                                                        id = when (key) {
-                                                            "donghuastream" -> R.drawable.ic_tv
-                                                            "luciferdonghua" -> R.drawable.ic_stats
-                                                            else -> R.drawable.ic_collections
-                                                        }
-                                                    ),
+                                                    imageVector = providerIcon,
                                                     contentDescription = null,
                                                     tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.size(18.dp)
+                                                    modifier = Modifier.size(20.dp)
                                                 )
                                             }
 
