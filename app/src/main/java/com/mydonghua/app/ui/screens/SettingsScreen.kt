@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -842,7 +843,7 @@ private fun SettingsGlassSection(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val isDark = androidx.compose.ui.graphics.luminance(MaterialTheme.colorScheme.surface) < 0.5f
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val surfaceBg = if (isDark) {
         Color(0xFF131B2A).copy(alpha = 0.70f)
     } else {
