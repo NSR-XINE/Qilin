@@ -376,19 +376,44 @@ fun MenuGlassPanel(
     isLightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val surfaceColor = when {
-        isAmoledMode -> Color(0xFF060912)
-        isLightMode -> MaterialTheme.colorScheme.surfaceContainerHigh
-        else -> Color(0xFF0F172A)
+    val backdrop = LocalLayerBackdrop.current
+    val surfaceTint = when {
+        isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.78f)
+        isLightMode -> Color.White.copy(alpha = 0.76f)
+        else -> Color(0xFF0B101C).copy(alpha = 0.78f)
     }
 
-    Surface(
-        modifier = modifier.clip(shape),
-        shape = shape,
-        color = surfaceColor,
-        tonalElevation = 6.dp,
-        shadowElevation = 8.dp
+    Box(
+        modifier = modifier.clip(shape)
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { shape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = when {
+                                isAmoledMode -> -0.02f
+                                isLightMode -> 0.08f
+                                else -> 0.02f
+                            },
+                            contrast = 1.05f,
+                            saturation = 1.35f
+                        )
+                        blur(if (isAmoledMode) 14f.dp.toPx() else 16f.dp.toPx())
+                    },
+                    highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.65f else 0.40f) },
+                    shadow = { Shadow(radius = 6f.dp, alpha = 0.25f) },
+                    innerShadow = { InnerShadow(radius = 8f.dp, alpha = 0.20f) },
+                    onDrawSurface = {
+                        drawRect(color = surfaceTint)
+                    }
+                )
+        )
+
         content()
     }
 }
