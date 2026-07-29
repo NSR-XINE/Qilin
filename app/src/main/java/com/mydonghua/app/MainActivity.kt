@@ -485,27 +485,15 @@ class MainActivity : ComponentActivity() {
                 ) + fadeOut(animationSpec = tween(300))
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
 
-                val glassGradient = Brush.verticalGradient(
-                    colors = if (isAmoledMode) {
-                        listOf(
-                            Color(0xF704060A),
-                            Color(0xF2090D18)
-                        )
-                    } else {
-                        listOf(
-                            Color(0xF70F172A),
-                            Color(0xF21E293B)
-                        )
-                    }
-                )
-
-                Box(
+                Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(menuShape)
-                        .background(brush = glassGradient, shape = menuShape)
+                        .clip(menuShape),
+                    shape = menuShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -525,28 +513,27 @@ class MainActivity : ComponentActivity() {
                                     text = "Navigation",
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "My Donghua App",
                                     fontSize = 13.sp,
-                                    color = Color(0xFF94A3B8)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.15f))
-                                    .clickable { isDrawerOpen = false },
-                                contentAlignment = Alignment.Center
+                            IconButton(
+                                onClick = { isDrawerOpen = false },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = "Close Menu",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
@@ -589,7 +576,7 @@ class MainActivity : ComponentActivity() {
                             )
 
                             HorizontalDivider(
-                                color = Color.White.copy(alpha = 0.15f),
+                                color = MaterialTheme.colorScheme.outlineVariant,
                                 modifier = Modifier.padding(vertical = Spacing.xs)
                             )
 
@@ -604,7 +591,7 @@ class MainActivity : ComponentActivity() {
                         Text(
                             text = "My Donghua • v1.0.0",
                             fontSize = 11.sp,
-                            color = Color(0xFF64748B),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                     }
@@ -698,21 +685,21 @@ private fun DrawerItem(
     isSelected: Boolean = false,
     onClick: () -> Unit
 ) {
-    val pillShape = RoundedCornerShape(28.dp)
+    val pillShape = CircleShape
     val containerColor = if (isSelected) {
-        Color(0xFF0EA5E9).copy(alpha = 0.22f)
+        MaterialTheme.colorScheme.secondaryContainer
     } else {
-        Color.White.copy(alpha = 0.07f)
+        Color.Transparent
     }
     val contentColor = if (isSelected) {
-        Color(0xFF38BDF8)
+        MaterialTheme.colorScheme.onSecondaryContainer
     } else {
-        Color.White
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
     val iconTint = if (isSelected) {
-        Color(0xFF38BDF8)
+        MaterialTheme.colorScheme.onSecondaryContainer
     } else {
-        Color(0xFF38BDF8)
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Surface(
@@ -720,17 +707,16 @@ private fun DrawerItem(
         selected = isSelected,
         shape = pillShape,
         color = containerColor,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0EA5E9).copy(alpha = 0.4f)) else null,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(56.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp),
+                .padding(horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
                 painter = painterResource(id = iconRes),
@@ -741,7 +727,7 @@ private fun DrawerItem(
             Text(
                 text = label,
                 fontSize = 15.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 color = contentColor
             )
         }
