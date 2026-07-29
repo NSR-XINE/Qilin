@@ -469,7 +469,14 @@ class MainActivity : ComponentActivity() {
 
             AnimatedVisibility(
                 visible = isDrawerOpen,
-                modifier = Modifier.zIndex(1000f),
+                modifier = Modifier
+                    .zIndex(1000f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        isDrawerOpen = false
+                    },
                 enter = slideInVertically(
                     initialOffsetY = { -it },
                     animationSpec = tween(
@@ -490,7 +497,14 @@ class MainActivity : ComponentActivity() {
                 val isLightMode = settingsState.themeMode.lowercase() == "light"
 
                 MenuGlassPanel(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            // Consumes touch events on menu panel so background touches are disabled
+                        },
                     shape = menuShape,
                     isAmoledMode = isAmoledMode,
                     isLightMode = isLightMode
