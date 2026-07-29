@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
             val appHazeState = remember { HazeState() }
             val drawerHazeState = remember { HazeState() }
 
-            androidx.activity.compose.BackHandler(enabled = true) {
+            androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
                 if (currentRoute != "home") {
                     navController.popBackStack("home", inclusive = false)
                 } else {
@@ -208,7 +208,7 @@ class MainActivity : ComponentActivity() {
                                      }
                                 },
                                 bottomBar = {
-                                    if (showGlobalHeader) {
+                                    if (showGlobalHeader && !isSearchOpen) {
                                         LiquidGlassNavBar(
                                             currentRoute = currentRoute,
                                             isDark = settingsState.themeMode.lowercase() != "light",
