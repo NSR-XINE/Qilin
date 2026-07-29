@@ -75,6 +75,7 @@ import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.LocalLayerBackdrop
+import com.mydonghua.app.ui.MenuGlassPanel
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
