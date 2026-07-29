@@ -486,58 +486,19 @@ class MainActivity : ComponentActivity() {
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                val backdrop = LocalLayerBackdrop.current
 
                 val menuSurfaceTint = if (isAmoledMode) {
-                    Color(0xFF04060A).copy(alpha = 0.96f)
+                    Color(0xFF060911).copy(alpha = 0.97f)
                 } else {
-                    Color(0xFF0B101C).copy(alpha = 0.94f)
+                    Color(0xFF0F172A).copy(alpha = 0.95f)
                 }
 
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(menuShape)
+                        .background(menuSurfaceTint)
                 ) {
-                    if (backdrop != null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .drawBackdrop(
-                                    backdrop = backdrop,
-                                    shape = { menuShape },
-                                    effects = {
-                                        vibrancy()
-                                        colorControls(
-                                            brightness = 0.0f,
-                                            contrast = 1.05f,
-                                            saturation = 1.3f
-                                        )
-                                        blur(10f.dp.toPx())
-                                    },
-                                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
-                                    shadow = { Shadow(radius = 16f.dp, alpha = 0.50f) },
-                                    onDrawSurface = {
-                                        val radius = menuShape.bottomStart.toPx(size, density = this)
-                                        drawRoundRect(
-                                            color = menuSurfaceTint,
-                                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
-                                        )
-                                    }
-                                )
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .hazeChild(state = drawerHazeState, shape = menuShape)
-                                .background(
-                                    color = menuSurfaceTint,
-                                    shape = menuShape
-                                )
-                        )
-                    }
-
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
