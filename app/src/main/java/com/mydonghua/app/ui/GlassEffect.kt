@@ -376,7 +376,7 @@ fun MenuGlassPanel(
     isLightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val backdrop = LocalLayerBackdrop.current
+    val backdrop = LocalLayerBackdrop.current ?: com.kyant.backdrop.backdrops.EmptyBackdrop
     val surfaceTint = when {
         isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.78f)
         isLightMode -> Color.White.copy(alpha = 0.76f)
