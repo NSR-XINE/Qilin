@@ -485,15 +485,14 @@ class MainActivity : ComponentActivity() {
                 ) + fadeOut(animationSpec = tween(300))
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
+                val isLightMode = settingsState.themeMode.lowercase() == "light"
 
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(menuShape),
+                MenuGlassPanel(
+                    modifier = Modifier.fillMaxSize(),
                     shape = menuShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tonalElevation = 6.dp,
-                    shadowElevation = 8.dp
+                    isAmoledMode = isAmoledMode,
+                    isLightMode = isLightMode
                 ) {
                     Column(
                         modifier = Modifier
