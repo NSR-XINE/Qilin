@@ -375,28 +375,18 @@ fun MenuGlassPanel(
     isLightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val density = LocalDensity.current.density
-    val surfaceTint = when {
-        isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.88f)
-        isLightMode -> Color(0xFFF8FAFC).copy(alpha = 0.90f)
-        else -> Color(0xFF0B101C).copy(alpha = 0.88f)
+    val surfaceColor = when {
+        isAmoledMode -> Color(0xFF060912)
+        isLightMode -> MaterialTheme.colorScheme.surfaceContainerHigh
+        else -> Color(0xFF0F172A)
     }
 
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .graphicsLayer {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    renderEffect = RenderEffect
-                        .createBlurEffect(
-                            28f * density,
-                            28f * density,
-                            android.graphics.Shader.TileMode.CLAMP
-                        )
-                        .asComposeRenderEffect()
-                }
-            }
-            .background(surfaceTint, shape)
+    Surface(
+        modifier = modifier.clip(shape),
+        shape = shape,
+        color = surfaceColor,
+        tonalElevation = 6.dp,
+        shadowElevation = 8.dp
     ) {
         content()
     }
