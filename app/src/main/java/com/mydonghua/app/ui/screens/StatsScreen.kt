@@ -238,20 +238,39 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(CornerRadius.sm))
-                            .background(MaterialTheme.colorScheme.surface)
+                            .defaultMinSize(minHeight = 64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
                             .border(
                                 width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(CornerRadius.sm)
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f),
+                                shape = RoundedCornerShape(16.dp)
                             )
-                            .padding(Spacing.md)
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        Column {
-                            Text(item.value, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
-                            Text(item.label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(verticalArrangement = Arrangement.Center) {
+                            Text(
+                                text = item.value,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = item.label,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             if (item.subText != null) {
-                                Text(item.subText, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = item.subText,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
                     }
