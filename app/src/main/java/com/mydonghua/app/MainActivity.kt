@@ -485,30 +485,16 @@ class MainActivity : ComponentActivity() {
                 ) + fadeOut(animationSpec = tween(300))
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                val isLightMode = settingsState.themeMode.lowercase() == "light"
 
-                val menuSurfaceTint = when {
-                    isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.82f)
-                    isLightMode -> Color.White.copy(alpha = 0.78f)
-                    else -> Color(0xFF0B101C).copy(alpha = 0.78f)
-                }
-
-                Box(
+                Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(menuShape)
+                        .clip(menuShape),
+                    shape = menuShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .hazeChild(state = drawerHazeState, shape = menuShape)
-                            .background(
-                                color = menuSurfaceTint,
-                                shape = menuShape
-                            )
-                    )
-
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
