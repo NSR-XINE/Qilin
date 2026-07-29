@@ -868,10 +868,7 @@ private fun AnimatedDialog(
             visible = animateTrigger,
             enter = scaleIn(
                 initialScale = 0.9f,
-                animationSpec = spring(
-                    stiffness = Spring.StiffnessMediumLow,
-                    dampingRatio = Spring.DampingRatioLowBouncy
-                )
+                animationSpec = tween(200, easing = FastOutSlowInEasing)
             ) + fadeIn(animationSpec = tween(150)),
             exit = scaleOut(
                 targetScale = 0.9f,

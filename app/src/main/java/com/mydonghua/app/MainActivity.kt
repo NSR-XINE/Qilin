@@ -431,18 +431,12 @@ class MainActivity : ComponentActivity() {
                     visible = isSearchOpen,
                     enter = slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = spring(
-                            stiffness = Spring.StiffnessMediumLow,
-                            dampingRatio = Spring.DampingRatioLowBouncy
-                        )
-                    ) + fadeIn(animationSpec = tween(300)),
+                        animationSpec = tween(280, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(280)),
                     exit = slideOutVertically(
                         targetOffsetY = { it },
-                        animationSpec = spring(
-                            stiffness = Spring.StiffnessMediumLow,
-                            dampingRatio = 1.0f
-                        )
-                    ) + fadeOut(animationSpec = tween(300)),
+                        animationSpec = tween(240, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(240)),
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
