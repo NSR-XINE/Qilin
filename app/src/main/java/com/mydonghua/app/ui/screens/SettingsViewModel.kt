@@ -26,7 +26,8 @@ data class SettingsUiState(
     val showContinue: Boolean = true,
     val showRecent: Boolean = true,
     val showSchedule: Boolean = true,
-    val autoOpenKeyboard: Boolean = true
+    val autoOpenKeyboard: Boolean = true,
+    val defaultStreamProvider: String = "donghuastream"
 )
 
 data class DashboardPrefs(
@@ -48,6 +49,7 @@ class SettingsViewModel @Inject constructor(
         themePreference.themeModeFlow,
         themePreference.accentColorFlow,
         themePreference.autoOpenKeyboardFlow,
+        themePreference.defaultStreamProviderFlow,
         combine(
             themePreference.showBannerFlow,
             themePreference.showContinueFlow,
@@ -56,7 +58,7 @@ class SettingsViewModel @Inject constructor(
         ) { banner, cont, recent, schedule ->
             DashboardPrefs(banner, cont, recent, schedule)
         }
-    ) { theme, accent, autoOpen, prefs ->
+    ) { theme, accent, autoOpen, provider, prefs ->
         SettingsUiState(
             themeMode = theme,
             accentColor = accent,
@@ -64,7 +66,8 @@ class SettingsViewModel @Inject constructor(
             showContinue = prefs.showContinue,
             showRecent = prefs.showRecent,
             showSchedule = prefs.showSchedule,
-            autoOpenKeyboard = autoOpen
+            autoOpenKeyboard = autoOpen,
+            defaultStreamProvider = provider
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -94,6 +97,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setAutoOpenKeyboard(autoOpen: Boolean) {
         viewModelScope.launch { themePreference.setAutoOpenKeyboard(autoOpen) }
+    }
+
+    fun setDefaultStreamProvider(provider: String) {
+        viewModelScope.launch { themePreference.setDefaultStreamProvider(provider) }
     }
 
     suspend fun exportBackup(context: Context): File? {

@@ -425,15 +425,79 @@ fun SettingsScreen(
                 }
             }
 
-            SectionHeader("Search & Input Options")
+            SectionHeader("Search & Streaming Options")
             GlassSection {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Spacing.xs)
+                ) {
                     TogglePreferenceItem(
                         title = "Auto-open Keyboard",
                         subtitle = "Automatically open soft keyboard when tapping the search button",
                         checked = uiState.autoOpenKeyboard,
                         onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
                     )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Text(
+                            text = "Default Watch Provider",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Choose which streaming provider to open when tapping \"Watch Online\"",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+
+                        val providers = listOf(
+                            Triple("donghuastream", "🎬 DonghuaStream", "donghuastream.org"),
+                            Triple("luciferdonghua", "⚡ LuciferDonghua", "luciferdonghua.in"),
+                            Triple("direct", "🔗 Custom URL", "Custom saved link")
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        ) {
+                            providers.forEach { (key, label, desc) ->
+                                val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
+                                Surface(
+                                    onClick = { viewModel.setDefaultStreamProvider(key) },
+                                    shape = RoundedCornerShape(CornerRadius.sm),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        width = if (isSelected) 1.5.dp else 0.5.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.15f)
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = Spacing.sm, horizontal = Spacing.xs),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

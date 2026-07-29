@@ -373,6 +373,7 @@ class MainActivity : ComponentActivity() {
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
+                                defaultStreamProvider = settingsState.defaultStreamProvider,
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)

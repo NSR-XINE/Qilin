@@ -50,7 +50,8 @@ fun ShowDetailScreen(
     onEditClick: (Show) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    topPadding: Dp = 0.dp
+    topPadding: Dp = 0.dp,
+    defaultStreamProvider: String = "donghuastream"
 ) {
     val context = LocalContext.current
     val allShows by viewModel.allShows.collectAsState()
@@ -398,8 +399,11 @@ fun ShowDetailScreen(
                 // Primary Watch Online Glass Button (Placed directly below Language/Info Chips)
                 Button(
                     onClick = { 
-                        val targetUrl = show.watchUrl.takeIf { !it.isNullOrBlank() }
-                            ?: com.mydonghua.app.data.service.PosterFetchService.getDonghuaStreamUrl(show.title)
+                        val targetUrl = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                            showTitle = show.title,
+                            customWatchUrl = show.watchUrl,
+                            providerPreference = defaultStreamProvider
+                        )
                         onWatchClick(targetUrl) 
                     },
                     modifier = Modifier

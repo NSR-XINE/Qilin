@@ -363,4 +363,15 @@ object PosterFetchService {
             "https://luciferdonghua.in/?s=$query"
         }
     }
+
+    fun resolveWatchUrl(showTitle: String, customWatchUrl: String?, providerPreference: String): String {
+        if (providerPreference.lowercase() == "direct" && !customWatchUrl.isNullOrBlank()) {
+            return customWatchUrl
+        }
+        return when (providerPreference.lowercase()) {
+            "luciferdonghua" -> getLuciferDonghuaUrl(showTitle)
+            "donghuastream" -> getDonghuaStreamUrl(showTitle)
+            else -> if (!customWatchUrl.isNullOrBlank()) customWatchUrl else getDonghuaStreamUrl(showTitle)
+        }
+    }
 }
