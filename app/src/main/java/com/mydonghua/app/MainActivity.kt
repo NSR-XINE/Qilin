@@ -52,6 +52,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.refraction
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
@@ -499,28 +506,64 @@ AnimatedVisibility(
             val drawerShape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
             val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
             val isLightMode = settingsState.themeMode.lowercase() == "light"
-            val drawerBgColor = when {
-                isAmoledMode -> Color(0xFF0A0D14).copy(alpha = 0.96f)
-                isLightMode -> MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-                else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+            val backdrop = LocalLayerBackdrop.current
+
+            val drawerSurfaceTint = when {
+                isAmoledMode -> Color(0xFF060910).copy(alpha = 0.55f)
+                isLightMode -> Color.White.copy(alpha = 0.50f)
+                else -> Color(0xFF0B101C).copy(alpha = 0.40f)
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(250.dp)
+            val drawerBaseModifier = Modifier
+                .fillMaxHeight()
+                .width(250.dp)
+
+            val drawerGlassModifier = if (backdrop != null) {
+                drawerBaseModifier.drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { drawerShape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = when {
+                                isAmoledMode -> -0.02f
+                                isLightMode -> 0.10f
+                                else -> 0.04f
+                            },
+                            contrast = if (isLightMode) 1.05f else 1.0f,
+                            saturation = 1.4f
+                        )
+                        blur(if (isAmoledMode) 16f.dp.toPx() else 14f.dp.toPx())
+                        refraction(size.minDimension / 4f, size.minDimension / 2f, false)
+                    },
+                    highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.80f else 0.60f) },
+                    shadow = { Shadow(radius = 6f.dp, alpha = 0.30f) },
+                    onDrawSurface = {
+                        val radius = drawerShape.topStart.toPx(size, density = this)
+                        drawRoundRect(
+                            color = drawerSurfaceTint,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
+                        )
+                    }
+                )
+            } else {
+                drawerBaseModifier
                     .clip(drawerShape)
                     .hazeChild(state = drawerHazeState, shape = drawerShape)
                     .background(
-                        color = drawerBgColor,
+                        color = drawerSurfaceTint,
                         shape = drawerShape
                     )
+            }
+
+            Column(
+                modifier = drawerGlassModifier
                     .border(
                         width = 1.dp,
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color.White.copy(alpha = if (isLightMode) 0.50f else 0.25f),
-                                Color.White.copy(alpha = if (isLightMode) 0.20f else 0.08f),
+                                Color.White.copy(alpha = if (isLightMode) 0.60f else 0.35f),
+                                Color.White.copy(alpha = if (isLightMode) 0.25f else 0.12f),
                                 Color.Transparent
                             )
                         ),

@@ -263,23 +263,44 @@ fun GlassSection(
     val hazeState = LocalHazeState.current
     val backdrop = LocalLayerBackdrop.current
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val isDark = surfaceColor.luminance() < 0.5f
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val isLight = surfaceColor.luminance() > 0.5f
+    val isAmoled = backgroundColor == Color.Black || backgroundColor.luminance() < 0.01f
+    val isDark = !isLight
 
-    val surfaceTint = if (isDark) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.25f)
-    val shadowColor = if (isDark) Color.Black.copy(alpha = 0.30f) else Color.Black.copy(alpha = 0.10f)
+    val surfaceTint = when {
+        isAmoled -> Color(0xFF0B0F17).copy(alpha = 0.45f)
+        isLight -> Color.White.copy(alpha = 0.35f)
+        else -> Color.Black.copy(alpha = 0.18f)
+    }
+
+    val shadowColor = when {
+        isAmoled -> Color.Black.copy(alpha = 0.40f)
+        isLight -> Color.Black.copy(alpha = 0.10f)
+        else -> Color.Black.copy(alpha = 0.25f)
+    }
 
     val specularGlassBorder = Brush.verticalGradient(
-        colors = if (isDark) listOf(
-            Color.White.copy(alpha = 0.50f),
-            Color.White.copy(alpha = 0.20f),
-            Color.White.copy(alpha = 0.10f),
-            Color.White.copy(alpha = 0.04f)
-        ) else listOf(
-            Color.White.copy(alpha = 0.75f),
-            Color.White.copy(alpha = 0.35f),
-            Color.Black.copy(alpha = 0.12f),
-            Color.Black.copy(alpha = 0.06f)
-        )
+        colors = when {
+            isAmoled -> listOf(
+                Color.White.copy(alpha = 0.60f),
+                Color.White.copy(alpha = 0.25f),
+                Color.White.copy(alpha = 0.08f),
+                Color.White.copy(alpha = 0.02f)
+            )
+            isLight -> listOf(
+                Color.White.copy(alpha = 0.85f),
+                Color.White.copy(alpha = 0.40f),
+                Color.Black.copy(alpha = 0.12f),
+                Color.Black.copy(alpha = 0.05f)
+            )
+            else -> listOf(
+                Color.White.copy(alpha = 0.55f),
+                Color.White.copy(alpha = 0.20f),
+                Color.White.copy(alpha = 0.08f),
+                Color.White.copy(alpha = 0.03f)
+            )
+        }
     )
 
     val baseModifier = modifier
@@ -299,16 +320,20 @@ fun GlassSection(
             effects = {
                 vibrancy()
                 colorControls(
-                    brightness = if (isDark) 0.05f else 0.10f,
-                    contrast = 1.0f,
-                    saturation = 1.5f
+                    brightness = when {
+                        isAmoled -> -0.02f
+                        isLight -> 0.10f
+                        else -> 0.04f
+                    },
+                    contrast = if (isLight) 1.05f else 1.0f,
+                    saturation = if (isLight) 1.25f else 1.5f
                 )
-                blur(12f.dp.toPx())
+                blur(if (isAmoled) 14f.dp.toPx() else 12f.dp.toPx())
                 refraction(size.minDimension / 4f, size.minDimension / 2f, false)
             },
-            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.50f else 0.70f) },
-            shadow = { Shadow(radius = 4f.dp, alpha = if (isDark) 0.30f else 0.15f) },
-            innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isDark) 0.25f else 0.15f) },
+            highlight = { Highlight.Default.copy(alpha = if (isLight) 0.70f else 0.55f) },
+            shadow = { Shadow(radius = 4f.dp, alpha = if (isLight) 0.15f else 0.30f) },
+            innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isLight) 0.15f else 0.25f) },
             onDrawSurface = {
                 val radius = shape.topStart.toPx(size, density = this)
                 drawRoundRect(
