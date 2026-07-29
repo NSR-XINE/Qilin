@@ -461,37 +461,84 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(Spacing.xs))
 
                         val providers = listOf(
-                            Triple("donghuastream", "🎬 DonghuaStream", "donghuastream.org"),
-                            Triple("luciferdonghua", "⚡ LuciferDonghua", "luciferdonghua.in"),
-                            Triple("direct", "🔗 Custom URL", "Custom saved link")
+                            Triple("donghuastream", "DonghuaStream", "donghuastream.org to search & stream"),
+                            Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in to search & stream"),
+                            Triple("direct", "Custom Saved URL", "Direct watch link specified in show details")
                         )
 
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            providers.forEach { (key, label, desc) ->
+                            providers.forEach { (key, title, domain) ->
                                 val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
+                                val emoji = when (key) {
+                                    "donghuastream" -> "🎬"
+                                    "luciferdonghua" -> "⚡"
+                                    else -> "🔗"
+                                }
+
                                 Surface(
                                     onClick = { viewModel.setDefaultStreamProvider(key) },
                                     shape = RoundedCornerShape(CornerRadius.sm),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
+                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
                                     border = androidx.compose.foundation.BorderStroke(
                                         width = if (isSelected) 1.5.dp else 0.5.dp,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.15f)
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.12f)
                                     ),
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Column(
-                                        modifier = Modifier.padding(vertical = Spacing.sm, horizontal = Spacing.xs),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(
-                                            text = label,
-                                            fontSize = 11.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(
+                                                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = emoji,
+                                                    fontSize = 18.sp,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+
+                                            Column(verticalArrangement = Arrangement.Center) {
+                                                Text(
+                                                    text = title,
+                                                    fontSize = 13.5.sp,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Text(
+                                                    text = domain,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Normal,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+
+                                        RadioButton(
+                                            selected = isSelected,
+                                            onClick = { viewModel.setDefaultStreamProvider(key) },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = MaterialTheme.colorScheme.primary
+                                            )
                                         )
                                     }
                                 }
