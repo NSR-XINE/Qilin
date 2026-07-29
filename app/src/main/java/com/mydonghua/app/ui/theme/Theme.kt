@@ -134,6 +134,32 @@ fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     }
 }
 
+fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
+    return when (accentKey.lowercase()) {
+        "purple" -> if (isLight) Color(0xFF5A189A) else Color(0xFF7B2CBF)
+        "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFD90429)
+        "green" -> if (isLight) Color(0xFF1B4332) else Color(0xFF2EA043)
+        "orange" -> if (isLight) Color(0xFF9A031E) else Color(0xFFD97706)
+        "blue" -> if (isLight) Color(0xFF1D4ED8) else Color(0xFF2563EB)
+        "teal" -> if (isLight) Color(0xFF0F766E) else Color(0xFF0D9488)
+        "pink" -> if (isLight) Color(0xFF9F1239) else Color(0xFFBE185D)
+        else -> if (isLight) Color(0xFF0077B6) else Color(0xFF00B4D8)
+    }
+}
+
+fun getTertiaryColor(accentKey: String, isLight: Boolean): Color {
+    return when (accentKey.lowercase()) {
+        "purple" -> if (isLight) Color(0xFF3C096C) else Color(0xFF5A189A)
+        "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFA0001C)
+        "green" -> if (isLight) Color(0xFF081C15) else Color(0xFF1B4332)
+        "orange" -> if (isLight) Color(0xFF5F0F40) else Color(0xFF9A031E)
+        "blue" -> if (isLight) Color(0xFF1E3A8A) else Color(0xFF1D4ED8)
+        "teal" -> if (isLight) Color(0xFF115E59) else Color(0xFF0F766E)
+        "pink" -> if (isLight) Color(0xFF881337) else Color(0xFF9F1239)
+        else -> if (isLight) Color(0xFF03045E) else Color(0xFF0077B6)
+    }
+}
+
 fun buildM3ColorScheme(
     accentKey: String,
     themeMode: String
@@ -141,6 +167,8 @@ fun buildM3ColorScheme(
     val isLight = themeMode.lowercase() == "light"
     val isAmoled = themeMode.lowercase() == "amoled"
     val accentColor = getAccentColor(accentKey, isLight)
+    val secondaryAccent = getSecondaryColor(accentKey, isLight)
+    val tertiaryAccent = getTertiaryColor(accentKey, isLight)
 
     val baseBg = when {
         isAmoled -> AmoledBg
@@ -154,21 +182,21 @@ fun buildM3ColorScheme(
         else -> DarkSurface
     }
 
-    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.04f else 0.05f).compositeOver(baseBg)
-    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.06f else 0.08f).compositeOver(baseSurface)
-    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.10f else 0.12f).compositeOver(if (isLight) LightSurfaceVariant else DarkSurfaceVariant)
+    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.04f else 0.02f).compositeOver(baseBg)
+    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.06f else 0.03f).compositeOver(baseSurface)
+    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.10f else 0.05f).compositeOver(if (isLight) LightSurfaceVariant else DarkSurfaceVariant)
 
     return if (isLight) {
         lightColorScheme(
             primary = accentColor,
             onPrimary = Color.White,
-            primaryContainer = accentColor.copy(alpha = 0.14f),
+            primaryContainer = accentColor.copy(alpha = 0.12f),
             onPrimaryContainer = accentColor,
-            secondary = accentColor,
+            secondary = secondaryAccent,
             onSecondary = Color.White,
-            secondaryContainer = accentColor.copy(alpha = 0.12f),
-            onSecondaryContainer = accentColor,
-            tertiary = accentColor,
+            secondaryContainer = secondaryAccent.copy(alpha = 0.10f),
+            onSecondaryContainer = secondaryAccent,
+            tertiary = tertiaryAccent,
             onTertiary = Color.White,
             background = backgroundTinted,
             surface = surfaceTinted,
@@ -185,13 +213,13 @@ fun buildM3ColorScheme(
         darkColorScheme(
             primary = accentColor,
             onPrimary = Color.Black,
-            primaryContainer = accentColor.copy(alpha = 0.20f),
+            primaryContainer = accentColor.copy(alpha = 0.10f),
             onPrimaryContainer = accentColor,
-            secondary = accentColor,
+            secondary = secondaryAccent,
             onSecondary = Color.Black,
-            secondaryContainer = accentColor.copy(alpha = 0.15f),
-            onSecondaryContainer = accentColor,
-            tertiary = accentColor,
+            secondaryContainer = secondaryAccent.copy(alpha = 0.08f),
+            onSecondaryContainer = secondaryAccent,
+            tertiary = tertiaryAccent,
             onTertiary = Color.White,
             background = backgroundTinted,
             surface = surfaceTinted,
