@@ -464,12 +464,8 @@ class MainActivity : ComponentActivity() {
                             .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm),
                     )
                 }
-            }
-        }
-    }
-}
 
-AnimatedVisibility(
+                AnimatedVisibility(
     visible = isDrawerOpen,
     enter = fadeIn(animationSpec = tween(300)),
     exit = fadeOut(animationSpec = tween(300))
@@ -653,6 +649,9 @@ AnimatedVisibility(
             }
         }
     }
+}
+}
+}
 }
 }
 }
