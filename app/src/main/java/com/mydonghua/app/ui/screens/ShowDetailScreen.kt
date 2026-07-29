@@ -465,7 +465,9 @@ fun ShowDetailScreen(
                                     imageVector = Icons.Rounded.PlayArrow,
                                     contentDescription = "Play",
                                     tint = Color.White,
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .offset(x = 1.dp)
                                 )
                             }
 

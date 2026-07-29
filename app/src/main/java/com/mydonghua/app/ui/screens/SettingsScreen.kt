@@ -504,17 +504,24 @@ fun SettingsScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .size(36.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .clip(androidx.compose.foundation.shape.CircleShape)
                                                     .background(
                                                         if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
                                                         else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
                                                     ),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Text(
-                                                    text = emoji,
-                                                    fontSize = 18.sp,
-                                                    textAlign = TextAlign.Center
+                                                Icon(
+                                                    painter = painterResource(
+                                                        id = when (key) {
+                                                            "donghuastream" -> R.drawable.ic_tv
+                                                            "luciferdonghua" -> R.drawable.ic_stats
+                                                            else -> R.drawable.ic_collections
+                                                        }
+                                                    ),
+                                                    contentDescription = null,
+                                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(18.dp)
                                                 )
                                             }
 
