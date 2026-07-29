@@ -401,6 +401,26 @@ fun AddEditShowScreen(
                         shape = RoundedCornerShape(CornerRadius.sm)
                     )
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        AssistChip(
+                            onClick = {
+                                val t = title.ifBlank { "donghua" }
+                                watchUrl = com.mydonghua.app.data.service.PosterFetchService.getDonghuaStreamUrl(t)
+                            },
+                            label = { Text("Set DonghuaStream", fontSize = 11.sp) }
+                        )
+                        AssistChip(
+                            onClick = {
+                                val t = title.ifBlank { "donghua" }
+                                watchUrl = com.mydonghua.app.data.service.PosterFetchService.getLuciferDonghuaUrl(t)
+                            },
+                            label = { Text("Set LuciferDonghua", fontSize = 11.sp) }
+                        )
+                    }
+
                     OutlinedTextField(
                         value = countdownUrl,
                         onValueChange = { countdownUrl = it },

@@ -347,4 +347,20 @@ object PosterFetchService {
             emptyList()
         }
     }
+
+    fun getDonghuaStreamUrl(query: String): String {
+        return try {
+            "https://donghuastream.org/?s=" + URLEncoder.encode(query, "UTF-8")
+        } catch (e: Exception) {
+            "https://donghuastream.org/?s=$query"
+        }
+    }
+
+    fun getLuciferDonghuaUrl(query: String): String {
+        return try {
+            "https://luciferdonghua.in/?s=" + URLEncoder.encode(query, "UTF-8")
+        } catch (e: Exception) {
+            "https://luciferdonghua.in/?s=$query"
+        }
+    }
 }
