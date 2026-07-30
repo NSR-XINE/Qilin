@@ -276,10 +276,11 @@ fun GlassSection(
     val isAmoled = backgroundColor == Color.Black || backgroundColor.luminance() < 0.01f
     val isDark = !isLight
 
+    val primaryTint = MaterialTheme.colorScheme.primary
     val surfaceTint = when {
-        isAmoled -> Color(0xFF0B0F17).copy(alpha = 0.45f)
+        isAmoled -> primaryTint.copy(alpha = 0.06f).compositeOver(Color.Black.copy(alpha = 0.55f))
         isLight -> Color.White.copy(alpha = 0.35f)
-        else -> Color.Black.copy(alpha = 0.18f)
+        else -> primaryTint.copy(alpha = 0.04f).compositeOver(Color.Black.copy(alpha = 0.18f))
     }
 
     val shadowColor = when {
@@ -401,9 +402,9 @@ fun MenuGlassPanel(
     val isDark = !isLightMode
 
     val baseColor = when {
-        isAmoledMode -> Color(0xFF04060A).copy(alpha = 0.55f)
+        isAmoledMode -> Color.Black.copy(alpha = 0.65f)
         isLightMode -> Color.White.copy(alpha = 0.45f)
-        else -> Color.Black.copy(alpha = 0.35f)
+        else -> Color.Black.copy(alpha = 0.40f)
     }
 
     val accentColor = MaterialTheme.colorScheme.primary
@@ -454,9 +455,9 @@ fun MenuGlassPanel(
             )
         } else {
             val fallbackBg = when {
-                isAmoledMode -> Color(0xFF060912).copy(alpha = 0.92f)
+                isAmoledMode -> Color.Black.copy(alpha = 0.95f)
                 isLightMode -> MaterialTheme.colorScheme.surfaceContainerHigh
-                else -> Color(0xFF0F172A).copy(alpha = 0.92f)
+                else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
             }
             Box(
                 modifier = Modifier

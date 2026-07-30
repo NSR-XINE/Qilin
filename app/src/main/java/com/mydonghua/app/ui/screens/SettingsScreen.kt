@@ -845,7 +845,7 @@ private fun SettingsGlassSection(
 ) {
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val surfaceBg = if (isDark) {
-        Color(0xFF131B2A).copy(alpha = 0.70f)
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     } else {
         Color.White.copy(alpha = 0.75f)
     }
