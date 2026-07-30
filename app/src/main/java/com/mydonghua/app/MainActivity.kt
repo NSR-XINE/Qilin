@@ -237,7 +237,6 @@ class MainActivity : ComponentActivity() {
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .graphicsLayer { alpha = if (isSearchOpen) 0f else 1f }
                                                 .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm)
                                         )
                                     }
