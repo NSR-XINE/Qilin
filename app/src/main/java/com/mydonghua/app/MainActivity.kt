@@ -448,7 +448,12 @@ class MainActivity : ComponentActivity() {
                     ) + fadeOut(animationSpec = tween(400, easing = FastOutSlowInEasing)),
                 ) {
                     Surface(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { },
                         color = MaterialTheme.colorScheme.background
                     ) {
                         SearchScreen(
