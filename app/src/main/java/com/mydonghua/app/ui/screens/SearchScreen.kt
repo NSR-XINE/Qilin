@@ -3,6 +3,7 @@ package com.mydonghua.app.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -129,34 +130,23 @@ fun SearchScreen(
             .statusBarsPadding()
     ) {
         // 1. Search Bar Input Field
-        Box(
+        OutlinedTextField(
+            value = query,
+            onValueChange = { viewModel.searchQuery.value = it },
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    viewModel.selectQuery(query)
+                    keyboardController?.hide()
+                }
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            singleLine = true,
+            shape = RoundedCornerShape(CornerRadius.lg),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xs)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    focusRequester.requestFocus()
-                    keyboardController?.show()
-                }
-        ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { viewModel.searchQuery.value = it },
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        viewModel.selectQuery(query)
-                        keyboardController?.hide()
-                    }
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                singleLine = true,
-                shape = RoundedCornerShape(CornerRadius.lg),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(CornerRadius.lg))
+                .clip(RoundedCornerShape(CornerRadius.lg))
                 .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.lg))
                 .background(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
@@ -166,6 +156,12 @@ fun SearchScreen(
                 .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        focusRequester.requestFocus()
+                        keyboardController?.show()
+                    }
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
@@ -218,7 +214,6 @@ fun SearchScreen(
                 }
             }
         )
-        }
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
