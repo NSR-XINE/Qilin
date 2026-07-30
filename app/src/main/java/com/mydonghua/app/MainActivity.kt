@@ -437,13 +437,13 @@ class MainActivity : ComponentActivity() {
                 AnimatedVisibility(
                     visible = isSearchOpen,
                     enter = slideInVertically(
-                        initialOffsetY = { it },
-                        animationSpec = tween(280, easing = FastOutSlowInEasing)
-                    ) + fadeIn(animationSpec = tween(280)),
+                        initialOffsetY = { -it },
+                        animationSpec = tween(700, easing = FastOutSlowInEasing)
+                    ),
                     exit = slideOutVertically(
-                        targetOffsetY = { it },
-                        animationSpec = tween(240, easing = FastOutSlowInEasing)
-                    ) + fadeOut(animationSpec = tween(240)),
+                        targetOffsetY = { -it },
+                        animationSpec = tween(600, easing = FastOutSlowInEasing)
+                    ),
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
