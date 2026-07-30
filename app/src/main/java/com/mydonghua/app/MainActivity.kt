@@ -186,6 +186,12 @@ class MainActivity : ComponentActivity() {
                                     val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
                                     if (showGlobalHeader || isDetailRoute) {
                                         val headerAlpha = if (isSearchOpen) 0f else 1f
+                                        val headerTouchBlocker = if (isSearchOpen) {
+                                            Modifier.clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) { }
+                                        } else Modifier
                                         if (isDetailRoute) {
                                             val detailShowId = navBackStackEntry?.arguments?.getString("showId")
                                             val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
@@ -195,7 +201,7 @@ class MainActivity : ComponentActivity() {
                                                 isDark = settingsState.themeMode.lowercase() != "light",
                                                 onBackClick = { navController.popBackStack() },
                                                 onEditClick = detailShow?.let { s -> { navController.navigate("add_edit_show?showId=${s.id}") } },
-                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }
+                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }.then(headerTouchBlocker)
                                             )
                                         } else {
                                             val headerTitle = when (currentRoute) {
@@ -210,7 +216,7 @@ class MainActivity : ComponentActivity() {
                                                 backdrop = contentBackdrop,
                                                 isDark = settingsState.themeMode.lowercase() != "light",
                                                 onDrawerOpen = { isDrawerOpen = true },
-                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }
+                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }.then(headerTouchBlocker)
                                             )
                                         }
                                     }
