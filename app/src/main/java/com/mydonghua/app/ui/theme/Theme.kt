@@ -125,7 +125,7 @@ fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
         "dynamic" -> if (isLight) Color(0xFF6750A4) else Color(0xFFD0BCFF)
         "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFFBB86FC)
-        "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF4081)
+        "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF2A5F)
         "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF4CAF50)
         "orange" -> if (isLight) Color(0xFFD97706) else Color(0xFFFF9800)
         "blue" -> if (isLight) Color(0xFF2563EB) else Color(0xFF448AFF)
@@ -139,7 +139,7 @@ fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
         "dynamic" -> if (isLight) Color(0xFF625B71) else Color(0xFFCCC2DC)
         "purple" -> if (isLight) Color(0xFF5A189A) else Color(0xFF9D4EDD)
-        "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFFF2A5F)
+        "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFD90429)
         "green" -> if (isLight) Color(0xFF1B4332) else Color(0xFF3FB950)
         "orange" -> if (isLight) Color(0xFF9A031E) else Color(0xFFF0883E)
         "blue" -> if (isLight) Color(0xFF1D4ED8) else Color(0xFF58A6FF)
@@ -153,7 +153,7 @@ fun getTertiaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
         "dynamic" -> if (isLight) Color(0xFF7D5260) else Color(0xFFEFB8C8)
         "purple" -> if (isLight) Color(0xFF3C096C) else Color(0xFF7B2CBF)
-        "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFD90429)
+        "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFA0001C)
         "green" -> if (isLight) Color(0xFF081C15) else Color(0xFF2EA043)
         "orange" -> if (isLight) Color(0xFF5F0F40) else Color(0xFFD97706)
         "blue" -> if (isLight) Color(0xFF1E3A8A) else Color(0xFF2563EB)
