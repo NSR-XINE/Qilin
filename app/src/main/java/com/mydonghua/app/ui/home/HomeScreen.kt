@@ -16,8 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -145,8 +148,11 @@ fun HeroBanner(
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            0.2f to Color.Transparent,
-                            1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.85f)
+                            0.0f to Color.Transparent,
+                            0.25f to Color.Transparent,
+                            0.55f to Color.Black.copy(alpha = 0.04f),
+                            0.8f to Color.Black.copy(alpha = 0.15f),
+                            1.0f to Color.Black.copy(alpha = 0.45f)
                         )
                     )
             )
@@ -154,7 +160,7 @@ fun HeroBanner(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 18.dp, end = 18.dp, bottom = Spacing.lg, top = 10.dp)
+                    .padding(start = 18.dp, end = 18.dp, bottom = Spacing.xl, top = 10.dp)
             ) {
                 Text(
                     text = show.title,
@@ -162,7 +168,14 @@ fun HeroBanner(
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    style = TextStyle(
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.5f),
+                            offset = Offset(0f, 1f),
+                            blurRadius = 3f
+                        )
+                    )
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
