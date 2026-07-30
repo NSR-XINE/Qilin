@@ -406,11 +406,19 @@ fun MenuGlassPanel(
         else -> Color.Black.copy(alpha = 0.35f)
     }
 
+    val accentColor = MaterialTheme.colorScheme.primary
     val borderColor = if (isDark) {
         Color.White.copy(alpha = 0.12f)
     } else {
         Color.Black.copy(alpha = 0.08f)
     }
+    val glassBorderBrush = Brush.verticalGradient(
+        colors = listOf(
+            accentColor.copy(alpha = if (isLightMode) 0.50f else 0.30f),
+            borderColor,
+            borderColor.copy(alpha = 0.30f)
+        )
+    )
 
     Box(
         modifier = modifier.clip(shape)
@@ -439,8 +447,8 @@ fun MenuGlassPanel(
                         }
                     )
                     .border(
-                        width = 0.5.dp,
-                        color = borderColor,
+                        width = 1.dp,
+                        brush = glassBorderBrush,
                         shape = shape
                     )
             )

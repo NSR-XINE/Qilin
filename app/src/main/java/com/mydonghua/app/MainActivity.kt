@@ -701,46 +701,45 @@ private fun DrawerItem(
 ) {
     val pillShape = CircleShape
     val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
     } else {
         Color.Transparent
     }
     val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.onSecondaryContainer
+        MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
-    val iconTint = if (isSelected) {
-        MaterialTheme.colorScheme.onSecondaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val borderStroke = if (isSelected) {
+        androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f))
+    } else null
 
     Surface(
         onClick = onClick,
         selected = isSelected,
         shape = pillShape,
         color = containerColor,
+        border = borderStroke,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(48.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = label,
-                modifier = Modifier.size(24.dp),
-                tint = iconTint
+                modifier = Modifier.size(22.dp),
+                tint = contentColor
             )
             Text(
                 text = label,
-                fontSize = 15.sp,
+                fontSize = 14.5.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 color = contentColor
             )
