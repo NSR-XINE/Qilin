@@ -50,17 +50,18 @@ fun ShowCard(
     val hazeState = LocalHazeState.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val overlayGradient = remember {
-        Brush.verticalGradient(
-            0.5f to Color.Transparent,
-            1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
-        )
+    val scrim = MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
+    val overlayGradient = remember(scrim) {
+        Brush.verticalGradient(0.5f to Color.Transparent, 1.0f to scrim)
     }
-    val statusColor = remember(show.status) {
+    val tertiary = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
+    val error = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+    val primary = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+    val statusColor = remember(show.status, tertiary, error, primary) {
         when (show.status) {
-            "completed" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
-            "stopped" -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
-            else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+            "completed" -> tertiary
+            "stopped" -> error
+            else -> primary
         }
     }
     val statusText = remember(show.status) {
@@ -70,9 +71,7 @@ fun ShowCard(
             else -> "Airing"
         }
     }
-    val transparentCardColors = remember {
-        CardDefaults.cardColors(containerColor = Color.Transparent)
-    }
+    val transparentCardColors = CardDefaults.cardColors(containerColor = Color.Transparent)
 
     if (showDeleteDialog) {
         AlertDialog(

@@ -378,17 +378,16 @@ fun SearchScreen(
                                 )
                             }
                             items(onlineResults, key = { it.id }) { show ->
-                                val onAdd = remember(show) { { showToAdd = show } }
                                 ShowCard(
                                     show = show,
-                                    onWatchClick = onAdd,
-                                    onEditClick = onAdd,
+                                    onWatchClick = { showToAdd = show },
+                                    onEditClick = { showToAdd = show },
                                     onDeleteClick = {},
                                     onFavoriteToggle = {},
                                     onNotifyToggle = {},
                                     onEpIncrement = {},
                                     onEpDecrement = {},
-                                    onCardClick = onAdd
+                                    onCardClick = { showToAdd = show }
                                 )
                             }
                         }
