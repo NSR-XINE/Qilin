@@ -129,23 +129,34 @@ fun SearchScreen(
             .statusBarsPadding()
     ) {
         // 1. Search Bar Input Field
-        OutlinedTextField(
-            value = query,
-            onValueChange = { viewModel.searchQuery.value = it },
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    viewModel.selectQuery(query)
-                    keyboardController?.hide()
-                }
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            singleLine = true,
-            shape = RoundedCornerShape(CornerRadius.lg),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xs)
-                .clip(RoundedCornerShape(CornerRadius.lg))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    focusRequester.requestFocus()
+                    keyboardController?.show()
+                }
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { viewModel.searchQuery.value = it },
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.selectQuery(query)
+                        keyboardController?.hide()
+                    }
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                singleLine = true,
+                shape = RoundedCornerShape(CornerRadius.lg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(CornerRadius.lg))
                 .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.lg))
                 .background(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
@@ -207,6 +218,7 @@ fun SearchScreen(
                 }
             }
         )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
