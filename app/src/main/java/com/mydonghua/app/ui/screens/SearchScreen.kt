@@ -126,16 +126,19 @@ fun SearchScreen(
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        // 1. Search Bar Input Field (visually identical to M3 SearchBar, focusable/editable, no popup)
-        SearchBarDefaults.InputField(
-            query = query,
-            onQueryChange = { viewModel.searchQuery.value = it },
-            onSearch = {
-                viewModel.selectQuery(it)
-                focusManager.clearFocus()
-            },
-            expanded = isSearchActive,
-            onExpandedChange = { isSearchActive = it },
+        // 1. Search Bar Input Field
+        OutlinedTextField(
+            value = query,
+            onValueChange = { viewModel.searchQuery.value = it },
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    viewModel.selectQuery(query)
+                    focusManager.clearFocus()
+                }
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            singleLine = true,
+            shape = RoundedCornerShape(CornerRadius.lg),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.lg)
@@ -151,7 +154,13 @@ fun SearchScreen(
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                 },
-            colors = SearchBarDefaults.inputFieldColors(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            ),
             placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             leadingIcon = {
                 IconButton(
