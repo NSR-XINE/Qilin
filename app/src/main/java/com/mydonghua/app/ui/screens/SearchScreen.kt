@@ -44,8 +44,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
-import android.app.Activity
-import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -103,6 +101,13 @@ fun SearchScreen(
         }
     }
 
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) {
+            delay(100)
+            keyboardController?.show()
+        }
+    }
+
     var isSearchActive by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
@@ -154,10 +159,6 @@ fun SearchScreen(
                 .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
-                    if (focusState.isFocused) {
-                        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
-                        imm?.showSoftInput((context as? Activity)?.currentFocus, InputMethodManager.SHOW_FORCED)
-                    }
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
