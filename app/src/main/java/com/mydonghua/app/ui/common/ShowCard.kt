@@ -168,6 +168,7 @@ fun ShowCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 64.dp)
                     .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
