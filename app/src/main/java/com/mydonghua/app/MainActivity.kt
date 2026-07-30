@@ -49,6 +49,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -182,39 +183,40 @@ class MainActivity : ComponentActivity() {
                                 containerColor = Color.Transparent,
                                 modifier = Modifier.fillMaxSize(),
                                 topBar = {
-                                     if (!isSearchOpen) {
-                                         val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
-                                         if (showGlobalHeader || isDetailRoute) {
-                                             if (isDetailRoute) {
-                                                 val detailShowId = navBackStackEntry?.arguments?.getString("showId")
-                                                 val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
-                                                 GlassHeader(
-                                                     title = detailShow?.title ?: "Donghua Details",
-                                                     backdrop = contentBackdrop,
-                                                     isDark = settingsState.themeMode.lowercase() != "light",
-                                                     onBackClick = { navController.popBackStack() },
-                                                     onEditClick = detailShow?.let { s -> { navController.navigate("add_edit_show?showId=${s.id}") } }
-                                                 )
-                                             } else {
-                                                 val headerTitle = when (currentRoute) {
-                                                     "home" -> "My Donghua"
-                                                     "airing" -> "Airing Schedule"
-                                                     "complete" -> "Completed"
-                                                     "stopped" -> "Stopped"
-                                                     else -> ""
-                                                 }
-                                                 GlassHeader(
-                                                     title = headerTitle,
-                                                     backdrop = contentBackdrop,
-                                                     isDark = settingsState.themeMode.lowercase() != "light",
-                                                     onDrawerOpen = { isDrawerOpen = true },
-                                                 )
-                                             }
-                                         }
-                                     }
+                                    val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
+                                    if (showGlobalHeader || isDetailRoute) {
+                                        val headerAlpha = if (isSearchOpen) 0f else 1f
+                                        if (isDetailRoute) {
+                                            val detailShowId = navBackStackEntry?.arguments?.getString("showId")
+                                            val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
+                                            GlassHeader(
+                                                title = detailShow?.title ?: "Donghua Details",
+                                                backdrop = contentBackdrop,
+                                                isDark = settingsState.themeMode.lowercase() != "light",
+                                                onBackClick = { navController.popBackStack() },
+                                                onEditClick = detailShow?.let { s -> { navController.navigate("add_edit_show?showId=${s.id}") } },
+                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }
+                                            )
+                                        } else {
+                                            val headerTitle = when (currentRoute) {
+                                                "home" -> "My Donghua"
+                                                "airing" -> "Airing Schedule"
+                                                "complete" -> "Completed"
+                                                "stopped" -> "Stopped"
+                                                else -> ""
+                                            }
+                                            GlassHeader(
+                                                title = headerTitle,
+                                                backdrop = contentBackdrop,
+                                                isDark = settingsState.themeMode.lowercase() != "light",
+                                                onDrawerOpen = { isDrawerOpen = true },
+                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }
+                                            )
+                                        }
+                                    }
                                 },
                                 bottomBar = {
-                                    if (showGlobalHeader && !isSearchOpen) {
+                                    if (showGlobalHeader) {
                                         LiquidGlassNavBar(
                                             currentRoute = currentRoute,
                                             isDark = settingsState.themeMode.lowercase() != "light",
@@ -235,6 +237,7 @@ class MainActivity : ComponentActivity() {
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
+                                                .graphicsLayer { alpha = if (isSearchOpen) 0f else 1f }
                                                 .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm)
                                         )
                                     }
@@ -439,11 +442,11 @@ class MainActivity : ComponentActivity() {
                     enter = slideInVertically(
                         initialOffsetY = { it },
                         animationSpec = tween(700, easing = FastOutSlowInEasing)
-                    ),
+                    ) + fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)),
                     exit = slideOutVertically(
                         targetOffsetY = { it },
                         animationSpec = tween(600, easing = FastOutSlowInEasing)
-                    ),
+                    ) + fadeOut(animationSpec = tween(400, easing = FastOutSlowInEasing)),
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
