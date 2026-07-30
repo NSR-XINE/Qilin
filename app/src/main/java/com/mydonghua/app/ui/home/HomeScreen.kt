@@ -154,7 +154,7 @@ fun HeroBanner(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 18.dp, end = 18.dp, bottom = 16.dp, top = 10.dp)
+                    .padding(start = 18.dp, end = 18.dp, bottom = Spacing.lg, top = 10.dp)
             ) {
                 Text(
                     text = show.title,
@@ -375,7 +375,7 @@ fun RecentlyUpdatedRow(
                                     text = relativeTime,
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 4.dp),
+                                    modifier = Modifier.padding(top = Spacing.xs),
                                     maxLines = 1
                                 )
                             }

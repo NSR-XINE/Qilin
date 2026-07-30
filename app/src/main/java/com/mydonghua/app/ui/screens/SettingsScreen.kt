@@ -157,8 +157,8 @@ fun SettingsScreen(
                                 verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(8.dp)
-                            ) {
+                                    .padding(Spacing.sm)
+                            } {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -200,7 +200,7 @@ fun SettingsScreen(
                                             modifier = Modifier
                                                 .size(18.dp)
                                                 .align(Alignment.Center)
-                                                .offset(y = 4.dp)
+                                                .offset(y = Spacing.xs)
                                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                                 .background(MaterialTheme.colorScheme.primary),
                                             contentAlignment = Alignment.Center
@@ -217,7 +217,7 @@ fun SettingsScreen(
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                                 ) {
                                     Icon(
                                         imageVector = modeIcon,

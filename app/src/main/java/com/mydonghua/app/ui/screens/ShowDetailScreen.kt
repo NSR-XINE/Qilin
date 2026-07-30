@@ -123,7 +123,7 @@ fun ShowDetailScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = 4.dp)
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
                     .height(220.dp)
             ) {
                 Box(
@@ -212,7 +212,7 @@ fun ShowDetailScreen(
                             border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.4f))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
@@ -523,7 +523,7 @@ fun ShowDetailScreen(
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.xs)
                                     )
                                 }
                             }

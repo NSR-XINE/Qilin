@@ -231,7 +231,7 @@ fun GlassHeader(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = if (onBackClick != null) 8.dp else 24.dp, end = 8.dp),
+                    .padding(start = if (onBackClick != null) Spacing.sm else Spacing.xxl, end = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (onBackClick != null) {
