@@ -19,7 +19,9 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
@@ -479,18 +481,29 @@ class MainActivity : ComponentActivity() {
                     },
                 enter = slideInVertically(
                     initialOffsetY = { -it },
-                    animationSpec = tween(
-                        durationMillis = 350,
-                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessLow
                     )
-                ) + fadeIn(animationSpec = tween(300)),
+                ) + fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 250,
+                        easing = LinearOutSlowInEasing
+                    )
+                ),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
                     animationSpec = tween(
-                        durationMillis = 300,
-                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                        durationMillis = 240,
+                        easing = FastOutLinearInEasing
                     )
-                ) + fadeOut(animationSpec = tween(300))
+                ) + fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 180,
+                        delayMillis = 40,
+                        easing = FastOutLinearInEasing
+                    )
+                )
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
