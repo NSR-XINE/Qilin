@@ -24,6 +24,7 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -139,30 +140,12 @@ fun CollectionsScreen(
                 }
             }
         } else if (sortedCollections.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    Text("No collections", fontSize = 48.sp)
-                    Text(
-                        text = "No collections created yet",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Edit a show and set its Collection field to start grouping them.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(horizontal = Spacing.xxxl),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            EmptyState(
+                title = "No collections created yet",
+                subtitle = "Edit a show and set its Collection field to start grouping them.",
+                painter = painterResource(id = R.drawable.ic_collections),
+                modifier = Modifier.padding(paddingValues)
+            )
         } else {
             LazyColumn(
                 modifier = Modifier

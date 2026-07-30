@@ -14,7 +14,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -99,17 +102,12 @@ fun FavoritesScreen(
                 }
             }
         } else if (shows.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = topPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No favorite shows selected",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            EmptyState(
+                title = "No favorite shows selected",
+                subtitle = "Mark shows as favorites to see them here",
+                painter = painterResource(id = R.drawable.ic_heart_outline),
+                modifier = Modifier.padding(top = topPadding)
+            )
         } else {
             LazyColumn(
                 modifier = Modifier

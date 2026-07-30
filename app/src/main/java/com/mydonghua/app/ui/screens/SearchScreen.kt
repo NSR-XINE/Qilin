@@ -67,6 +67,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.TrendingUp
+import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.screens.SearchSuggestion
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -283,32 +284,13 @@ fun SearchScreen(
                 val showMatches = suggestions.filterIsInstance<SearchSuggestion.ShowMatch>()
 
                 if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(bottom = 80.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null,
-                                modifier = Modifier.size(IconSize.hero),
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                            )
-                            Spacer(modifier = Modifier.height(Spacing.md))
-                            Text(
-                                text = "No matching shows found",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.height(Spacing.xs))
-                            Text(
-                                text = "Try searching for another title",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                            )
-                        }
-                    }
+                    EmptyState(
+                        title = "No matching shows found",
+                        subtitle = "Try searching for another title or browse all shows",
+                        icon = Icons.Default.Search,
+                        actionLabel = "Browse All",
+                        onAction = onNavigateBack
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),

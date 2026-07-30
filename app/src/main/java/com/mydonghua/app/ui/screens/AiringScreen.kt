@@ -14,7 +14,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -46,17 +49,12 @@ fun AiringScreen(
                 items(5) { ShowCardSkeleton() }
             }
         } else if (shows.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = topPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No ongoing shows tracked",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            EmptyState(
+                title = "No ongoing shows tracked",
+                subtitle = "Add shows that are currently airing to track them here",
+                painter = painterResource(id = R.drawable.ic_airing),
+                modifier = Modifier.padding(top = topPadding)
+            )
         } else {
             LazyColumn(
                 modifier = Modifier

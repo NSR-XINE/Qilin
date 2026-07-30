@@ -22,6 +22,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.common.EmptyState
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,17 +77,20 @@ fun CalendarScreen(
         },
         modifier = modifier
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = Spacing.lg)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
-            Spacer(modifier = Modifier.height(Spacing.xs))
             if (isLoading) {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                ) {
+                    Spacer(modifier = Modifier.height(Spacing.xs))
                     repeat(3) {
                         Column(
                             modifier = Modifier
@@ -129,16 +133,19 @@ fun CalendarScreen(
                     }
                 }
             } else if (upcomingWeekList.isEmpty()) {
-                Text(
-                    text = "No shows scheduled for release this week",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EmptyState(
+                    title = "No shows scheduled for release this week",
+                    subtitle = "Add shows that are currently airing with release days set",
+                    painter = painterResource(id = R.drawable.ic_calendar)
                 )
             } else {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.lg)
                 ) {
+                    Spacer(modifier = Modifier.height(Spacing.xs))
                     upcomingWeekList.forEach { group ->
                         Column(
                             modifier = Modifier
@@ -182,10 +189,9 @@ fun CalendarScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
             }
-
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

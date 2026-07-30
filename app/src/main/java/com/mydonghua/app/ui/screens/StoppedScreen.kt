@@ -14,7 +14,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -83,17 +86,12 @@ fun StoppedScreen(
                 }
             }
         } else if (shows.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = topPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No hiatus or upcoming shows tracked",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            EmptyState(
+                title = "No hiatus or upcoming shows tracked",
+                subtitle = "Shows on hiatus or yet to premiere will show up here",
+                painter = painterResource(id = R.drawable.ic_stopped),
+                modifier = Modifier.padding(top = topPadding)
+            )
         } else {
             LazyColumn(
                 modifier = Modifier
