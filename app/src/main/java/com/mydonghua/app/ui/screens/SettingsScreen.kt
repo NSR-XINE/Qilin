@@ -158,7 +158,7 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(Spacing.sm)
-                            } {
+                            ) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
