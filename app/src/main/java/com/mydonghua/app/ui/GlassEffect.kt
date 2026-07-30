@@ -1,8 +1,11 @@
 package com.mydonghua.app.ui
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -256,8 +259,7 @@ fun GlassBackground(
         content()
     }
 }
-@Composable
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GlassSection(
     modifier: Modifier = Modifier,
@@ -362,13 +364,13 @@ fun GlassSection(
 
     val interactiveModifier = when {
         onClick != null && onLongClick != null -> {
-            liquidGlassModifier.clip(shape).androidx.compose.foundation.combinedClickable(
+            liquidGlassModifier.clip(shape).combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
         }
         onClick != null -> {
-            liquidGlassModifier.clip(shape).androidx.compose.foundation.clickable(onClick = onClick)
+            liquidGlassModifier.clip(shape).clickable(onClick = onClick)
         }
         else -> liquidGlassModifier
     }
