@@ -480,27 +480,38 @@ class MainActivity : ComponentActivity() {
                         isDrawerOpen = false
                     },
                 enter = slideInVertically(
-                    initialOffsetY = { -it },
+                    initialOffsetY = { -it / 2 },
                     animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessLow
+                        dampingRatio = 0.8f,
+                        stiffness = 380f
+                    )
+                ) + scaleIn(
+                    initialScale = 0.95f,
+                    animationSpec = spring(
+                        dampingRatio = 0.8f,
+                        stiffness = 380f
                     )
                 ) + fadeIn(
                     animationSpec = tween(
-                        durationMillis = 250,
+                        durationMillis = 220,
                         easing = LinearOutSlowInEasing
                     )
                 ),
                 exit = slideOutVertically(
-                    targetOffsetY = { -it },
-                    animationSpec = tween(
-                        durationMillis = 240,
-                        easing = FastOutLinearInEasing
+                    targetOffsetY = { -it / 2 },
+                    animationSpec = spring(
+                        dampingRatio = 0.85f,
+                        stiffness = 420f
+                    )
+                ) + scaleOut(
+                    targetScale = 0.95f,
+                    animationSpec = spring(
+                        dampingRatio = 0.85f,
+                        stiffness = 420f
                     )
                 ) + fadeOut(
                     animationSpec = tween(
                         durationMillis = 180,
-                        delayMillis = 40,
                         easing = FastOutLinearInEasing
                     )
                 )
