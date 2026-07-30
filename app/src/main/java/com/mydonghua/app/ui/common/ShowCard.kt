@@ -50,6 +50,30 @@ fun ShowCard(
     val hazeState = LocalHazeState.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val overlayGradient = remember {
+        Brush.verticalGradient(
+            0.5f to Color.Transparent,
+            1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
+        )
+    }
+    val statusColor = remember(show.status) {
+        when (show.status) {
+            "completed" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
+            "stopped" -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+            else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+        }
+    }
+    val statusText = remember(show.status) {
+        when (show.status) {
+            "completed" -> "Completed"
+            "stopped" -> "Hiatus"
+            else -> "Airing"
+        }
+    }
+    val transparentCardColors = remember {
+        CardDefaults.cardColors(containerColor = Color.Transparent)
+    }
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -87,7 +111,7 @@ fun ShowCard(
             )
             .clickable { onCardClick(show) },
         shape = RoundedCornerShape(CornerRadius.card),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = transparentCardColors
     ) {
         Column {
             Box(
@@ -106,12 +130,7 @@ fun ShowCard(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                0.5f to Color.Transparent,
-                                1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
-                            )
-                        )
+                        .background(brush = overlayGradient)
                 )
 
                 Box(
@@ -119,21 +138,13 @@ fun ShowCard(
                         .align(Alignment.TopEnd)
                         .padding(Spacing.sm)
                         .background(
-                            color = when (show.status) {
-                                "completed" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
-                                "stopped" -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
-                                else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                            },
+                            color = statusColor,
                             shape = RoundedCornerShape(CornerRadius.sm)
                         )
                         .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                 ) {
                     Text(
-                        text = when (show.status) {
-                            "completed" -> "Completed"
-                            "stopped" -> "Hiatus"
-                            else -> "Airing"
-                        },
+                        text = statusText,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White

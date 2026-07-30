@@ -117,17 +117,37 @@ fun HeroBanner(
         }
     }
 
+    val bannerBorderBrush = remember {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.45f),
+                Color.White.copy(alpha = 0.12f)
+            )
+        )
+    }
+    val overlayBrush = remember {
+        Brush.verticalGradient(
+            0.0f to Color.Transparent,
+            0.25f to Color.Transparent,
+            0.55f to Color.Black.copy(alpha = 0.04f),
+            0.8f to Color.Black.copy(alpha = 0.15f),
+            1.0f to Color.Black.copy(alpha = 0.45f)
+        )
+    }
+    val textShadow = remember {
+        Shadow(
+            color = Color.Black.copy(alpha = 0.5f),
+            offset = Offset(0f, 1f),
+            blurRadius = 3f
+        )
+    }
+
     val bannerShape = RoundedCornerShape(CornerRadius.card)
     Card(
         shape = bannerShape,
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.45f),
-                    Color.White.copy(alpha = 0.12f)
-                )
-            )
+            brush = bannerBorderBrush
         ),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier
@@ -154,15 +174,7 @@ fun HeroBanner(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0.0f to Color.Transparent,
-                            0.25f to Color.Transparent,
-                            0.55f to Color.Black.copy(alpha = 0.04f),
-                            0.8f to Color.Black.copy(alpha = 0.15f),
-                            1.0f to Color.Black.copy(alpha = 0.45f)
-                        )
-                    )
+                    .background(overlayBrush)
             )
 
             Column(
@@ -177,13 +189,7 @@ fun HeroBanner(
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.5f),
-                            offset = Offset(0f, 1f),
-                            blurRadius = 3f
-                        )
-                    )
+                    style = TextStyle(shadow = textShadow)
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
@@ -209,30 +215,30 @@ fun HeroBanner(
 private fun BannerTimeBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
     val shape = RoundedCornerShape(12.dp)
+    val bgBrush = remember {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.Black.copy(alpha = 0.38f),
+                Color.Black.copy(alpha = 0.22f)
+            )
+        )
+    }
+    val borderBrush = remember {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.45f),
+                Color.White.copy(alpha = 0.12f)
+            )
+        )
+    }
     Box(
         modifier = Modifier
             .width(52.dp)
             .height(44.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Black.copy(alpha = 0.38f),
-                        Color.Black.copy(alpha = 0.22f)
-                    )
-                )
-            )
-            .border(
-                width = 0.75.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.45f),
-                        Color.White.copy(alpha = 0.12f)
-                    )
-                ),
-                shape = shape
-            )
+            .background(brush = bgBrush)
+            .border(width = 0.75.dp, brush = borderBrush, shape = shape)
             .padding(vertical = 2.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -461,18 +467,19 @@ fun WeeklyScheduleSection(
     modifier: Modifier = Modifier
 ) {
     val hazeState = LocalHazeState.current
-    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+    val days = remember { listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") }
 
-    val calendar = Calendar.getInstance()
-    val todayNum = calendar.get(Calendar.DAY_OF_WEEK)
-    val todayName = when (todayNum) {
-        Calendar.MONDAY -> "Monday"
-        Calendar.TUESDAY -> "Tuesday"
-        Calendar.WEDNESDAY -> "Wednesday"
-        Calendar.THURSDAY -> "Thursday"
-        Calendar.FRIDAY -> "Friday"
-        Calendar.SATURDAY -> "Saturday"
-        else -> "Sunday"
+    val todayName = remember {
+        val calendar = Calendar.getInstance()
+        when (calendar.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.MONDAY -> "Monday"
+            Calendar.TUESDAY -> "Tuesday"
+            Calendar.WEDNESDAY -> "Wednesday"
+            Calendar.THURSDAY -> "Thursday"
+            Calendar.FRIDAY -> "Friday"
+            Calendar.SATURDAY -> "Saturday"
+            else -> "Sunday"
+        }
     }
 
     var selectedDay by remember { mutableStateOf(todayName) }

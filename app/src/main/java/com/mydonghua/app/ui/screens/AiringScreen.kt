@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.mydonghua.app.domain.model.Show
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
@@ -34,6 +35,11 @@ fun AiringScreen(
     val shows by viewModel.airingShows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
+    val onDelete = remember { { s: Show -> viewModel.deleteShow(s.id) } }
+    val onFavorite = remember { { s: Show -> viewModel.toggleFavorite(s) } }
+    val onNotify = remember { { s: Show -> viewModel.toggleNotification(context, s) } }
+    val onIncrement = remember { { s: Show -> viewModel.incrementEpisode(s) } }
+    val onDecrement = remember { { s: Show -> viewModel.decrementEpisode(s) } }
 
     Box(
         modifier = modifier.fillMaxSize()
@@ -88,11 +94,11 @@ fun AiringScreen(
                         show = show,
                         onWatchClick = onWatchClick,
                         onEditClick = onEditClick,
-                        onDeleteClick = { viewModel.deleteShow(it.id) },
-                        onFavoriteToggle = { viewModel.toggleFavorite(it) },
-                        onNotifyToggle = { viewModel.toggleNotification(context, it) },
-                        onEpIncrement = { viewModel.incrementEpisode(it) },
-                        onEpDecrement = { viewModel.decrementEpisode(it) },
+                        onDeleteClick = onDelete,
+                        onFavoriteToggle = onFavorite,
+                        onNotifyToggle = onNotify,
+                        onEpIncrement = onIncrement,
+                        onEpDecrement = onDecrement,
                         onCardClick = onCardClick
                     )
                 }

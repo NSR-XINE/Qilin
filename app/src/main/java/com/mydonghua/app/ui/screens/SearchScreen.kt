@@ -282,6 +282,12 @@ fun SearchScreen(
                 }
             } else {
                 val showMatches = suggestions.filterIsInstance<SearchSuggestion.ShowMatch>()
+                val onShowClickById = remember { { s: Show -> onShowClick(s.id) } }
+                val onDelete = remember { { s: Show -> showsViewModel.deleteShow(s.id) } }
+                val onFavorite = remember { { s: Show -> showsViewModel.toggleFavorite(s) } }
+                val onNotify = remember { { s: Show -> showsViewModel.toggleNotification(context, s) } }
+                val onIncrement = remember { { s: Show -> showsViewModel.incrementEpisode(s) } }
+                val onDecrement = remember { { s: Show -> showsViewModel.decrementEpisode(s) } }
 
                 if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
                     EmptyState(
@@ -335,13 +341,13 @@ fun SearchScreen(
                                 ShowCard(
                                     show = show,
                                     onWatchClick = onWatchClick,
-                                    onEditClick = { onShowClick(it.id) },
-                                    onDeleteClick = { showsViewModel.deleteShow(it.id) },
-                                    onFavoriteToggle = { showsViewModel.toggleFavorite(it) },
-                                    onNotifyToggle = { showsViewModel.toggleNotification(context, it) },
-                                    onEpIncrement = { showsViewModel.incrementEpisode(it) },
-                                    onEpDecrement = { showsViewModel.decrementEpisode(it) },
-                                    onCardClick = { onShowClick(it.id) }
+                                    onEditClick = onShowClickById,
+                                    onDeleteClick = onDelete,
+                                    onFavoriteToggle = onFavorite,
+                                    onNotifyToggle = onNotify,
+                                    onEpIncrement = onIncrement,
+                                    onEpDecrement = onDecrement,
+                                    onCardClick = onShowClickById
                                 )
                             }
                         }
@@ -372,16 +378,17 @@ fun SearchScreen(
                                 )
                             }
                             items(onlineResults, key = { it.id }) { show ->
+                                val onAdd = remember(show) { { showToAdd = show } }
                                 ShowCard(
                                     show = show,
-                                    onWatchClick = { showToAdd = show },
-                                    onEditClick = { showToAdd = show },
+                                    onWatchClick = onAdd,
+                                    onEditClick = onAdd,
                                     onDeleteClick = {},
                                     onFavoriteToggle = {},
                                     onNotifyToggle = {},
                                     onEpIncrement = {},
                                     onEpDecrement = {},
-                                    onCardClick = { showToAdd = show }
+                                    onCardClick = onAdd
                                 )
                             }
                         }

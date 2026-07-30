@@ -162,6 +162,7 @@ fun HistoryScreen(
                     }
 
                     items(items, key = { "${it.showId}_${it.watchedAt}" }) { item ->
+                        val onItemClick = remember(item.showId) { { onShowClick(item.showId) } }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -172,7 +173,7 @@ fun HistoryScreen(
                                     color = MaterialTheme.colorScheme.outlineVariant,
                                     shape = RoundedCornerShape(CornerRadius.sm)
                                 )
-                                .clickable { onShowClick(item.showId) }
+                                .clickable(onClick = onItemClick)
                                 .padding(Spacing.sm),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
