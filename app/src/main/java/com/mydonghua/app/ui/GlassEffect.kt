@@ -257,9 +257,13 @@ fun GlassBackground(
     }
 }
 @Composable
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
 fun GlassSection(
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(CornerRadius.card),
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit = {}
 ) {
     val hazeState = LocalHazeState.current
@@ -316,34 +320,36 @@ fun GlassSection(
         )
 
     val liquidGlassModifier = if (backdrop != null) {
-        baseModifier.drawBackdrop(
-            backdrop = backdrop,
-            shape = { shape },
-            effects = {
-                vibrancy()
-                colorControls(
-                    brightness = when {
-                        isAmoled -> -0.02f
-                        isLight -> 0.10f
-                        else -> 0.04f
-                    },
-                    contrast = if (isLight) 1.05f else 1.0f,
-                    saturation = if (isLight) 1.25f else 1.5f
-                )
-                blur(if (isAmoled) 14f.dp.toPx() else 12f.dp.toPx())
-                refraction(size.minDimension / 4f, size.minDimension / 2f, false)
-            },
-            highlight = { Highlight.Default.copy(alpha = if (isLight) 0.70f else 0.55f) },
-            shadow = { Shadow(radius = 4f.dp, alpha = if (isLight) 0.15f else 0.30f) },
-            innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isLight) 0.15f else 0.25f) },
-            onDrawSurface = {
-                val radius = shape.topStart.toPx(size, density = this)
-                drawRoundRect(
-                    color = surfaceTint,
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
-                )
-            }
-        )
+        baseModifier
+            .clip(shape)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    colorControls(
+                        brightness = when {
+                            isAmoled -> -0.02f
+                            isLight -> 0.10f
+                            else -> 0.04f
+                        },
+                        contrast = if (isLight) 1.05f else 1.0f,
+                        saturation = if (isLight) 1.25f else 1.5f
+                    )
+                    blur(if (isAmoled) 14f.dp.toPx() else 12f.dp.toPx())
+                    refraction(size.minDimension / 4f, size.minDimension / 2f, false)
+                },
+                highlight = { Highlight.Default.copy(alpha = if (isLight) 0.70f else 0.55f) },
+                shadow = { Shadow(radius = 4f.dp, alpha = if (isLight) 0.15f else 0.30f) },
+                innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isLight) 0.15f else 0.25f) },
+                onDrawSurface = {
+                    val radius = shape.topStart.toPx(size, density = this)
+                    drawRoundRect(
+                        color = surfaceTint,
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
+                    )
+                }
+            )
     } else {
         baseModifier
             .clip(shape)
@@ -354,8 +360,21 @@ fun GlassSection(
             )
     }
 
+    val interactiveModifier = when {
+        onClick != null && onLongClick != null -> {
+            liquidGlassModifier.clip(shape).androidx.compose.foundation.combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+        }
+        onClick != null -> {
+            liquidGlassModifier.clip(shape).androidx.compose.foundation.clickable(onClick = onClick)
+        }
+        else -> liquidGlassModifier
+    }
+
     Box(
-        modifier = liquidGlassModifier
+        modifier = interactiveModifier
             .border(
                 width = 1.dp,
                 brush = specularGlassBorder,

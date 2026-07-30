@@ -261,12 +261,12 @@ fun ContinueWatchingRow(
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         items(shows, key = { it.id }) { show ->
-            GlassSection(modifier = Modifier.width(240.dp)) {
+            GlassSection(
+                modifier = Modifier.width(240.dp),
+                onClick = { onShowClick(show.id) }
+            ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onShowClick(show.id) }
-                        .padding(Spacing.sm),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -336,12 +336,12 @@ fun RecentlyUpdatedRow(
     ) {
         items(shows, key = { it.id }) { show ->
             Box(modifier = Modifier.fillParentMaxWidth()) {
-                GlassSection(modifier = Modifier.fillMaxWidth()) {
+                GlassSection(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onShowClick(show.id) }
+                ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onShowClick(show.id) }
-                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
