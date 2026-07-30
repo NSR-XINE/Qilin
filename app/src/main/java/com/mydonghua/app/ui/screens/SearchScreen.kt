@@ -101,14 +101,14 @@ fun SearchScreen(
         }
     }
 
+    var isSearchActive by remember { mutableStateOf(false) }
+
     LaunchedEffect(isSearchActive) {
         if (isSearchActive) {
             delay(100)
             keyboardController?.show()
         }
     }
-
-    var isSearchActive by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
