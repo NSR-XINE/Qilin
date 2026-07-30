@@ -481,16 +481,16 @@ class MainActivity : ComponentActivity() {
                     },
                 enter = slideInVertically(
                     initialOffsetY = { -it },
-                    animationSpec = spring(
-                        dampingRatio = 0.6f,
-                        stiffness = 130f
+                    animationSpec = tween(
+                        durationMillis = 700,
+                        easing = FastOutSlowInEasing
                     )
                 ),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
-                    animationSpec = spring(
-                        dampingRatio = 0.7f,
-                        stiffness = 160f
+                    animationSpec = tween(
+                        durationMillis = 600,
+                        easing = FastOutSlowInEasing
                     )
                 )
             ) {
