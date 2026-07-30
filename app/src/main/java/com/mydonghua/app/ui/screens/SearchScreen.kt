@@ -54,7 +54,7 @@ import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalFocusManager
+
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.ImeAction
@@ -88,28 +88,18 @@ fun SearchScreen(
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
 
     LaunchedEffect(autoOpenKeyboard) {
         if (autoOpenKeyboard) {
-            delay(400)
-            runCatching {
-                focusRequester.requestFocus()
-                keyboardController?.show()
-            }
+            delay(200)
+            focusRequester.requestFocus()
+            keyboardController?.show()
         }
     }
 
     var isSearchActive by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isSearchActive) {
-        if (isSearchActive) {
-            delay(100)
-            keyboardController?.show()
-        }
-    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -123,7 +113,6 @@ fun SearchScreen(
     BackHandler(enabled = true) {
         if (isKeyboardVisible) {
             keyboardController?.hide()
-            focusManager.clearFocus()
         } else {
             onNavigateBack()
         }
