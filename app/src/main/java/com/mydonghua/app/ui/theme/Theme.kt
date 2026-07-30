@@ -105,7 +105,7 @@ fun buildM3ColorSchemeWithAccents(
 
     val baseBg = when {
         isAmoled -> AmoledBg
-        isLight -> Color(0xFFF6F7F9)
+        isLight -> Color(0xFFFAF8F9)
         else -> DarkBg
     }
 
@@ -115,9 +115,9 @@ fun buildM3ColorSchemeWithAccents(
         else -> DarkSurface
     }
 
-    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.05f else 0.03f).compositeOver(baseBg)
-    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.08f else 0.04f).compositeOver(baseSurface)
-    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.12f else 0.06f).compositeOver(if (isLight) LightSurfaceVariant else DarkSurfaceVariant)
+    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.06f else 0.04f).compositeOver(baseBg)
+    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.08f else 0.05f).compositeOver(baseSurface)
+    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.14f else 0.08f).compositeOver(if (isLight) Color(0xFFF2EFF2) else DarkSurfaceVariant)
 
     return if (isLight) {
         lightColorScheme(
@@ -134,6 +134,9 @@ fun buildM3ColorSchemeWithAccents(
             background = backgroundTinted,
             surface = surfaceTinted,
             surfaceVariant = surfaceVariantTinted,
+            surfaceContainer = accentColor.copy(alpha = 0.06f).compositeOver(Color.White),
+            surfaceContainerHigh = accentColor.copy(alpha = 0.10f).compositeOver(Color.White),
+            surfaceContainerHighest = accentColor.copy(alpha = 0.14f).compositeOver(Color.White),
             surfaceTint = accentColor,
             outline = LightOutline,
             outlineVariant = LightOutline.copy(alpha = 0.5f),
@@ -157,6 +160,9 @@ fun buildM3ColorSchemeWithAccents(
             background = backgroundTinted,
             surface = surfaceTinted,
             surfaceVariant = surfaceVariantTinted,
+            surfaceContainer = if (isAmoled) AmoledSurface else accentColor.copy(alpha = 0.06f).compositeOver(DarkSurface),
+            surfaceContainerHigh = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = 0.10f).compositeOver(DarkSurface),
+            surfaceContainerHighest = if (isAmoled) AmoledSurfaceTint else accentColor.copy(alpha = 0.14f).compositeOver(DarkSurface),
             surfaceTint = accentColor,
             outline = if (isAmoled) AmoledOutline else DarkOutline,
             outlineVariant = (if (isAmoled) AmoledOutline else DarkOutline).copy(alpha = 0.5f),
