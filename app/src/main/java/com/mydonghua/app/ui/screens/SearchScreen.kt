@@ -180,6 +180,7 @@ fun SearchScreen(
                          ) {
                             if (isSearchActive) {
                                 keyboardController?.hide()
+                                focusManager.clearFocus()
                             } else {
                                 onNavigateBack()
                             }
