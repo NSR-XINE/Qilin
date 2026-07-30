@@ -134,7 +134,7 @@ fun SearchScreen(
                 viewModel.selectQuery(it)
                 focusManager.clearFocus()
             },
-            expanded = false,
+            expanded = isSearchActive,
             onExpandedChange = { isSearchActive = it },
             modifier = Modifier
                 .fillMaxWidth()
