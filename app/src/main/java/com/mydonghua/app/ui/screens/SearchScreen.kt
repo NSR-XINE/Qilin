@@ -124,18 +124,7 @@ fun SearchScreen(
             .statusBarsPadding()
     ) {
         // 1. Search Bar Input Field
-        OutlinedTextField(
-            value = query,
-            onValueChange = { viewModel.searchQuery.value = it },
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    viewModel.selectQuery(query)
-                    keyboardController?.hide()
-                }
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            singleLine = true,
-            shape = RoundedCornerShape(CornerRadius.lg),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.lg)
@@ -146,61 +135,79 @@ fun SearchScreen(
                     shape = RoundedCornerShape(CornerRadius.lg)
                 )
                 .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
-                .focusRequester(focusRequester)
-                .onFocusChanged { focusState ->
-                    isSearchActive = focusState.isFocused
-                },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            ),
-            placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
-            leadingIcon = {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                         ) {
-                            if (isSearchActive) {
-                                keyboardController?.hide()
-                            } else {
-                                onNavigateBack()
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
-                        contentDescription = if (isSearchActive) "Back" else "Search",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { viewModel.searchQuery.value = it },
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.selectQuery(query)
+                        keyboardController?.hide()
+                    }
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                singleLine = true,
+                shape = RoundedCornerShape(CornerRadius.lg),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        isSearchActive = focusState.isFocused
+                    },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                ),
+                placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
+                leadingIcon = {
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { viewModel.clearQuery() }
-                            ),
+                                indication = null
+                            ) {
+                                if (isSearchActive) {
+                                    keyboardController?.hide()
+                                } else {
+                                    onNavigateBack()
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Icon(
+                            imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
+                            contentDescription = if (isSearchActive) "Back" else "Search",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { viewModel.clearQuery() }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
