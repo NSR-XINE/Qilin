@@ -55,7 +55,7 @@ import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.LocalHazeState
 import dev.chrisbanes.haze.hazeChild
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.ImeAction
@@ -88,7 +88,7 @@ fun SearchScreen(
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
 
@@ -96,9 +96,10 @@ fun SearchScreen(
 
     LaunchedEffect(autoOpenKeyboard) {
         if (autoOpenKeyboard) {
-            delay(250)
+            delay(400)
             runCatching {
                 focusRequester.requestFocus()
+                keyboardController?.show()
             }
         }
     }
@@ -116,7 +117,7 @@ fun SearchScreen(
 
     BackHandler(enabled = true) {
         if (isKeyboardVisible) {
-            focusManager.clearFocus()
+            keyboardController?.hide()
         } else {
             onNavigateBack()
         }
@@ -128,13 +129,26 @@ fun SearchScreen(
             .statusBarsPadding()
     ) {
         // 1. Search Bar Input Field
-        OutlinedTextField(
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg)
+                .padding(top = Spacing.xs)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    focusRequester.requestFocus()
+                    keyboardController?.show()
+                }
+        ) {
+            OutlinedTextField(
             value = query,
             onValueChange = { viewModel.searchQuery.value = it },
             keyboardActions = KeyboardActions(
                 onSearch = {
                     viewModel.selectQuery(query)
-                    focusManager.clearFocus()
+                    keyboardController?.hide()
                 }
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -142,8 +156,6 @@ fun SearchScreen(
             shape = RoundedCornerShape(CornerRadius.lg),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.lg)
-                .padding(top = Spacing.xs)
                 .clip(RoundedCornerShape(CornerRadius.lg))
                 .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.lg))
                 .background(
@@ -171,9 +183,9 @@ fun SearchScreen(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) {
+                         ) {
                             if (isSearchActive) {
-                                focusManager.clearFocus()
+                                keyboardController?.hide()
                             } else {
                                 onNavigateBack()
                             }
@@ -206,6 +218,7 @@ fun SearchScreen(
                 }
             }
         )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
@@ -324,7 +337,7 @@ fun SearchScreen(
                                     match = match,
                                     onClick = {
                                         viewModel.selectQuery(match.displayText)
-                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
                                         onShowClick(match.show.id)
                                     }
                                 )
