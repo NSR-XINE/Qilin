@@ -129,20 +129,7 @@ fun SearchScreen(
             .statusBarsPadding()
     ) {
         // 1. Search Bar Input Field
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.lg)
-                .padding(top = Spacing.xs)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    focusRequester.requestFocus()
-                    keyboardController?.show()
-                }
-        ) {
-            OutlinedTextField(
+        OutlinedTextField(
             value = query,
             onValueChange = { viewModel.searchQuery.value = it },
             keyboardActions = KeyboardActions(
@@ -156,6 +143,8 @@ fun SearchScreen(
             shape = RoundedCornerShape(CornerRadius.lg),
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = Spacing.lg)
+                .padding(top = Spacing.xs)
                 .clip(RoundedCornerShape(CornerRadius.lg))
                 .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.lg))
                 .background(
@@ -218,7 +207,6 @@ fun SearchScreen(
                 }
             }
         )
-        }
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
