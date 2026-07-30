@@ -480,39 +480,39 @@ class MainActivity : ComponentActivity() {
                         isDrawerOpen = false
                     },
                 enter = slideInVertically(
-                    initialOffsetY = { -it / 2 },
-                    animationSpec = spring(
-                        dampingRatio = 0.8f,
-                        stiffness = 380f
+                    initialOffsetY = { -it },
+                    animationSpec = tween(
+                        durationMillis = 450,
+                        easing = FastOutSlowInEasing
                     )
                 ) + scaleIn(
-                    initialScale = 0.95f,
-                    animationSpec = spring(
-                        dampingRatio = 0.8f,
-                        stiffness = 380f
+                    initialScale = 0.92f,
+                    animationSpec = tween(
+                        durationMillis = 450,
+                        easing = FastOutSlowInEasing
                     )
                 ) + fadeIn(
                     animationSpec = tween(
-                        durationMillis = 220,
-                        easing = LinearOutSlowInEasing
+                        durationMillis = 450,
+                        easing = FastOutSlowInEasing
                     )
                 ),
                 exit = slideOutVertically(
-                    targetOffsetY = { -it / 2 },
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = 420f
+                    targetOffsetY = { -it },
+                    animationSpec = tween(
+                        durationMillis = 450,
+                        easing = FastOutSlowInEasing
                     )
                 ) + scaleOut(
-                    targetScale = 0.95f,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = 420f
+                    targetScale = 0.92f,
+                    animationSpec = tween(
+                        durationMillis = 450,
+                        easing = FastOutSlowInEasing
                     )
                 ) + fadeOut(
                     animationSpec = tween(
-                        durationMillis = 180,
-                        easing = FastOutLinearInEasing
+                        durationMillis = 450,
+                        easing = FastOutSlowInEasing
                     )
                 )
             ) {
