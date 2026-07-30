@@ -252,7 +252,6 @@ fun StatsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(Spacing.xxxl))
-                }
             }
         }
     }
