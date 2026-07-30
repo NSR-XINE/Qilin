@@ -481,38 +481,16 @@ class MainActivity : ComponentActivity() {
                     },
                 enter = slideInVertically(
                     initialOffsetY = { -it },
-                    animationSpec = tween(
-                        durationMillis = 450,
-                        easing = FastOutSlowInEasing
-                    )
-                ) + scaleIn(
-                    initialScale = 0.92f,
-                    animationSpec = tween(
-                        durationMillis = 450,
-                        easing = FastOutSlowInEasing
-                    )
-                ) + fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 450,
-                        easing = FastOutSlowInEasing
+                    animationSpec = spring(
+                        dampingRatio = 0.7f,
+                        stiffness = 260f
                     )
                 ),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
                     animationSpec = tween(
-                        durationMillis = 450,
-                        easing = FastOutSlowInEasing
-                    )
-                ) + scaleOut(
-                    targetScale = 0.92f,
-                    animationSpec = tween(
-                        durationMillis = 450,
-                        easing = FastOutSlowInEasing
-                    )
-                ) + fadeOut(
-                    animationSpec = tween(
-                        durationMillis = 450,
-                        easing = FastOutSlowInEasing
+                        durationMillis = 250,
+                        easing = FastOutLinearInEasing
                     )
                 )
             ) {
