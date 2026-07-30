@@ -114,7 +114,6 @@ class MainActivity : ComponentActivity() {
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
             val appHazeState = remember { HazeState() }
-            val drawerHazeState = remember { HazeState() }
 
             androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
                 if (currentRoute != "home") {
@@ -163,15 +162,10 @@ class MainActivity : ComponentActivity() {
                                 StarsBackground()
                             }
                         }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .haze(drawerHazeState, style = HazeMaterials.ultraThin())
+                        CompositionLocalProvider(
+                            LocalHazeState provides appHazeState,
+                            LocalLayerBackdrop provides contentBackdrop
                         ) {
-                            CompositionLocalProvider(
-                                LocalHazeState provides appHazeState,
-                                LocalLayerBackdrop provides contentBackdrop
-                            ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -491,7 +485,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 }
-            }
 
             AnimatedVisibility(
                 visible = isDrawerOpen,
@@ -637,12 +630,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
     }
 }
 }
 }
 }
+
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         requestNotificationPermission()
