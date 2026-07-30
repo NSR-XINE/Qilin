@@ -178,14 +178,18 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxSize(),
                                 topBar = {
                                     val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
-                                    if (showGlobalHeader || isDetailRoute) {
-                                        val headerAlpha = if (isSearchOpen) 0f else 1f
-                                        val headerTouchBlocker = if (isSearchOpen) {
-                                            Modifier.clickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = null
-                                            ) { }
-                                        } else Modifier
+                                    if (isSearchOpen) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .statusBarsPadding()
+                                                .height(64.dp)
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = null
+                                                ) { }
+                                        )
+                                    } else if (showGlobalHeader || isDetailRoute) {
                                         if (isDetailRoute) {
                                             val detailShowId = navBackStackEntry?.arguments?.getString("showId")
                                             val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }
@@ -195,7 +199,6 @@ class MainActivity : ComponentActivity() {
                                                 isDark = settingsState.themeMode.lowercase() != "light",
                                                 onBackClick = { navController.popBackStack() },
                                                 onEditClick = detailShow?.let { s -> { navController.navigate("add_edit_show?showId=${s.id}") } },
-                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }.then(headerTouchBlocker)
                                             )
                                         } else {
                                             val headerTitle = when (currentRoute) {
@@ -210,7 +213,6 @@ class MainActivity : ComponentActivity() {
                                                 backdrop = contentBackdrop,
                                                 isDark = settingsState.themeMode.lowercase() != "light",
                                                 onDrawerOpen = { isDrawerOpen = true },
-                                                modifier = Modifier.graphicsLayer { alpha = headerAlpha }.then(headerTouchBlocker)
                                             )
                                         }
                                     }
@@ -634,7 +636,7 @@ class MainActivity : ComponentActivity() {
 }
 }
 }
-}
+    }
 
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
@@ -685,6 +687,7 @@ class MainActivity : ComponentActivity() {
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
     }
+}
 }
 
 @Composable
