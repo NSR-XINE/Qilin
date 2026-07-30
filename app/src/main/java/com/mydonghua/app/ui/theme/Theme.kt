@@ -123,6 +123,7 @@ private val AmoledColorScheme = darkColorScheme(
 
 fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
+        "dynamic" -> if (isLight) Color(0xFF6750A4) else Color(0xFFD0BCFF)
         "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFF9D4EDD)
         "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF2A5F)
         "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF3FB950)
@@ -136,6 +137,7 @@ fun getAccentColor(accentKey: String, isLight: Boolean): Color {
 
 fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
+        "dynamic" -> if (isLight) Color(0xFF625B71) else Color(0xFFCCC2DC)
         "purple" -> if (isLight) Color(0xFF5A189A) else Color(0xFF7B2CBF)
         "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFD90429)
         "green" -> if (isLight) Color(0xFF1B4332) else Color(0xFF2EA043)
@@ -149,6 +151,7 @@ fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
 
 fun getTertiaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
+        "dynamic" -> if (isLight) Color(0xFF7D5260) else Color(0xFFEFB8C8)
         "purple" -> if (isLight) Color(0xFF3C096C) else Color(0xFF5A189A)
         "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFA0001C)
         "green" -> if (isLight) Color(0xFF081C15) else Color(0xFF1B4332)
@@ -160,15 +163,14 @@ fun getTertiaryColor(accentKey: String, isLight: Boolean): Color {
     }
 }
 
-fun buildM3ColorScheme(
-    accentKey: String,
+fun buildM3ColorSchemeWithAccents(
+    accentColor: Color,
+    secondaryAccent: Color,
+    tertiaryAccent: Color,
     themeMode: String
 ): ColorScheme {
     val isLight = themeMode.lowercase() == "light"
     val isAmoled = themeMode.lowercase() == "amoled"
-    val accentColor = getAccentColor(accentKey, isLight)
-    val secondaryAccent = getSecondaryColor(accentKey, isLight)
-    val tertiaryAccent = getTertiaryColor(accentKey, isLight)
 
     val baseBg = when {
         isAmoled -> AmoledBg
@@ -190,11 +192,11 @@ fun buildM3ColorScheme(
         lightColorScheme(
             primary = accentColor,
             onPrimary = Color.White,
-            primaryContainer = accentColor.copy(alpha = 0.12f),
+            primaryContainer = accentColor.copy(alpha = 0.14f),
             onPrimaryContainer = accentColor,
             secondary = secondaryAccent,
             onSecondary = Color.White,
-            secondaryContainer = secondaryAccent.copy(alpha = 0.10f),
+            secondaryContainer = secondaryAccent.copy(alpha = 0.12f),
             onSecondaryContainer = secondaryAccent,
             tertiary = tertiaryAccent,
             onTertiary = Color.White,
@@ -213,11 +215,11 @@ fun buildM3ColorScheme(
         darkColorScheme(
             primary = accentColor,
             onPrimary = Color.Black,
-            primaryContainer = accentColor.copy(alpha = 0.10f),
+            primaryContainer = accentColor.copy(alpha = 0.12f),
             onPrimaryContainer = accentColor,
             secondary = secondaryAccent,
             onSecondary = Color.Black,
-            secondaryContainer = secondaryAccent.copy(alpha = 0.08f),
+            secondaryContainer = secondaryAccent.copy(alpha = 0.10f),
             onSecondaryContainer = secondaryAccent,
             tertiary = tertiaryAccent,
             onTertiary = Color.White,
@@ -233,6 +235,17 @@ fun buildM3ColorScheme(
             scrim = Color.Black
         )
     }
+}
+
+fun buildM3ColorScheme(
+    accentKey: String,
+    themeMode: String
+): ColorScheme {
+    val isLight = themeMode.lowercase() == "light"
+    val accentColor = getAccentColor(accentKey, isLight)
+    val secondaryAccent = getSecondaryColor(accentKey, isLight)
+    val tertiaryAccent = getTertiaryColor(accentKey, isLight)
+    return buildM3ColorSchemeWithAccents(accentColor, secondaryAccent, tertiaryAccent, themeMode)
 }
 
 val LocalDisplayCornerRadius = staticCompositionLocalOf<Dp> { 24.dp }
@@ -266,20 +279,17 @@ fun MyDonghuaTheme(
     val displayCornerRadius = rememberDisplayCornerRadius()
 
     val finalScheme = if (accentColor.lowercase() == "dynamic" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val dynamicScheme = if (isLight) {
+        val dynamicSys = if (isLight) {
             dynamicLightColorScheme(context)
         } else {
             dynamicDarkColorScheme(context)
         }
-        if (themeMode.lowercase() == "amoled") {
-            dynamicScheme.copy(
-                background = AmoledBg,
-                surface = AmoledSurface,
-                surfaceVariant = AmoledSurfaceVariant
-            )
-        } else {
-            dynamicScheme
-        }
+        buildM3ColorSchemeWithAccents(
+            accentColor = dynamicSys.primary,
+            secondaryAccent = dynamicSys.secondary,
+            tertiaryAccent = dynamicSys.tertiary,
+            themeMode = themeMode
+        )
     } else {
         buildM3ColorScheme(accentColor, themeMode)
     }
