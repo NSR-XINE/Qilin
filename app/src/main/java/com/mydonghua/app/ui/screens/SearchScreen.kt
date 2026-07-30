@@ -3,6 +3,7 @@ package com.mydonghua.app.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -163,27 +164,42 @@ fun SearchScreen(
             ),
             placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             leadingIcon = {
-                IconButton(
-                    onClick = {
-                        if (isSearchActive) {
-                            focusManager.clearFocus()
-                        } else {
-                            onNavigateBack()
-                        }
-                    }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            if (isSearchActive) {
+                                focusManager.clearFocus()
+                            } else {
+                                onNavigateBack()
+                            }
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
                         contentDescription = if (isSearchActive) "Back" else "Search",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             },
             trailingIcon = {
                 if (query.isNotEmpty()) {
-                    IconButton(
-                        onClick = { viewModel.clearQuery() },
-                        modifier = Modifier.clip(CircleShape)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { viewModel.clearQuery() }
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                     }
