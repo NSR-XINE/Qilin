@@ -3,7 +3,6 @@ package com.mydonghua.app.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,7 +41,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
@@ -148,7 +146,6 @@ fun SearchScreen(
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xs)
                 .clip(RoundedCornerShape(CornerRadius.lg))
-                .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.lg))
                 .background(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
                     shape = RoundedCornerShape(CornerRadius.lg)
@@ -157,12 +154,6 @@ fun SearchScreen(
                 .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
-                }
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        focusRequester.requestFocus()
-                        keyboardController?.show()
-                    }
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
