@@ -437,11 +437,11 @@ class MainActivity : ComponentActivity() {
                 AnimatedVisibility(
                     visible = isSearchOpen,
                     enter = slideInVertically(
-                        initialOffsetY = { -it },
+                        initialOffsetY = { it },
                         animationSpec = tween(700, easing = FastOutSlowInEasing)
                     ),
                     exit = slideOutVertically(
-                        targetOffsetY = { -it },
+                        targetOffsetY = { it },
                         animationSpec = tween(600, easing = FastOutSlowInEasing)
                     ),
                 ) {
