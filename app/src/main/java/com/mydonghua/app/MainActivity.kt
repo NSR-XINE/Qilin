@@ -637,6 +637,7 @@ class MainActivity : ComponentActivity() {
 }
 }
     }
+    }
 
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
@@ -687,7 +688,6 @@ class MainActivity : ComponentActivity() {
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
     }
-}
 }
 
 @Composable
