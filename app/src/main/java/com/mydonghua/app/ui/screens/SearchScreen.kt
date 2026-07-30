@@ -104,13 +104,6 @@ fun SearchScreen(
 
     var isSearchActive by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isSearchActive) {
-        if (isSearchActive) {
-            delay(100)
-            keyboardController?.show()
-        }
-    }
-
     DisposableEffect(Unit) {
         onDispose {
             viewModel.clearQuery()
@@ -160,6 +153,9 @@ fun SearchScreen(
                 .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
+                    if (focusState.isFocused) {
+                        keyboardController?.show()
+                    }
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
