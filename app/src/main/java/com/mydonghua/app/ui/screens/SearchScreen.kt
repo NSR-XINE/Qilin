@@ -44,6 +44,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,8 +55,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
-import com.mydonghua.app.ui.LocalHazeState
-import dev.chrisbanes.haze.hazeChild
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
@@ -80,7 +80,6 @@ fun SearchScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val hazeState = LocalHazeState.current
     val query by viewModel.searchQuery.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
     val results by viewModel.filteredShows.collectAsState()
@@ -97,6 +96,8 @@ fun SearchScreen(
         runCatching {
             focusRequester.requestFocus()
             keyboardController?.show()
+            val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showSoftInput((context as? Activity)?.currentFocus, InputMethodManager.SHOW_IMPLICIT)
         }
     }
 
@@ -150,6 +151,9 @@ fun SearchScreen(
                 .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
+                    if (focusState.isFocused) {
+                        keyboardController?.show()
+                    }
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
