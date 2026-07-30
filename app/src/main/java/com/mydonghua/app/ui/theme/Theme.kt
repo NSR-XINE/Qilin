@@ -124,13 +124,13 @@ private val AmoledColorScheme = darkColorScheme(
 fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
         "dynamic" -> if (isLight) Color(0xFF6750A4) else Color(0xFFD0BCFF)
-        "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFF9D4EDD)
-        "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF2A5F)
-        "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF3FB950)
-        "orange" -> if (isLight) Color(0xFFD97706) else Color(0xFFF0883E)
-        "blue" -> if (isLight) Color(0xFF2563EB) else Color(0xFF58A6FF)
-        "teal" -> if (isLight) Color(0xFF0D9488) else Color(0xFF2DD4BF)
-        "pink" -> if (isLight) Color(0xFFBE185D) else Color(0xFFF472B6)
+        "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFFBB86FC)
+        "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF4081)
+        "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF4CAF50)
+        "orange" -> if (isLight) Color(0xFFD97706) else Color(0xFFFF9800)
+        "blue" -> if (isLight) Color(0xFF2563EB) else Color(0xFF448AFF)
+        "teal" -> if (isLight) Color(0xFF0D9488) else Color(0xFF1DE9B6)
+        "pink" -> if (isLight) Color(0xFFBE185D) else Color(0xFFFF69B4)
         else -> if (isLight) Color(0xFF009AA6) else Color(0xFF00F2FE)
     }
 }
@@ -138,13 +138,13 @@ fun getAccentColor(accentKey: String, isLight: Boolean): Color {
 fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
         "dynamic" -> if (isLight) Color(0xFF625B71) else Color(0xFFCCC2DC)
-        "purple" -> if (isLight) Color(0xFF5A189A) else Color(0xFF7B2CBF)
-        "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFD90429)
-        "green" -> if (isLight) Color(0xFF1B4332) else Color(0xFF2EA043)
-        "orange" -> if (isLight) Color(0xFF9A031E) else Color(0xFFD97706)
-        "blue" -> if (isLight) Color(0xFF1D4ED8) else Color(0xFF2563EB)
-        "teal" -> if (isLight) Color(0xFF0F766E) else Color(0xFF0D9488)
-        "pink" -> if (isLight) Color(0xFF9F1239) else Color(0xFFBE185D)
+        "purple" -> if (isLight) Color(0xFF5A189A) else Color(0xFF9D4EDD)
+        "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFFF2A5F)
+        "green" -> if (isLight) Color(0xFF1B4332) else Color(0xFF3FB950)
+        "orange" -> if (isLight) Color(0xFF9A031E) else Color(0xFFF0883E)
+        "blue" -> if (isLight) Color(0xFF1D4ED8) else Color(0xFF58A6FF)
+        "teal" -> if (isLight) Color(0xFF0F766E) else Color(0xFF2DD4BF)
+        "pink" -> if (isLight) Color(0xFF9F1239) else Color(0xFFF472B6)
         else -> if (isLight) Color(0xFF0077B6) else Color(0xFF00B4D8)
     }
 }
@@ -152,13 +152,13 @@ fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
 fun getTertiaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
         "dynamic" -> if (isLight) Color(0xFF7D5260) else Color(0xFFEFB8C8)
-        "purple" -> if (isLight) Color(0xFF3C096C) else Color(0xFF5A189A)
-        "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFA0001C)
-        "green" -> if (isLight) Color(0xFF081C15) else Color(0xFF1B4332)
-        "orange" -> if (isLight) Color(0xFF5F0F40) else Color(0xFF9A031E)
-        "blue" -> if (isLight) Color(0xFF1E3A8A) else Color(0xFF1D4ED8)
-        "teal" -> if (isLight) Color(0xFF115E59) else Color(0xFF0F766E)
-        "pink" -> if (isLight) Color(0xFF881337) else Color(0xFF9F1239)
+        "purple" -> if (isLight) Color(0xFF3C096C) else Color(0xFF7B2CBF)
+        "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFD90429)
+        "green" -> if (isLight) Color(0xFF081C15) else Color(0xFF2EA043)
+        "orange" -> if (isLight) Color(0xFF5F0F40) else Color(0xFFD97706)
+        "blue" -> if (isLight) Color(0xFF1E3A8A) else Color(0xFF2563EB)
+        "teal" -> if (isLight) Color(0xFF115E59) else Color(0xFF0D9488)
+        "pink" -> if (isLight) Color(0xFF881337) else Color(0xFFBE185D)
         else -> if (isLight) Color(0xFF03045E) else Color(0xFF0077B6)
     }
 }
@@ -184,19 +184,19 @@ fun buildM3ColorSchemeWithAccents(
         else -> DarkSurface
     }
 
-    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.04f else 0.02f).compositeOver(baseBg)
-    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.06f else 0.03f).compositeOver(baseSurface)
-    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.10f else 0.05f).compositeOver(if (isLight) LightSurfaceVariant else DarkSurfaceVariant)
+    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.05f else 0.03f).compositeOver(baseBg)
+    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.08f else 0.04f).compositeOver(baseSurface)
+    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.12f else 0.06f).compositeOver(if (isLight) LightSurfaceVariant else DarkSurfaceVariant)
 
     return if (isLight) {
         lightColorScheme(
             primary = accentColor,
             onPrimary = Color.White,
-            primaryContainer = accentColor.copy(alpha = 0.14f),
+            primaryContainer = accentColor.copy(alpha = 0.22f),
             onPrimaryContainer = accentColor,
             secondary = secondaryAccent,
             onSecondary = Color.White,
-            secondaryContainer = secondaryAccent.copy(alpha = 0.12f),
+            secondaryContainer = secondaryAccent.copy(alpha = 0.18f),
             onSecondaryContainer = secondaryAccent,
             tertiary = tertiaryAccent,
             onTertiary = Color.White,
@@ -215,11 +215,11 @@ fun buildM3ColorSchemeWithAccents(
         darkColorScheme(
             primary = accentColor,
             onPrimary = Color.Black,
-            primaryContainer = accentColor.copy(alpha = 0.12f),
+            primaryContainer = accentColor.copy(alpha = 0.25f),
             onPrimaryContainer = accentColor,
             secondary = secondaryAccent,
             onSecondary = Color.Black,
-            secondaryContainer = secondaryAccent.copy(alpha = 0.10f),
+            secondaryContainer = secondaryAccent.copy(alpha = 0.20f),
             onSecondaryContainer = secondaryAccent,
             tertiary = tertiaryAccent,
             onTertiary = Color.White,
