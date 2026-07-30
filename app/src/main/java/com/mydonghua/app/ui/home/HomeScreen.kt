@@ -16,11 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +35,7 @@ import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
+import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -67,27 +65,34 @@ fun HomeScreen(
             .navigationBarsPadding(),
         contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 80.dp)
     ) {
-        if (state.showCountdownBanner && state.nextUpShow != null) {
-            item(key = "hero_banner_${state.nextUpShow!!.id}") {
-                HeroBanner(
-                    show = state.nextUpShow!!,
-                    onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") },
-                    onBannerClick = { onShowClick(state.nextUpShow!!.id) }
-                )
+        if (state.isLoading) {
+            item { HeroBannerSkeleton() }
+            item { SectionHeaderSkeleton() }
+            item { HorizontalRowSkeleton() }
+            item { SectionHeaderSkeleton() }
+            item { HorizontalRowSkeleton() }
+        } else {
+            if (state.showCountdownBanner && state.nextUpShow != null) {
+                item(key = "hero_banner_${state.nextUpShow!!.id}") {
+                    HeroBanner(
+                        show = state.nextUpShow!!,
+                        onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") },
+                        onBannerClick = { onShowClick(state.nextUpShow!!.id) }
+                    )
+                }
+                item(key = "hero_banner_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
             }
-            item(key = "hero_banner_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
-        }
 
-        if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
-            item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
-            item(key = "section_continue_row") { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
-        }
+            if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
+                item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
+                item(key = "section_continue_row") { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
+            }
 
-        if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
-            item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
-            item(key = "section_recent_row") { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
+            if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
+                item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
+                item(key = "section_recent_row") { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
+            }
         }
-
     }
 }
 
@@ -396,6 +401,50 @@ fun RecentlyUpdatedRow(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HeroBannerSkeleton() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
+            .height(250.dp)
+            .clip(RoundedCornerShape(CornerRadius.card))
+            .shimmerEffect()
+    )
+}
+
+@Composable
+private fun SectionHeaderSkeleton() {
+    Box(
+        modifier = Modifier
+            .padding(start = Spacing.lg, top = Spacing.xxl, bottom = Spacing.md)
+            .width(160.dp)
+            .height(20.dp)
+            .clip(RoundedCornerShape(CornerRadius.xs))
+            .shimmerEffect()
+    )
+}
+
+@Composable
+private fun HorizontalRowSkeleton() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .width(240.dp)
+                    .height(72.dp)
+                    .clip(RoundedCornerShape(CornerRadius.sm))
+                    .shimmerEffect()
+            )
         }
     }
 }

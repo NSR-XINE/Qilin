@@ -24,6 +24,7 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -39,6 +40,7 @@ fun CollectionsScreen(
     modifier: Modifier = Modifier
 ) {
     val collectionsMap by showsViewModel.collections.collectAsState()
+    val isLoading by showsViewModel.isLoading.collectAsState()
     val context = LocalContext.current
     val sortedCollections = remember(collectionsMap) {
         collectionsMap.entries.sortedBy { it.key.lowercase() }
@@ -63,7 +65,80 @@ fun CollectionsScreen(
         },
         modifier = modifier
     ) { paddingValues ->
-        if (sortedCollections.isEmpty()) {
+        if (isLoading) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = Spacing.lg)
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+                contentPadding = PaddingValues(top = Spacing.md, bottom = Spacing.sm)
+            ) {
+                items(3) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(CornerRadius.sm))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(14.dp)
+                                    .clip(RoundedCornerShape(CornerRadius.xs))
+                                    .shimmerEffect()
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .width(56.dp)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(CornerRadius.xs))
+                                    .shimmerEffect()
+                            )
+                        }
+                        repeat(2) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(CornerRadius.sm))
+                                    .padding(Spacing.sm),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .shimmerEffect()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(12.dp)
+                                        .clip(RoundedCornerShape(CornerRadius.xs))
+                                        .shimmerEffect()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .width(48.dp)
+                                        .height(14.dp)
+                                        .clip(RoundedCornerShape(CornerRadius.xs))
+                                        .shimmerEffect()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (sortedCollections.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

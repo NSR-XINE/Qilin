@@ -24,7 +24,11 @@ class ShowsViewModel @Inject constructor(
     private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     val allShows: StateFlow<List<Show>> = showRepository.getAllShows()
+        .onEach { _isLoading.value = false }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val history: StateFlow<List<WatchHistoryItem>> = combine(

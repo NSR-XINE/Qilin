@@ -23,6 +23,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import androidx.compose.ui.res.painterResource
@@ -39,6 +40,7 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     val historyList by showsViewModel.history.collectAsState()
+    val isLoading by showsViewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
     val groupedHistory = remember(historyList) {
@@ -66,7 +68,71 @@ fun HistoryScreen(
         },
         modifier = modifier
     ) { paddingValues ->
-        if (historyList.isEmpty()) {
+        if (isLoading) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = Spacing.lg)
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+                contentPadding = PaddingValues(bottom = Spacing.sm)
+            ) {
+                items(2) { groupIndex ->
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        Box(
+                            modifier = Modifier
+                                .width(80.dp)
+                                .height(16.dp)
+                                .clip(RoundedCornerShape(CornerRadius.xs))
+                                .shimmerEffect()
+                        )
+                        repeat(2) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(CornerRadius.sm))
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .padding(Spacing.sm),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .shimmerEffect()
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.7f)
+                                            .height(14.dp)
+                                            .clip(RoundedCornerShape(CornerRadius.xs))
+                                            .shimmerEffect()
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.45f)
+                                            .height(11.dp)
+                                            .clip(RoundedCornerShape(CornerRadius.xs))
+                                            .shimmerEffect()
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .width(48.dp)
+                                        .height(11.dp)
+                                        .clip(RoundedCornerShape(CornerRadius.xs))
+                                        .shimmerEffect()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (historyList.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

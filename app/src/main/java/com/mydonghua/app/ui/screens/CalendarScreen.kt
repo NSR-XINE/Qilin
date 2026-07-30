@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import androidx.compose.ui.res.painterResource
@@ -31,6 +32,7 @@ fun CalendarScreen(
     modifier: Modifier = Modifier
 ) {
     val shows by showsViewModel.allShows.collectAsState()
+    val isLoading by showsViewModel.isLoading.collectAsState()
     val ongoingShows = remember(shows) { shows.filter { it.status == "ongoing" } }
     val scrollState = rememberScrollState()
 
@@ -83,7 +85,50 @@ fun CalendarScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             Spacer(modifier = Modifier.height(Spacing.xs))
-            if (upcomingWeekList.isEmpty()) {
+            if (isLoading) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    repeat(3) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(CornerRadius.sm))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .padding(Spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .height(12.dp)
+                                    .clip(RoundedCornerShape(CornerRadius.xs))
+                                    .shimmerEffect()
+                            )
+                            repeat(2) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(13.dp)
+                                            .clip(RoundedCornerShape(CornerRadius.xs))
+                                            .shimmerEffect()
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .width(40.dp)
+                                            .height(12.dp)
+                                            .clip(RoundedCornerShape(CornerRadius.xs))
+                                            .shimmerEffect()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (upcomingWeekList.isEmpty()) {
                 Text(
                     text = "No shows scheduled for release this week",
                     fontSize = 12.sp,

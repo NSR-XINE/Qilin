@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.StatsCalculator
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import androidx.compose.ui.res.painterResource
@@ -33,6 +34,7 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val shows by showsViewModel.allShows.collectAsState()
+    val isLoading by showsViewModel.isLoading.collectAsState()
     val stats = remember(shows) { StatsCalculator.computeStats(shows) }
     val scrollState = rememberScrollState()
 
@@ -79,141 +81,179 @@ fun StatsScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             Spacer(modifier = Modifier.height(Spacing.xs))
-            Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            StatsGrid(
-                items = listOf(
-                    StatItem("Total Tracked", stats.total.toString()),
-                    StatItem("Currently Airing", stats.airing.toString()),
-                    StatItem("Completed", stats.completed.toString()),
-                    StatItem("Hiatus / Stopped", stats.stopped.toString()),
-                    StatItem("Total Episodes", stats.totalEpisodes.toString()),
-                    StatItem("Hours Watched", stats.hoursWatched.toString()),
-                    StatItem("Favorites", stats.favorites.toString()),
-                    StatItem("Airing Today", todayShows.size.toString())
-                )
-            )
-
-            Text("Completion & Activity Metrics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            StatsGrid(
-                items = listOf(
-                    StatItem("Completion Rate", "${stats.completionRate}%"),
-                    StatItem("Day Streak", stats.streak.toString()),
-                    StatItem("Active This Week", stats.weeklyActivity.toString()),
-                    StatItem("Active This Month", stats.monthlyActivity.toString()),
-                    StatItem("Avg Rating", stats.avgRating),
-                    StatItem("Longest Series", stats.longestSeries?.title ?: "\u2014", subText = "${stats.longestEpCount} eps")
-                ),
-                columns = 2
-            )
-
-            if (stats.topGenres.isNotEmpty()) {
-                Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    stats.topGenres.forEach { (genre, count) ->
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(CornerRadius.sm))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
-                        ) {
-                            Text(
-                                text = "$genre ($count)",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+            if (isLoading) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
+                    repeat(2) {
+                        Column {
+                            Box(
+                                modifier = Modifier
+                                    .width(160.dp)
+                                    .height(14.dp)
+                                    .clip(RoundedCornerShape(CornerRadius.xs))
+                                    .shimmerEffect()
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.sm))
+                            StatsGrid(
+                                items = (0 until 4).map {
+                                    StatItem("Loading", "---")
+                                }
                             )
                         }
                     }
+                    Box(
+                        modifier = Modifier
+                            .width(120.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(CornerRadius.xs))
+                            .shimmerEffect()
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(CornerRadius.sm))
+                            .shimmerEffect()
+                    )
                 }
-            }
-
-            if (stats.topStudios.isNotEmpty()) {
-                Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    stats.topStudios.forEach { (studio, count) ->
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(CornerRadius.sm))
-                                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
-                                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
-                        ) {
-                            Text(
-                                text = "$studio ($count)",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-
-            Text("This Week's Remaining Releases", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            if (thisWeekShows.isEmpty()) {
-                Text("No upcoming releases this week", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(CornerRadius.sm))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .border(
-                            width = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(CornerRadius.sm)
-                        )
-                        .padding(Spacing.sm),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    thisWeekShows.forEach { show ->
-                        val isToday = show.releaseDay == todayName
-                        Row(
+                Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                StatsGrid(
+                    items = listOf(
+                        StatItem("Total Tracked", stats.total.toString()),
+                        StatItem("Currently Airing", stats.airing.toString()),
+                        StatItem("Completed", stats.completed.toString()),
+                        StatItem("Hiatus / Stopped", stats.stopped.toString()),
+                        StatItem("Total Episodes", stats.totalEpisodes.toString()),
+                        StatItem("Hours Watched", stats.hoursWatched.toString()),
+                        StatItem("Favorites", stats.favorites.toString()),
+                        StatItem("Airing Today", todayShows.size.toString())
+                    )
+                )
+
+                Text("Completion & Activity Metrics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                StatsGrid(
+                    items = listOf(
+                        StatItem("Completion Rate", "${stats.completionRate}%"),
+                        StatItem("Day Streak", stats.streak.toString()),
+                        StatItem("Active This Week", stats.weeklyActivity.toString()),
+                        StatItem("Active This Month", stats.monthlyActivity.toString()),
+                        StatItem("Avg Rating", stats.avgRating),
+                        StatItem("Longest Series", stats.longestSeries?.title ?: "\u2014", subText = "${stats.longestEpCount} eps")
+                    ),
+                    columns = 2
+                )
+
+                    if (stats.topGenres.isNotEmpty()) {
+                        Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            stats.topGenres.forEach { (genre, count) ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                        .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                                ) {
+                                    Text(
+                                        text = "$genre ($count)",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (stats.topStudios.isNotEmpty()) {
+                        Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            stats.topStudios.forEach { (studio, count) ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
+                                        .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                                ) {
+                                    Text(
+                                        text = "$studio ($count)",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text("This Week's Remaining Releases", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    if (thisWeekShows.isEmpty()) {
+                        Text("No upcoming releases this week", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(
-                                    if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                    else Color.Transparent,
-                                    RoundedCornerShape(CornerRadius.xs)
+                                .clip(RoundedCornerShape(CornerRadius.sm))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(
+                                    width = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                    shape = RoundedCornerShape(CornerRadius.sm)
                                 )
-                                .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                         ) {
-                            Text(
-                                text = show.releaseDay?.substring(0, 3) ?: "Sun",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.width(48.dp)
-                            )
-                            Text(
-                                text = show.title,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1
-                            )
-                            Text(
-                                text = show.releaseTime ?: "10:00",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            thisWeekShows.forEach { show ->
+                                val isToday = show.releaseDay == todayName
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                            else Color.Transparent,
+                                            RoundedCornerShape(CornerRadius.xs)
+                                        )
+                                        .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = show.releaseDay?.substring(0, 3) ?: "Sun",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.width(48.dp)
+                                    )
+                                    Text(
+                                        text = show.title,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = show.releaseTime ?: "10:00",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(Spacing.xxxl))
                 }
             }
-
-            Spacer(modifier = Modifier.height(Spacing.xxxl))
         }
     }
 }
