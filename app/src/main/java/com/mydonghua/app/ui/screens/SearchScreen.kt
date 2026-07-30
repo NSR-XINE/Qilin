@@ -91,14 +91,15 @@ fun SearchScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
+    val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
 
-    LaunchedEffect(Unit) {
-        delay(400)
-        runCatching {
-            focusRequester.requestFocus()
-            keyboardController?.show()
-            val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
-            imm?.showSoftInput((context as? Activity)?.currentFocus, InputMethodManager.SHOW_IMPLICIT)
+    LaunchedEffect(autoOpenKeyboard) {
+        if (autoOpenKeyboard) {
+            delay(400)
+            runCatching {
+                focusRequester.requestFocus()
+                keyboardController?.show()
+            }
         }
     }
 
@@ -154,7 +155,8 @@ fun SearchScreen(
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                     if (focusState.isFocused) {
-                        keyboardController?.show()
+                        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+                        imm?.showSoftInput((context as? Activity)?.currentFocus, InputMethodManager.SHOW_FORCED)
                     }
                 },
             colors = OutlinedTextFieldDefaults.colors(
