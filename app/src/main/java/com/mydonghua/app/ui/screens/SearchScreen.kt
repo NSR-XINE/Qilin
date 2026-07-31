@@ -43,7 +43,8 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
@@ -176,12 +177,10 @@ fun SearchScreen(
                     shape = RoundedCornerShape(CornerRadius.banner)
                 )
                 .pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = {
-                            focusAndOpenKeyboard()
-                            tryAwaitRelease()
-                        }
-                    )
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        focusAndOpenKeyboard()
+                    }
                 },
             verticalAlignment = Alignment.CenterVertically
         ) {
