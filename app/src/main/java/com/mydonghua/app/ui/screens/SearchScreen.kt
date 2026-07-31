@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,8 +60,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.style.TextOverflow
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -136,94 +139,125 @@ fun SearchScreen(
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        // 1. Search Bar Input Field
-        OutlinedTextField(
-            value = query,
-            onValueChange = { viewModel.searchQuery.value = it },
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    viewModel.selectQuery(query)
-                    keyboardController?.hide()
-                }
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            singleLine = true,
-            shape = RoundedCornerShape(CornerRadius.lg),
+        // 1. Search Bar
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xs)
-                .clip(RoundedCornerShape(CornerRadius.lg))
+                .height(56.dp)
+                .clip(RoundedCornerShape(CornerRadius.banner))
                 .background(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-                    shape = RoundedCornerShape(CornerRadius.lg)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(CornerRadius.banner)
                 )
-                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(CornerRadius.lg))
-                .focusRequester(focusRequester)
-                .onFocusChanged { focusState ->
-                    isSearchActive = focusState.isFocused
-                    if (focusState.isFocused) {
-                        showKeyboard()
-                    }
-                }
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(CornerRadius.banner)
+                )
                 .pointerInput(Unit) {
                     detectTapGestures {
                         focusRequester.requestFocus()
                         showKeyboard()
                     }
                 },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            ),
-            placeholder = { Text("Search shows...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
-            leadingIcon = {
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Leading icon (search when idle / back when active)
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        if (isSearchActive) {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                        } else {
+                            onNavigateBack()
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
+                    contentDescription = if (isSearchActive) "Back" else "Search",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(IconSize.xl)
+                )
+            }
+
+            // Text input field
+            BasicTextField(
+                value = query,
+                onValueChange = { viewModel.searchQuery.value = it },
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        isSearchActive = focusState.isFocused
+                        if (focusState.isFocused) {
+                            showKeyboard()
+                        }
+                    },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                singleLine = true,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.selectQuery(query)
+                        keyboardController?.hide()
+                    }
+                ),
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (query.isEmpty()) {
+                            Text(
+                                text = "Search shows...",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+
+            // Trailing clear icon (only when there's text)
+            if (query.isNotEmpty()) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                         ) {
-                            if (isSearchActive) {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                            } else {
-                                onNavigateBack()
-                            }
-                        },
+                            indication = null,
+                            onClick = { viewModel.clearQuery() }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
-                        contentDescription = if (isSearchActive) "Back" else "Search",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        modifier = Modifier.size(24.dp)
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Clear",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(IconSize.lg)
                     )
                 }
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { viewModel.clearQuery() }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("\u2715", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                    }
-                }
+            } else {
+                Spacer(modifier = Modifier.width(Spacing.xs))
             }
-        )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
