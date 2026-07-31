@@ -8,9 +8,10 @@ A sleek, high-aesthetic dark-themed native Android application designed for Chin
 
 - **Language & Runtime**: 100% Native Kotlin 2.0.0 (JVM 17)
 - **UI Framework**: Jetpack Compose (BOM `2024.09.00`), Material 3, Navigation-Compose
-- **Visual Design**: 
+- **Visual Design**:
   - **Haze 0.7.3** — Real-time backdrop blur & glassmorphism
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
+  - **Performance-tuned**: static glass background (no per-frame gradient animation), off-main-thread GPU luminance sampling, short pure cross-fade route transitions — tuned to keep scrolling, search, settings, and tab switches smooth
 - **Architecture**: Clean Architecture + MVVM + Dagger Hilt Dependency Injection
 - **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries, Jetpack DataStore Preferences
 - **Network & Parsing**: Retrofit 2.11 + OkHttp 4.12 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
@@ -32,7 +33,7 @@ my_donghua/
 │           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system (22 files)
 │           └── com/mydonghua/app/
 │               ├── DonghuaApp.kt             # Application class (@HiltAndroidApp)
-│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav
+│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav, search keyboard focus
 │               ├── WatchActivity.kt          # ExoPlayer / Media3 full-screen video player
 │               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
 │               ├── BootReceiver.kt           # Re-schedules alarms on boot or app update (WakeLock)
@@ -42,33 +43,24 @@ my_donghua/
 │               │   ├── DatabaseModule.kt     # Room AppDatabase & DAO injection
 │               │   └── RepositoryModule.kt   # Repository interface bindings
 │               ├── data/
-│               │   ├── db/
-│               │   │   ├── AppDatabase.kt    # Room database (v3 Schema)
-│               │   │   ├── ShowDao.kt        # Show CRUD reactive queries
-│               │   │   ├── SettingsDao.kt    # Key-value setting queries
-│               │   │   ├── WatchHistoryDao.kt# Episode progress history queries
-│               │   │   ├── ShowEntity.kt     # Room show entity
-│               │   │   ├── SettingEntity.kt  # Room setting entity
-│               │   │   ├── WatchHistoryEntity.kt # Room watch history entity
-│               │   │   └── RoomSyncHelper.kt # Legacy SQLite import & conversion bridge
+│               │   ├── db/                   # Room v3 (shows, settings, watch_history) + DAOs
 │               │   ├── pref/
 │               │   │   └── ThemePreference.kt# DataStore preferences for theme & UI visibility
-│               │   ├── repository/
-│               │   │   ├── ShowRepository.kt # Repository interface
-│               │   │   └── ShowRepositoryImpl.kt # Room & state data source implementation
+│               │   ├── repository/           # Show / Settings / WatchHistory repository impls (Room-backed)
 │               │   └── service/
 │               │       └── PosterFetchService.kt # Jikan, AniList GraphQL & HTML scrapers
 │               ├── domain/
-│               │   └── model/
-│               │       ├── Show.kt           # Domain entity
-│               │       ├── CountdownCalculator.kt # DST-safe countdown tick logic
-│               │       └── StatsCalculator.kt # Analytics & statistics builder
+│               │   ├── model/                # Show, CountdownCalculator (DST-safe), StatsCalculator
+│               │   └── repository/           # Domain repository interfaces
 │               └── ui/
+│                   ├── GlassEffect.kt        # Static glass background, GlassSection glass components
+│                   ├── GlassHeader.kt        # Top glass header
+│                   ├── LiquidGlassButton.kt  # Liquid glass button
 │                   ├── LiquidGlassNavBar.kt  # Custom liquid glass bottom navigation bar
-│                   ├── common/               # ShowCard, GlassCard, search bars, tags
-│                   ├── home/                 # HomeScreen layout, hero banner, weekly schedule
-│                   ├── theme/                # Color palettes, Material 3 theme & dynamic wallpaper matching
-│                   └── screens/              # Airing, Completed, Stopped, Favorites, Detail, Search, Settings, Stats, Calendar, Collections, History
+│                   ├── common/               # ShowCard, DonghuaPoster, EmptyState, ErrorState, ShimmerEffect
+│                   ├── home/                 # HomeScreen layout, hero banner, continue watching, recent searches
+│                   ├── theme/                # Color palettes, Material 3 theme, animations & dynamic wallpaper matching
+│                   └── screens/              # Airing, Completed, Stopped, Favorites, Detail, Search, Settings, Stats, Calendar, Collections, History, Add/Edit
 ├── AGENTS.md
 └── README.md
 ```
@@ -81,13 +73,14 @@ my_donghua/
 - ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
 - 🎨 **Kyant Liquid Glass & Haze Backgrounds**: Ultra-sleek glassmorphism UI with liquid refraction, adaptive brightness/saturation, and real-time backdrop blur.
+- 🔍 **Smart Search**: Search bar auto-focuses and opens the keyboard on tap, with a recent-search history that supports per-item delete and "Clear all".
 - 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
 - 🔔 **Native Push Notifications**: Automatic DST-aware heads-up notifications when a new episode releases.
 - 📊 **Statistics Dashboard**: 8-card analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.
 - 🎬 **Native Media Playback**: ExoPlayer / Media3 video player supporting direct streams (`.mp4`, `.m3u8`, `.mkv`) and external web stream browser fallbacks.
 - 🖼️ **Automated Poster Fetching**: Auto-fills high-res cover art from Jikan (MyAnimeList), AniList GraphQL, DonghuaStream, and AnimeCountdown.
 - 📁 **Collections & Favorites**: Group related donghua series into collection folders and bookmark favorites with one tap.
-- 💾 **JSON Backup & SAF Integration**: Export and import full watchlists via Android Storage Access Framework (SAF).
+- 💾 **JSON Backup & Restore**: Export and import full watchlists via the Android document picker, plus FileProvider sharing.
 - 🌓 **Multiple Themes**: Dark Mode, AMOLED (True Black), Light Mode, and Material You dynamic color extraction on Android 12+.
 
 ---
@@ -126,7 +119,7 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 | Column | Type | Description |
 |---|---|---|
 | `key` | TEXT (PK) | Setting key |
-| `value` | TEXT | Setting value |
+| `value` | TEXT | Setting value (e.g. `recent_searches` stores a JSON array) |
 
 ### 3. `watch_history`
 | Column | Type | Description |
@@ -141,7 +134,7 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 ## 🛠️ Building & Compilation
 
 ### Requirements
-- **JDK**: Java 17+
+- **JDK**: Java 17+ (embedded in AndroidIDE)
 - **Android SDK**: `compileSdk 36`, `targetSdk 35`, `minSdk 29`
 - **Gradle**: 8.6+ with Kotlin 2.0.0
 
@@ -157,3 +150,5 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 # Run Unit Tests
 ./gradlew test
 ```
+
+> **Note**: This project is developed and built from within AndroidIDE (the Java 17 JDK is embedded there; there is no shell-level `java` command).
