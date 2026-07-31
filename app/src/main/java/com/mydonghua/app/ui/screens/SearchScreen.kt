@@ -2,8 +2,8 @@ package com.mydonghua.app.ui.screens
 
 import android.app.Activity
 import android.util.Log
-import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.BackHandler
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,9 +44,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
@@ -111,14 +108,10 @@ fun SearchScreen(
 
     fun showKeyboardNow() {
         Log.d("SearchDebug", "showKeyboardNow: keyboardController=${if (keyboardController != null) "present" else "NULL"}")
-        runCatching {
-            keyboardController?.show()
-            val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
-            val result = imm?.showSoftInput(composeView, InputMethodManager.SHOW_IMPLICIT)
-            Log.d("SearchDebug", "showKeyboardNow: imm=${if (imm != null) "present" else "NULL"}, showSoftInput returned $result")
-        }.onFailure {
-            Log.d("SearchDebug", "showKeyboardNow threw", it)
-        }
+        keyboardController?.show()
+        val window = (context as? Activity)?.window ?: return
+        WindowCompat.getInsetsController(window, composeView)
+            .show(WindowInsetsCompat.Type.ime())
     }
 
     fun isImeVisibleNow(): Boolean {
@@ -127,24 +120,20 @@ fun SearchScreen(
             .getInsets(WindowInsetsCompat.Type.ime()).bottom > 0
     }
 
-    fun retryShowKeyboard() {
+    fun focusAndOpenKeyboard() {
+        Log.d("SearchDebug", "focusAndOpenKeyboard: requesting focus...")
+        focusRequester.requestFocus()
         scope.launch {
-            repeat(6) { i ->
+            repeat(3) { i ->
                 if (isImeVisibleNow()) {
-                    Log.d("SearchDebug", "retryShowKeyboard: attempt #$i — IME visible, done")
+                    Log.d("SearchDebug", "keyboard retry: attempt #$i — IME visible, done")
                     return@launch
                 }
                 showKeyboardNow()
                 delay(150)
             }
-            Log.d("SearchDebug", "retryShowKeyboard: exhausted 6 attempts, isImeVisibleNow=${isImeVisibleNow()}")
+            Log.d("SearchDebug", "keyboard retry: exhausted 3 attempts, isImeVisibleNow=${isImeVisibleNow()}")
         }
-    }
-
-    fun focusAndOpenKeyboard() {
-        Log.d("SearchDebug", "focusAndOpenKeyboard: requesting focus...")
-        focusRequester.requestFocus()
-        retryShowKeyboard()
     }
 
     LaunchedEffect(autoOpenKeyboard) {
@@ -193,16 +182,7 @@ fun SearchScreen(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
                     shape = RoundedCornerShape(CornerRadius.banner)
-                )
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
-                        Log.d("SearchDebug", "TAP: down detected on search bar, deferring focus+keyboard")
-                        scope.launch {
-                            focusAndOpenKeyboard()
-                        }
-                    }
-                },
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Leading icon (search when idle / back when active)
@@ -242,9 +222,6 @@ fun SearchScreen(
                         Log.d("SearchDebug", "onFocusChanged: isFocused=${focusState.isFocused}")
                         isFocused = focusState.isFocused
                         isSearchActive = focusState.isFocused
-                        if (focusState.isFocused) {
-                            retryShowKeyboard()
-                        }
                     },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface
