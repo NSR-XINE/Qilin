@@ -40,6 +40,7 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
@@ -66,6 +67,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.domain.model.Show
@@ -170,6 +173,15 @@ fun SearchScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        Log.d("SearchDebug", "TAP DOWN on search bar at ${down.position}")
+                        scope.launch {
+                            focusAndOpenKeyboard()
+                        }
+                    }
+                }
                 .padding(horizontal = Spacing.lg)
                 .padding(top = Spacing.xs)
                 .height(56.dp)
