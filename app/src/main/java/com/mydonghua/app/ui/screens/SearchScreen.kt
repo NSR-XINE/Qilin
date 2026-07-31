@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -94,27 +95,40 @@ fun SearchScreen(
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val context = LocalContext.current
+    val composeView = LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    val showKeyboard: () -> Unit = {
+    val scope = rememberCoroutineScope()
+    val isKeyboardVisible = WindowInsets.isImeVisible
+
+    var isSearchActive by remember { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
+
+    fun showKeyboardNow() {
         runCatching {
             keyboardController?.show()
-            val view = (context as? Activity)?.currentFocus
             val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
-            imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            imm?.showSoftInput(composeView, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
+    fun focusAndOpenKeyboard() {
+        focusRequester.requestFocus()
+        scope.launch {
+            repeat(6) {
+                if (isKeyboardVisible) return@launch
+                focusRequester.requestFocus()
+                showKeyboardNow()
+                delay(150)
+            }
         }
     }
 
     LaunchedEffect(Unit) {
         delay(400)
-        runCatching {
-            focusRequester.requestFocus()
-            showKeyboard()
-        }
+        focusAndOpenKeyboard()
     }
-
-    var isSearchActive by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -122,8 +136,6 @@ fun SearchScreen(
             viewModel.updateFilters(SearchFilters())
         }
     }
-
-    val isKeyboardVisible = WindowInsets.isImeVisible
 
     BackHandler(enabled = true) {
         if (isKeyboardVisible) {
@@ -138,6 +150,7 @@ fun SearchScreen(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
+            .imePadding()
     ) {
         // 1. Search Bar
         Row(
@@ -157,10 +170,12 @@ fun SearchScreen(
                     shape = RoundedCornerShape(CornerRadius.banner)
                 )
                 .pointerInput(Unit) {
-                    detectTapGestures {
-                        focusRequester.requestFocus()
-                        showKeyboard()
-                    }
+                    detectTapGestures(
+                        onPress = {
+                            focusAndOpenKeyboard()
+                            tryAwaitRelease()
+                        }
+                    )
                 },
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -198,9 +213,10 @@ fun SearchScreen(
                     .weight(1f)
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
+                        isFocused = focusState.isFocused
                         isSearchActive = focusState.isFocused
                         if (focusState.isFocused) {
-                            showKeyboard()
+                            focusAndOpenKeyboard()
                         }
                     },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
