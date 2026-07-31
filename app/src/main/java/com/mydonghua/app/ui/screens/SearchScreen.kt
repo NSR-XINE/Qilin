@@ -93,6 +93,7 @@ fun SearchScreen(
     val results by viewModel.filteredShows.collectAsState()
     val onlineResults by viewModel.onlineResults.collectAsState()
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
+    val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val context = LocalContext.current
     val composeView = LocalView.current
@@ -128,9 +129,11 @@ fun SearchScreen(
         retryShowKeyboard()
     }
 
-    LaunchedEffect(Unit) {
-        delay(400)
-        focusAndOpenKeyboard()
+    LaunchedEffect(autoOpenKeyboard) {
+        if (autoOpenKeyboard) {
+            delay(400)
+            focusAndOpenKeyboard()
+        }
     }
 
     DisposableEffect(Unit) {
