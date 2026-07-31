@@ -234,16 +234,16 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                    fadeIn(animationSpec = tween(220))
+                                    fadeIn(animationSpec = tween(140))
                                 },
                                 exitTransition = {
-                                    fadeOut(animationSpec = tween(180))
+                                    fadeOut(animationSpec = tween(110))
                                 },
                                 popEnterTransition = {
-                                    fadeIn(animationSpec = tween(220))
+                                    fadeIn(animationSpec = tween(140))
                                 },
                                 popExitTransition = {
-                                    fadeOut(animationSpec = tween(180))
+                                    fadeOut(animationSpec = tween(110))
                                 }
                             ) {
                         composable("home") {

@@ -105,14 +105,13 @@ fun LiquidGlassNavBar(
 
 
     LaunchedEffect(layer) {
-        val buffer = IntBuffer.allocate(25)
         while (isActive) {
             try {
                 if (layer.size.width > 0 && layer.size.height > 0) {
-                    val imageBitmap = layer.toImageBitmap()
                     val avg = withContext(Dispatchers.Default) {
+                        val imageBitmap = layer.toImageBitmap()
                         val thumbnail = Bitmap.createScaledBitmap(imageBitmap.asAndroidBitmap(), 5, 5, false)
-                        buffer.rewind()
+                        val buffer = IntBuffer.allocate(25)
                         thumbnail.copyPixelsToBuffer(buffer)
                         (0 until 25).sumOf { i ->
                             val c = buffer.get(i)
@@ -125,7 +124,7 @@ fun LiquidGlassNavBar(
                     luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
                 }
             } catch (_: Throwable) { }
-            delay(1.seconds)
+            delay(2.seconds)
         }
     }
 

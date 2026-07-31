@@ -1,6 +1,5 @@
 package com.mydonghua.app.ui
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -77,81 +75,24 @@ fun GlassBackground(
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val surfaceTint = MaterialTheme.colorScheme.surfaceTint
 
-    val infiniteTransition = rememberInfiniteTransition(label = "appleMusicFluidGlow")
+    // Orb 1: Primary Accent (Top-Left)
+    val orb1X = 0.25f
+    val orb1Y = 0.15f
+    val orb1Scale = 1.2f
 
-    // Orb 1: Primary Accent (Top-Left Lissajous Orbit)
-    val orb1X by infiniteTransition.animateFloat(
-        initialValue = -0.2f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(tween(18000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb1X"
-    )
-    val orb1Y by infiniteTransition.animateFloat(
-        initialValue = -0.3f,
-        targetValue = 0.6f,
-        animationSpec = infiniteRepeatable(tween(27000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb1Y"
-    )
-    val orb1Scale by infiniteTransition.animateFloat(
-        initialValue = 1.0f,
-        targetValue = 1.45f,
-        animationSpec = infiniteRepeatable(tween(14000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "orb1Scale"
-    )
+    // Orb 2: Secondary / Tertiary Tint (Bottom-Right)
+    val orb2X = 0.65f
+    val orb2Y = 0.75f
+    val orb2Scale = 1.1f
 
-    // Orb 2: Secondary / Tertiary Tint (Bottom-Right Orbit)
-    val orb2X by infiniteTransition.animateFloat(
-        initialValue = 1.1f,
-        targetValue = 0.2f,
-        animationSpec = infiniteRepeatable(tween(23000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb2X"
-    )
-    val orb2Y by infiniteTransition.animateFloat(
-        initialValue = 1.2f,
-        targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(tween(16000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb2Y"
-    )
-    val orb2Scale by infiniteTransition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1.35f,
-        animationSpec = infiniteRepeatable(tween(19000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "orb2Scale"
-    )
+    // Orb 3: Complementary Floating Glare (Center-Right)
+    val orb3X = 0.35f
+    val orb3Y = 0.6f
 
-    // Orb 3: Complementary Floating Glare (Center-Right Drift)
-    val orb3X by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = -0.1f,
-        animationSpec = infiniteRepeatable(tween(31000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb3X"
-    )
-    val orb3Y by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(tween(22000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb3Y"
-    )
-
-    // Orb 4: Center Plasma Ambient Core (Swell & Pulse)
-    val orb4X by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.8f,
-        animationSpec = infiniteRepeatable(tween(25000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb4X"
-    )
-    val orb4Y by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 0.1f,
-        animationSpec = infiniteRepeatable(tween(33000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "orb4Y"
-    )
-    val orb4Scale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.40f,
-        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "orb4Scale"
-    )
+    // Orb 4: Center Plasma Ambient Core
+    val orb4X = 0.55f
+    val orb4Y = 0.4f
+    val orb4Scale = 1.1f
 
     val isDark = backgroundColor.luminance() < 0.5f
     val orb1Alpha = if (isDark) 0.04f else 0.12f
