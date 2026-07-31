@@ -418,13 +418,6 @@ fun SettingsScreen(
                         checked = uiState.showRecent,
                         onCheckedChange = { viewModel.setShowRecent(it) }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    TogglePreferenceItem(
-                        title = "Weekly Schedule Section",
-                        subtitle = "Organized day-by-day release schedule section",
-                        checked = uiState.showSchedule,
-                        onCheckedChange = { viewModel.setShowSchedule(it) }
-                    )
                 }
             }
 

@@ -24,7 +24,6 @@ data class HomeUiState(
     val showCountdownBanner: Boolean = true,
     val showContinueWatching: Boolean = true,
     val showRecentlyUpdated: Boolean = true,
-    val showWeeklySchedule: Boolean = true,
     val themeMode: String = "dark",
     val isLoading: Boolean = false
 )
@@ -49,7 +48,6 @@ class HomeViewModel @Inject constructor(
         val showBanner: Boolean,
         val showContinue: Boolean,
         val showRecent: Boolean,
-        val showSchedule: Boolean,
         val theme: String
     )
 
@@ -58,14 +56,12 @@ class HomeViewModel @Inject constructor(
             themePreference.showBannerFlow,
             themePreference.showContinueFlow,
             themePreference.showRecentFlow,
-            themePreference.showScheduleFlow,
             themePreference.themeModeFlow
-        ) { banner, cont, recent, schedule, theme ->
+        ) { banner, cont, recent, theme ->
             DashboardSettings(
                 showBanner = banner,
                 showContinue = cont,
                 showRecent = recent,
-                showSchedule = schedule,
                 theme = theme
             )
         }
@@ -95,7 +91,6 @@ class HomeViewModel @Inject constructor(
                 showCountdownBanner = settings.showBanner,
                 showContinueWatching = settings.showContinue,
                 showRecentlyUpdated = settings.showRecent,
-                showWeeklySchedule = settings.showSchedule,
                 themeMode = settings.theme,
                 isLoading = false
             )
@@ -144,9 +139,5 @@ class HomeViewModel @Inject constructor(
 
     fun setShowRecent(show: Boolean) {
         viewModelScope.launch { themePreference.setShowRecent(show) }
-    }
-
-    fun setShowSchedule(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowSchedule(show) }
     }
 }

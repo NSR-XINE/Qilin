@@ -231,6 +231,23 @@ class SearchViewModel @Inject constructor(
         searchQuery.value = ""
     }
 
+    fun removeRecentSearch(query: String) {
+        viewModelScope.launch {
+            val recentJson = settingsRepository.getSetting("recent_searches", "[]")
+            val list = getRecentSearches(recentJson).toMutableList()
+            list.removeIf { it.equals(query, ignoreCase = true) }
+            val arr = JSONArray()
+            list.forEach { arr.put(it) }
+            settingsRepository.putSetting("recent_searches", arr.toString())
+        }
+    }
+
+    fun clearRecentSearches() {
+        viewModelScope.launch {
+            settingsRepository.putSetting("recent_searches", "[]")
+        }
+    }
+
     fun updateFilters(newFilters: SearchFilters) {
         activeFilters.value = newFilters
     }

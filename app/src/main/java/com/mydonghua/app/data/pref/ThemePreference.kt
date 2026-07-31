@@ -24,7 +24,6 @@ class ThemePreference @Inject constructor(
         val SHOW_BANNER = booleanPreferencesKey("show_banner")
         val SHOW_CONTINUE = booleanPreferencesKey("show_continue")
         val SHOW_RECENT = booleanPreferencesKey("show_recent")
-        val SHOW_SCHEDULE = booleanPreferencesKey("show_schedule")
         val AUTO_OPEN_KEYBOARD = booleanPreferencesKey("auto_open_keyboard")
         val DEFAULT_STREAM_PROVIDER = stringPreferencesKey("default_stream_provider")
     }
@@ -35,7 +34,6 @@ class ThemePreference @Inject constructor(
     val showBannerFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_BANNER] ?: true }
     val showContinueFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_CONTINUE] ?: true }
     val showRecentFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_RECENT] ?: true }
-    val showScheduleFlow: Flow<Boolean> = context.dataStore.data.map { it[SHOW_SCHEDULE] ?: true }
     val autoOpenKeyboardFlow: Flow<Boolean> = context.dataStore.data.map { it[AUTO_OPEN_KEYBOARD] ?: true }
     val defaultStreamProviderFlow: Flow<String> = context.dataStore.data.map { it[DEFAULT_STREAM_PROVIDER] ?: "donghuastream" }
 
@@ -57,10 +55,6 @@ class ThemePreference @Inject constructor(
 
     suspend fun setShowRecent(show: Boolean) {
         context.dataStore.edit { it[SHOW_RECENT] = show }
-    }
-
-    suspend fun setShowSchedule(show: Boolean) {
-        context.dataStore.edit { it[SHOW_SCHEDULE] = show }
     }
 
     suspend fun setAutoOpenKeyboard(autoOpen: Boolean) {

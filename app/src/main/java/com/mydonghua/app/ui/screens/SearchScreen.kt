@@ -75,6 +75,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.TrendingUp
 import com.mydonghua.app.ui.common.EmptyState
@@ -298,16 +299,35 @@ fun SearchScreen(
 
                         if (recents.isNotEmpty()) {
                             item {
-                                Text(
-                                    text = "Recent Searches",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Recent Searches",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Clear all",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                                        modifier = Modifier.clickable { viewModel.clearRecentSearches() }
+                                    )
+                                }
                             }
                             items(recents) { item ->
-                                SuggestionRow(text = item.text, isRecent = true, onClick = { viewModel.selectQuery(item.text) })
+                                SuggestionRow(
+                                    text = item.text,
+                                    isRecent = true,
+                                    onClick = { viewModel.selectQuery(item.text) },
+                                    onDelete = { viewModel.removeRecentSearch(item.text) }
+                                )
                             }
                         }
 
@@ -498,7 +518,7 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SuggestionRow(text: String, isRecent: Boolean, onClick: () -> Unit) {
+private fun SuggestionRow(text: String, isRecent: Boolean, onClick: () -> Unit, onDelete: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -516,8 +536,31 @@ private fun SuggestionRow(text: String, isRecent: Boolean, onClick: () -> Unit) 
         Text(
             text = text,
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
+        if (onDelete != null) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onDelete
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Delete recent search",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            }
+        }
     }
 }
 

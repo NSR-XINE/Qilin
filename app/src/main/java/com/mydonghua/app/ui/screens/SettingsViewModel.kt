@@ -25,7 +25,6 @@ data class SettingsUiState(
     val showBanner: Boolean = true,
     val showContinue: Boolean = true,
     val showRecent: Boolean = true,
-    val showSchedule: Boolean = true,
     val autoOpenKeyboard: Boolean = true,
     val defaultStreamProvider: String = "donghuastream"
 )
@@ -33,8 +32,7 @@ data class SettingsUiState(
 data class DashboardPrefs(
     val showBanner: Boolean,
     val showContinue: Boolean,
-    val showRecent: Boolean,
-    val showSchedule: Boolean
+    val showRecent: Boolean
 )
 
 @HiltViewModel
@@ -53,10 +51,9 @@ class SettingsViewModel @Inject constructor(
         combine(
             themePreference.showBannerFlow,
             themePreference.showContinueFlow,
-            themePreference.showRecentFlow,
-            themePreference.showScheduleFlow
-        ) { banner, cont, recent, schedule ->
-            DashboardPrefs(banner, cont, recent, schedule)
+            themePreference.showRecentFlow
+        ) { banner, cont, recent ->
+            DashboardPrefs(banner, cont, recent)
         }
     ) { theme, accent, autoOpen, provider, prefs ->
         SettingsUiState(
@@ -65,7 +62,6 @@ class SettingsViewModel @Inject constructor(
             showBanner = prefs.showBanner,
             showContinue = prefs.showContinue,
             showRecent = prefs.showRecent,
-            showSchedule = prefs.showSchedule,
             autoOpenKeyboard = autoOpen,
             defaultStreamProvider = provider
         )
@@ -89,10 +85,6 @@ class SettingsViewModel @Inject constructor(
 
     fun setShowRecent(show: Boolean) {
         viewModelScope.launch { themePreference.setShowRecent(show) }
-    }
-
-    fun setShowSchedule(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowSchedule(show) }
     }
 
     fun setAutoOpenKeyboard(autoOpen: Boolean) {
