@@ -47,7 +47,10 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
@@ -55,6 +58,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
@@ -108,6 +112,8 @@ fun SearchScreen(
 
     var isSearchActive by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
+    var searchBarPos by remember { mutableStateOf(Offset.Zero) }
+    var searchBarSize by remember { mutableStateOf(IntSize.Zero) }
 
     fun showKeyboardNow() {
         Log.d("SearchDebug", "showKeyboardNow: keyboardController=${if (keyboardController != null) "present" else "NULL"}")
@@ -173,10 +179,18 @@ fun SearchScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .onGloballyPositioned {
+                    searchBarPos = it.positionInWindow()
+                    searchBarSize = it.size
+                }
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        Log.d("SearchDebug", "TAP DOWN on search bar at ${down.position}")
+                        val windowPos = searchBarPos + down.position
+                        Log.d(
+                            "SearchDebug",
+                            "TAP DOWN on search bar window=$windowPos barPos=$searchBarPos barSize=$searchBarSize"
+                        )
                         scope.launch {
                             focusAndOpenKeyboard()
                         }
