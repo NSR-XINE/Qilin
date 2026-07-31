@@ -1,6 +1,7 @@
 package com.mydonghua.app.ui.screens
 
 import android.app.Activity
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -102,35 +103,45 @@ fun SearchScreen(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
-    val isKeyboardVisible = WindowInsets.isImeVisible
+    val isKeyboardVisible by remember { derivedStateOf { WindowInsets.isImeVisible } }
 
     var isSearchActive by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
     fun showKeyboardNow() {
+        Log.d("SearchDebug", "showKeyboardNow: keyboardController=${if (keyboardController != null) "present" else "NULL"}")
         runCatching {
             keyboardController?.show()
             val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
-            imm?.showSoftInput(composeView, InputMethodManager.SHOW_IMPLICIT)
+            val result = imm?.showSoftInput(composeView, InputMethodManager.SHOW_IMPLICIT)
+            Log.d("SearchDebug", "showKeyboardNow: imm=${if (imm != null) "present" else "NULL"}, showSoftInput returned $result")
+        }.onFailure {
+            Log.d("SearchDebug", "showKeyboardNow threw", it)
         }
     }
 
     fun retryShowKeyboard() {
         scope.launch {
-            repeat(6) {
-                if (isKeyboardVisible) return@launch
+            repeat(6) { i ->
+                if (isKeyboardVisible) {
+                    Log.d("SearchDebug", "retryShowKeyboard: attempt #$i — IME visible, done")
+                    return@launch
+                }
                 showKeyboardNow()
                 delay(150)
             }
+            Log.d("SearchDebug", "retryShowKeyboard: exhausted 6 attempts, isKeyboardVisible=$isKeyboardVisible")
         }
     }
 
     fun focusAndOpenKeyboard() {
+        Log.d("SearchDebug", "focusAndOpenKeyboard: requesting focus...")
         focusRequester.requestFocus()
         retryShowKeyboard()
     }
 
     LaunchedEffect(autoOpenKeyboard) {
+        Log.d("SearchDebug", "LaunchedEffect: autoOpenKeyboard=$autoOpenKeyboard")
         if (autoOpenKeyboard) {
             delay(400)
             focusAndOpenKeyboard()
@@ -179,7 +190,10 @@ fun SearchScreen(
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)
-                        focusAndOpenKeyboard()
+                        Log.d("SearchDebug", "TAP: down detected on search bar, deferring focus+keyboard")
+                        scope.launch {
+                            focusAndOpenKeyboard()
+                        }
                     }
                 },
             verticalAlignment = Alignment.CenterVertically
@@ -218,6 +232,7 @@ fun SearchScreen(
                     .weight(1f)
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
+                        Log.d("SearchDebug", "onFocusChanged: isFocused=${focusState.isFocused}")
                         isFocused = focusState.isFocused
                         isSearchActive = focusState.isFocused
                         if (focusState.isFocused) {
