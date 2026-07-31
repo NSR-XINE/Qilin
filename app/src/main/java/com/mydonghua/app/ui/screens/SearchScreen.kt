@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.BackHandler
+import androidx.core.view.WindowInsetsCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -103,7 +104,7 @@ fun SearchScreen(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
-    val isKeyboardVisible by remember { derivedStateOf { WindowInsets.isImeVisible } }
+    val isKeyboardVisible = WindowInsets.isImeVisible
 
     var isSearchActive by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
@@ -120,17 +121,23 @@ fun SearchScreen(
         }
     }
 
+    fun isImeVisibleNow(): Boolean {
+        val insets = composeView.rootWindowInsets ?: return false
+        return WindowInsetsCompat.toWindowInsetsCompat(insets, composeView)
+            .getInsets(WindowInsetsCompat.Type.ime()).bottom > 0
+    }
+
     fun retryShowKeyboard() {
         scope.launch {
             repeat(6) { i ->
-                if (isKeyboardVisible) {
+                if (isImeVisibleNow()) {
                     Log.d("SearchDebug", "retryShowKeyboard: attempt #$i — IME visible, done")
                     return@launch
                 }
                 showKeyboardNow()
                 delay(150)
             }
-            Log.d("SearchDebug", "retryShowKeyboard: exhausted 6 attempts, isKeyboardVisible=$isKeyboardVisible")
+            Log.d("SearchDebug", "retryShowKeyboard: exhausted 6 attempts, isImeVisibleNow=${isImeVisibleNow()}")
         }
     }
 
