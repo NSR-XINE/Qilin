@@ -67,7 +67,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.pointer.awaitFirstDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import com.mydonghua.app.ui.common.ShowCard
