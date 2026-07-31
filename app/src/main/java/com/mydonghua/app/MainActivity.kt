@@ -184,7 +184,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxSize(),
                                 topBar = {
                                     val isDetailRoute = currentRoute.startsWith("show_detail/") || currentRoute.startsWith("detail/")
-                                    if (showGlobalHeader || isDetailRoute) {
+                                    if (!isSearchOpen && (showGlobalHeader || isDetailRoute)) {
                                         if (isDetailRoute) {
                                             val detailShowId = navBackStackEntry?.arguments?.getString("showId")
                                             val detailShow = remember(detailShowId, allShows) { allShows.find { it.id == detailShowId } }

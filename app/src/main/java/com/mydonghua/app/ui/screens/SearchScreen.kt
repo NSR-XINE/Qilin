@@ -114,6 +114,7 @@ fun SearchScreen(
     var isFocused by remember { mutableStateOf(false) }
     var searchBarPos by remember { mutableStateOf(Offset.Zero) }
     var searchBarSize by remember { mutableStateOf(IntSize.Zero) }
+    var barBoundsLogged by remember { mutableStateOf(false) }
 
     fun showKeyboardNow() {
         Log.d("SearchDebug", "showKeyboardNow: keyboardController=${if (keyboardController != null) "present" else "NULL"}")
@@ -182,6 +183,13 @@ fun SearchScreen(
                 .onGloballyPositioned {
                     searchBarPos = it.positionInWindow()
                     searchBarSize = it.size
+                    if (!barBoundsLogged) {
+                        barBoundsLogged = true
+                        Log.d(
+                            "SearchDebug",
+                            "BAR placed at window=${it.positionInWindow()} size=${it.size}"
+                        )
+                    }
                 }
                 .pointerInput(Unit) {
                     awaitEachGesture {
