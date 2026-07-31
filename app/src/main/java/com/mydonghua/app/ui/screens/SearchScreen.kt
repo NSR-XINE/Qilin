@@ -113,16 +113,19 @@ fun SearchScreen(
         }
     }
 
-    fun focusAndOpenKeyboard() {
-        focusRequester.requestFocus()
+    fun retryShowKeyboard() {
         scope.launch {
             repeat(6) {
                 if (isKeyboardVisible) return@launch
-                focusRequester.requestFocus()
                 showKeyboardNow()
                 delay(150)
             }
         }
+    }
+
+    fun focusAndOpenKeyboard() {
+        focusRequester.requestFocus()
+        retryShowKeyboard()
     }
 
     LaunchedEffect(Unit) {
@@ -216,7 +219,7 @@ fun SearchScreen(
                         isFocused = focusState.isFocused
                         isSearchActive = focusState.isFocused
                         if (focusState.isFocused) {
-                            focusAndOpenKeyboard()
+                            retryShowKeyboard()
                         }
                     },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
