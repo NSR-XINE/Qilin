@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -29,8 +28,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
@@ -40,10 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -221,7 +214,6 @@ class MainActivity : ComponentActivity() {
                                             isSearchOpen = isSearchOpen,
                                             onSearchClick = {
                                                 isSearchOpen = !isSearchOpen
-                                                Log.d("SearchDebug", "onSearchClick: isSearchOpen=$isSearchOpen")
                                             },
                                             onNavigate = { route ->
                                                 when (route) {
@@ -447,20 +439,9 @@ class MainActivity : ComponentActivity() {
                         animationSpec = tween(600, easing = FastOutSlowInEasing)
                     ) + fadeOut(animationSpec = tween(400, easing = FastOutSlowInEasing)),
                 ) {
-                    var searchSurfacePos by remember { mutableStateOf(Offset.Zero) }
                     Surface(
                         modifier = Modifier
                             .fillMaxSize()
-                            .onGloballyPositioned { searchSurfacePos = it.positionInWindow() }
-                            .pointerInput(Unit) {
-                                awaitEachGesture {
-                                    val down = awaitFirstDown(requireUnconsumed = false)
-                                    Log.d(
-                                        "SearchDebug",
-                                        "SEARCH SURFACE down local=${down.position} window=${searchSurfacePos + down.position}"
-                                    )
-                                }
-                            }
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -492,7 +473,6 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateBack = {
                                 isSearchOpen = false
-                                Log.d("SearchDebug", "onNavigateBack: isSearchOpen=false")
                             }
                         )
                     }

@@ -1,7 +1,6 @@
 package com.mydonghua.app.ui.screens
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -47,10 +46,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
@@ -58,7 +54,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mydonghua.app.R
@@ -111,13 +106,8 @@ fun SearchScreen(
     val isKeyboardVisible = WindowInsets.isImeVisible
 
     var isSearchActive by remember { mutableStateOf(false) }
-    var isFocused by remember { mutableStateOf(false) }
-    var searchBarPos by remember { mutableStateOf(Offset.Zero) }
-    var searchBarSize by remember { mutableStateOf(IntSize.Zero) }
-    var barBoundsLogged by remember { mutableStateOf(false) }
 
     fun showKeyboardNow() {
-        Log.d("SearchDebug", "showKeyboardNow: keyboardController=${if (keyboardController != null) "present" else "NULL"}")
         keyboardController?.show()
         val window = (context as? Activity)?.window ?: return
         WindowCompat.getInsetsController(window, composeView)
@@ -131,23 +121,19 @@ fun SearchScreen(
     }
 
     fun focusAndOpenKeyboard() {
-        Log.d("SearchDebug", "focusAndOpenKeyboard: requesting focus...")
         focusRequester.requestFocus()
         scope.launch {
             repeat(3) { i ->
                 if (isImeVisibleNow()) {
-                    Log.d("SearchDebug", "keyboard retry: attempt #$i — IME visible, done")
                     return@launch
                 }
                 showKeyboardNow()
                 delay(150)
             }
-            Log.d("SearchDebug", "keyboard retry: exhausted 3 attempts, isImeVisibleNow=${isImeVisibleNow()}")
         }
     }
 
     LaunchedEffect(autoOpenKeyboard) {
-        Log.d("SearchDebug", "LaunchedEffect: autoOpenKeyboard=$autoOpenKeyboard")
         if (autoOpenKeyboard) {
             delay(400)
             focusAndOpenKeyboard()
@@ -180,25 +166,9 @@ fun SearchScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .onGloballyPositioned {
-                    searchBarPos = it.positionInWindow()
-                    searchBarSize = it.size
-                    if (!barBoundsLogged) {
-                        barBoundsLogged = true
-                        Log.d(
-                            "SearchDebug",
-                            "BAR placed at window=${it.positionInWindow()} size=${it.size}"
-                        )
-                    }
-                }
                 .pointerInput(Unit) {
                     awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        val windowPos = searchBarPos + down.position
-                        Log.d(
-                            "SearchDebug",
-                            "TAP DOWN on search bar window=$windowPos barPos=$searchBarPos barSize=$searchBarSize"
-                        )
+                        awaitFirstDown(requireUnconsumed = false)
                         scope.launch {
                             focusAndOpenKeyboard()
                         }
@@ -253,8 +223,6 @@ fun SearchScreen(
                     .weight(1f)
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
-                        Log.d("SearchDebug", "onFocusChanged: isFocused=${focusState.isFocused}")
-                        isFocused = focusState.isFocused
                         isSearchActive = focusState.isFocused
                     },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
