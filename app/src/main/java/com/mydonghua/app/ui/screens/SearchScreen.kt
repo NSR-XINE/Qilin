@@ -1,5 +1,7 @@
 package com.mydonghua.app.ui.screens
 
+import android.app.Activity
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,6 +43,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
@@ -90,15 +94,20 @@ fun SearchScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
+    val showKeyboard: () -> Unit = {
+        runCatching {
+            keyboardController?.show()
+            val view = (context as? Activity)?.currentFocus
+            val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
 
-    LaunchedEffect(autoOpenKeyboard) {
-        if (autoOpenKeyboard) {
-            delay(400)
-            runCatching {
-                focusRequester.requestFocus()
-                keyboardController?.show()
-            }
+    LaunchedEffect(Unit) {
+        delay(400)
+        runCatching {
+            focusRequester.requestFocus()
+            showKeyboard()
         }
     }
 
@@ -154,7 +163,13 @@ fun SearchScreen(
                 .onFocusChanged { focusState ->
                     isSearchActive = focusState.isFocused
                     if (focusState.isFocused) {
-                        keyboardController?.show()
+                        showKeyboard()
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        focusRequester.requestFocus()
+                        showKeyboard()
                     }
                 },
             colors = OutlinedTextFieldDefaults.colors(
