@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -257,8 +258,11 @@ fun LiquidGlassNavBar(
                 currentTabIndex = navIndex
                 if (barWidthPx > 0) {
                     userInteracting = true
-                    dampedDrag.animateToValue(navToValue(navIndex))
-                    userInteracting = false
+                    try {
+                        dampedDrag.animateToIndex(navToValue(navIndex))
+                    } finally {
+                        userInteracting = false
+                    }
                 }
             }
 
@@ -527,6 +531,7 @@ class DampedDragAnimation(
     private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
     private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
     private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
+    private val snapAnimationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val velocityAnimation = Animatable(0f, 5f)
@@ -606,6 +611,13 @@ class DampedDragAnimation(
                 }
                 release()
             }
+        }
+    }
+
+    suspend fun animateToIndex(value: Float) {
+        mutatorMutex.mutate {
+            val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+            valueAnimation.animateTo(target, snapAnimationSpec)
         }
     }
 
