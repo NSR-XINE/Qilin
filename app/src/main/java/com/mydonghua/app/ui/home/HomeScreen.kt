@@ -35,6 +35,7 @@ import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
+import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -57,11 +58,15 @@ fun HomeScreen(
 
     val effectiveTopPadding = if (topPadding.value > 0f) topPadding + Spacing.md else 88.dp
 
+    val listState = rememberLazyListState()
+    ScrollPerfMonitor(listState, "home")
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Transparent)
             .navigationBarsPadding(),
+        state = listState,
         contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 80.dp)
     ) {
         if (state.isLoading) {
