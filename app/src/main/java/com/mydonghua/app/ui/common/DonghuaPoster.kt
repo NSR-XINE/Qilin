@@ -50,7 +50,8 @@ object PosterStagger {
     /**
      * Returns a delay in ms before this url's first load, or 0 to load now.
      * First-time loads starting right after a tab switch are deferred past the
-     * capsule slide (their decode burst stalled the slide); scroll reveals load now.
+     * capsule slide (their decode burst stalled the slide); scroll reveals load
+     * once the scroll settles (see ScrollGate in ScrollPerf.kt).
      */
     fun staggerDelay(url: String): Long {
         if (!seen.add(url)) return 0L
@@ -106,11 +107,14 @@ fun DonghuaPoster(
         if (posterUrl.isNullOrBlank()) 0L else PosterStagger.staggerDelay(posterUrl)
     }
     var posterEnabled by remember(posterUrl) {
-        mutableStateOf(posterUrl.isNullOrBlank() || staggerDelayMs == 0L)
+        mutableStateOf(
+            posterUrl.isNullOrBlank() || (staggerDelayMs == 0L && !ScrollGate.scrolling)
+        )
     }
     LaunchedEffect(posterUrl, staggerDelayMs) {
-        if (posterUrl.isNullOrBlank() || staggerDelayMs == 0L) return@LaunchedEffect
-        delay(staggerDelayMs)
+        if (posterUrl.isNullOrBlank()) return@LaunchedEffect
+        if (staggerDelayMs > 0L) delay(staggerDelayMs)
+        while (ScrollGate.scrolling) delay(50L)
         posterEnabled = true
     }
 
