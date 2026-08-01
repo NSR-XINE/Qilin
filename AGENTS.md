@@ -28,9 +28,12 @@ The app previously lagged with many cards on screen, when opening search/setting
 - **Navbar luminance readback runs off the main thread every 2s.** In `ui/LiquidGlassNavBar.kt` the whole `layer.toImageBitmap()` + 5x5 thumbnail average runs inside `withContext(Dispatchers.Default)`, skipped while the user is dragging or the capsule is animating (`userInteracting`). Keep it off the UI thread and slow (>= 1s).
 - **NavHost transitions are short pure cross-fades** (`MainActivity.kt`): `fadeIn(tween(140))` / `fadeOut(tween(110))` for enter/exit/pop. Avoid scale/slide transitions — they rendered two screens diverging around the seam during tab switches.
 - **Liquid glass blur intensity MUST stay low.** Tab-switch lag was traced to per-frame shader cost: the capsule's blur had a 20dp constant floor (~22-36dp total, ~66-108px @3x) plus 10/14dp dispersion, re-run every frame during the slide. Fixed by cutting capsule blur to 7-14dp (adaptive 1-8dp + 6dp constant), halving dispersion to 5/7dp, and reducing search-button blur to 1-10dp with refraction halved to size/8 & size/4. Do NOT bump these values back up without re-measuring NavLag `maxFrameGapMs`.
+- **Predictive back gesture.** Manifest has `android:enableOnBackInvokedCallback="true"`. `MainActivity.kt` uses `PredictiveBackHandler` (activity-compose 1.9.0, opt-in `androidx.activity.ExperimentalPredictiveBack`) for the drawer/menu and search overlay: progress drives `graphicsLayer` `translationY` (drawer slides up, search slides down); code after `progressFlow.collect` = gesture completed (commit `isXxxOpen=false`), `CancellationException` = cancelled (rethrow), `finally` resets progress to 0. Drawer is composed last so its handler wins priority. The main `BackHandler` is enabled only on tab routes with drawer/search closed — sub-screen pops fall through to NavHost, which needs `navigation-compose >= 2.8.0` for its own predictive pop animations (currently 2.8.9). Keep custom `PredictiveBackHandler`s composed unconditionally (use `enabled`), per docs.
 
 ## Key Dependencies
 - Compose BOM: `2024.09.00` (provides `rememberGraphicsLayer` / `GraphicsLayer` via Compose UI 1.7.x)
+- Navigation Compose: `2.8.9` (>= 2.8.0 required for NavHost predictive back pop animations)
+- activity-compose: `1.9.0` (provides `PredictiveBackHandler`)
 - Haze: `0.7.3`
 - Kyant Liquid Glass: **none (vendored)**
 

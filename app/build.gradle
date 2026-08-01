@@ -35,7 +35,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = '17'
-        freeCompilerArgs += ["-Xskip-metadata-version-check"]
+        freeCompilerArgs += ["-Xskip-metadata-version-check", "-opt-in=androidx.activity.ExperimentalPredictiveBack"]
     }
 
     buildFeatures {
@@ -69,7 +69,7 @@ dependencies {
     implementation 'androidx.compose.material:material-icons-extended'
     implementation 'androidx.activity:activity-compose:1.9.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0'
-    implementation 'androidx.navigation:navigation-compose:2.7.7'
+    implementation 'androidx.navigation:navigation-compose:2.8.9'
 
     // Room Database
     implementation "androidx.room:room-runtime:2.6.1"

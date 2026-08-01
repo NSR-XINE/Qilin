@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -101,16 +102,19 @@ class MainActivity : ComponentActivity() {
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
-            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
+            val tabRoutes = listOf("home", "airing", "complete", "stopped")
+            val showGlobalHeader = currentRoute in tabRoutes
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
             val appHazeState = remember { HazeState() }
 
-            androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
-                when {
-                    isDrawerOpen -> isDrawerOpen = false
-                    currentRoute != "home" -> navController.popBackStack("home", inclusive = false)
-                    else -> showExitDialog = true
+            androidx.activity.compose.BackHandler(
+                enabled = !isSearchOpen && !isDrawerOpen && currentRoute in tabRoutes
+            ) {
+                if (currentRoute != "home") {
+                    navController.popBackStack("home", inclusive = false)
+                } else {
+                    showExitDialog = true
                 }
             }
 
@@ -427,9 +431,25 @@ class MainActivity : ComponentActivity() {
                         animationSpec = tween(300, easing = FastOutSlowInEasing)
                     ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing)),
                 ) {
+                    val searchBackProgress = remember { mutableFloatStateOf(0f) }
+                    PredictiveBackHandler(enabled = isSearchOpen) { progressFlow ->
+                        try {
+                            progressFlow.collect { event ->
+                                searchBackProgress.floatValue = event.progress
+                            }
+                            isSearchOpen = false
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } finally {
+                            searchBackProgress.floatValue = 0f
+                        }
+                    }
                     Surface(
                         modifier = Modifier
                             .fillMaxSize()
+                            .graphicsLayer {
+                                translationY = searchBackProgress.floatValue * size.height
+                            }
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -493,12 +513,28 @@ class MainActivity : ComponentActivity() {
                     )
                 )
             ) {
+                val drawerBackProgress = remember { mutableFloatStateOf(0f) }
+                PredictiveBackHandler(enabled = isDrawerOpen) { progressFlow ->
+                    try {
+                        progressFlow.collect { event ->
+                            drawerBackProgress.floatValue = event.progress
+                        }
+                        isDrawerOpen = false
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } finally {
+                        drawerBackProgress.floatValue = 0f
+                    }
+                }
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
                 val isLightMode = settingsState.themeMode.lowercase() == "light"
 
                 MenuGlassPanel(
                     modifier = Modifier
+                        .graphicsLayer {
+                            translationY = -drawerBackProgress.floatValue * size.height
+                        }
                         .fillMaxSize()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
