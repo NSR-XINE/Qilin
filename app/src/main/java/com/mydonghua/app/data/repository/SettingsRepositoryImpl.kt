@@ -27,6 +27,6 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAllSettings(): Map<String, String> {
-        return settingsDao.getAllSettings().associate { it.key to it.value }
+        return settingsDao.getAllSettings().associate { it.key to (it.value ?: "") }
     }
 }
