@@ -51,6 +51,7 @@ import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.*
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.common.PosterTrace
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
@@ -284,7 +285,7 @@ fun LiquidGlassNavBar(
                     val slideMs = (System.nanoTime() - slideT0) / 1_000_000
                     android.util.Log.e(
                         "NavLag",
-                        "slide=${slideMs}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
+                        "slide=${slideMs}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L} posters=${PosterTrace.composedCount}"
                     )
                     userInteracting = false
                 }
@@ -295,6 +296,7 @@ fun LiquidGlassNavBar(
                     .drop(1)
                     .collectLatest { index ->
                         if (draggedFlag[0]) {
+                            PosterTrace.reset()
                             currentOnNavigate(navRoutes[index])
                         }
                     }
@@ -393,6 +395,7 @@ fun LiquidGlassNavBar(
                             contentDescription = tabDescription,
                             selected = currentTabIndex == position,
                             onClick = {
+                                PosterTrace.reset()
                                 currentTabIndex = position
                                 onNavigate(route)
                             },

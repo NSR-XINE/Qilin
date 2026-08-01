@@ -22,6 +22,20 @@ import coil.request.ImageRequest
 
 import com.mydonghua.app.ui.theme.JustSansFamily
 
+object PosterTrace {
+    @Volatile
+    var composedCount = 0
+        private set
+
+    fun reset() {
+        composedCount = 0
+    }
+
+    fun inc() {
+        composedCount++
+    }
+}
+
 /**
  * Extracts initials acronym from title (e.g. "Renegade Immortal" -> "RI", "Soul Land" -> "SL")
  */
@@ -53,6 +67,11 @@ fun DonghuaPoster(
 ) {
     val context = LocalContext.current
     val initials = remember(title) { getTitleInitials(title) }
+
+    remember(posterUrl) {
+        PosterTrace.inc()
+        true
+    }
 
     val imageRequest = remember(posterUrl, context, crossfade) {
         ImageRequest.Builder(context)
