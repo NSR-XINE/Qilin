@@ -111,6 +111,7 @@ fun LiquidGlassNavBar(
         while (isActive) {
             try {
                 if (!userInteracting && layer.size.width > 0 && layer.size.height > 0) {
+                    val readT0 = SystemClock.elapsedRealtime()
                     val avg = withContext(Dispatchers.Default) {
                         val imageBitmap = layer.toImageBitmap()
                         android.graphics.Canvas(thumbnail).drawBitmap(
@@ -125,6 +126,10 @@ fun LiquidGlassNavBar(
                             val b = (c and 0xFF) / 255.0
                             0.2126 * r + 0.7152 * g + 0.0722 * b
                         } / 25.0
+                    }
+                    val readMs = SystemClock.elapsedRealtime() - readT0
+                    if (readMs > 8) {
+                        android.util.Log.d("NavLag", "readback took ${readMs}ms")
                     }
                     luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
                 }
@@ -257,7 +262,23 @@ fun LiquidGlassNavBar(
                 currentTabIndex = navIndex
                 if (barWidthPx > 0) {
                     userInteracting = true
+                    val slideT0 = SystemClock.elapsedRealtime()
                     dampedDrag.animateToValue(navToValue(navIndex))
+                    var last = 0L
+                    var maxGap = 0L
+                    var frames = 0
+                    var running = true
+                    while (running) {
+                        val now = withFrameNanos { it }
+                        if (last != 0L) maxGap = maxOf(maxGap, now - last)
+                        frames++
+                        last = now
+                        running = (now - slideT0 * 1_000_000L) < 700_000_000L
+                    }
+                    android.util.Log.d(
+                        "NavLag",
+                        "slide=${SystemClock.elapsedRealtime() - slideT0}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
+                    )
                     userInteracting = false
                 }
             }
@@ -475,8 +496,13 @@ private fun Modifier.drawBackdropCustomShape(
             refraction(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
         },
         onDrawBackdrop = { drawBackdrop ->
+            val recT0 = SystemClock.elapsedRealtime()
             drawBackdrop()
             layer.record { drawBackdrop() }
+            val recMs = SystemClock.elapsedRealtime() - recT0
+            if (recMs > 6) {
+                android.util.Log.d("NavLag", "backdrop record took ${recMs}ms")
+            }
         },
         onDrawSurface = {
             val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
