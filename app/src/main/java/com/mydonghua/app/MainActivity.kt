@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -64,6 +67,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
+import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
@@ -97,7 +101,10 @@ class MainActivity : ComponentActivity() {
             val allShows by showsViewModel.allShows.collectAsState()
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route ?: "home"
+            val baseRoute = navBackStackEntry?.destination?.route ?: "main"
+            val onTabScreen = baseRoute == "main"
+            var selectedTab by rememberSaveable { mutableStateOf("home") }
+            val currentRoute = if (onTabScreen) selectedTab else baseRoute
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
@@ -107,10 +114,14 @@ class MainActivity : ComponentActivity() {
             val appHazeState = remember { HazeState() }
 
             androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
-                if (currentRoute != "home") {
-                    navController.popBackStack("home", inclusive = false)
+                if (onTabScreen) {
+                    if (selectedTab != "home") {
+                        selectedTab = "home"
+                    } else {
+                        showExitDialog = true
+                    }
                 } else {
-                    showExitDialog = true
+                    navController.popBackStack()
                 }
             }
 
@@ -209,14 +220,13 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigate = { route ->
                                                 when (route) {
-                                                    "home" -> {
-                                                        val currentDest = navController.currentBackStackEntry?.destination?.route
-                                                        if (currentDest != "home") {
-                                                            navController.popBackStack("home", inclusive = false)
+                                                    "home", "airing", "complete", "stopped" -> {
+                                                        if (selectedTab != route) {
+                                                            selectedTab = route
                                                         }
                                                     }
                                                     "add_edit_show" -> navController.navigate("add_edit_show")
-                                                    else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
+                                                    else -> navController.navigate(route) { popUpTo("main"); launchSingleTop = true; restoreState = true }
                                                 }
                                             },
                                             modifier = Modifier
@@ -233,7 +243,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                             NavHost(
                                 navController = navController,
-                                startDestination = "home",
+                                startDestination = "main",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
                                     fadeIn(animationSpec = tween(140))
@@ -248,10 +258,12 @@ class MainActivity : ComponentActivity() {
                                     fadeOut(animationSpec = tween(110))
                                 }
                             ) {
-                        composable("home") {
-                                HomeScreen(
-                                viewModel = homeViewModel,
+                        composable("main") {
+                                TabContent(
+                                selectedTab = selectedTab,
                                 topPadding = innerPadding.calculateTopPadding(),
+                                homeViewModel = homeViewModel,
+                                showsViewModel = showsViewModel,
                                 onSearchClick = {
                                     isSearchOpen = true
                                 },
@@ -261,65 +273,17 @@ class MainActivity : ComponentActivity() {
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                }
-                            )
-                        }
-                        composable("airing") {
-                                AiringScreen(
-                                viewModel = showsViewModel,
-                                topPadding = innerPadding.calculateTopPadding(),
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
                                     navController.navigate("show_detail/${show.id}")
-                                }
-                            )
-                        }
-                        composable("complete") {
-                                CompletedScreen(
-                                viewModel = showsViewModel,
-                                topPadding = innerPadding.calculateTopPadding(),
+                                },
                                 onWatchClick = { url ->
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)
                                     }
                                     startActivity(intent)
-                                },
-                                onEditClick = { show ->
-                                    navController.navigate("add_edit_show?showId=${show.id}")
-                                },
-                                onCardClick = { show ->
-                                    navController.navigate("show_detail/${show.id}")
-                                }
-                            )
-                        }
-                        composable("stopped") {
-                                StoppedScreen(
-                                viewModel = showsViewModel,
-                                topPadding = innerPadding.calculateTopPadding(),
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
-                                onEditClick = { show ->
-                                    navController.navigate("add_edit_show?showId=${show.id}")
-                                },
-                                onCardClick = { show ->
-                                    navController.navigate("show_detail/${show.id}")
                                 }
                             )
                         }
@@ -670,6 +634,78 @@ class MainActivity : ComponentActivity() {
         const val FILE_CHOOSER_REQUEST_CODE = 1001
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
+    }
+}
+
+private val tabRoutes = listOf("home", "airing", "complete", "stopped")
+
+@Composable
+private fun TabContent(
+    selectedTab: String,
+    topPadding: Dp,
+    homeViewModel: HomeViewModel,
+    showsViewModel: ShowsViewModel,
+    onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onShowClick: (String) -> Unit,
+    onWatchClick: (String) -> Unit,
+    onEditClick: (Show) -> Unit,
+    onCardClick: (Show) -> Unit,
+) {
+    var visitedMask by rememberSaveable { mutableIntStateOf(1) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        tabRoutes.forEachIndexed { index, route ->
+            val active = route == selectedTab
+            val visited = (visitedMask and (1 shl index)) != 0
+            if (active || visited) {
+                val alpha by animateFloatAsState(
+                    targetValue = if (active) 1f else 0f,
+                    animationSpec = tween(140),
+                    label = "tab-$route"
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(if (active) 1f else 0f)
+                        .graphicsLayer { this.alpha = alpha }
+                ) {
+                    when (route) {
+                        "home" -> HomeScreen(
+                            viewModel = homeViewModel,
+                            topPadding = topPadding,
+                            onSearchClick = onSearchClick,
+                            onSettingsClick = onSettingsClick,
+                            onShowClick = onShowClick,
+                            onWatchClick = onWatchClick
+                        )
+                        "airing" -> AiringScreen(
+                            viewModel = showsViewModel,
+                            topPadding = topPadding,
+                            onWatchClick = onWatchClick,
+                            onEditClick = onEditClick,
+                            onCardClick = onCardClick
+                        )
+                        "complete" -> CompletedScreen(
+                            viewModel = showsViewModel,
+                            topPadding = topPadding,
+                            onWatchClick = onWatchClick,
+                            onEditClick = onEditClick,
+                            onCardClick = onCardClick
+                        )
+                        "stopped" -> StoppedScreen(
+                            viewModel = showsViewModel,
+                            topPadding = topPadding,
+                            onWatchClick = onWatchClick,
+                            onEditClick = onEditClick,
+                            onCardClick = onCardClick
+                        )
+                    }
+                }
+                if (active) {
+                    SideEffect { visitedMask = visitedMask or (1 shl index) }
+                }
+            }
+        }
     }
 }
 

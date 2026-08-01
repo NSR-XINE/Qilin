@@ -26,7 +26,9 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 The app previously lagged with many cards on screen, when opening search/settings, and during tab switches. Preserve these mitigations:
 - **Glass background orbs are STATIC.** `GlassBackground` in `ui/GlassEffect.kt` used to run an `infiniteTransition` with 11 animators that re-rasterized 5 full-screen gradient layers every frame. It now uses fixed orb positions/scales. Do NOT reintroduce per-frame animation here.
 - **Navbar luminance readback runs off the main thread every 2s.** In `ui/LiquidGlassNavBar.kt` the whole `layer.toImageBitmap()` + 5x5 thumbnail average runs inside `withContext(Dispatchers.Default)`, skipped while the user is dragging or the capsule is animating (`userInteracting`). Keep it off the UI thread and slow (>= 1s).
-- **NavHost transitions are short pure cross-fades** (`MainActivity.kt`): `fadeIn(tween(140))` / `fadeOut(tween(110))` for enter/exit/pop. Avoid scale/slide transitions — they rendered two screens diverging around the seam during tab switches.
+- **Programmatic tab switches use a fast capsule slide.** `LaunchedEffect(navIndex)` calls `dampedDrag.animateToIndex(...)`, a 200ms `FastOutSlowInEasing` tween that ONLY animates the capsule value — it does NOT run the press()/release() scale dance or velocity animations used by the finger-drag path. The full springy `animateToValue()` is reserved for drag settling. `userInteracting` stays true for the whole slide via try/finally. Measured with `adb logcat -s NavLag` at 120Hz: most switches drop ZERO frames (8ms max gap); the 200ms tween removes the old ~600ms springy wobble that read as "laggy".
+- **Tab screens are KEPT ALIVE across switches.** The 4 tabs live inside a single NavHost destination `"main"` (see `TabContent` in `MainActivity.kt`). Each visited tab stays in composition (only the active one is visible, via a 140ms alpha fade + `zIndex`); switching tabs is a pure state change (`selectedTab`), so it never re-composes the screen or burst-decodes posters. `visitedMask` (rememberSaveable bitmask) keeps unvisited tabs uncomposed until first shown. NavHost short cross-fades now apply only to sub-screen navigation.
+- **NavHost transitions are short pure cross-fades** (`MainActivity.kt`): `fadeIn(tween(140))` / `fadeOut(tween(110))` for enter/exit/pop. Avoid scale/slide transitions — they rendered two screens diverging around the seam.
 
 ## Key Dependencies
 - Compose BOM: `2024.09.00` (provides `rememberGraphicsLayer` / `GraphicsLayer` via Compose UI 1.7.x)
@@ -40,6 +42,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Luminance animation: captures 5x5 thumbnail **every 2s on `Dispatchers.Default`**, calculates average luminance, animates `Animatable` — used for adaptive effect intensity; skipped while `userInteracting` (drag / capsule animation)
 - 5 items: Home, Airing, Search (center circle), Complete, Stopped
 - Applied as `Modifier` on the Row containing all nav items
+- Tab switches are pure state changes: navbar `onNavigate` sets `MainActivity.selectedTab` (tabs are NOT NavHost routes anymore; the NavHost start destination is `"main"`). `currentRoute` is `selectedTab` while on `"main"`, else the real back stack route.
 
 ## Search Bar / Keyboard
 - Search bar tap path (`MainActivity.kt`): Row `pointerInput` `awaitFirstDown` -> `focusAndOpenKeyboard()` (`focusRequester.requestFocus()` + 3x/150ms retry + `keyboardController?.show()` + `WindowCompat...show(ime())`)

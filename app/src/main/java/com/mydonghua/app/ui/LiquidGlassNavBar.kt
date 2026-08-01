@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -268,24 +269,25 @@ fun LiquidGlassNavBar(
                 )
                 if (barWidthPx > 0) {
                     userInteracting = true
-                    val slideT0 = System.nanoTime()
-                    dampedDrag.animateToValue(navToValue(navIndex))
-                    var last = 0L
-                    var maxGap = 0L
-                    var frames = 0
-                    var running = true
-                    while (running) {
-                        val now = withFrameNanos { it }
-                        if (last != 0L) maxGap = maxOf(maxGap, now - last)
-                        frames++
-                        last = now
-                        running = (now - slideT0) < 700_000_000L
+                    try {
+                        val anim = launch { dampedDrag.animateToIndex(navToValue(navIndex)) }
+                        val slideT0 = System.nanoTime()
+                        var last = 0L
+                        var maxGap = 0L
+                        var frames = 0
+                        while (anim.isActive) {
+                            val now = withFrameNanos { it }
+                            if (last != 0L) maxGap = maxOf(maxGap, now - last)
+                            frames++
+                            last = now
+                        }
+                        android.util.Log.e(
+                            "NavLag",
+                            "slide=${(System.nanoTime() - slideT0) / 1_000_000}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
+                        )
+                    } finally {
+                        userInteracting = false
                     }
-                    android.util.Log.e(
-                        "NavLag",
-                        "slide=${(System.nanoTime() - slideT0) / 1_000_000}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
-                    )
-                    userInteracting = false
                 }
             }
 
@@ -559,6 +561,7 @@ class DampedDragAnimation(
     private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
     private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
     private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
+    private val snapAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val velocityAnimation = Animatable(0f, 5f)
@@ -638,6 +641,13 @@ class DampedDragAnimation(
                 }
                 release()
             }
+        }
+    }
+
+    suspend fun animateToIndex(value: Float) {
+        mutatorMutex.mutate {
+            val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
+            valueAnimation.animateTo(target, snapAnimationSpec)
         }
     }
 
