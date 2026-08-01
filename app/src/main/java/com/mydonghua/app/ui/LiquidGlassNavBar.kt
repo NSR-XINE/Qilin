@@ -331,11 +331,11 @@ fun LiquidGlassNavBar(
                                     saturation = 1.5f,
                                 )
                                 blur(
-                                    (if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
-                                    else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)) + 20f.dp.toPx(),
+                                    (if (l > 0f) lerp(4f.dp.toPx(), 8f.dp.toPx(), l)
+                                    else lerp(4f.dp.toPx(), 1f.dp.toPx(), -l)) + 6f.dp.toPx(),
                                 )
                                 val pressProg = dampedDrag.pressProgress
-                                refractionWithDispersion(10f.dp.toPx() * pressProg, 14f.dp.toPx() * pressProg, hasDepthEffect = false)
+                                refractionWithDispersion(5f.dp.toPx() * pressProg, 7f.dp.toPx() * pressProg, hasDepthEffect = false)
                             },
                             highlight = { Highlight.Default.copy(alpha = 0.6f) },
                             shadow = { Shadow(radius = 4f.dp, alpha = 0.4f) },
@@ -494,12 +494,12 @@ private fun Modifier.drawBackdropCustomShape(
             )
             blur(
                 (if (l > 0f) {
-                    lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
+                    lerp(4f.dp.toPx(), 8f.dp.toPx(), l)
                 } else {
-                    lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)
+                    lerp(4f.dp.toPx(), 1f.dp.toPx(), -l)
                 }) + 2f.dp.toPx() * press,
             )
-            refraction(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
+            refraction(size.minDimension / 8f + 2f.dp.toPx() * press, size.minDimension / 4f, false)
         },
         onDrawBackdrop = { drawBackdrop ->
             val recT0 = SystemClock.elapsedRealtime()
