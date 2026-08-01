@@ -531,7 +531,7 @@ class DampedDragAnimation(
     private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
     private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
     private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
-    private val snapAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+    private val snapAnimationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val velocityAnimation = Animatable(0f, 5f)
