@@ -121,6 +121,7 @@ fun SearchScreen(
     }
 
     fun focusAndOpenKeyboard() {
+        if (isSearchActive) return
         focusRequester.requestFocus()
         scope.launch {
             repeat(4) {
