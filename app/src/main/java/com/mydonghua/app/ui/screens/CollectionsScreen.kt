@@ -51,7 +51,7 @@ fun CollectionsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Collections folders", fontWeight = FontWeight.Bold) },
+                title = { Text("Collections folders", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -183,7 +183,7 @@ fun CollectionsScreen(
                                 Text(
                                     text = collectionName,
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -196,7 +196,7 @@ fun CollectionsScreen(
                                 Text(
                                     text = "${showsList.size} shows",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -261,7 +261,7 @@ fun CollectionsScreen(
                                         Text(
                                             text = show.status.uppercase(),
                                             fontSize = 9.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = statusColor
                                         )
                                     }

@@ -62,7 +62,7 @@ fun CalendarScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("$monthName $yearName", fontWeight = FontWeight.Bold) },
+                title = { Text("$monthName $yearName", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -163,7 +163,7 @@ fun CalendarScreen(
                             Text(
                                 text = group.dayName,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             group.shows.forEach { show ->

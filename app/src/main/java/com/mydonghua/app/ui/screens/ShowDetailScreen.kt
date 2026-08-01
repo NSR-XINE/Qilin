@@ -283,7 +283,7 @@ fun ShowDetailScreen(
                                     Text(
                                         text = "NEXT RELEASE",
                                         fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary,
                                         letterSpacing = 0.5.sp
                                     )
@@ -330,7 +330,7 @@ fun ShowDetailScreen(
                                 Text(
                                     text = "WATCH PROGRESS",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary,
                                     letterSpacing = 0.5.sp
                                 )
@@ -354,7 +354,7 @@ fun ShowDetailScreen(
                                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                        Text("-", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                                     }
                                 }
                                 Surface(
@@ -364,7 +364,7 @@ fun ShowDetailScreen(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text("+", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                                     }
                                 }
                             }
@@ -475,7 +475,7 @@ fun ShowDetailScreen(
                             Column(verticalArrangement = Arrangement.Center) {
                                 Text(
                                     text = "WATCH ONLINE",
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp,
                                     color = Color.White,
                                     letterSpacing = 0.5.sp
@@ -504,7 +504,7 @@ fun ShowDetailScreen(
                         Text(
                             text = "GENRES",
                             fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary,
                             letterSpacing = 0.5.sp
                         )
@@ -543,7 +543,7 @@ fun ShowDetailScreen(
                             Text(
                                 text = "SYNOPSIS",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary,
                                 letterSpacing = 0.5.sp
                             )
@@ -646,7 +646,7 @@ private fun DetailGlassChip(label: String, value: String, modifier: Modifier = M
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label.uppercase(), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, letterSpacing = 0.5.sp)
+            Text(label.uppercase(), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 0.5.sp)
             Spacer(modifier = Modifier.height(2.dp))
             Text(value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onBackground)
         }

@@ -101,7 +101,7 @@ fun AddEditShowScreen(
                 title = {
                     Text(
                         if (editingShow != null) "Edit Show" else "Add New Show",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
@@ -131,7 +131,7 @@ fun AddEditShowScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
                         text = "Basic Info",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -239,7 +239,7 @@ fun AddEditShowScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                         Text(
                             text = "Schedule",
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -303,7 +303,7 @@ fun AddEditShowScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
                         text = "Episodes",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -336,7 +336,7 @@ fun AddEditShowScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
                         text = "Media & Links",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -445,7 +445,7 @@ fun AddEditShowScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                     Text(
                         text = "Details",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -554,7 +554,7 @@ fun AddEditShowScreen(
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(IconSize.md))
                 Spacer(Modifier.width(Spacing.sm))
-                Text("Save Show", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Save Show", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(Spacing.xxxl))

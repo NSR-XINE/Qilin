@@ -89,7 +89,7 @@ fun SettingsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("App Settings", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("App Settings", fontWeight = FontWeight.SemiBold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -228,7 +228,7 @@ fun SettingsScreen(
                                     Text(
                                         text = modeTitle,
                                         fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
@@ -293,7 +293,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "Material You Dynamic",
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
@@ -398,7 +398,7 @@ fun SettingsScreen(
                                 Text(
                                     text = accentName,
                                     fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                             }
@@ -457,7 +457,7 @@ fun SettingsScreen(
                     ) {
                         Text(
                             text = "Default Watch Provider",
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -536,7 +536,7 @@ fun SettingsScreen(
                                                 Text(
                                                     text = title,
                                                     fontSize = 13.5.sp,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.SemiBold,
                                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                                 )
                                                 Text(
@@ -619,7 +619,7 @@ fun SettingsScreen(
                             shape = buttonShape,
                             contentPadding = PaddingValues(horizontal = Spacing.sm)
                         ) {
-                            Text("Export Backup JSON", fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+                            Text("Export Backup JSON", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
                         }
 
                         OutlinedButton(
@@ -639,7 +639,7 @@ fun SettingsScreen(
                             shape = buttonShape,
                             contentPadding = PaddingValues(horizontal = Spacing.sm)
                         ) {
-                            Text("Import Backup JSON", fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+                            Text("Import Backup JSON", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
                         }
                     }
                 }
@@ -670,7 +670,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "My Donghua",
                                     fontSize = 17.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.width(Spacing.sm))
@@ -681,7 +681,7 @@ fun SettingsScreen(
                                     Text(
                                         text = "v2.4.0",
                                         fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
@@ -737,7 +737,7 @@ private fun SectionHeader(title: String) {
         Text(
             text = title.uppercase(),
             fontSize = 11.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             letterSpacing = 1.sp
         )
@@ -822,7 +822,7 @@ private fun SettingsActionItem(
                 }
             }
         }
-        Text("\u2192", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("\u2192", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -839,7 +839,7 @@ private fun SettingsInfoItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(title, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-        Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
     }
 }
 

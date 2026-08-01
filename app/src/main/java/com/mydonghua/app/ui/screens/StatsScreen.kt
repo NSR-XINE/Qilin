@@ -58,7 +58,7 @@ fun StatsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Detailed Statistics", fontWeight = FontWeight.Bold) },
+                title = { Text("Detailed Statistics", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -118,7 +118,7 @@ fun StatsScreen(
                     )
                 }
             } else {
-                Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                 StatsGrid(
                     items = listOf(
                         StatItem("Total Tracked", stats.total.toString()),
@@ -132,7 +132,7 @@ fun StatsScreen(
                     )
                 )
 
-                Text("Completion & Activity Metrics", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("Completion & Activity Metrics", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                 StatsGrid(
                     items = listOf(
                         StatItem("Completion Rate", "${stats.completionRate}%"),
@@ -146,7 +146,7 @@ fun StatsScreen(
                 )
 
                     if (stats.topGenres.isNotEmpty()) {
-                        Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -163,7 +163,7 @@ fun StatsScreen(
                                         text = "$genre ($count)",
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -171,7 +171,7 @@ fun StatsScreen(
                     }
 
                     if (stats.topStudios.isNotEmpty()) {
-                        Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -188,14 +188,14 @@ fun StatsScreen(
                                         text = "$studio ($count)",
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.secondary,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
                         }
                     }
 
-                    Text("This Week's Remaining Releases", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("This Week's Remaining Releases", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                     if (thisWeekShows.isEmpty()) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -247,7 +247,7 @@ fun StatsScreen(
                                     Text(
                                         text = show.releaseDay?.substring(0, 3) ?: "Sun",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.width(48.dp)
                                     )
@@ -262,7 +262,7 @@ fun StatsScreen(
                                     Text(
                                         text = show.releaseTime ?: "10:00",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -319,7 +319,7 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                             Text(
                                 text = item.value,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -338,7 +338,7 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                                 Text(
                                     text = item.subText,
                                     fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis

@@ -309,13 +309,13 @@ fun SearchScreen(
                                     Text(
                                         text = "Recent Searches",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
                                         text = "Clear all",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                                         modifier = Modifier.clickable { viewModel.clearRecentSearches() }
                                     )
@@ -336,7 +336,7 @@ fun SearchScreen(
                                 Text(
                                     text = "Popular Searches",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.secondary,
                                     modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
                                 )
@@ -395,7 +395,7 @@ fun SearchScreen(
                                 Text(
                                     text = "Suggestions",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
                                 )
@@ -420,7 +420,7 @@ fun SearchScreen(
                                 Text(
                                     text = "My Library",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
                                 )
@@ -460,7 +460,7 @@ fun SearchScreen(
                                 Text(
                                     text = "Online Results (AniList / MyAnimeList)",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.secondary,
                                     modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
                                 )
@@ -620,7 +620,7 @@ private fun FilterChipsRow(
                 Text(
                     text = "Clear all",
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                     modifier = Modifier.clickable { onClearAll() }
                 )
@@ -707,7 +707,7 @@ private fun FilterChipButton(
             Text(
                 text = if (isSelected) "\u2715" else "+",
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
@@ -727,7 +727,7 @@ private fun GenreFilterDialog(
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Filter by Genre", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Filter by Genre", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
 
                 if (genres.isEmpty()) {
@@ -769,7 +769,7 @@ private fun GenreFilterDialog(
                                     Text(
                                         "\u2713",
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontSize = 16.sp
                                     )
                                 }
@@ -804,7 +804,7 @@ private fun StudioFilterDialog(
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Filter by Studio", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Filter by Studio", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
                 OutlinedTextField(
                     value = text,
@@ -838,7 +838,7 @@ private fun YearFilterDialog(
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Filter by Year", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Filter by Year", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
                 OutlinedTextField(
                     value = text,
@@ -872,12 +872,12 @@ private fun RatingFilterDialog(
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Minimum Rating", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Minimum Rating", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.lg))
                 Text(
                     text = if (sliderValue > 0) "\u2265 ${sliderValue.toInt()}" else "No minimum",
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
@@ -928,7 +928,7 @@ private fun SortFilterDialog(
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
         Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
             Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Sort Order", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Sort Order", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
                 Spacer(Modifier.height(Spacing.md))
                 options.forEach { (value, label) ->
                     val isSelected = selected == value
@@ -955,7 +955,7 @@ private fun SortFilterDialog(
                             Text(
                                 "\u2713",
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp
                             )
                         }

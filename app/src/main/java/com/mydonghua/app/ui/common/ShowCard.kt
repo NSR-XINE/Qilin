@@ -145,7 +145,7 @@ fun ShowCard(
                     Text(
                         text = statusText,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.White
                     )
                 }

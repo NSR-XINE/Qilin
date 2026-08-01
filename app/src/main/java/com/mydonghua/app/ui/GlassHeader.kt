@@ -259,7 +259,7 @@ fun GlassHeader(
                         brush = Brush.verticalGradient(
                             colors = listOf(contentColor, contentColor.copy(alpha = 0.75f))
                         ),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp,
                         letterSpacing = 0.25.sp
                     ),

@@ -113,7 +113,7 @@ fun PosterAcronymPlaceholder(
                 text = initials,
                 fontFamily = JustSansFamily,
                 fontSize = if (fontSize != TextUnit.Unspecified) fontSize else 7.5.sp,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.SemiBold,
                 color = primaryColor.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center
             )

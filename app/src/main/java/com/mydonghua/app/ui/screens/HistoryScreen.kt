@@ -54,7 +54,7 @@ fun HistoryScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Watch History Log", fontWeight = FontWeight.Bold) },
+                title = { Text("Watch History Log", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -155,7 +155,7 @@ fun HistoryScreen(
                         Text(
                             text = dateHeader,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(top = Spacing.sm)
                         )

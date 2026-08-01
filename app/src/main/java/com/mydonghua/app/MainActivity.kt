@@ -529,7 +529,7 @@ class MainActivity : ComponentActivity() {
                                 Text(
                                     text = "Navigation",
                                     fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
@@ -744,7 +744,7 @@ private fun DrawerItem(
             Text(
                 text = label,
                 fontSize = 14.5.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 color = contentColor
             )
         }
