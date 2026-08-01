@@ -1,10 +1,9 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
-import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -38,8 +36,6 @@ fun AiringScreen(
     val shows by viewModel.airingShows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
-    val listState = rememberLazyListState()
-    ScrollPerfMonitor(listState, "airing")
     val onDelete = remember { { s: Show -> viewModel.deleteShow(s.id) } }
     val onFavorite = remember { { s: Show -> viewModel.toggleFavorite(s) } }
     val onNotify = remember { { s: Show -> viewModel.toggleNotification(context, s) } }
@@ -50,14 +46,15 @@ fun AiringScreen(
         modifier = modifier.fillMaxSize()
     ) {
         if (isLoading) {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .navigationBarsPadding(),
+                    .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState()),
                 contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
-                item { HeaderSkeleton() }
-                items(5) { ShowCardSkeleton() }
+                HeaderSkeleton()
+                repeat(5) { ShowCardSkeleton() }
             }
         } else if (shows.isEmpty()) {
             EmptyState(
@@ -67,35 +64,33 @@ fun AiringScreen(
                 modifier = Modifier.padding(top = topPadding)
             )
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .navigationBarsPadding(),
-                state = listState,
+                    .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState()),
                 contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Airing",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = if (shows.size == 1) "1 show" else "${shows.size} shows",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Airing",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = if (shows.size == 1) "1 show" else "${shows.size} shows",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                items(shows, key = { it.id }) { show ->
+                shows.forEach { show ->
                     ShowCard(
                         show = show,
                         onWatchClick = onWatchClick,
