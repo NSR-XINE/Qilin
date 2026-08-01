@@ -234,10 +234,8 @@ fun LiquidGlassNavBar(
                                 val firstPressed = event.changes.firstOrNull { it.pressed }
                                 if (firstPressed != null) {
                                     activeTouchPosition = firstPressed.position
-                                    android.util.Log.d("LiquidGlass", "activeTouchPosition: ${firstPressed.position}")
                                 } else {
                                     activeTouchPosition = Offset.Zero
-                                    android.util.Log.d("LiquidGlass", "activeTouchPosition: Zero")
                                 }
                             }
                         }
