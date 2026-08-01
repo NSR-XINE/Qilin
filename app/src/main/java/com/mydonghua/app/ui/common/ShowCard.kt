@@ -295,6 +295,18 @@ fun ShowCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_trash),
+                            contentDescription = "Delete",
+                            modifier = Modifier.size(IconSize.sm),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
