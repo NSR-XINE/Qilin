@@ -23,8 +23,10 @@ import kotlinx.coroutines.delay
 
 import com.mydonghua.app.ui.theme.JustSansFamily
 
-private const val STAGGER_STEP_MS = 40L
-private const val STAGGER_MAX_MS = 120L
+private const val POSTER_LOAD_DELAY_MS = 250L
+private const val POSTER_STAGGER_STEP_MS = 30L
+private const val POSTER_STAGGER_MAX_ADD_MS = 90L
+private const val SWITCH_BURST_WINDOW_MS = 800L
 
 object PosterTrace {
     @Volatile
@@ -43,16 +45,23 @@ object PosterTrace {
 object PosterStagger {
     private val counter = java.util.concurrent.atomic.AtomicInteger(0)
     private val seen = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+    private val lastResetNanos = java.util.concurrent.atomic.AtomicLong(0L)
 
-    /** Returns a stagger delay in ms, or 0 if this url has already been loaded once. */
+    /**
+     * Returns a delay in ms before this url's first load, or 0 to load now.
+     * First-time loads starting right after a tab switch are deferred past the
+     * capsule slide (their decode burst stalled the slide); scroll reveals load now.
+     */
     fun staggerDelay(url: String): Long {
         if (!seen.add(url)) return 0L
+        if (System.nanoTime() - lastResetNanos.get() > SWITCH_BURST_WINDOW_MS * 1_000_000L) return 0L
         val idx = counter.getAndIncrement()
-        return minOf(idx * STAGGER_STEP_MS, STAGGER_MAX_MS)
+        return POSTER_LOAD_DELAY_MS + minOf(idx * POSTER_STAGGER_STEP_MS, POSTER_STAGGER_MAX_ADD_MS)
     }
 
     fun reset() {
         counter.set(0)
+        lastResetNanos.set(System.nanoTime())
     }
 }
 
