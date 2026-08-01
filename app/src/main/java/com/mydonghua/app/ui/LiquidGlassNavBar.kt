@@ -268,7 +268,7 @@ fun LiquidGlassNavBar(
                 )
                 if (barWidthPx > 0) {
                     userInteracting = true
-                    val slideT0 = SystemClock.elapsedRealtime()
+                    val slideT0 = System.nanoTime()
                     dampedDrag.animateToValue(navToValue(navIndex))
                     var last = 0L
                     var maxGap = 0L
@@ -279,11 +279,11 @@ fun LiquidGlassNavBar(
                         if (last != 0L) maxGap = maxOf(maxGap, now - last)
                         frames++
                         last = now
-                        running = (now - slideT0 * 1_000_000L) < 700_000_000L
+                        running = (now - slideT0) < 700_000_000L
                     }
                     android.util.Log.e(
                         "NavLag",
-                        "slide=${SystemClock.elapsedRealtime() - slideT0}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
+                        "slide=${(System.nanoTime() - slideT0) / 1_000_000}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
                     )
                     userInteracting = false
                 }
