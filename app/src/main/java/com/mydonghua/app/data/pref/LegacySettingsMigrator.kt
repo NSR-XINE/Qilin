@@ -6,8 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.mydonghua.app.data.db.SettingEntity
+import com.mydonghua.app.data.db.SettingsDao
 import com.mydonghua.app.domain.repository.SettingsKeys
-import com.mydonghua.app.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -17,15 +18,17 @@ private val Context.legacyDataStore: DataStore<Preferences> by preferencesDataSt
 
 /**
  * One-time migration of the legacy settings stores into the Room-backed
- * [SettingsRepository]. Reads:
+ * `settings` table. Reads:
  *  - DataStore "settings" (theme mode, accent color, UI visibility, keyboard, stream provider)
  *  - SharedPreferences "notification_prefs" (notification round-trip values)
- * Writes everything into the Room `settings` table, gated by [SettingsKeys.PREFS_MIGRATED].
+ * Writes everything via [SettingsDao] (bypassing the settings repository
+ * migration gate to avoid a deadlock), gated by [SettingsKeys.PREFS_MIGRATED].
  */
 @Singleton
 class LegacySettingsMigrator @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val settingsRepository: SettingsRepository
+    private val settingsDao: SettingsDao,
+    private val migrationGate: SettingsMigrationGate
 ) {
     companion object {
         private val LEGACY_THEME_MODE = stringPreferencesKey("app_theme")
@@ -38,37 +41,41 @@ class LegacySettingsMigrator @Inject constructor(
     }
 
     suspend fun migrate() {
-        if (settingsRepository.getSetting(SettingsKeys.PREFS_MIGRATED, "false") == "true") return
+        try {
+            if (settingsDao.getSetting(SettingsKeys.PREFS_MIGRATED)?.value == "true") return
 
-        val prefs = context.legacyDataStore.data.first()
+            val prefs = context.legacyDataStore.data.first()
 
-        prefs[LEGACY_THEME_MODE]?.let {
-            settingsRepository.putSetting(SettingsKeys.THEME_MODE, it)
-        }
-        prefs[LEGACY_ACCENT_COLOR]?.let {
-            settingsRepository.putSetting(SettingsKeys.ACCENT_COLOR, it)
-        }
-        prefs[LEGACY_SHOW_BANNER]?.let {
-            settingsRepository.putSetting(SettingsKeys.SHOW_BANNER, it.toString())
-        }
-        prefs[LEGACY_SHOW_CONTINUE]?.let {
-            settingsRepository.putSetting(SettingsKeys.SHOW_CONTINUE, it.toString())
-        }
-        prefs[LEGACY_SHOW_RECENT]?.let {
-            settingsRepository.putSetting(SettingsKeys.SHOW_RECENT, it.toString())
-        }
-        prefs[LEGACY_AUTO_OPEN_KEYBOARD]?.let {
-            settingsRepository.putSetting(SettingsKeys.AUTO_OPEN_KEYBOARD, it.toString())
-        }
-        prefs[LEGACY_DEFAULT_STREAM_PROVIDER]?.let {
-            settingsRepository.putSetting(SettingsKeys.DEFAULT_STREAM_PROVIDER, it)
-        }
+            prefs[LEGACY_THEME_MODE]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.THEME_MODE, it))
+            }
+            prefs[LEGACY_ACCENT_COLOR]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.ACCENT_COLOR, it))
+            }
+            prefs[LEGACY_SHOW_BANNER]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.SHOW_BANNER, it.toString()))
+            }
+            prefs[LEGACY_SHOW_CONTINUE]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.SHOW_CONTINUE, it.toString()))
+            }
+            prefs[LEGACY_SHOW_RECENT]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.SHOW_RECENT, it.toString()))
+            }
+            prefs[LEGACY_AUTO_OPEN_KEYBOARD]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.AUTO_OPEN_KEYBOARD, it.toString()))
+            }
+            prefs[LEGACY_DEFAULT_STREAM_PROVIDER]?.let {
+                settingsDao.insertSetting(SettingEntity(SettingsKeys.DEFAULT_STREAM_PROVIDER, it))
+            }
 
-        val notifyPrefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
-        notifyPrefs.all.forEach { (key, value) ->
-            settingsRepository.putSetting(key, value.toString())
-        }
+            val notifyPrefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
+            notifyPrefs.all.forEach { (key, value) ->
+                settingsDao.insertSetting(SettingEntity(key, value.toString()))
+            }
 
-        settingsRepository.putSetting(SettingsKeys.PREFS_MIGRATED, "true")
+            settingsDao.insertSetting(SettingEntity(SettingsKeys.PREFS_MIGRATED, "true"))
+        } finally {
+            migrationGate.markMigrated()
+        }
     }
 }

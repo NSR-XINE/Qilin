@@ -3,6 +3,7 @@ package com.mydonghua.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
+import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -41,6 +43,8 @@ fun CompletedScreen(
     val onNotify = remember { { s: Show -> viewModel.toggleNotification(context, s) } }
     val onIncrement = remember { { s: Show -> viewModel.incrementEpisode(s) } }
     val onDecrement = remember { { s: Show -> viewModel.decrementEpisode(s) } }
+    val listState = rememberLazyListState()
+    ScrollPerfMonitor(listState, "complete")
 
     Box(
         modifier = modifier.fillMaxSize()
@@ -59,6 +63,7 @@ fun CompletedScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding(),
+                state = listState,
                 contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
                 item {

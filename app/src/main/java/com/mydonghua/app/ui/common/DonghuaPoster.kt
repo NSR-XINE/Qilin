@@ -43,6 +43,8 @@ object PosterTrace {
 }
 
 object PosterStagger {
+    private const val MAX_SEEN_URLS = 2000
+
     private val counter = java.util.concurrent.atomic.AtomicInteger(0)
     private val seen = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private val lastResetNanos = java.util.concurrent.atomic.AtomicLong(0L)
@@ -55,6 +57,7 @@ object PosterStagger {
      */
     fun staggerDelay(url: String): Long {
         if (!seen.add(url)) return 0L
+        if (seen.size > MAX_SEEN_URLS) seen.clear()
         if (System.nanoTime() - lastResetNanos.get() > SWITCH_BURST_WINDOW_MS * 1_000_000L) return 0L
         val idx = counter.getAndIncrement()
         return POSTER_LOAD_DELAY_MS + minOf(idx * POSTER_STAGGER_STEP_MS, POSTER_STAGGER_MAX_ADD_MS)

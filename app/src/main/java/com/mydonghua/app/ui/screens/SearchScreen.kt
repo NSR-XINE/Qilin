@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,6 +80,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.TrendingUp
 import com.mydonghua.app.ui.common.EmptyState
+import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.screens.SearchSuggestion
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -119,6 +121,9 @@ fun SearchScreen(
         activeFilters.selectedStudio != null ||
         activeFilters.selectedYear != null ||
         activeFilters.minRating > 0
+
+    val resultsListState = rememberLazyListState()
+    ScrollPerfMonitor(resultsListState, "search")
 
     fun showKeyboardNow() {
         val window = (context as? Activity)?.window ?: return
@@ -400,6 +405,7 @@ fun SearchScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+                        state = resultsListState,
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
                         item {

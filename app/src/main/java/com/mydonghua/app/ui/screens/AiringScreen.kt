@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
+import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -41,6 +42,8 @@ fun AiringScreen(
     val onNotify = remember { { s: Show -> viewModel.toggleNotification(context, s) } }
     val onIncrement = remember { { s: Show -> viewModel.incrementEpisode(s) } }
     val onDecrement = remember { { s: Show -> viewModel.decrementEpisode(s) } }
+    val scrollState = rememberScrollState()
+    ScrollPerfMonitor(scrollState, "airing")
 
     Box(
         modifier = modifier.fillMaxSize()
@@ -50,7 +53,7 @@ fun AiringScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
                 HeaderSkeleton()
@@ -68,7 +71,7 @@ fun AiringScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
                 Row(
