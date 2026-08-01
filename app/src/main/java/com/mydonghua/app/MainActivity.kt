@@ -107,10 +107,10 @@ class MainActivity : ComponentActivity() {
             val appHazeState = remember { HazeState() }
 
             androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
-                if (currentRoute != "home") {
-                    navController.popBackStack("home", inclusive = false)
-                } else {
-                    showExitDialog = true
+                when {
+                    isDrawerOpen -> isDrawerOpen = false
+                    currentRoute != "home" -> navController.popBackStack("home", inclusive = false)
+                    else -> showExitDialog = true
                 }
             }
 
