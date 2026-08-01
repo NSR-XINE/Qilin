@@ -149,6 +149,10 @@ fun LiquidGlassNavBar(
     val barInteraction = rememberGlassInteraction()
     var currentTabIndex by remember { mutableIntStateOf(navIndex) }
 
+    LaunchedEffect(Unit) {
+        android.util.Log.e("NavLag", "diagnostic build running")
+    }
+
     fun navToValue(index: Int): Float = index.toFloat()
 
     BoxWithConstraints(
@@ -258,6 +262,10 @@ fun LiquidGlassNavBar(
 
             LaunchedEffect(navIndex) {
                 currentTabIndex = navIndex
+                android.util.Log.e(
+                    "NavLag",
+                    "navIndex=$navIndex barWidthPx=$barWidthPx"
+                )
                 if (barWidthPx > 0) {
                     userInteracting = true
                     val slideT0 = SystemClock.elapsedRealtime()
@@ -273,7 +281,7 @@ fun LiquidGlassNavBar(
                         last = now
                         running = (now - slideT0 * 1_000_000L) < 700_000_000L
                     }
-                    android.util.Log.d(
+                    android.util.Log.e(
                         "NavLag",
                         "slide=${SystemClock.elapsedRealtime() - slideT0}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
                     )
