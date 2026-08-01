@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -270,6 +271,7 @@ fun LiquidGlassNavBar(
                     userInteracting = true
                     val slideT0 = System.nanoTime()
                     dampedDrag.animateToValue(navToValue(navIndex))
+                    val slideMs = (System.nanoTime() - slideT0) / 1_000_000
                     var last = 0L
                     var maxGap = 0L
                     var frames = 0
@@ -283,7 +285,7 @@ fun LiquidGlassNavBar(
                     }
                     android.util.Log.e(
                         "NavLag",
-                        "slide=${(System.nanoTime() - slideT0) / 1_000_000}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
+                        "slide=${slideMs}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L}"
                     )
                     userInteracting = false
                 }
@@ -559,6 +561,7 @@ class DampedDragAnimation(
     private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
     private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
     private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
+    private val snapAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val velocityAnimation = Animatable(0f, 5f)
@@ -632,7 +635,7 @@ class DampedDragAnimation(
             mutatorMutex.mutate {
                 press()
                 val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
-                launch { valueAnimation.animateTo(target, valueAnimationSpec) }
+                launch { valueAnimation.animateTo(target, snapAnimationSpec) }
                 if (velocity != 0f) {
                     launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
                 }
