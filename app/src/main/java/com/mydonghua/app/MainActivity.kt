@@ -418,12 +418,12 @@ class MainActivity : ComponentActivity() {
                     visible = isSearchOpen,
                     enter = slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = tween(700, easing = FastOutSlowInEasing)
-                    ) + fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)),
+                        animationSpec = tween(360, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(320, easing = FastOutSlowInEasing)),
                     exit = slideOutVertically(
                         targetOffsetY = { it },
-                        animationSpec = tween(600, easing = FastOutSlowInEasing)
-                    ) + fadeOut(animationSpec = tween(400, easing = FastOutSlowInEasing)),
+                        animationSpec = tween(300, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing)),
                 ) {
                     Surface(
                         modifier = Modifier

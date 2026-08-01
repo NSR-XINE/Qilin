@@ -109,7 +109,6 @@ fun SearchScreen(
     var isSearchActive by remember { mutableStateOf(false) }
 
     fun showKeyboardNow() {
-        keyboardController?.show()
         val window = (context as? Activity)?.window ?: return
         WindowCompat.getInsetsController(window, composeView)
             .show(WindowInsetsCompat.Type.ime())
@@ -124,7 +123,7 @@ fun SearchScreen(
     fun focusAndOpenKeyboard() {
         focusRequester.requestFocus()
         scope.launch {
-            repeat(3) { i ->
+            repeat(4) {
                 if (isImeVisibleNow()) {
                     return@launch
                 }
