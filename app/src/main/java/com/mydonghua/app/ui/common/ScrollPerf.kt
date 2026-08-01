@@ -1,6 +1,6 @@
 package com.mydonghua.app.ui.common
 
-import androidx.compose.foundation.ScrollableState
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
