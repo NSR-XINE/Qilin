@@ -15,6 +15,7 @@ object ShowActions {
     ) {
         val nextEp = show.currentEp + 1
         val clampedEp = if (show.totalEp > 0) nextEp.coerceAtMost(show.totalEp) else nextEp
+        if (clampedEp == show.currentEp) return
         val updated = show.copy(currentEp = clampedEp, lastUpdated = System.currentTimeMillis())
         showRepository.insertOrUpdateShow(updated)
         watchHistoryRepository.addWatchHistory(show.id, clampedEp)
@@ -53,12 +54,16 @@ object ShowActions {
             Toast.makeText(context, "${show.title} Notifications: Silent", Toast.LENGTH_SHORT).show()
             show.copy(alarmRequestCode = null, lastUpdated = System.currentTimeMillis())
         } else {
-            val code = Math.abs((show.id + System.currentTimeMillis()).hashCode())
-            if (show.status == "ongoing" && !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()) {
+            val canSchedule = show.status == "ongoing" && !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
+            if (canSchedule) {
+                val code = (show.id + System.currentTimeMillis()).hashCode() and 0x7FFFFFFF
                 AlarmScheduler.schedule(context, show.id, show.title, show.releaseDay, show.releaseTime, code, show.currentEp)
+                Toast.makeText(context, "${show.title} Notifications: Normal", Toast.LENGTH_SHORT).show()
+                show.copy(alarmRequestCode = code, lastUpdated = System.currentTimeMillis())
+            } else {
+                Toast.makeText(context, "Notifications need an ongoing show with a set release day/time", Toast.LENGTH_LONG).show()
+                show
             }
-            Toast.makeText(context, "${show.title} Notifications: Normal", Toast.LENGTH_SHORT).show()
-            show.copy(alarmRequestCode = code, lastUpdated = System.currentTimeMillis())
         }
         showRepository.insertOrUpdateShow(updatedShow)
     }

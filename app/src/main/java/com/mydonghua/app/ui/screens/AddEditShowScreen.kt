@@ -508,7 +508,9 @@ fun AddEditShowScreen(
                         return@Button
                     }
 
-                    val show = Show(
+                    val newAlarmCode = UUID.randomUUID().toString().hashCode() and 0x7FFFFFFF
+
+                    var show = Show(
                         id = editingShow?.id ?: UUID.randomUUID().toString(),
                         title = title,
                         titleZh = titleZh.takeIf { it.isNotEmpty() },
@@ -525,7 +527,7 @@ fun AddEditShowScreen(
                         rating = rating.toInt(),
                         lastUpdated = System.currentTimeMillis(),
                         dateAdded = editingShow?.dateAdded ?: System.currentTimeMillis(),
-                        alarmRequestCode = if (editingShow != null) editingShow.alarmRequestCode else Math.abs(UUID.randomUUID().toString().hashCode()),
+                        alarmRequestCode = editingShow?.alarmRequestCode,
                         genres = genres.takeIf { it.isNotEmpty() },
                         studio = studio.takeIf { it.isNotEmpty() },
                         releaseYear = releaseYear.toIntOrNull() ?: 0,
@@ -533,14 +535,19 @@ fun AddEditShowScreen(
                         collectionId = collectionId.takeIf { it.isNotEmpty() }
                     )
 
-                    if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty() && show.alarmRequestCode != null) {
+                    if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty()) {
+                        val scheduleCode = show.alarmRequestCode ?: newAlarmCode
+                        show = show.copy(alarmRequestCode = scheduleCode)
                         AlarmScheduler.schedule(
                             context, show.id, show.title, show.releaseDay,
-                            show.releaseTime, show.alarmRequestCode!!, show.currentEp
+                            show.releaseTime, scheduleCode, show.currentEp
                         )
                     } else {
-                        val cancelCode = show.alarmRequestCode ?: editingShow?.alarmRequestCode ?: 0
-                        AlarmScheduler.cancel(context, show.id, cancelCode)
+                        val cancelCode = show.alarmRequestCode ?: 0
+                        if (cancelCode > 0) {
+                            AlarmScheduler.cancel(context, show.id, cancelCode)
+                        }
+                        show = show.copy(alarmRequestCode = null)
                     }
 
                     viewModel.insertOrUpdateShow(show)

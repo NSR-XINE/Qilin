@@ -252,6 +252,7 @@ class MainActivity : ComponentActivity() {
                                 HomeScreen(
                                 viewModel = homeViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
+                                defaultStreamProvider = settingsState.defaultStreamProvider,
                                 onSearchClick = {
                                     isSearchOpen = true
                                 },
@@ -457,6 +458,7 @@ class MainActivity : ComponentActivity() {
                                 startActivity(intent)
                             },
                             onShowClick = { showId ->
+                                isSearchOpen = false
                                 navController.navigate("show_detail/$showId")
                             },
                             onNavigateBack = {

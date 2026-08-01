@@ -29,7 +29,7 @@ object AlarmScheduler {
         if (lastTime != null && (now - lastTime) < MIN_SCHEDULE_INTERVAL_MS) return
         _lastScheduled[dedupKey] = now
 
-        val effectiveCode = if (alarmCode > 0) alarmCode else Math.abs(showId.hashCode())
+        val effectiveCode = if (alarmCode > 0) alarmCode else (showId.hashCode() and 0x7FFFFFFF)
 
         cancel(context, showId, effectiveCode)
 
@@ -83,7 +83,7 @@ object AlarmScheduler {
 
         val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 
-        val effectiveCode = if (alarmCode > 0) alarmCode else (showId?.hashCode()?.let { Math.abs(it) } ?: 0)
+        val effectiveCode = if (alarmCode > 0) alarmCode else ((showId?.hashCode() ?: 0) and 0x7FFFFFFF)
         val intent = Intent(context, NotificationReceiver::class.java)
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val pi = PendingIntent.getBroadcast(

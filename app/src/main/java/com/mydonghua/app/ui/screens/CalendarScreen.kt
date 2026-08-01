@@ -23,6 +23,7 @@ import com.mydonghua.app.ui.theme.IconSize
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.common.EmptyState
+import kotlinx.coroutines.delay
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +44,18 @@ fun CalendarScreen(
 
     val weekDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
-    val upcomingWeekList = remember(ongoingShows) {
+    var dayKey by remember { mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+            if (currentDay != dayKey) {
+                dayKey = currentDay
+            }
+        }
+    }
+
+    val upcomingWeekList = remember(ongoingShows, dayKey) {
         val list = mutableListOf<UpcomingDayGroup>()
         for (i in 0 until 7) {
             val d = Calendar.getInstance().apply {

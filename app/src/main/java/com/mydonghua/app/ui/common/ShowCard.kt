@@ -257,6 +257,19 @@ fun ShowCard(
                         )
                     }
 
+                    IconButton(
+                        onClick = { onNotifyToggle(show) },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_bell),
+                            contentDescription = "Notifications",
+                            modifier = Modifier.size(IconSize.sm),
+                            tint = if (show.alarmRequestCode != null) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     if (!show.watchUrl.isNullOrEmpty()) {
                         IconButton(
                             onClick = { onWatchClick(show.watchUrl ?: "") },

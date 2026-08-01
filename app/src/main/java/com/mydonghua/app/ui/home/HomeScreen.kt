@@ -53,6 +53,7 @@ fun HomeScreen(
     onWatchClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     topPadding: androidx.compose.ui.unit.Dp = 0.dp,
+    defaultStreamProvider: String = "donghuastream",
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -80,7 +81,14 @@ fun HomeScreen(
                 item(key = "hero_banner_${state.nextUpShow!!.id}") {
                     HeroBanner(
                         show = state.nextUpShow!!,
-                        onWatchClick = { onWatchClick(state.nextUpShow!!.watchUrl ?: "") },
+                        onWatchClick = {
+                            val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                showTitle = state.nextUpShow!!.title,
+                                customWatchUrl = state.nextUpShow!!.watchUrl,
+                                providerPreference = defaultStreamProvider
+                            )
+                            onWatchClick(url)
+                        },
                         onBannerClick = { onShowClick(state.nextUpShow!!.id) }
                     )
                 }
@@ -108,12 +116,19 @@ fun HeroBanner(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val targetMs = remember(show.id) { CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime) }
-    var remainingTime by remember(show.id) { mutableStateOf(CountdownCalculator.calculateTimeRemaining(targetMs)) }
+    var remainingTime by remember(show.id) {
+        mutableStateOf(
+            CountdownCalculator.calculateTimeRemaining(
+                CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)
+            )
+        )
+    }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(show.id, show.releaseDay, show.releaseTime) {
         while (true) {
-            remainingTime = CountdownCalculator.calculateTimeRemaining(targetMs)
+            remainingTime = CountdownCalculator.calculateTimeRemaining(
+                CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)
+            )
             delay(1000)
         }
     }

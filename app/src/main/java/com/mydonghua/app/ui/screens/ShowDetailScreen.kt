@@ -91,9 +91,10 @@ fun ShowDetailScreen(
     }
 
     LaunchedEffect(show.releaseDay, show.releaseTime) {
-        val targetMs = CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)
         while (true) {
-            countdownTime = CountdownCalculator.calculateTimeRemaining(targetMs)
+            countdownTime = CountdownCalculator.calculateTimeRemaining(
+                CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)
+            )
             delay(1000)
         }
     }

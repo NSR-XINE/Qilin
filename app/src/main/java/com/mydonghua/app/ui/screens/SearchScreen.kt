@@ -98,6 +98,13 @@ fun SearchScreen(
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
     val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
+    val activeFilters by viewModel.activeFilters.collectAsState()
+    val distinctGenres by viewModel.distinctGenres.collectAsState()
+    var showGenreDialog by remember { mutableStateOf(false) }
+    var showStudioDialog by remember { mutableStateOf(false) }
+    var showYearDialog by remember { mutableStateOf(false) }
+    var showRatingDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val composeView = LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -107,6 +114,11 @@ fun SearchScreen(
     val isKeyboardVisible = WindowInsets.isImeVisible
 
     var isSearchActive by remember { mutableStateOf(false) }
+
+    val hasActiveFilters = activeFilters.selectedGenre != null ||
+        activeFilters.selectedStudio != null ||
+        activeFilters.selectedYear != null ||
+        activeFilters.minRating > 0
 
     fun showKeyboardNow() {
         val window = (context as? Activity)?.window ?: return
@@ -169,7 +181,7 @@ fun SearchScreen(
                 .fillMaxWidth()
                 .pointerInput(Unit) {
                     awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
+                        awaitFirstDown(requireUnconsumed = true)
                         scope.launch {
                             focusAndOpenKeyboard()
                         }
@@ -286,7 +298,7 @@ fun SearchScreen(
 
         // 2. Redesigned Suggestions / Results List
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            if (query.isEmpty()) {
+            if (query.isEmpty() && !hasActiveFilters) {
                 val suggestionsList = suggestions
                 if (suggestionsList.isNotEmpty()) {
                     LazyColumn(
@@ -390,6 +402,18 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
+                        item {
+                            FilterChipsRow(
+                                filters = activeFilters,
+                                onGenreClick = { showGenreDialog = true },
+                                onStudioClick = { showStudioDialog = true },
+                                onYearClick = { showYearDialog = true },
+                                onRatingClick = { showRatingDialog = true },
+                                onSortClick = { showSortDialog = true },
+                                onClearAll = { viewModel.updateFilters(SearchFilters()) }
+                            )
+                        }
+
                         if (isSearchActive && showMatches.isNotEmpty()) {
                             item {
                                 Text(
@@ -510,6 +534,57 @@ fun SearchScreen(
                 TextButton(onClick = { showToAdd = null }) {
                     Text("Cancel")
                 }
+            }
+        )
+    }
+
+    if (showGenreDialog) {
+        GenreFilterDialog(
+            genres = distinctGenres,
+            selected = activeFilters.selectedGenre,
+            onDismiss = { showGenreDialog = false },
+            onApply = { genre ->
+                viewModel.updateFilters(activeFilters.copy(selectedGenre = genre))
+            }
+        )
+    }
+
+    if (showStudioDialog) {
+        StudioFilterDialog(
+            initial = activeFilters.selectedStudio ?: "",
+            onDismiss = { showStudioDialog = false },
+            onApply = { studio ->
+                viewModel.updateFilters(activeFilters.copy(selectedStudio = studio.trim().ifBlank { null }))
+            }
+        )
+    }
+
+    if (showYearDialog) {
+        YearFilterDialog(
+            initial = activeFilters.selectedYear?.toString() ?: "",
+            onDismiss = { showYearDialog = false },
+            onApply = { year ->
+                viewModel.updateFilters(activeFilters.copy(selectedYear = year.toIntOrNull()))
+            }
+        )
+    }
+
+    if (showRatingDialog) {
+        RatingFilterDialog(
+            initial = activeFilters.minRating.toFloat(),
+            onDismiss = { showRatingDialog = false },
+            onApply = { rating ->
+                viewModel.updateFilters(activeFilters.copy(minRating = rating.toInt()))
+            }
+        )
+    }
+
+    if (showSortDialog) {
+        SortFilterDialog(
+            initial = activeFilters.sortBy,
+            onDismiss = { showSortDialog = false },
+            onApply = { sort ->
+                viewModel.updateFilters(activeFilters.copy(sortBy = sort))
             }
         )
     }
