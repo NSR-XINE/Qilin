@@ -19,8 +19,12 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import kotlinx.coroutines.delay
 
 import com.mydonghua.app.ui.theme.JustSansFamily
+
+private const val STAGGER_STEP_MS = 40L
+private const val STAGGER_MAX_MS = 120L
 
 object PosterTrace {
     @Volatile
@@ -33,6 +37,22 @@ object PosterTrace {
 
     fun inc() {
         composedCount++
+    }
+}
+
+object PosterStagger {
+    private val counter = java.util.concurrent.atomic.AtomicInteger(0)
+    private val seen = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    /** Returns a stagger delay in ms, or 0 if this url has already been loaded once. */
+    fun staggerDelay(url: String): Long {
+        if (!seen.add(url)) return 0L
+        val idx = counter.getAndIncrement()
+        return minOf(idx * STAGGER_STEP_MS, STAGGER_MAX_MS)
+    }
+
+    fun reset() {
+        counter.set(0)
     }
 }
 
@@ -73,9 +93,21 @@ fun DonghuaPoster(
         true
     }
 
-    val imageRequest = remember(posterUrl, context, crossfade) {
+    val staggerDelayMs = remember(posterUrl) {
+        if (posterUrl.isNullOrBlank()) 0L else PosterStagger.staggerDelay(posterUrl)
+    }
+    var posterEnabled by remember(posterUrl) {
+        mutableStateOf(posterUrl.isNullOrBlank() || staggerDelayMs == 0L)
+    }
+    LaunchedEffect(posterUrl, staggerDelayMs) {
+        if (posterUrl.isNullOrBlank() || staggerDelayMs == 0L) return@LaunchedEffect
+        delay(staggerDelayMs)
+        posterEnabled = true
+    }
+
+    val imageRequest = remember(posterUrl, context, crossfade, posterEnabled) {
         ImageRequest.Builder(context)
-            .data(posterUrl?.takeIf { it.isNotBlank() && it != "null" })
+            .data(if (posterEnabled) posterUrl?.takeIf { it.isNotBlank() && it != "null" } else null)
             .crossfade(if (crossfade) 250 else 0)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)

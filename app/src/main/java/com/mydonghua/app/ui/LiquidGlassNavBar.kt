@@ -51,6 +51,7 @@ import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.*
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.common.PosterStagger
 import com.mydonghua.app.ui.common.PosterTrace
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -297,6 +298,7 @@ fun LiquidGlassNavBar(
                     .collectLatest { index ->
                         if (draggedFlag[0]) {
                             PosterTrace.reset()
+                            PosterStagger.reset()
                             currentOnNavigate(navRoutes[index])
                         }
                     }
@@ -396,6 +398,7 @@ fun LiquidGlassNavBar(
                             selected = currentTabIndex == position,
                             onClick = {
                                 PosterTrace.reset()
+                                PosterStagger.reset()
                                 currentTabIndex = position
                                 onNavigate(route)
                             },
