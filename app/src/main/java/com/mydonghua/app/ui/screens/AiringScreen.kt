@@ -50,8 +50,8 @@ fun AiringScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState()),
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
                 HeaderSkeleton()
                 repeat(5) { ShowCardSkeleton() }
@@ -68,8 +68,8 @@ fun AiringScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState()),
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = topPadding + Spacing.sm, bottom = 80.dp)
             ) {
                 Row(
                     modifier = Modifier
