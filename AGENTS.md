@@ -56,6 +56,10 @@ The app previously lagged with many cards on screen, when opening search/setting
   - Backup/restore (`SettingsViewModel`) now round-trips all Room settings under the `notifyPrefs` JSON field (kept for backward compatibility with old backups).
 - Do NOT reintroduce DataStore/SharedPreferences for app settings; add new keys to `SettingsKeys`.
 
+## Runtime Permissions
+- Storage permission is requested **once on first launch** (`MainActivity.requestStoragePermissionOnce`, gated by the Room key `storage_permission_prompted`). On API 33+ this is `READ_MEDIA_IMAGES`; below it is `READ_EXTERNAL_STORAGE`. It is NOT re-requested on later launches.
+- Backup export/import buttons in `SettingsScreen` (Data Backups section) are **disabled until storage permission is granted**; a "Grant Storage Permission" button re-requests it.
+
 ## Vendor Directory
 - `app/src/main/java/com/kyant/backdrop/` — 22 Kyant Backdrop source files (no external dependency)
   - Core: `Backdrop.kt`, `BackdropEffectScope.kt`, `DrawBackdropModifier.kt`, `InverseLayerScope.kt`, `RuntimeShaderCacheScope.kt`, `Shaders.kt`, `ShapeProvider.kt`

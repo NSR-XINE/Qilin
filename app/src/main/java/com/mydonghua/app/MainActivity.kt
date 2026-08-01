@@ -44,7 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -620,7 +622,7 @@ class MainActivity : ComponentActivity() {
     private fun requestPermissionsOnStart() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         requestNotificationPermission()
-        requestStoragePermission()
+        requestStoragePermissionOnce()
     }
 
     fun requestNotificationPermission() {
@@ -637,27 +639,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun requestStoragePermission() {
+    private fun currentStoragePermission(): String =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES),
-                    STORAGE_PERMISSION_CODE
-                )
-            }
+            android.Manifest.permission.READ_MEDIA_IMAGES
         } else {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                    STORAGE_PERMISSION_CODE
-                )
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+    fun hasStoragePermission(): Boolean =
+        ContextCompat.checkSelfPermission(this, currentStoragePermission()) == PackageManager.PERMISSION_GRANTED
+
+    private fun requestStoragePermissionOnce() {
+        lifecycleScope.launch {
+            if (settingsViewModel.storagePermissionPrompted()) {
+                return@launch
             }
+            settingsViewModel.markStoragePermissionPrompted()
+            if (hasStoragePermission()) {
+                return@launch
+            }
+            ActivityCompat.requestPermissions(
+                this@MainActivity,
+                arrayOf(currentStoragePermission()),
+                STORAGE_PERMISSION_CODE
+            )
         }
     }
 

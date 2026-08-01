@@ -2,7 +2,9 @@ package com.mydonghua.app.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
@@ -79,6 +82,13 @@ fun SettingsScreen(
                 }
             )
         }
+    }
+
+    var storageGranted by remember { mutableStateOf(hasStoragePermission(context)) }
+    val storagePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        storageGranted = granted
     }
 
     Scaffold(
@@ -566,12 +576,42 @@ fun SettingsScreen(
                         lineHeight = 16.sp
                     )
 
+                    if (!storageGranted) {
+                        Text(
+                            text = "Storage permission is required to save or import backups. Allow it below to enable backup export and import.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+                        Button(
+                            onClick = {
+                                storagePermissionLauncher.launch(currentStoragePermission())
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                contentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 0.5.dp,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(CornerRadius.sm),
+                            contentPadding = PaddingValues(horizontal = Spacing.sm)
+                        ) {
+                            Text("Grant Storage Permission", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
+                        }
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
                         val buttonShape = RoundedCornerShape(CornerRadius.sm)
                         Button(
+                            enabled = storageGranted,
                             onClick = {
                                 coroutineScope.launch {
                                     val file = viewModel.exportBackup(context)
@@ -592,8 +632,8 @@ fun SettingsScreen(
                                 .weight(1f)
                                 .height(48.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                contentColor = MaterialTheme.colorScheme.primary
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = if (storageGranted) 0.15f else 0.07f),
+                                contentColor = MaterialTheme.colorScheme.primary.copy(alpha = if (storageGranted) 1f else 0.4f)
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 0.5.dp,
@@ -606,6 +646,7 @@ fun SettingsScreen(
                         }
 
                         OutlinedButton(
+                            enabled = storageGranted,
                             onClick = {
                                 filePickerLauncher.launch("application/json")
                             },
@@ -613,7 +654,7 @@ fun SettingsScreen(
                                 .weight(1f)
                                 .height(48.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurface
+                                contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = if (storageGranted) 1f else 0.4f)
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 0.5.dp,
@@ -857,3 +898,13 @@ private fun SettingsGlassSection(
         )
     }
 }
+
+private fun currentStoragePermission(): String =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        android.Manifest.permission.READ_MEDIA_IMAGES
+    } else {
+        android.Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+
+private fun hasStoragePermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(context, currentStoragePermission()) == PackageManager.PERMISSION_GRANTED

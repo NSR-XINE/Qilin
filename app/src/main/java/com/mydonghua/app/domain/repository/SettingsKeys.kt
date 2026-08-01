@@ -11,4 +11,5 @@ object SettingsKeys {
     const val RECENT_SEARCHES = "recent_searches"
     const val SEARCH_FREQUENCY = "search_frequency"
     const val PREFS_MIGRATED = "prefs_migrated"
+    const val STORAGE_PERMISSION_PROMPTED = "storage_permission_prompted"
 }

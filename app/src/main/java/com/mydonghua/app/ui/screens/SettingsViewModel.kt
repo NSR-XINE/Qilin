@@ -90,6 +90,15 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.putBool(SettingsKeys.AUTO_OPEN_KEYBOARD, autoOpen) }
     }
 
+    suspend fun storagePermissionPrompted(): Boolean =
+        settingsRepository.getBool(SettingsKeys.STORAGE_PERMISSION_PROMPTED, false)
+
+    fun markStoragePermissionPrompted() {
+        viewModelScope.launch {
+            settingsRepository.putBool(SettingsKeys.STORAGE_PERMISSION_PROMPTED, true)
+        }
+    }
+
     fun setDefaultStreamProvider(provider: String) {
         viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.DEFAULT_STREAM_PROVIDER, provider) }
     }
