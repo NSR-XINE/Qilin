@@ -422,7 +422,6 @@ fun LiquidGlassNavBar(
                 shape = CircleShape,
                 pressProgress = searchInteraction.pressProgress,
                 touchPosition = { searchInteraction.touchPosition },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
             )
             .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
             .clickable(
@@ -436,7 +435,7 @@ fun LiquidGlassNavBar(
             imageVector = Icons.Rounded.Search,
             contentDescription = "Search",
             modifier = Modifier.size(IconSize.xl),
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            tint = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -480,7 +479,6 @@ private fun Modifier.drawBackdropCustomShape(
     pressProgress: Float = 0f,
     touchPosition: () -> Offset = { Offset.Zero },
     pressedScale: Float = 1.12f,
-    containerColor: Color? = null,
 ): Modifier =
     this.drawBackdrop(
         backdrop = backdrop,
@@ -516,8 +514,7 @@ private fun Modifier.drawBackdropCustomShape(
             val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
             val radius = size.height / 2f
             drawRoundRect(
-                color = containerColor?.copy(alpha = 0.9f)
-                    ?: Color.Black.copy(alpha = darken),
+                color = Color.Black.copy(alpha = darken),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
             )
             val press = pressProgress
