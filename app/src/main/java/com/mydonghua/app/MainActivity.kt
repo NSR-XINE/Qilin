@@ -378,11 +378,7 @@ class MainActivity : ComponentActivity() {
                         composable("settings") {
                                 SettingsScreen(
                                 viewModel = settingsViewModel,
-                                onNavigateBack = { navController.popBackStack() },
-                                onNavigateToStats = { navController.navigate("stats") },
-                                onNavigateToCalendar = { navController.navigate("calendar") },
-                                onNavigateToHistory = { navController.navigate("history") },
-                                onNavigateToCollections = { navController.navigate("collections") }
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("stats") {

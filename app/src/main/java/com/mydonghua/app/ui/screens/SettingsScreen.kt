@@ -56,10 +56,6 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit,
-    onNavigateToStats: () -> Unit,
-    onNavigateToCalendar: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToCollections: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -552,19 +548,6 @@ fun SettingsScreen(
                             }
                         }
                     }
-                }
-            }
-
-            SectionHeader("App Tools & Features")
-            SettingsGlassSection {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    SettingsActionItem("Detailed Stats & Analytics", subtitle = "Viewing metrics, total watch time & status charts", iconRes = R.drawable.ic_stats, onClick = onNavigateToStats)
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    SettingsActionItem("Releases Calendar", subtitle = "Full day-by-day airing schedule overview", iconRes = R.drawable.ic_calendar, onClick = onNavigateToCalendar)
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    SettingsActionItem("Watch History Log", subtitle = "Chronological viewing history & date logs", iconRes = R.drawable.ic_history, onClick = onNavigateToHistory)
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    SettingsActionItem("Grouped Collections", subtitle = "Custom show groupings & categories", iconRes = R.drawable.ic_collections, onClick = onNavigateToCollections)
                 }
             }
 
