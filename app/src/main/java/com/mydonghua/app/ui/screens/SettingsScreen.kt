@@ -338,7 +338,19 @@ fun SettingsScreen(
                             Triple("orange", "Orange", Pair(Color(0xFFF0883E), Color(0xFFD97706))),
                             Triple("blue", "Blue", Pair(Color(0xFF58A6FF), Color(0xFF2563EB))),
                             Triple("teal", "Teal", Pair(Color(0xFF2DD4BF), Color(0xFF0D9488))),
-                            Triple("pink", "Pink", Pair(Color(0xFFF472B6), Color(0xFFBE185D)))
+                            Triple("pink", "Pink", Pair(Color(0xFFF472B6), Color(0xFFBE185D))),
+                            Triple("red", "Red", Pair(Color(0xFFFF5252), Color(0xFFC62828))),
+                            Triple("amber", "Amber", Pair(Color(0xFFFFCA28), Color(0xFFFF8F00))),
+                            Triple("lime", "Lime", Pair(Color(0xFFBEF264), Color(0xFF84CC16))),
+                            Triple("emerald", "Emerald", Pair(Color(0xFF34D399), Color(0xFF059669))),
+                            Triple("indigo", "Indigo", Pair(Color(0xFF818CF8), Color(0xFF4F46E5))),
+                            Triple("violet", "Violet", Pair(Color(0xFFA78BFA), Color(0xFF7C3AED))),
+                            Triple("gold", "Gold", Pair(Color(0xFFFDE047), Color(0xFFEAB308))),
+                            Triple("sky", "Sky", Pair(Color(0xFF7DD3FC), Color(0xFF0284C7))),
+                            Triple("fuchsia", "Fuchsia", Pair(Color(0xFFF0ABFC), Color(0xFFC026D3))),
+                            Triple("coral", "Coral", Pair(Color(0xFFFF8A80), Color(0xFFF45454))),
+                            Triple("slate", "Slate", Pair(Color(0xFFCBD5E1), Color(0xFF64748B))),
+                            Triple("cocoa", "Cocoa", Pair(Color(0xFFD7CCC8), Color(0xFFA1887F)))
                         )
                         accentPresets.forEach { (accentKey, accentName, colorPair) ->
                             val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
