@@ -139,7 +139,8 @@ fun ShowDetailScreen(
                             .fillMaxSize()
                             .clip(detailBannerShape),
                         contentScale = ContentScale.Crop,
-                        showAcronym = false
+                        showAcronym = false,
+                        crossfade = true
                     )
 
                     // Liquid Gradient Overlays for high poster clarity & text readability

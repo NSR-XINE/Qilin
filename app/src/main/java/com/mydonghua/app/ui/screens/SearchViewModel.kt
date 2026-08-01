@@ -2,8 +2,8 @@ package com.mydonghua.app.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mydonghua.app.data.pref.ThemePreference
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,13 +31,12 @@ sealed class SearchSuggestion {
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val showRepository: ShowRepository,
-    private val settingsRepository: SettingsRepository,
-    private val themePreference: ThemePreference
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
     val activeFilters = MutableStateFlow(SearchFilters())
-    val autoOpenKeyboard: StateFlow<Boolean> = themePreference.autoOpenKeyboardFlow
+    val autoOpenKeyboard: StateFlow<Boolean> = settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val allShows = showRepository.getAllShows()
@@ -55,8 +54,8 @@ class SearchViewModel @Inject constructor(
     val suggestions: StateFlow<List<SearchSuggestion>> = combine(
         searchQuery,
         allShows,
-        settingsRepository.getSettingFlow("recent_searches", "[]"),
-        settingsRepository.getSettingFlow("search_frequency", "{}")
+        settingsRepository.getSettingFlow(SettingsKeys.RECENT_SEARCHES, "[]"),
+        settingsRepository.getSettingFlow(SettingsKeys.SEARCH_FREQUENCY, "{}")
     ) { query, shows, recentJson, freqJson ->
         val q = query.trim()
         if (q.isEmpty()) {
@@ -233,18 +232,18 @@ class SearchViewModel @Inject constructor(
 
     fun removeRecentSearch(query: String) {
         viewModelScope.launch {
-            val recentJson = settingsRepository.getSetting("recent_searches", "[]")
+            val recentJson = settingsRepository.getSetting(SettingsKeys.RECENT_SEARCHES, "[]")
             val list = getRecentSearches(recentJson).toMutableList()
             list.removeIf { it.equals(query, ignoreCase = true) }
             val arr = JSONArray()
             list.forEach { arr.put(it) }
-            settingsRepository.putSetting("recent_searches", arr.toString())
+            settingsRepository.putSetting(SettingsKeys.RECENT_SEARCHES, arr.toString())
         }
     }
 
     fun clearRecentSearches() {
         viewModelScope.launch {
-            settingsRepository.putSetting("recent_searches", "[]")
+            settingsRepository.putSetting(SettingsKeys.RECENT_SEARCHES, "[]")
         }
     }
 
@@ -256,14 +255,14 @@ class SearchViewModel @Inject constructor(
         val q = query.trim()
         if (q.isEmpty()) return
         viewModelScope.launch {
-            val recentJson = settingsRepository.getSetting("recent_searches", "[]")
+            val recentJson = settingsRepository.getSetting(SettingsKeys.RECENT_SEARCHES, "[]")
             val list = getRecentSearches(recentJson).toMutableList()
             list.removeIf { it.equals(q, ignoreCase = true) }
             list.add(0, q)
             val updated = list.take(10)
             val arr = JSONArray()
             updated.forEach { arr.put(it) }
-            settingsRepository.putSetting("recent_searches", arr.toString())
+            settingsRepository.putSetting(SettingsKeys.RECENT_SEARCHES, arr.toString())
         }
     }
 
@@ -271,11 +270,11 @@ class SearchViewModel @Inject constructor(
         val q = query.trim().lowercase()
         if (q.isEmpty()) return
         viewModelScope.launch {
-            val freqJson = settingsRepository.getSetting("search_frequency", "{}")
+            val freqJson = settingsRepository.getSetting(SettingsKeys.SEARCH_FREQUENCY, "{}")
             val obj = JSONObject(freqJson)
             val count = obj.optInt(q, 0)
             obj.put(q, count + 1)
-            settingsRepository.putSetting("search_frequency", obj.toString())
+            settingsRepository.putSetting(SettingsKeys.SEARCH_FREQUENCY, obj.toString())
         }
     }
 

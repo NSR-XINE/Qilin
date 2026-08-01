@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mydonghua.app.data.pref.ThemePreference
+import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.repository.WatchHistoryRepository
@@ -37,21 +37,20 @@ data class DashboardPrefs(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val themePreference: ThemePreference,
-    private val showRepository: ShowRepository,
     private val settingsRepository: SettingsRepository,
+    private val showRepository: ShowRepository,
     private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        themePreference.themeModeFlow,
-        themePreference.accentColorFlow,
-        themePreference.autoOpenKeyboardFlow,
-        themePreference.defaultStreamProviderFlow,
+        settingsRepository.getSettingFlow(SettingsKeys.THEME_MODE, "dark"),
+        settingsRepository.getSettingFlow(SettingsKeys.ACCENT_COLOR, "default"),
+        settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true),
+        settingsRepository.getSettingFlow(SettingsKeys.DEFAULT_STREAM_PROVIDER, "donghuastream"),
         combine(
-            themePreference.showBannerFlow,
-            themePreference.showContinueFlow,
-            themePreference.showRecentFlow
+            settingsRepository.getBoolFlow(SettingsKeys.SHOW_BANNER, true),
+            settingsRepository.getBoolFlow(SettingsKeys.SHOW_CONTINUE, true),
+            settingsRepository.getBoolFlow(SettingsKeys.SHOW_RECENT, true)
         ) { banner, cont, recent ->
             DashboardPrefs(banner, cont, recent)
         }
@@ -68,31 +67,31 @@ class SettingsViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
     fun setThemeMode(mode: String) {
-        viewModelScope.launch { themePreference.setThemeMode(mode) }
+        viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.THEME_MODE, mode) }
     }
 
     fun setAccentColor(accent: String) {
-        viewModelScope.launch { themePreference.setAccentColor(accent) }
+        viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.ACCENT_COLOR, accent) }
     }
 
     fun setShowBanner(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowBanner(show) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_BANNER, show) }
     }
 
     fun setShowContinue(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowContinue(show) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_CONTINUE, show) }
     }
 
     fun setShowRecent(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowRecent(show) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_RECENT, show) }
     }
 
     fun setAutoOpenKeyboard(autoOpen: Boolean) {
-        viewModelScope.launch { themePreference.setAutoOpenKeyboard(autoOpen) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.AUTO_OPEN_KEYBOARD, autoOpen) }
     }
 
     fun setDefaultStreamProvider(provider: String) {
-        viewModelScope.launch { themePreference.setDefaultStreamProvider(provider) }
+        viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.DEFAULT_STREAM_PROVIDER, provider) }
     }
 
     suspend fun exportBackup(context: Context): File? {
@@ -139,11 +138,9 @@ class SettingsViewModel @Inject constructor(
                 historyArr.put(obj)
             }
 
-            // TODO: Move to SettingsRepository (Room) alongside ThemePreference migration
-            // to eliminate the third settings store (SharedPreferences notification_prefs).
-            val notifyPrefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
-            val prefsMap = notifyPrefs.all
-            val notifyJson = JSONObject(prefsMap)
+            // All app settings (theme, UI toggles, search history, notifications) live in the Room settings table.
+            val settingsMap = settingsRepository.getAllSettings()
+            val settingsJson = JSONObject(settingsMap)
 
             val backup = JSONObject().apply {
                 put("version", 2)
@@ -151,7 +148,7 @@ class SettingsViewModel @Inject constructor(
                 put("appVersion", "v6.8")
                 put("shows", showsArr)
                 put("watchHistory", historyArr)
-                put("notifyPrefs", notifyJson.toString())
+                put("notifyPrefs", settingsJson.toString())
             }
 
             val backupDir = File(context.cacheDir, "backups")
@@ -176,6 +173,13 @@ class SettingsViewModel @Inject constructor(
                 val showsArr = parsed.optJSONArray("shows") ?: JSONArray()
                 val watchHistory = parsed.optJSONArray("watchHistory") ?: JSONArray()
                 val notifyPrefsStr = parsed.optString("notifyPrefs", "{}")
+                val notifyObj = JSONObject(notifyPrefsStr)
+                val keys = notifyObj.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    val value = notifyObj.get(key)
+                    settingsRepository.putSetting(key, value.toString())
+                }
 
                 val importedShowsList = mutableListOf<com.mydonghua.app.domain.model.Show>()
                 for (i in 0 until showsArr.length()) {
@@ -220,25 +224,6 @@ class SettingsViewModel @Inject constructor(
                         hObj.getInt("episodeNum")
                     )
                 }
-
-                val notifyPrefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
-                val editor = notifyPrefs.edit()
-                val notifyObj = JSONObject(notifyPrefsStr)
-                val keys = notifyObj.keys()
-                while (keys.hasNext()) {
-                    val key = keys.next()
-                    val value = notifyObj.get(key)
-                    if (value is Boolean) {
-                        editor.putBoolean(key, value)
-                    } else if (value is Long) {
-                        editor.putLong(key, value)
-                    } else if (value is Int) {
-                        editor.putInt(key, value)
-                    } else if (value is String) {
-                        editor.putString(key, value)
-                    }
-                }
-                editor.apply()
 
                 com.mydonghua.app.AlarmScheduler.rescheduleAllAfterBoot(context)
 

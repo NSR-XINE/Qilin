@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.repository.WatchHistoryRepository
@@ -12,7 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.mydonghua.app.data.pref.ThemePreference
 import com.mydonghua.app.CountdownWidget
 import javax.inject.Inject
 
@@ -33,8 +33,7 @@ class HomeViewModel @Inject constructor(
     private val showRepository: ShowRepository,
     private val settingsRepository: SettingsRepository,
     private val watchHistoryRepository: WatchHistoryRepository,
-    @ApplicationContext private val context: Context,
-    private val themePreference: ThemePreference
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
@@ -53,10 +52,10 @@ class HomeViewModel @Inject constructor(
 
     private fun loadHomeData() {
         val settingsFlow = combine(
-            themePreference.showBannerFlow,
-            themePreference.showContinueFlow,
-            themePreference.showRecentFlow,
-            themePreference.themeModeFlow
+            settingsRepository.getBoolFlow(SettingsKeys.SHOW_BANNER, true),
+            settingsRepository.getBoolFlow(SettingsKeys.SHOW_CONTINUE, true),
+            settingsRepository.getBoolFlow(SettingsKeys.SHOW_RECENT, true),
+            settingsRepository.getSettingFlow(SettingsKeys.THEME_MODE, "dark")
         ) { banner, cont, recent, theme ->
             DashboardSettings(
                 showBanner = banner,
@@ -130,14 +129,14 @@ class HomeViewModel @Inject constructor(
     }
 
     fun setShowBanner(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowBanner(show) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_BANNER, show) }
     }
 
     fun setShowContinue(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowContinue(show) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_CONTINUE, show) }
     }
 
     fun setShowRecent(show: Boolean) {
-        viewModelScope.launch { themePreference.setShowRecent(show) }
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_RECENT, show) }
     }
 }

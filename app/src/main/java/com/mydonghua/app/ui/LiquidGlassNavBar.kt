@@ -102,16 +102,21 @@ fun LiquidGlassNavBar(
         animationSpec = tween(durationMillis = 250)
     )
 
-
+    var userInteracting by remember { mutableStateOf(false) }
 
     LaunchedEffect(layer) {
+        val thumbnail = Bitmap.createBitmap(5, 5, Bitmap.Config.ARGB_8888)
+        val buffer = IntBuffer.allocate(25)
+        val scaleRect = android.graphics.Rect(0, 0, 5, 5)
         while (isActive) {
             try {
-                if (layer.size.width > 0 && layer.size.height > 0) {
+                if (!userInteracting && layer.size.width > 0 && layer.size.height > 0) {
                     val avg = withContext(Dispatchers.Default) {
                         val imageBitmap = layer.toImageBitmap()
-                        val thumbnail = Bitmap.createScaledBitmap(imageBitmap.asAndroidBitmap(), 5, 5, false)
-                        val buffer = IntBuffer.allocate(25)
+                        android.graphics.Canvas(thumbnail).drawBitmap(
+                            imageBitmap.asAndroidBitmap(), null, scaleRect, null
+                        )
+                        buffer.rewind()
                         thumbnail.copyPixelsToBuffer(buffer)
                         (0 until 25).sumOf { i ->
                             val c = buffer.get(i)
@@ -171,8 +176,12 @@ fun LiquidGlassNavBar(
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
                     pressedScale = 1.1f,
-                    onDragStarted = { draggedFlag[0] = false },
+                    onDragStarted = {
+                        draggedFlag[0] = false
+                        userInteracting = true
+                    },
                     onDragStopped = {
+                        userInteracting = false
                         if (draggedFlag[0]) {
                             val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
                             val safeIndex =
@@ -247,7 +256,9 @@ fun LiquidGlassNavBar(
             LaunchedEffect(navIndex) {
                 currentTabIndex = navIndex
                 if (barWidthPx > 0) {
+                    userInteracting = true
                     dampedDrag.animateToValue(navToValue(navIndex))
+                    userInteracting = false
                 }
             }
 

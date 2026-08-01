@@ -28,9 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
 import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
@@ -45,7 +42,6 @@ import com.mydonghua.app.ui.theme.IconSize
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun HomeScreen(
@@ -454,135 +450,6 @@ private fun HorizontalRowSkeleton() {
                     .clip(RoundedCornerShape(CornerRadius.sm))
                     .shimmerEffect()
             )
-        }
-    }
-}
-
-@Composable
-fun WeeklyScheduleSection(
-    shows: List<Show>,
-    onShowClick: (String) -> Unit,
-    onWatchClick: (String) -> Unit,
-    viewModel: HomeViewModel,
-    modifier: Modifier = Modifier
-) {
-    val hazeState = LocalHazeState.current
-    val days = remember { listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") }
-
-    val todayName = remember {
-        val calendar = Calendar.getInstance()
-        when (calendar.get(Calendar.DAY_OF_WEEK)) {
-            Calendar.MONDAY -> "Monday"
-            Calendar.TUESDAY -> "Tuesday"
-            Calendar.WEDNESDAY -> "Wednesday"
-            Calendar.THURSDAY -> "Thursday"
-            Calendar.FRIDAY -> "Friday"
-            Calendar.SATURDAY -> "Saturday"
-            else -> "Sunday"
-        }
-    }
-
-    var selectedDay by remember { mutableStateOf(todayName) }
-
-    val filteredShows = remember(shows, selectedDay) {
-        shows.filter { it.status == "ongoing" && it.releaseDay == selectedDay }
-            .sortedWith(compareBy { it.releaseTime ?: "" })
-    }
-    GlassSection(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = Spacing.xs),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-            ) {
-                items(days) { day ->
-                    val isSelected = day == selectedDay
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(CornerRadius.chip))
-                            .background(
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else Color.Transparent,
-                                shape = RoundedCornerShape(CornerRadius.chip)
-                            )
-                            .clickable { selectedDay = day }
-                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = day.substring(0, 3),
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(Spacing.md))
-
-            if (filteredShows.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Spacing.xxl),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No shows releasing on this day",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.xs)
-                        .padding(bottom = Spacing.sm),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                ) {
-                    filteredShows.forEach { show ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(CornerRadius.chip))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f))
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                                    shape = RoundedCornerShape(CornerRadius.chip)
-                                )
-                                .clickable { onShowClick(show.id) }
-                                .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = show.title,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.width(Spacing.sm))
-                            Text(
-                                text = show.releaseTime ?: "",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }

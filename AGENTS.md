@@ -25,7 +25,7 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 ## Performance Rules (IMPORTANT)
 The app previously lagged with many cards on screen, when opening search/settings, and during tab switches. Preserve these mitigations:
 - **Glass background orbs are STATIC.** `GlassBackground` in `ui/GlassEffect.kt` used to run an `infiniteTransition` with 11 animators that re-rasterized 5 full-screen gradient layers every frame. It now uses fixed orb positions/scales. Do NOT reintroduce per-frame animation here.
-- **Navbar luminance readback runs off the main thread every 2s.** In `ui/LiquidGlassNavBar.kt` the whole `layer.toImageBitmap()` + 5x5 thumbnail average runs inside `withContext(Dispatchers.Default)`. Keep it off the UI thread and slow (>= 1s).
+- **Navbar luminance readback runs off the main thread every 2s.** In `ui/LiquidGlassNavBar.kt` the whole `layer.toImageBitmap()` + 5x5 thumbnail average runs inside `withContext(Dispatchers.Default)`, skipped while the user is dragging or the capsule is animating (`userInteracting`). Keep it off the UI thread and slow (>= 1s).
 - **NavHost transitions are short pure cross-fades** (`MainActivity.kt`): `fadeIn(tween(140))` / `fadeOut(tween(110))` for enter/exit/pop. Avoid scale/slide transitions — they rendered two screens diverging around the seam during tab switches.
 
 ## Key Dependencies
@@ -37,7 +37,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `LiquidGlassNavBar.kt` in `com.mydonghua.app.ui` package
 - Uses `rememberLayerBackdrop()` + `Modifier.layerBackdrop(backdrop)` to capture screen content
 - `Modifier.drawBackdropCustomShape()` applies: `colorControls(brightness/contrast/saturation) + blur(2-16px adaptive) + refraction(24px)`
-- Luminance animation: captures 5x5 thumbnail **every 2s on `Dispatchers.Default`**, calculates average luminance, animates `Animatable` — used for adaptive effect intensity
+- Luminance animation: captures 5x5 thumbnail **every 2s on `Dispatchers.Default`**, calculates average luminance, animates `Animatable` — used for adaptive effect intensity; skipped while `userInteracting` (drag / capsule animation)
 - 5 items: Home, Airing, Search (center circle), Complete, Stopped
 - Applied as `Modifier` on the Row containing all nav items
 
@@ -47,11 +47,14 @@ The app previously lagged with many cards on screen, when opening search/setting
 - While `isSearchOpen`, the Scaffold `topBar` is emptied (the GlassHeader top region previously overlapped and ate search-bar taps).
 - Recent searches: stored in the Room `settings` table under key `"recent_searches"` (JSON array) via `SearchViewModel`. `SearchScreen` offers per-row delete (x) and "Clear all".
 
-## Settings Storage (3 stores — TODO: consolidate into Room)
-- **DataStore** (`ThemePreference.kt`, name `"settings"`) — theme & UI prefs. Keys: `app_theme`, `pref_accent_color`, `show_banner`, `show_continue`, `show_recent`, `auto_open_keyboard`, `default_stream_provider`
-- **Room `settings` table** (`SettingsDao` / `SettingsRepositoryImpl`) — key-value; hosts `recent_searches` among others
-- **SharedPreferences `"notification_prefs"`** (`SettingsViewModel`) — notification settings; `CountdownWidget` has its own PREFS_NAME
-- TODO note also in `SettingsRepositoryImpl.kt`
+## Settings Storage
+- **Single source of truth: the Room `settings` table** (`SettingsDao` / `SettingsRepositoryImpl`), accessed through `SettingsRepository` + typed helpers (`getBoolFlow`/`putBool`) and key constants in `domain/repository/SettingsKeys.kt`.
+- Keys: `app_theme`, `pref_accent_color`, `show_banner`, `show_continue`, `show_recent`, `auto_open_keyboard`, `default_stream_provider`, `recent_searches` (JSON), `search_frequency` (JSON), `prefs_migrated`.
+- Legacy stores were consolidated away:
+  - `ThemePreference` (DataStore "settings") was **deleted** — values migrated once into Room by `LegacySettingsMigrator` (`data/pref/LegacySettingsMigrator.kt`), run from `DonghuaApp.onCreate`, gated by `prefs_migrated`.
+  - SharedPreferences `notification_prefs` was **removed**; its keys are migrated into Room too.
+  - Backup/restore (`SettingsViewModel`) now round-trips all Room settings under the `notifyPrefs` JSON field (kept for backward compatibility with old backups).
+- Do NOT reintroduce DataStore/SharedPreferences for app settings; add new keys to `SettingsKeys`.
 
 ## Vendor Directory
 - `app/src/main/java/com/kyant/backdrop/` — 22 Kyant Backdrop source files (no external dependency)

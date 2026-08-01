@@ -13,7 +13,7 @@ A sleek, high-aesthetic dark-themed native Android application designed for Chin
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
   - **Performance-tuned**: static glass background (no per-frame gradient animation), off-main-thread GPU luminance sampling, short pure cross-fade route transitions — tuned to keep scrolling, search, settings, and tab switches smooth
 - **Architecture**: Clean Architecture + MVVM + Dagger Hilt Dependency Injection
-- **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries, Jetpack DataStore Preferences
+- **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries — a single Room-backed settings store (theme, UI toggles, search history, notification prefs) replaces the legacy DataStore/SharedPreferences split
 - **Network & Parsing**: Retrofit 2.11 + OkHttp 4.12 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
 - **Media Playback**: ExoPlayer / Media3 1.3.1 (Supports `.mp4`, `.m3u8`, `.mkv` direct streaming & custom web player fallback)
 - **Background & Scheduling**: Android `AlarmManager` (DST-aware exact alarms), `PowerManager.WakeLock` boot receivers, App Widgets
@@ -45,7 +45,7 @@ my_donghua/
 │               ├── data/
 │               │   ├── db/                   # Room v3 (shows, settings, watch_history) + DAOs
 │               │   ├── pref/
-│               │   │   └── ThemePreference.kt# DataStore preferences for theme & UI visibility
+│               │   │   └── LegacySettingsMigrator.kt # One-time DataStore/SharedPreferences → Room settings migration
 │               │   ├── repository/           # Show / Settings / WatchHistory repository impls (Room-backed)
 │               │   └── service/
 │               │       └── PosterFetchService.kt # Jikan, AniList GraphQL & HTML scrapers
@@ -120,6 +120,8 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 |---|---|---|
 | `key` | TEXT (PK) | Setting key |
 | `value` | TEXT | Setting value (e.g. `recent_searches` stores a JSON array) |
+
+All app settings live in this single key-value store (theme mode, accent color, UI visibility toggles, auto-open keyboard, default stream provider, recent searches, notification prefs). Legacy DataStore / SharedPreferences values are migrated here once on first launch.
 
 ### 3. `watch_history`
 | Column | Type | Description |
