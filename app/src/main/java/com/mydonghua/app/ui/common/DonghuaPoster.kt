@@ -96,7 +96,7 @@ fun DonghuaPoster(
     contentScale: ContentScale = ContentScale.Crop,
     showAcronym: Boolean = true,
     fontSize: TextUnit = TextUnit.Unspecified,
-    crossfade: Boolean = false
+    crossfade: Boolean = true
 ) {
     val context = LocalContext.current
     val initials = remember(title) { getTitleInitials(title) }
@@ -124,7 +124,7 @@ fun DonghuaPoster(
     val imageRequest = remember(posterUrl, context, crossfade, posterEnabled) {
         ImageRequest.Builder(context)
             .data(if (posterEnabled) posterUrl?.takeIf { it.isNotBlank() && it != "null" } else null)
-            .crossfade(if (crossfade) 250 else 0)
+            .crossfade(if (crossfade) 200 else 0)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
             .networkCachePolicy(CachePolicy.ENABLED)
