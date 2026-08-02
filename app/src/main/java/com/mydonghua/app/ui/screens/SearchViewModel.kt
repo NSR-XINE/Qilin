@@ -134,7 +134,6 @@ class SearchViewModel @Inject constructor(
      */
     private suspend fun performOnlineSearch(q: String): List<Show> {
         if (q.trim().length < 2) return emptyList()
-        if (filteredShows.value.isNotEmpty()) return emptyList()
         _searchError.value = false
         _isSearchingOnline.value = true
         try {
