@@ -162,7 +162,7 @@ fun SearchScreen(
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val spokenText = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
             if (!spokenText.isNullOrBlank()) {
-                viewModel.onSearchQueryChanged(spokenText)
+                viewModel.selectQuery(spokenText)
             }
         }
     }
