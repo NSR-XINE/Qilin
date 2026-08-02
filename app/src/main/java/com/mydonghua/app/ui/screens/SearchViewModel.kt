@@ -185,7 +185,16 @@ class SearchViewModel @Inject constructor(
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val onlineSearchJob = searchQuery
-        .debounce(600)
+        .onEach { q ->
+            if (q.trim().length >= 2) {
+                _isSearchingOnline.value = true
+                _searchError.value = false
+            } else {
+                _isSearchingOnline.value = false
+                _onlineResults.value = emptyList()
+            }
+        }
+        .debounce(300)
         .flatMapLatest { q ->
             flow { emit(performOnlineSearch(q)) }
         }
