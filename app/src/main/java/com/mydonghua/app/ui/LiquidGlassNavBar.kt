@@ -169,7 +169,7 @@ fun LiquidGlassNavBar(
         val configuration = LocalConfiguration.current
         val screenWidth = configuration.screenWidthDp.dp
         val horizontalPadding = Spacing.sm * 2
-        val maxCapsuleWidth = minOf((screenWidth - horizontalPadding - searchButtonSize - Spacing.sm) * 0.9f, 480.dp)
+        val maxCapsuleWidth = minOf((screenWidth - horizontalPadding - searchButtonSize - Spacing.sm) * 0.9f, 320.dp)
         val searchButtonOffset by animateDpAsState(
             targetValue = if (isSearchOpen) - (maxWidth - searchButtonSize - Spacing.md) else 0.dp,
             animationSpec = spring(

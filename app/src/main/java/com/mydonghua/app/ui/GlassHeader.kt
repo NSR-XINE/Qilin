@@ -103,10 +103,12 @@ fun GlassHeader(
     val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
     Box(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.TopCenter
     ) {
         Box(
             modifier = Modifier
+                .widthIn(max = 440.dp)
                 .fillMaxWidth()
                 .graphicsLayer {
                     val animScale = capsuleScale
@@ -155,6 +157,7 @@ fun GlassHeader(
 
         Box(
             modifier = Modifier
+                .widthIn(max = 440.dp)
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp)
