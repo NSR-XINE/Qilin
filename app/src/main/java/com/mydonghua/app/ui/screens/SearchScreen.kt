@@ -156,10 +156,29 @@ fun SearchScreen(
         }
     }
 
+    val voiceSearchLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spokenText = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+            if (!spokenText.isNullOrBlank()) {
+                viewModel.onSearchQueryChanged(spokenText)
+            }
+        }
+    }
+
     fun startVoiceSearch() {
         if (viewModel.startVoiceSearch()) return
-        scope.launch {
-            snackbarHostState.showSnackbar("Voice search is coming soon")
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Search shows...")
+        }
+        try {
+            voiceSearchLauncher.launch(intent)
+        } catch (e: Exception) {
+            scope.launch {
+                snackbarHostState.showSnackbar("Voice search is not supported on this device")
+            }
         }
     }
 
