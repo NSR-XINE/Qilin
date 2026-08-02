@@ -6,7 +6,9 @@ import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
+import com.mydonghua.app.domain.voice.VoiceSearchController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -25,13 +27,14 @@ data class SearchFilters(
 sealed class SearchSuggestion {
     data class Popular(val text: String) : SearchSuggestion()
     data class Recent(val text: String) : SearchSuggestion()
-    data class ShowMatch(val show: Show, val displayText: String, val score: Int) : SearchSuggestion()
+    data class ShowMatch(val show: Show, val displayText: String, val score: Int, val subtitle: String? = null) : SearchSuggestion()
 }
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val showRepository: ShowRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val voiceSearchController: VoiceSearchController
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
@@ -82,7 +85,7 @@ class SearchViewModel @Inject constructor(
                         titleZhLower.contains(qLower) || fuzzyMatch(show.titleZh, q) -> show.titleZh ?: show.title
                         else -> show.title
                     }
-                    scored.add(SearchSuggestion.ShowMatch(show, displayText, score))
+                    scored.add(SearchSuggestion.ShowMatch(show, displayText, score, matchReason(show, q)))
                 }
             }
             scored.sortByDescending { it.score }
@@ -96,67 +99,105 @@ class SearchViewModel @Inject constructor(
     private val _isSearchingOnline = MutableStateFlow(false)
     val isSearchingOnline: StateFlow<Boolean> = _isSearchingOnline.asStateFlow()
 
+    private val _searchError = MutableStateFlow(false)
+    val searchError: StateFlow<Boolean> = _searchError.asStateFlow()
+
+    private var voiceJob: Job? = null
+
+    val isVoiceSearchAvailable: Boolean
+        get() = voiceSearchController.isAvailable
+
+    /**
+     * Starts voice input if the [VoiceSearchController] supports it. Returns
+     * false when unavailable so the caller can surface a placeholder hint.
+     */
+    fun startVoiceSearch(): Boolean {
+        if (!voiceSearchController.isAvailable) return false
+        voiceJob?.cancel()
+        voiceJob = viewModelScope.launch {
+            voiceSearchController.startListening().collect { partial ->
+                searchQuery.value = partial
+            }
+        }
+        return true
+    }
+
+    fun stopVoiceSearch() {
+        voiceJob?.cancel()
+        voiceJob = null
+        voiceSearchController.stopListening()
+    }
+
+    /**
+     * Runs the online (AniList / MyAnimeList) search for [q] and updates
+     * [onlineResults] / [searchError]. Shared by the debounced flow and retry.
+     */
+    private suspend fun performOnlineSearch(q: String): List<Show> {
+        if (q.trim().length < 2) return emptyList()
+        if (filteredShows.value.isNotEmpty()) return emptyList()
+        _searchError.value = false
+        _isSearchingOnline.value = true
+        try {
+            val aniListResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
+            val malResults = com.mydonghua.app.data.service.PosterFetchService.searchMyAnimeList(q)
+
+            val combined = mutableListOf<Show>()
+            val addedTitles = mutableSetOf<String>()
+            val localTitles = allShows.value.map { it.title.lowercase().trim() }
+
+            fun addResult(title: String, titleZh: String?, status: String?, totalEp: Int, poster: String?, synopsis: String?, source: String) {
+                val key = title.lowercase().trim()
+                if (localTitles.contains(key) || addedTitles.contains(key)) return
+                if (titleZh != null && localTitles.contains(titleZh.lowercase().trim())) return
+
+                addedTitles.add(key)
+                combined.add(
+                    Show(
+                        id = "online_${source}_${title.hashCode()}",
+                        title = title,
+                        titleZh = titleZh,
+                        status = status ?: "ongoing",
+                        totalEp = totalEp,
+                        poster = poster,
+                        notes = synopsis,
+                        genres = null,
+                        studio = null,
+                        releaseYear = 0
+                    )
+                )
+            }
+
+            aniListResults.forEach { r ->
+                addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "anilist")
+            }
+            malResults.forEach { r ->
+                addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "mal")
+            }
+
+            return combined
+        } catch (e: Exception) {
+            _searchError.value = true
+            return emptyList()
+        } finally {
+            _isSearchingOnline.value = false
+        }
+    }
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val onlineSearchJob = searchQuery
         .debounce(600)
         .flatMapLatest { q ->
-            flow {
-                if (q.trim().length < 2) {
-                    emit(emptyList())
-                    return@flow
-                }
-                if (filteredShows.value.isNotEmpty()) {
-                    emit(emptyList())
-                    return@flow
-                }
-                _isSearchingOnline.value = true
-                try {
-                    val aniListResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
-                    val malResults = com.mydonghua.app.data.service.PosterFetchService.searchMyAnimeList(q)
-
-                    val combined = mutableListOf<Show>()
-                    val addedTitles = mutableSetOf<String>()
-                    val localTitles = allShows.value.map { it.title.lowercase().trim() }
-
-                    fun addResult(title: String, titleZh: String?, status: String?, totalEp: Int, poster: String?, synopsis: String?, source: String) {
-                        val key = title.lowercase().trim()
-                        if (localTitles.contains(key) || addedTitles.contains(key)) return
-                        if (titleZh != null && localTitles.contains(titleZh.lowercase().trim())) return
-
-                        addedTitles.add(key)
-                        combined.add(
-                            Show(
-                                id = "online_${source}_${title.hashCode()}",
-                                title = title,
-                                titleZh = titleZh,
-                                status = status ?: "ongoing",
-                                totalEp = totalEp,
-                                poster = poster,
-                                notes = synopsis,
-                                genres = null,
-                                studio = null,
-                                releaseYear = 0
-                            )
-                        )
-                    }
-
-                    aniListResults.forEach { r ->
-                        addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "anilist")
-                    }
-                    malResults.forEach { r ->
-                        addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "mal")
-                    }
-
-                    emit(combined)
-                } catch (e: Exception) {
-                    emit(emptyList())
-                } finally {
-                    _isSearchingOnline.value = false
-                }
-            }
+            flow { emit(performOnlineSearch(q)) }
         }
         .onEach { _onlineResults.value = it }
         .launchIn(viewModelScope)
+
+    fun retryOnlineSearch() {
+        viewModelScope.launch {
+            val results = performOnlineSearch(searchQuery.value)
+            _onlineResults.value = results
+        }
+    }
 
     val filteredShows: StateFlow<List<Show>> = combine(
         searchQuery,
@@ -332,13 +373,54 @@ class SearchViewModel @Inject constructor(
         if (title.startsWith(q)) return 80
         if (title.contains(q)) return 60
         if (titleZh.contains(q)) return 50
-        
+
         // Only allow fuzzy (subsequence) match for queries with at least 3 characters
         if (q.length >= 3) {
             if (fuzzyMatch(title, q)) return 40
             if (fuzzyMatch(titleZh, q)) return 30
         }
-        
+
+        // Search across every content type: genres and studio.
+        val genres = show.genres?.split(",")
+            ?.mapNotNull { it.trim().lowercase().ifEmpty { null } }
+            ?: emptyList()
+        if (genres.any { it == q }) return 45
+        if (genres.any { it.contains(q) }) return 25
+        val studio = (show.studio ?: "").lowercase().trim()
+        if (studio == q) return 20
+        if (studio.isNotEmpty() && studio.contains(q)) return 15
+
         return 0
+    }
+
+    /**
+     * Returns a short reason string ("Genre: X" / "Studio: Y") when [query]
+     * matched a show via its genres or studio rather than its title, so the UI
+     * can explain why the show surfaced. Null when the title matched.
+     */
+    private fun matchReason(show: Show, query: String): String? {
+        val q = query.lowercase().trim()
+        if (q.isEmpty()) return null
+
+        val title = (show.title ?: "").lowercase().trim()
+        val titleZh = (show.titleZh ?: "").lowercase().trim()
+        val titleMatched = title.contains(q) || title.startsWith(q) ||
+            (q.length >= 3 && (fuzzyMatch(title, q) || fuzzyMatch(titleZh, q))) ||
+            titleZh.contains(q)
+        if (titleMatched) return null
+
+        val genres = show.genres?.split(",")
+            ?.mapNotNull { it.trim().ifEmpty { null } }
+            ?: emptyList()
+        genres.firstOrNull { it.lowercase() == q || it.lowercase().contains(q) }?.let {
+            return "Genre: $it"
+        }
+
+        val studio = show.studio?.trim()?.takeIf { it.isNotEmpty() }
+        studio?.takeIf { it.lowercase() == q || it.lowercase().contains(q) }?.let {
+            return "Studio: $it"
+        }
+
+        return null
     }
 }

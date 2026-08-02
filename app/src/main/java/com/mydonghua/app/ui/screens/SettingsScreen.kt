@@ -68,9 +68,15 @@ fun SettingsScreen(
     val hazeState = LocalHazeState.current
 
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Throwable) {}
             viewModel.importBackup(
                 context = context,
                 uri = uri,
@@ -611,7 +617,6 @@ fun SettingsScreen(
                     ) {
                         val buttonShape = RoundedCornerShape(CornerRadius.sm)
                         Button(
-                            enabled = storageGranted,
                             onClick = {
                                 coroutineScope.launch {
                                     val file = viewModel.exportBackup(context)
@@ -632,8 +637,8 @@ fun SettingsScreen(
                                 .weight(1f)
                                 .height(48.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = if (storageGranted) 0.15f else 0.07f),
-                                contentColor = MaterialTheme.colorScheme.primary.copy(alpha = if (storageGranted) 1f else 0.4f)
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                contentColor = MaterialTheme.colorScheme.primary
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 0.5.dp,
@@ -646,15 +651,14 @@ fun SettingsScreen(
                         }
 
                         OutlinedButton(
-                            enabled = storageGranted,
                             onClick = {
-                                filePickerLauncher.launch("application/json")
+                                filePickerLauncher.launch(arrayOf("application/json", "*/*"))
                             },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = if (storageGranted) 1f else 0.4f)
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 0.5.dp,

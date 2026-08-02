@@ -73,7 +73,7 @@ my_donghua/
 - ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
 - 🎨 **Kyant Liquid Glass & Haze Backgrounds**: Ultra-sleek glassmorphism UI with liquid refraction, adaptive brightness/saturation, and real-time backdrop blur.
-- 🔍 **Smart Search**: Search bar auto-focuses and opens the keyboard on tap, with a recent-search history that supports per-item delete and "Clear all".
+- 🔍 **Smart Search**: Search bar auto-focuses and opens the keyboard on tap, with a recent-search history that supports per-item delete and "Clear all". Searches across every content type (English/Chinese titles, fuzzy matches, genres, studios, plus AniList/MyAnimeList online results), with matched-text highlighting, debounced online lookup, loading/empty/error states with retry, and a voice-search architecture placeholder.
 - 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
 - 🔔 **Native Push Notifications**: Automatic DST-aware heads-up notifications when a new episode releases.
 - 📊 **Statistics Dashboard**: 8-card analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.

@@ -174,9 +174,13 @@ class SettingsViewModel @Inject constructor(
     fun importBackup(context: Context, uri: Uri, onSuccess: (String) -> Unit, onFailure: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val jsonString = context.contentResolver.openInputStream(uri)?.use { stream ->
-                    stream.bufferedReader().readText()
-                } ?: throw Exception("Unable to open backup file")
+                val jsonString = try {
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.bufferedReader().readText()
+                    }
+                } catch (se: SecurityException) {
+                    throw Exception("Permission denied opening file. Please select the file again using the document picker.")
+                } ?: throw Exception("Unable to open backup file stream.")
 
                 val parsed = JSONObject(jsonString)
                 val showsArr = parsed.optJSONArray("shows") ?: JSONArray()

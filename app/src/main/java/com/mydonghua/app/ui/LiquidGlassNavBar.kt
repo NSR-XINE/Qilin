@@ -169,7 +169,7 @@ fun LiquidGlassNavBar(
         val configuration = LocalConfiguration.current
         val screenWidth = configuration.screenWidthDp.dp
         val horizontalPadding = Spacing.sm * 2
-        val maxCapsuleWidth = (screenWidth - horizontalPadding - searchButtonSize - Spacing.sm) * 0.9f
+        val maxCapsuleWidth = minOf((screenWidth - horizontalPadding - searchButtonSize - Spacing.sm) * 0.9f, 480.dp)
         val searchButtonOffset by animateDpAsState(
             targetValue = if (isSearchOpen) - (maxWidth - searchButtonSize - Spacing.md) else 0.dp,
             animationSpec = spring(
@@ -222,7 +222,7 @@ fun LiquidGlassNavBar(
                 .fillMaxWidth()
                 .height(NavBarHeight.bar),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = if (screenWidth > 600.dp) Arrangement.Center else Arrangement.Start
         ) {
             Spacer(modifier = Modifier.width(Spacing.md))
             Box(
@@ -316,9 +316,7 @@ fun LiquidGlassNavBar(
                 val pressedHeight = with(density) { 56.dp.toPx() }
                 val pillHeightPx = lerp(restHeight, pressedHeight, progress)
 
-                val startCenter = with(density) { 32.dp.toPx() }
-                val endCenter = barWidthPx - startCenter
-                val pillCenterPx = lerp(startCenter, endCenter, dampedDrag.value / (totalSlots - 1f))
+                val pillCenterPx = (dampedDrag.value + 0.5f) * slotWidthPx
                 val translationX = pillCenterPx - pillWidthPx / 2f
                 Box(
                     modifier = Modifier
@@ -331,7 +329,7 @@ fun LiquidGlassNavBar(
                             effects = {
                                 vibrancy()
                                 colorControls(
-                                    brightness = 0.05f,
+                                    brightness = if (isDark) 0.05f else 0.1f,
                                     contrast = 1f,
                                     saturation = 1.5f,
                                 )
@@ -342,8 +340,8 @@ fun LiquidGlassNavBar(
                                 val pressProg = dampedDrag.pressProgress
                                 refractionWithDispersion(5f.dp.toPx() * pressProg, 7f.dp.toPx() * pressProg, hasDepthEffect = false)
                             },
-                            highlight = { Highlight.Default.copy(alpha = 0.6f) },
-                            shadow = { Shadow(radius = 4f.dp, alpha = 0.4f) },
+                            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.6f else 0.8f) },
+                            shadow = { Shadow(radius = 4f.dp, alpha = if (isDark) 0.4f else 0.2f) },
                             innerShadow = {
                                 val pressProg = dampedDrag.pressProgress
                                 InnerShadow(radius = 8f.dp * pressProg, alpha = pressProg)
@@ -356,8 +354,14 @@ fun LiquidGlassNavBar(
                                 scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                             },
                             onDrawSurface = {
-                                val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                                drawRect(Color.Black.copy(alpha = darken))
+                                val alphaFactor = ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f)
+                                if (isDark) {
+                                    val darken = lerp(0.22f, 0.55f, alphaFactor)
+                                    drawRect(Color.Black.copy(alpha = darken))
+                                } else {
+                                    val lighten = lerp(0.35f, 0.65f, alphaFactor)
+                                    drawRect(Color.White.copy(alpha = lighten))
+                                }
                             },
                         )
                         .width(with(density) { pillWidthPx.toDp() })
@@ -369,9 +373,7 @@ fun LiquidGlassNavBar(
                 modifier = Modifier.matchParentSize().then(dampedDrag.modifier),
             ) {
                 navRoutes.forEachIndexed { position, route ->
-                    val startCenter = with(density) { 32.dp.toPx() }
-                    val endCenter = barWidthPx - startCenter
-                    val iconCenterPx = lerp(startCenter, endCenter, position / (totalSlots - 1f))
+                    val iconCenterPx = (position + 0.5f) * slotWidthPx
                     Box(
                         modifier = Modifier
                             .fillMaxHeight()
@@ -518,10 +520,15 @@ private fun Modifier.drawBackdropCustomShape(
             }
         },
         onDrawSurface = {
-            val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
+            val alphaFactor = ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f)
             val radius = size.height / 2f
+            val surfaceColor = if (luminanceAnimation > 0.5f) {
+                Color.White.copy(alpha = lerp(0.25f, 0.45f, alphaFactor))
+            } else {
+                Color.Black.copy(alpha = lerp(0.12f, 0.45f, alphaFactor))
+            }
             drawRoundRect(
-                color = Color.Black.copy(alpha = darken),
+                color = surfaceColor,
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
             )
             val press = pressProgress

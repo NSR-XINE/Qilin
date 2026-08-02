@@ -78,9 +78,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.TrendingUp
+import androidx.compose.material.icons.rounded.WifiOff
 import com.mydonghua.app.ui.common.EmptyState
-import com.mydonghua.app.ui.common.ScrollPerfMonitor
+import com.mydonghua.app.ui.common.HighlightedText
 import com.mydonghua.app.ui.screens.SearchSuggestion
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -98,6 +100,7 @@ fun SearchScreen(
     val results by viewModel.filteredShows.collectAsState()
     val onlineResults by viewModel.onlineResults.collectAsState()
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
+    val searchError by viewModel.searchError.collectAsState()
     val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val activeFilters by viewModel.activeFilters.collectAsState()
@@ -113,6 +116,7 @@ fun SearchScreen(
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     val isKeyboardVisible = WindowInsets.isImeVisible
 
     var isSearchActive by remember { mutableStateOf(false) }
@@ -151,6 +155,13 @@ fun SearchScreen(
         }
     }
 
+    fun startVoiceSearch() {
+        if (viewModel.startVoiceSearch()) return
+        scope.launch {
+            snackbarHostState.showSnackbar("Voice search is coming soon")
+        }
+    }
+
     LaunchedEffect(autoOpenKeyboard) {
         if (autoOpenKeyboard) {
             delay(400)
@@ -174,8 +185,9 @@ fun SearchScreen(
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .imePadding()
@@ -274,7 +286,7 @@ fun SearchScreen(
                 }
             )
 
-            // Trailing clear icon (only when there's text)
+            // Trailing icon: voice search placeholder when idle, clear when there's text
             if (query.isNotEmpty()) {
                 Box(
                     modifier = Modifier
@@ -295,7 +307,24 @@ fun SearchScreen(
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.width(Spacing.xs))
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { startVoiceSearch() }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Mic,
+                        contentDescription = "Voice search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(IconSize.xl)
+                    )
+                }
             }
         }
 
@@ -394,7 +423,15 @@ fun SearchScreen(
                 val onIncrement = remember { { s: Show -> showsViewModel.incrementEpisode(s) } }
                 val onDecrement = remember { { s: Show -> showsViewModel.decrementEpisode(s) } }
 
-                if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
+                if (searchError && query.trim().isNotEmpty() && !isSearchingOnline && results.isEmpty() && onlineResults.isEmpty()) {
+                    EmptyState(
+                        title = "Search failed",
+                        subtitle = "We couldn't reach the search service. Check your connection and try again.",
+                        icon = Icons.Rounded.WifiOff,
+                        actionLabel = "Retry",
+                        onAction = { viewModel.retryOnlineSearch() }
+                    )
+                } else if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
                     EmptyState(
                         title = "No matching shows found",
                         subtitle = "Try searching for another title or browse all shows",
@@ -433,6 +470,7 @@ fun SearchScreen(
                             items(showMatches) { match ->
                                 SuggestionMatchRow(
                                     match = match,
+                                    query = query,
                                     onClick = {
                                         viewModel.selectQuery(match.displayText)
                                         keyboardController?.hide()
@@ -465,8 +503,31 @@ fun SearchScreen(
                                     onNotifyToggle = onNotify,
                                     onEpIncrement = onIncrement,
                                     onEpDecrement = onDecrement,
-                                    onCardClick = onShowClickById
+                                    onCardClick = onShowClickById,
+                                    highlightQuery = query
                                 )
+                            }
+                        }
+
+                        if (searchError) {
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                ) {
+                                    Text(
+                                        text = "Couldn't load online results.",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TextButton(onClick = { viewModel.retryOnlineSearch() }) {
+                                        Text("Retry")
+                                    }
+                                }
                             }
                         }
 
@@ -513,6 +574,16 @@ fun SearchScreen(
                 }
             }
         }
+    }
+
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .imePadding()
+            .navigationBarsPadding()
+            .padding(bottom = 80.dp)
+    )
     }
 
     if (showToAdd != null) {
@@ -646,7 +717,11 @@ private fun SuggestionRow(text: String, isRecent: Boolean, onClick: () -> Unit, 
 }
 
 @Composable
-private fun SuggestionMatchRow(match: SearchSuggestion.ShowMatch, onClick: () -> Unit) {
+private fun SuggestionMatchRow(
+    match: SearchSuggestion.ShowMatch,
+    query: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -661,11 +736,24 @@ private fun SuggestionMatchRow(match: SearchSuggestion.ShowMatch, onClick: () ->
             modifier = Modifier.size(20.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )
-        Text(
-            text = match.displayText,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            HighlightedText(
+                text = match.displayText,
+                query = query,
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (!match.subtitle.isNullOrEmpty()) {
+                Text(
+                    text = match.subtitle,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 

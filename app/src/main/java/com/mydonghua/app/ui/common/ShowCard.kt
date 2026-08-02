@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,7 +48,8 @@ fun ShowCard(
     onEpIncrement: (Show) -> Unit,
     onEpDecrement: (Show) -> Unit,
     onCardClick: (Show) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    highlightQuery: String? = null
 ) {
     val context = LocalContext.current
     val hazeState = LocalHazeState.current
@@ -158,22 +160,52 @@ fun ShowCard(
                         .align(Alignment.BottomStart)
                         .padding(Spacing.md)
                 ) {
-                    Text(
-                        text = show.title,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (!show.titleZh.isNullOrEmpty()) {
+                    if (highlightQuery.isNullOrBlank()) {
                         Text(
-                            text = show.titleZh,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.7f),
-                            maxLines = 1,
+                            text = show.title,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+                    } else {
+                        HighlightedText(
+                            text = show.title,
+                            query = highlightQuery,
+                            style = TextStyle(
+                                color = Color.White,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            highlightColor = Color.White,
+                            highlightWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (!show.titleZh.isNullOrEmpty()) {
+                        if (highlightQuery.isNullOrBlank()) {
+                            Text(
+                                text = show.titleZh,
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.7f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        } else {
+                            HighlightedText(
+                                text = show.titleZh,
+                                query = highlightQuery,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color.White.copy(alpha = 0.7f)
+                                ),
+                                highlightColor = Color.White,
+                                highlightWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }
