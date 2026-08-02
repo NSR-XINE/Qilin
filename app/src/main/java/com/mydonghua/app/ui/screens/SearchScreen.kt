@@ -83,6 +83,7 @@ import androidx.compose.material.icons.rounded.TrendingUp
 import androidx.compose.material.icons.rounded.WifiOff
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.HighlightedText
+import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.screens.SearchSuggestion
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
