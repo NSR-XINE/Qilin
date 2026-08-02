@@ -157,14 +157,13 @@ fun GlassHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(top = 2.dp, bottom = 14.dp),
+                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .widthIn(max = 420.dp)
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.xl)
                     .height(56.dp)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
