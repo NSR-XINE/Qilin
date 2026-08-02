@@ -250,7 +250,7 @@ class MainActivity : ComponentActivity() {
                                         dir < 0 -> slideInHorizontally(initialOffsetX = { -it }) +
                                             fadeIn(animationSpec = tween(240))
                                         else -> slideInHorizontally(initialOffsetX = { it }) +
-                                            fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
+                                            fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing))
                                     }
                                 },
                                 exitTransition = {
@@ -263,17 +263,15 @@ class MainActivity : ComponentActivity() {
                                             fadeOut(animationSpec = tween(200))
                                         dir < 0 -> slideOutHorizontally(targetOffsetX = { it }) +
                                             fadeOut(animationSpec = tween(200))
-                                        else -> slideOutHorizontally(targetOffsetX = { -it / 3 }) +
-                                            fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
+                                        else -> fadeOut(animationSpec = tween(150, easing = FastOutSlowInEasing))
                                     }
                                 },
                                 popEnterTransition = {
                                     slideInHorizontally(initialOffsetX = { -it / 3 }) +
-                                        fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
+                                        fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing))
                                 },
                                 popExitTransition = {
-                                    slideOutHorizontally(targetOffsetX = { it }) +
-                                        fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
+                                    fadeOut(animationSpec = tween(150, easing = FastOutSlowInEasing))
                                 }
                             ) {
                         composable("home") {
