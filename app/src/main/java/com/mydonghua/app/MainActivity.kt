@@ -240,22 +240,30 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                    val fromTab = initialState.destination.route in TAB_ROUTES
-                                    val toTab = targetState.destination.route in TAB_ROUTES
-                                    if (fromTab && toTab) {
-                                        fadeIn(animationSpec = tween(240))
-                                    } else {
-                                        slideInHorizontally(initialOffsetX = { it }) +
+                                    val dir = tabTransitionDirection(
+                                        initialState.destination.route,
+                                        targetState.destination.route
+                                    )
+                                    when {
+                                        dir > 0 -> slideInHorizontally(initialOffsetX = { it }) +
+                                            fadeIn(animationSpec = tween(240))
+                                        dir < 0 -> slideInHorizontally(initialOffsetX = { -it }) +
+                                            fadeIn(animationSpec = tween(240))
+                                        else -> slideInHorizontally(initialOffsetX = { it }) +
                                             fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
                                     }
                                 },
                                 exitTransition = {
-                                    val fromTab = initialState.destination.route in TAB_ROUTES
-                                    val toTab = targetState.destination.route in TAB_ROUTES
-                                    if (fromTab && toTab) {
-                                        fadeOut(animationSpec = tween(200))
-                                    } else {
-                                        slideOutHorizontally(targetOffsetX = { -it / 3 }) +
+                                    val dir = tabTransitionDirection(
+                                        initialState.destination.route,
+                                        targetState.destination.route
+                                    )
+                                    when {
+                                        dir > 0 -> slideOutHorizontally(targetOffsetX = { -it }) +
+                                            fadeOut(animationSpec = tween(200))
+                                        dir < 0 -> slideOutHorizontally(targetOffsetX = { it }) +
+                                            fadeOut(animationSpec = tween(200))
+                                        else -> slideOutHorizontally(targetOffsetX = { -it / 3 }) +
                                             fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
                                     }
                                 },
@@ -692,7 +700,13 @@ class MainActivity : ComponentActivity() {
         const val FILE_CHOOSER_REQUEST_CODE = 1001
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
-        private val TAB_ROUTES = setOf("home", "airing", "complete", "stopped", "favorites")
+        private val TAB_ROUTES = listOf("home", "airing", "complete", "stopped", "favorites")
+
+        private fun tabTransitionDirection(from: String?, to: String?): Int {
+            val fromIndex = TAB_ROUTES.indexOf(from)
+            val toIndex = TAB_ROUTES.indexOf(to)
+            return if (fromIndex != -1 && toIndex != -1) toIndex.compareTo(fromIndex) else 0
+        }
     }
 }
 
