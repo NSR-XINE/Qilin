@@ -236,16 +236,16 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                    fadeIn(animationSpec = tween(140))
+                                    fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
                                 },
                                 exitTransition = {
-                                    fadeOut(animationSpec = tween(110))
+                                    fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
                                 },
                                 popEnterTransition = {
-                                    fadeIn(animationSpec = tween(140))
+                                    fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
                                 },
                                 popExitTransition = {
-                                    fadeOut(animationSpec = tween(110))
+                                    fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
                                 }
                             ) {
                         composable("home") {
@@ -486,14 +486,14 @@ class MainActivity : ComponentActivity() {
                         durationMillis = 700,
                         easing = FastOutSlowInEasing
                     )
-                ),
+                ) + fadeIn(animationSpec = tween(340, easing = FastOutSlowInEasing)),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
                     animationSpec = tween(
                         durationMillis = 600,
                         easing = FastOutSlowInEasing
                     )
-                )
+                ) + fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
