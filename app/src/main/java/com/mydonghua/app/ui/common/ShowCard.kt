@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Favorite
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -222,30 +220,6 @@ fun ShowCard(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                    OutlinedIconButton(
-                        onClick = { onEpDecrement(show) },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Remove,
-                            contentDescription = "Decrement Episode",
-                            modifier = Modifier.size(IconSize.sm),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    OutlinedIconButton(
-                        onClick = { onEpIncrement(show) },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Add,
-                            contentDescription = "Increment Episode",
-                            modifier = Modifier.size(IconSize.sm),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
                     IconButton(
                         onClick = { onFavoriteToggle(show) },
                         modifier = Modifier.size(36.dp)
