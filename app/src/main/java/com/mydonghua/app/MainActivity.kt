@@ -22,6 +22,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.res.painterResource
@@ -497,8 +499,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                }
-
             AnimatedVisibility(
                 visible = isDrawerOpen,
                 modifier = Modifier
@@ -521,33 +521,29 @@ class MainActivity : ComponentActivity() {
                     animationSpec = tween(500, easing = FastOutSlowInEasing)
                 ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing))
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                    val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                    val isLightMode = settingsState.themeMode.lowercase() == "light"
+                val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
+                val isLightMode = settingsState.themeMode.lowercase() == "light"
 
-                    MenuGlassPanel(
-                        modifier = Modifier
-                            .widthIn(max = 480.dp)
-                            .fillMaxWidth()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                // Consumes touch events on menu panel so background touches are disabled
-                            },
-                        shape = menuShape,
-                        isAmoledMode = isAmoledMode,
-                        isLightMode = isLightMode
-                    ) {
+                MenuGlassPanel(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            // Consumes touch events on menu panel so background touches are disabled
+                        },
+                    shape = menuShape,
+                    isAmoledMode = isAmoledMode,
+                    isLightMode = isLightMode
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .statusBarsPadding()
                             .navigationBarsPadding()
+                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -645,7 +641,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
     }
 }
 }

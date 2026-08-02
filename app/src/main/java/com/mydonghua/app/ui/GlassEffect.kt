@@ -388,11 +388,6 @@ fun MenuGlassPanel(
                             drawRect(color = baseColor)
                         }
                     )
-                    .border(
-                        width = 1.dp,
-                        brush = glassBorderBrush,
-                        shape = shape
-                    )
             )
         } else {
             val fallbackBg = when {
@@ -404,11 +399,6 @@ fun MenuGlassPanel(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(fallbackBg, shape)
-                    .border(
-                        width = 0.5.dp,
-                        color = borderColor,
-                        shape = shape
-                    )
             )
         }
 
