@@ -137,6 +137,7 @@ class SearchViewModel @Inject constructor(
         _searchError.value = false
         _isSearchingOnline.value = true
         try {
+            val kitsuResults = com.mydonghua.app.data.service.PosterFetchService.searchKitsu(q)
             val aniListResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
             val malResults = com.mydonghua.app.data.service.PosterFetchService.searchMyAnimeList(q)
 
@@ -166,6 +167,9 @@ class SearchViewModel @Inject constructor(
                 )
             }
 
+            kitsuResults.forEach { r ->
+                addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "kitsu")
+            }
             aniListResults.forEach { r ->
                 addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "anilist")
             }

@@ -348,6 +348,72 @@ object PosterFetchService {
         }
     }
 
+    data class KitsuSearchResult(
+        val title: String,
+        val titleZh: String?,
+        val synopsis: String?,
+        val poster: String?,
+        val totalEp: Int,
+        val status: String?
+    )
+
+    suspend fun searchKitsu(query: String, limit: Int = 10): List<KitsuSearchResult> = withContext(Dispatchers.IO) {
+        try {
+            val encodedQuery = URLEncoder.encode(query, "UTF-8")
+            val request = Request.Builder()
+                .url("https://kitsu.io/api/edge/anime?filter[text]=$encodedQuery&page[limit]=$limit")
+                .get()
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@withContext emptyList()
+                val bodyStr = response.body?.string() ?: return@withContext emptyList()
+                val json = JSONObject(bodyStr)
+                val data = json.optJSONArray("data") ?: return@withContext emptyList()
+
+                val results = mutableListOf<KitsuSearchResult>()
+                for (i in 0 until data.length()) {
+                    val entry = data.getJSONObject(i)
+                    val attr = entry.optJSONObject("attributes") ?: continue
+
+                    val titlesObj = attr.optJSONObject("titles")
+                    val en = titlesObj?.optString("en")?.takeIf { it.isNotEmpty() && it != "null" }
+                    val jaJp = titlesObj?.optString("ja_jp")?.takeIf { it.isNotEmpty() && it != "null" }
+                    val canonical = attr.optString("canonicalTitle", "Unknown Title")
+
+                    val mainTitle = en ?: canonical
+                    val posterObj = attr.optJSONObject("posterImage")
+                    val imageUrl = posterObj?.optString("large")?.takeIf { it.isNotEmpty() && it != "null" }
+                        ?: posterObj?.optString("original")?.takeIf { it.isNotEmpty() && it != "null" }
+
+                    val synopsis = attr.optString("synopsis", "").takeIf { it.isNotEmpty() && it != "null" }
+                    val episodes = attr.optInt("episodeCount", 0)
+                    val statusStr = attr.optString("status", "").lowercase()
+                    val status = when {
+                        statusStr.contains("current") -> "ongoing"
+                        statusStr.contains("finished") -> "completed"
+                        else -> "ongoing"
+                    }
+
+                    results.add(
+                        KitsuSearchResult(
+                            title = mainTitle,
+                            titleZh = jaJp,
+                            synopsis = synopsis,
+                            poster = imageUrl,
+                            totalEp = episodes,
+                            status = status
+                        )
+                    )
+                }
+                results
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     fun getDonghuaStreamUrl(query: String): String {
         return try {
             "https://donghuastream.org/?s=" + URLEncoder.encode(query, "UTF-8")
