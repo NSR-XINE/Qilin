@@ -157,12 +157,15 @@ fun GlassHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp)
+                .padding(top = 2.dp, bottom = 14.dp),
+            contentAlignment = Alignment.Center
         ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 420.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.xl)
+                    .height(56.dp)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
@@ -363,14 +366,16 @@ class CutoutHeaderShape(
             val bottomPaddingPx = with(density) { 14.dp.toPx() }
             val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
-            val left = capsulePaddingStartPx
-            val right = size.width - capsulePaddingEndPx
+            val maxCapsuleWidthPx = with(density) { 420.dp.toPx() }
+            val availableWidth = size.width - capsulePaddingStartPx - capsulePaddingEndPx
+            val actualCapsuleWidth = minOf(availableWidth, maxCapsuleWidthPx)
+
+            val centerX = size.width / 2f
             val bottom = size.height - bottomPaddingPx
             val top = bottom - capsuleHeightPx
-            
-            val centerX = (left + right) / 2f
             val centerY = (top + bottom) / 2f
-            val halfWidth = (right - left) / 2f
+
+            val halfWidth = actualCapsuleWidth / 2f
             val halfHeight = (bottom - top) / 2f
             
             val scaledLeft = centerX - halfWidth * scale
