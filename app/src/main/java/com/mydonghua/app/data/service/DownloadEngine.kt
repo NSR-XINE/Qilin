@@ -109,6 +109,136 @@ object DownloadEngine {
         updateTask(taskId) { it.copy(status = DownloadStatus.DOWNLOADING) }
         createNotificationChannel(context)
 
+        try {
+            // Check headers & total size via HEAD request
+            val headRequest = Request.Builder()
+                .url(url)
+                .head()
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .build()
+
+            var totalBytes = -1L
+            var acceptsRanges = false
+
+            try {
+                client.newCall(headRequest).execute().use { res ->
+                    if (res.isSuccessful) {
+                        totalBytes = res.header("Content-Length")?.toLongOrNull() ?: -1L
+                        acceptsRanges = res.header("Accept-Ranges")?.lowercase() == "bytes" || totalBytes > 2_000_000L
+                    }
+                }
+            } catch (ignored: Exception) {}
+
+            if (acceptsRanges && totalBytes > 2_000_000L) {
+                runParallelChunkDownload(context, taskId, url, outputFile, totalBytes)
+            } else {
+                runSingleStreamDownload(context, taskId, url, outputFile)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            updateTask(taskId) { it.copy(status = DownloadStatus.FAILED, errorMessage = e.localizedMessage) }
+        } finally {
+            activeJobs.remove(taskId)
+        }
+    }
+
+    private suspend fun runParallelChunkDownload(
+        context: Context,
+        taskId: String,
+        url: String,
+        outputFile: File,
+        totalBytes: Long
+    ) = coroutineScope {
+        val numChunks = 4
+        val chunkSize = totalBytes / numChunks
+        val totalDownloadedCounter = java.util.concurrent.atomic.AtomicLong(0L)
+        val bytesInLastSecCounter = java.util.concurrent.atomic.AtomicLong(0L)
+
+        // Pre-allocate file size
+        java.io.RandomAccessFile(outputFile, "rw").use { raf ->
+            raf.setLength(totalBytes)
+        }
+
+        var lastSampleTime = System.currentTimeMillis()
+
+        val jobs = (0 until numChunks).map { index ->
+            val startByte = index * chunkSize
+            val endByte = if (index == numChunks - 1) totalBytes - 1 else (startByte + chunkSize - 1)
+
+            launch(Dispatchers.IO) {
+                val req = Request.Builder()
+                    .url(url)
+                    .header("Range", "bytes=$startByte-$endByte")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .build()
+
+                client.newCall(req).execute().use { response ->
+                    if (!response.isSuccessful && response.code != 206) return@launch
+                    val body = response.body ?: return@launch
+                    val stream = body.byteStream()
+                    val buffer = ByteArray(8 * 1024)
+
+                    java.io.RandomAccessFile(outputFile, "rw").use { raf ->
+                        raf.seek(startByte)
+                        var read: Int
+                        while (stream.read(buffer).also { read = it } != -1) {
+                            if (!isActive) return@launch
+                            raf.write(buffer, 0, read)
+                            totalDownloadedCounter.addAndGet(read.toLong())
+                            bytesInLastSecCounter.addAndGet(read.toLong())
+                        }
+                    }
+                }
+            }
+        }
+
+        val monitorJob = launch {
+            while (isActive && jobs.any { it.isActive }) {
+                delay(1000L)
+                val now = System.currentTimeMillis()
+                val elapsed = now - lastSampleTime
+                val bytesThisSec = bytesInLastSecCounter.getAndSet(0L)
+                val downloaded = totalDownloadedCounter.get()
+
+                val speedBps = if (elapsed > 0) (bytesThisSec * 1000L) / elapsed else 0L
+                val progressPercent = (downloaded.toFloat() / totalBytes) * 100f
+                val remainingBytes = (totalBytes - downloaded).coerceAtLeast(0L)
+                val etaSec = if (speedBps > 0) remainingBytes / speedBps else 0L
+
+                updateTask(taskId) {
+                    it.copy(
+                        progress = progressPercent,
+                        downloadedBytes = downloaded,
+                        totalBytes = totalBytes,
+                        speedBps = speedBps,
+                        etaSeconds = etaSec
+                    )
+                }
+                showNotification(context, activeTasks[taskId]!!)
+                lastSampleTime = now
+            }
+        }
+
+        jobs.joinAll()
+        monitorJob.cancel()
+
+        updateTask(taskId) {
+            it.copy(
+                status = DownloadStatus.COMPLETED,
+                progress = 100f,
+                downloadedBytes = totalBytes,
+                totalBytes = totalBytes
+            )
+        }
+        showCompletedNotification(context, activeTasks[taskId]!!)
+    }
+
+    private suspend fun runSingleStreamDownload(
+        context: Context,
+        taskId: String,
+        url: String,
+        outputFile: File
+    ) {
         var input: InputStream? = null
         var output: FileOutputStream? = null
 
@@ -195,7 +325,6 @@ object DownloadEngine {
         } finally {
             try { input?.close() } catch (ignored: Exception) {}
             try { output?.close() } catch (ignored: Exception) {}
-            activeJobs.remove(taskId)
         }
     }
 
