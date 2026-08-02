@@ -442,6 +442,11 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                        composable("downloads") {
+                            com.mydonghua.app.ui.screens.DownloadsScreen(
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
                     }
                 }
 
@@ -605,6 +610,12 @@ class MainActivity : ComponentActivity() {
                                 label = "Collections",
                                 isSelected = currentRoute == "collections",
                                 onClick = { isDrawerOpen = false; navController.navigate("collections") }
+                            )
+                            DrawerItem(
+                                iconRes = R.drawable.ic_history,
+                                label = "Downloads",
+                                isSelected = currentRoute == "downloads",
+                                onClick = { isDrawerOpen = false; navController.navigate("downloads") }
                             )
                             DrawerItem(
                                 iconRes = R.drawable.ic_history,
