@@ -38,6 +38,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+
 class WatchActivity : ComponentActivity() {
 
     private var player: ExoPlayer? = null
@@ -49,6 +53,9 @@ class WatchActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            hideSystemUI()
+        }
 
         val watchUrl = intent.getStringExtra("watch_url") ?: ""
         val showTitle = intent.getStringExtra("show_title") ?: "Donghua Episode"
@@ -277,6 +284,7 @@ class WatchActivity : ComponentActivity() {
                                     callback?.onCustomViewHidden()
                                     return
                                 }
+                                hideSystemUI()
                                 customView = view
                                 customViewCallback = callback
                                 fullscreenContainer = FrameLayout(ctx).apply {
@@ -293,6 +301,9 @@ class WatchActivity : ComponentActivity() {
 
                             override fun onHideCustomView() {
                                 if (customView == null) return
+                                if (resources.configuration.orientation != android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                                    showSystemUI()
+                                }
                                 (window.decorView as ViewGroup).removeView(fullscreenContainer)
                                 fullscreenContainer = null
                                 customView = null
@@ -305,6 +316,30 @@ class WatchActivity : ComponentActivity() {
                 },
                 modifier = Modifier.fillMaxSize()
             )
+        }
+    }
+
+    private fun hideSystemUI() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
+    private fun showSystemUI() {
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            hideSystemUI()
+        } else {
+            showSystemUI()
         }
     }
 
