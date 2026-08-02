@@ -521,23 +521,28 @@ class MainActivity : ComponentActivity() {
                     animationSpec = tween(500, easing = FastOutSlowInEasing)
                 ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing))
             ) {
-                val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                val isLightMode = settingsState.themeMode.lowercase() == "light"
-
-                MenuGlassPanel(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            // Consumes touch events on menu panel so background touches are disabled
-                        },
-                    shape = menuShape,
-                    isAmoledMode = isAmoledMode,
-                    isLightMode = isLightMode
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter
                 ) {
+                    val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                    val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
+                    val isLightMode = settingsState.themeMode.lowercase() == "light"
+
+                    MenuGlassPanel(
+                        modifier = Modifier
+                            .widthIn(max = 480.dp)
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                // Consumes touch events on menu panel so background touches are disabled
+                            },
+                        shape = menuShape,
+                        isAmoledMode = isAmoledMode,
+                        isLightMode = isLightMode
+                    ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -640,6 +645,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
     }
 }
 }
