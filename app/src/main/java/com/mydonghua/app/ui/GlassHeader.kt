@@ -56,9 +56,6 @@ import com.mydonghua.app.ui.theme.NavBarHeight
 
 import androidx.compose.ui.text.style.TextOverflow
 
-import android.content.res.Configuration
-import androidx.compose.ui.platform.LocalConfiguration
-
 @Composable
 fun GlassHeader(
     title: String,
@@ -69,9 +66,6 @@ fun GlassHeader(
     onEditClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
     val menuInteraction = remember { MutableInteractionSource() }
     val isMenuPressed by menuInteraction.collectIsPressedAsState()
     val menuScale by animateFloatAsState(
@@ -109,10 +103,7 @@ fun GlassHeader(
     val capsuleHeightPx = with(density) { 56.dp.toPx() }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (isLandscape) Modifier.padding(horizontal = 48.dp) else Modifier),
-        contentAlignment = Alignment.TopCenter
+        modifier = modifier.fillMaxWidth()
     ) {
         Box(
             modifier = Modifier
