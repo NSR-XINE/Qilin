@@ -82,6 +82,18 @@ class CountdownWidget : AppWidgetProvider() {
                 }
             }
 
+            val mainIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent = android.app.PendingIntent.getActivity(
+                context,
+                0,
+                mainIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_show_title, pendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_countdown, pendingIntent)
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
