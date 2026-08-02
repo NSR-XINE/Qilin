@@ -404,7 +404,7 @@ fun LiquidGlassNavBar(
     }
 }
 
-    Spacer(modifier = Modifier.weight(1f))
+    Spacer(modifier = Modifier.width(Spacing.sm))
 
     Box(
         modifier = Modifier
