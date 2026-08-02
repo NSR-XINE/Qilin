@@ -345,26 +345,29 @@ class WatchActivity : ComponentActivity() {
 
     private fun downloadVideo(context: Context, videoUrl: String, title: String) {
         try {
-            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val uri = Uri.parse(videoUrl)
-            val request = DownloadManager.Request(uri).apply {
-                setTitle(title)
-                setDescription("Downloading episode for offline viewing...")
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_MOVIES,
-                    "MyDonghua/${title.replace(Regex("[^a-zA-Z0-9_]"), "_")}.mp4"
-                )
-                setAllowedOverMetered(true)
-                setAllowedOverRoaming(true)
-            }
-            downloadManager.enqueue(request)
+            com.mydonghua.app.data.service.DownloadEngine.startDownload(context, videoUrl, title)
             Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
-            Toast.makeText(context, "Download started via browser...", Toast.LENGTH_SHORT).show()
             try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
-            } catch (ignored: Exception) {}
+                val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                val uri = Uri.parse(videoUrl)
+                val request = DownloadManager.Request(uri).apply {
+                    setTitle(title)
+                    setDescription("Downloading episode for offline viewing...")
+                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_MOVIES,
+                        "MyDonghua/${title.replace(Regex("[^a-zA-Z0-9_]"), "_")}.mp4"
+                    )
+                }
+                downloadManager.enqueue(request)
+                Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_LONG).show()
+            } catch (ex: Exception) {
+                Toast.makeText(context, "Opening download link...", Toast.LENGTH_SHORT).show()
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
+                } catch (ignored: Exception) {}
+            }
         }
     }
 }
