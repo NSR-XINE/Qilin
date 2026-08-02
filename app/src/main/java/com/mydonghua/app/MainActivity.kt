@@ -11,9 +11,13 @@ import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -236,16 +240,32 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                    fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
+                                    val fromTab = initialState.destination.route in TAB_ROUTES
+                                    val toTab = targetState.destination.route in TAB_ROUTES
+                                    if (fromTab && toTab) {
+                                        fadeIn(animationSpec = tween(240))
+                                    } else {
+                                        slideInHorizontally(initialOffsetX = { it }) +
+                                            fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
+                                    }
                                 },
                                 exitTransition = {
-                                    fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                                    val fromTab = initialState.destination.route in TAB_ROUTES
+                                    val toTab = targetState.destination.route in TAB_ROUTES
+                                    if (fromTab && toTab) {
+                                        fadeOut(animationSpec = tween(200))
+                                    } else {
+                                        slideOutHorizontally(targetOffsetX = { -it / 3 }) +
+                                            fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
+                                    }
                                 },
                                 popEnterTransition = {
-                                    fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
+                                    slideInHorizontally(initialOffsetX = { -it / 3 }) +
+                                        fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing))
                                 },
                                 popExitTransition = {
-                                    fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                                    slideOutHorizontally(targetOffsetX = { it }) +
+                                        fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
                                 }
                             ) {
                         composable("home") {
@@ -421,12 +441,15 @@ class MainActivity : ComponentActivity() {
                     visible = isSearchOpen,
                     enter = slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = tween(360, easing = FastOutSlowInEasing)
-                    ) + fadeIn(animationSpec = tween(320, easing = FastOutSlowInEasing)),
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing)),
                     exit = slideOutVertically(
                         targetOffsetY = { it },
-                        animationSpec = tween(300, easing = FastOutSlowInEasing)
-                    ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing)),
+                        animationSpec = tween(280, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(240, easing = FastOutSlowInEasing)),
                 ) {
                     Surface(
                         modifier = Modifier
@@ -482,18 +505,15 @@ class MainActivity : ComponentActivity() {
                     },
                 enter = slideInVertically(
                     initialOffsetY = { -it },
-                    animationSpec = tween(
-                        durationMillis = 700,
-                        easing = FastOutSlowInEasing
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(340, easing = FastOutSlowInEasing)),
+                ) + fadeIn(animationSpec = tween(280, easing = FastOutSlowInEasing)),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
-                    animationSpec = tween(
-                        durationMillis = 600,
-                        easing = FastOutSlowInEasing
-                    )
-                ) + fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
+                    animationSpec = tween(500, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing))
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
@@ -672,6 +692,7 @@ class MainActivity : ComponentActivity() {
         const val FILE_CHOOSER_REQUEST_CODE = 1001
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
+        private val TAB_ROUTES = setOf("home", "airing", "complete", "stopped", "favorites")
     }
 }
 
