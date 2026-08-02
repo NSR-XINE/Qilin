@@ -50,6 +50,8 @@ import dev.chrisbanes.haze.hazeChild
 val LocalHazeState = compositionLocalOf { HazeState() }
 val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 
+val Spacing = com.mydonghua.app.ui.theme.Spacing
+
 private val GlassTintAlpha = 0.04f
 
 @Composable
