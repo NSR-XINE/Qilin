@@ -43,22 +43,12 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.Spacing
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
 val LocalHazeState = compositionLocalOf { HazeState() }
 val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
-
-object Spacing {
-    val xs = 4.dp
-    val sm = 8.dp
-    val md = 12.dp
-    val lg = 16.dp
-    val xl = 20.dp
-    val xxl = 24.dp
-    val xxxl = 32.dp
-    val section = xxxl
-}
 
 private val GlassTintAlpha = 0.04f
 

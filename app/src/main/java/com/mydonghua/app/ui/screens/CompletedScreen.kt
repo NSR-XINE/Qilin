@@ -50,7 +50,7 @@ fun CompletedScreen(
         modifier = modifier.fillMaxSize()
     ) {
         if (isLoading) {
-            SkeletonList()
+            SkeletonList(topPadding = topPadding)
         } else if (shows.isEmpty()) {
             EmptyState(
                 title = "No completed shows tracked",
@@ -106,12 +106,12 @@ fun CompletedScreen(
 }
 
 @Composable
-private fun SkeletonList() {
+private fun SkeletonList(topPadding: Dp = 0.dp) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(top = 0.dp, bottom = 80.dp)
+        contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
     ) {
         items(5) {
             Card(
