@@ -6,15 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.NotificationsNone
-import androidx.compose.material.icons.rounded.PlayCircle
-import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -222,24 +222,24 @@ fun ShowCard(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                    IconButton(
+                    OutlinedIconButton(
                         onClick = { onEpDecrement(show) },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Remove,
+                            imageVector = Icons.Outlined.Remove,
                             contentDescription = "Decrement Episode",
                             modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    IconButton(
+                    OutlinedIconButton(
                         onClick = { onEpIncrement(show) },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Add,
+                            imageVector = Icons.Outlined.Add,
                             contentDescription = "Increment Episode",
                             modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -251,8 +251,8 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = if (show.isFavorite == 1) Icons.Rounded.Favorite
-                            else Icons.Rounded.FavoriteBorder,
+                            imageVector = if (show.isFavorite == 1) Icons.Outlined.Favorite
+                            else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Favorite",
                             modifier = Modifier.size(IconSize.sm),
                             tint = if (show.isFavorite == 1) MaterialTheme.colorScheme.primary
@@ -265,8 +265,8 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = if (show.alarmRequestCode != null) Icons.Rounded.Notifications
-                            else Icons.Rounded.NotificationsNone,
+                            imageVector = if (show.alarmRequestCode != null) Icons.Outlined.Notifications
+                            else Icons.Outlined.NotificationsNone,
                             contentDescription = "Notifications",
                             modifier = Modifier.size(IconSize.sm),
                             tint = if (show.alarmRequestCode != null) MaterialTheme.colorScheme.primary
@@ -280,7 +280,7 @@ fun ShowCard(
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.PlayCircle,
+                                imageVector = Icons.Outlined.PlayCircle,
                                 contentDescription = "Watch",
                                 modifier = Modifier.size(IconSize.sm),
                                 tint = MaterialTheme.colorScheme.primary
@@ -293,7 +293,7 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Edit,
+                            imageVector = Icons.Outlined.Edit,
                             contentDescription = "Edit",
                             modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -305,7 +305,7 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Delete,
+                            imageVector = Icons.Outlined.Delete,
                             contentDescription = "Delete",
                             modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.error
