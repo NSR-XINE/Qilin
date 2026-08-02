@@ -222,9 +222,8 @@ fun LiquidGlassNavBar(
                 .fillMaxWidth()
                 .height(NavBarHeight.bar),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (screenWidth > 600.dp) Arrangement.Center else Arrangement.Start
+            horizontalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.width(Spacing.md))
             Box(
                 modifier = Modifier
                     .width(maxCapsuleWidth)
@@ -354,14 +353,8 @@ fun LiquidGlassNavBar(
                                 scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                             },
                             onDrawSurface = {
-                                val alphaFactor = ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f)
-                                if (isDark) {
-                                    val darken = lerp(0.22f, 0.55f, alphaFactor)
-                                    drawRect(Color.Black.copy(alpha = darken))
-                                } else {
-                                    val lighten = lerp(0.35f, 0.65f, alphaFactor)
-                                    drawRect(Color.White.copy(alpha = lighten))
-                                }
+                                val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
+                                drawRect(Color.Black.copy(alpha = darken))
                             },
                         )
                         .width(with(density) { pillWidthPx.toDp() })
@@ -520,15 +513,10 @@ private fun Modifier.drawBackdropCustomShape(
             }
         },
         onDrawSurface = {
-            val alphaFactor = ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f)
+            val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
             val radius = size.height / 2f
-            val surfaceColor = if (luminanceAnimation > 0.5f) {
-                Color.White.copy(alpha = lerp(0.25f, 0.45f, alphaFactor))
-            } else {
-                Color.Black.copy(alpha = lerp(0.12f, 0.45f, alphaFactor))
-            }
             drawRoundRect(
-                color = surfaceColor,
+                color = Color.Black.copy(alpha = darken),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
             )
             val press = pressProgress
