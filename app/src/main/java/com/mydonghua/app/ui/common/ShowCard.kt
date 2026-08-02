@@ -4,11 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.NotificationsNone
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -246,10 +251,8 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            painter = painterResource(
-                                id = if (show.isFavorite == 1) R.drawable.ic_heart_filled
-                                else R.drawable.ic_heart_outline
-                            ),
+                            imageVector = if (show.isFavorite == 1) Icons.Rounded.Favorite
+                            else Icons.Rounded.FavoriteBorder,
                             contentDescription = "Favorite",
                             modifier = Modifier.size(IconSize.sm),
                             tint = if (show.isFavorite == 1) MaterialTheme.colorScheme.primary
@@ -262,7 +265,8 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_bell),
+                            imageVector = if (show.alarmRequestCode != null) Icons.Rounded.Notifications
+                            else Icons.Rounded.NotificationsNone,
                             contentDescription = "Notifications",
                             modifier = Modifier.size(IconSize.sm),
                             tint = if (show.alarmRequestCode != null) MaterialTheme.colorScheme.primary
@@ -276,7 +280,7 @@ fun ShowCard(
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_circle_play),
+                                imageVector = Icons.Rounded.PlayCircle,
                                 contentDescription = "Watch",
                                 modifier = Modifier.size(IconSize.sm),
                                 tint = MaterialTheme.colorScheme.primary
@@ -289,9 +293,9 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_edit),
+                            imageVector = Icons.Rounded.Edit,
                             contentDescription = "Edit",
-                            modifier = Modifier.size(IconSize.xs),
+                            modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -301,7 +305,7 @@ fun ShowCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_trash),
+                            imageVector = Icons.Rounded.Delete,
                             contentDescription = "Delete",
                             modifier = Modifier.size(IconSize.sm),
                             tint = MaterialTheme.colorScheme.error
