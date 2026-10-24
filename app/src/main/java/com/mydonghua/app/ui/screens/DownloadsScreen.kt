@@ -53,21 +53,31 @@ fun DownloadsScreen(
     var fileToDelete by remember { mutableStateOf<File?>(null) }
 
     fun refreshOfflineFiles() {
-        val storageDir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-            "MyDonghua"
-        )
-        if (storageDir.exists()) {
-            offlineFiles = storageDir.listFiles { _, name ->
-                name.endsWith(".mp4", ignoreCase = true) || name.endsWith(".mkv", ignoreCase = true)
-            }?.toList()?.sortedByDescending { it.lastModified() } ?: emptyList()
-        } else {
-            offlineFiles = emptyList()
+        val dirs = DownloadEngine.getAllStorageDirs(context)
+        val files = mutableListOf<File>()
+        for (dir in dirs) {
+            if (dir.exists()) {
+                val list = dir.listFiles { _, name ->
+                    name.endsWith(".mp4", ignoreCase = true) ||
+                    name.endsWith(".mkv", ignoreCase = true) ||
+                    name.endsWith(".ts", ignoreCase = true)
+                }
+                if (list != null) {
+                    files.addAll(list)
+                }
+            }
         }
+        offlineFiles = files.distinctBy { it.name }.sortedByDescending { it.lastModified() }
     }
 
     LaunchedEffect(Unit) {
         refreshOfflineFiles()
+    }
+
+    LaunchedEffect(tasks) {
+        if (tasks.any { it.status == DownloadStatus.COMPLETED }) {
+            refreshOfflineFiles()
+        }
     }
 
     val activeTasks = remember(tasks) {
@@ -80,12 +90,20 @@ fun DownloadsScreen(
 
     val (freeBytes, totalDeviceBytes) = remember {
         try {
-            val stat = StatFs(Environment.getExternalStorageDirectory().path)
+            val primaryDir = DownloadEngine.getPrimaryStorageDir(context)
+            val stat = StatFs(primaryDir.path)
             val free = stat.availableBlocksLong * stat.blockSizeLong
             val total = stat.blockCountLong * stat.blockSizeLong
             Pair(free, total)
         } catch (e: Exception) {
-            Pair(0L, 0L)
+            try {
+                val stat = StatFs(Environment.getExternalStorageDirectory().path)
+                val free = stat.availableBlocksLong * stat.blockSizeLong
+                val total = stat.blockCountLong * stat.blockSizeLong
+                Pair(free, total)
+            } catch (ex: Exception) {
+                Pair(0L, 0L)
+            }
         }
     }
 
@@ -110,7 +128,12 @@ fun DownloadsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        val tmp = File(file.parentFile, "${file.name}.tmp")
+                        if (tmp.exists()) tmp.delete()
                         file.delete()
+                        try {
+                            android.media.MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null, null)
+                        } catch (ignored: Exception) {}
                         fileToDelete = null
                         refreshOfflineFiles()
                     }

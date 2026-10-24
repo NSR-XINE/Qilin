@@ -120,7 +120,7 @@ class WatchActivity : ComponentActivity() {
                     watchUrl = watchUrl,
                     showTitle = showTitle,
                     onBack = { finish() },
-                    onDownload = { downloadVideo(context, watchUrl, showTitle) },
+                    onDownload = { streamUrl -> downloadVideo(context, streamUrl, showTitle) },
                     onOpenExternal = {
                         try {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(watchUrl)))
@@ -1077,12 +1077,13 @@ class WatchActivity : ComponentActivity() {
         watchUrl: String,
         showTitle: String,
         onBack: () -> Unit,
-        onDownload: () -> Unit,
+        onDownload: (String) -> Unit,
         onOpenExternal: () -> Unit
     ) {
         val context = LocalContext.current
         var webViewRef by remember { mutableStateOf<WebView?>(null) }
         var webProgress by remember { mutableIntStateOf(0) }
+        var detectedVideoUrl by remember { mutableStateOf<String?>(null) }
 
         DisposableEffect(Unit) {
             onDispose {
@@ -1203,7 +1204,10 @@ class WatchActivity : ComponentActivity() {
                         }
 
                         IconButton(
-                            onClick = onDownload,
+                            onClick = {
+                                val stream = detectedVideoUrl ?: watchUrl
+                                onDownload(stream)
+                            },
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
@@ -1289,6 +1293,18 @@ class WatchActivity : ComponentActivity() {
                                     return true
                                 }
                                 return false
+                            }
+
+                            override fun onLoadResource(view: WebView?, url: String?) {
+                                super.onLoadResource(view, url)
+                                if (url != null) {
+                                    val clean = url.lowercase()
+                                    if ((clean.contains(".m3u8") || clean.contains(".mp4") || clean.contains(".mkv")) &&
+                                        !clean.contains("analytics") && !clean.contains("stats") && !clean.contains("doubleclick")
+                                    ) {
+                                        detectedVideoUrl = url
+                                    }
+                                }
                             }
                         }
 
