@@ -17,7 +17,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -152,7 +155,6 @@ fun LiquidGlassNavBar(
     val totalSlots = 4f
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
     val coroutineScope = rememberCoroutineScope()
-    val barInteraction = rememberGlassInteraction()
     var currentTabIndex by remember { mutableIntStateOf(navIndex) }
 
     LaunchedEffect(Unit) {
@@ -186,6 +188,7 @@ fun LiquidGlassNavBar(
         )
 
         val draggedFlag = remember { booleanArrayOf(false) }
+        var activeTouchPosition by remember { mutableStateOf(Offset.Zero) }
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
                 DampedDragAnimation(
@@ -195,17 +198,21 @@ fun LiquidGlassNavBar(
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
                     pressedScale = 1.1f,
-                    onDragStarted = {
+                    totalSlots = totalSlots,
+                    getBarWidthPx = { barWidthPx },
+                    onDragStarted = { position ->
                         draggedFlag[0] = false
                         userInteracting = true
+                        activeTouchPosition = position
                     },
                     onDragStopped = {
                         userInteracting = false
+                        activeTouchPosition = Offset.Zero
                         if (draggedFlag[0]) {
                             val vel = velocity
                             val targetIndex = when {
-                                vel > 0.5f -> (value + 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
-                                vel < -0.5f -> (value - 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
+                                vel > 0.4f -> (value + 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
+                                vel < -0.4f -> (value - 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
                                 else -> value.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
                             }
                             val safeIndex =
@@ -219,8 +226,9 @@ fun LiquidGlassNavBar(
                             }
                         }
                     },
-                    onDrag = { _, dragAmount ->
+                    onDrag = { _, dragAmount, position ->
                         if (dragAmount.x != 0f) draggedFlag[0] = true
+                        activeTouchPosition = position
                         val slotWidth = if (totalSlots > 0) barWidthPx / totalSlots else 0f
                         if (slotWidth > 0f) {
                             val next = (value + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f)
@@ -228,11 +236,20 @@ fun LiquidGlassNavBar(
                             currentTabIndex = next.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
                         }
                     },
+                    onTap = { slot ->
+                        activeTouchPosition = Offset.Zero
+                        if (slot != currentTabIndex) {
+                            PosterTrace.reset()
+                            PosterStagger.reset()
+                            currentTabIndex = slot
+                            currentOnNavigate(navRoutes[slot])
+                        }
+                        animateToValue(navToValue(slot))
+                    },
                 )
             }
 
-        var activeTouchPosition by remember { mutableStateOf(Offset.Zero) }
-        val unifiedPressProgress = maxOf(barInteraction.pressProgress, dampedDrag.pressProgress)
+        val unifiedPressProgress = dampedDrag.pressProgress
 
         Row(
             modifier = Modifier
@@ -248,21 +265,7 @@ fun LiquidGlassNavBar(
                     .graphicsLayer {
                         alpha = capsuleAlpha
                     }
-                    .onSizeChanged { barWidthPx = it.width }
-                    .pointerInput(barInteraction) { barInteraction.detectPress(this) }
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                val event = awaitPointerEvent(PointerEventPass.Initial)
-                                val firstPressed = event.changes.firstOrNull { it.pressed }
-                                if (firstPressed != null) {
-                                    activeTouchPosition = firstPressed.position
-                                } else {
-                                    activeTouchPosition = Offset.Zero
-                                }
-                            }
-                        }
-                    },
+                    .onSizeChanged { barWidthPx = it.width },
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Box(
@@ -408,12 +411,6 @@ fun LiquidGlassNavBar(
                             },
                             contentDescription = tabDescription,
                             selected = currentTabIndex == position,
-                            onClick = {
-                                PosterTrace.reset()
-                                PosterStagger.reset()
-                                currentTabIndex = position
-                                onNavigate(route)
-                            },
                         )
                     }
                 }
@@ -466,7 +463,6 @@ private fun NavBarIcon(
     iconRes: Int,
     contentDescription: String,
     selected: Boolean,
-    onClick: () -> Unit,
 ) {
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.12f else 1.0f,
@@ -480,13 +476,7 @@ private fun NavBarIcon(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(CapsuleShape)
-            .clickable(
-                interactionSource = null,
-                indication = null,
-                role = Role.Tab,
-                onClick = onClick,
-            ),
+            .clip(CapsuleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -577,9 +567,12 @@ class DampedDragAnimation(
     val visibilityThreshold: Float,
     val initialScale: Float,
     val pressedScale: Float,
+    val totalSlots: Float,
+    val getBarWidthPx: () -> Int,
     val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
     val onDragStopped: DampedDragAnimation.() -> Unit,
-    val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
+    val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset, position: Offset) -> Unit,
+    val onTap: DampedDragAnimation.(slot: Int) -> Unit,
 ) {
     private val valueAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow)
     private val smoothAnimationSpec = spring<Float>(dampingRatio = 0.60f, stiffness = Spring.StiffnessMediumLow)
@@ -606,25 +599,50 @@ class DampedDragAnimation(
     val velocity: Float get() = velocityAnimation.value
 
     val modifier: Modifier =
-        Modifier.pointerInput(Unit) {
-            detectHorizontalDragGestures(
-                onDragStart = { offset ->
-                    onDragStarted(offset)
-                    press()
-                },
-                onDragEnd = {
-                    onDragStopped()
-                    release()
-                },
-                onDragCancel = {
-                    onDragStopped()
-                    release()
-                },
-                onHorizontalDrag = { change, dragAmount ->
-                    change.consume()
-                    onDrag(size, Offset(dragAmount, 0f))
+        Modifier.pointerInput(totalSlots) {
+            val touchSlop = viewConfiguration.touchSlop
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val startX = down.position.x
+                var hasDragged = false
+
+                onDragStarted(down.position)
+                press()
+
+                val pointerId = down.id
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+
+                    if (change.changedToUpIgnoreConsumed()) {
+                        change.consume()
+                        val barWidth = getBarWidthPx()
+                        val slotWidth = if (totalSlots > 0 && barWidth > 0) barWidth / totalSlots else 0f
+                        if (!hasDragged) {
+                            val slot = if (slotWidth > 0f) {
+                                (down.position.x / slotWidth).toInt().coerceIn(0, totalSlots.toInt() - 1)
+                            } else 0
+                            onTap(slot)
+                        } else {
+                            onDragStopped()
+                        }
+                        release()
+                        break
+                    }
+
+                    val dragAmountX = change.positionChange().x
+                    if (!hasDragged && abs(change.position.x - startX) > touchSlop) {
+                        hasDragged = true
+                    }
+
+                    if (hasDragged) {
+                        change.consume()
+                        if (dragAmountX != 0f) {
+                            onDrag(size, Offset(dragAmountX, 0f), change.position)
+                        }
+                    }
                 }
-            )
+            }
         }
 
     fun press() {
