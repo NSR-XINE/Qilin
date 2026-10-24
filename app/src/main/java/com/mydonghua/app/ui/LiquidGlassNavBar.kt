@@ -13,7 +13,9 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -198,21 +200,31 @@ fun LiquidGlassNavBar(
                     onDragStopped = {
                         userInteracting = false
                         if (draggedFlag[0]) {
-                            val snapped = targetValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
-                            val safeIndex =
-                                if (snapped in navRoutes.indices) snapped else currentTabIndex
-                            if (safeIndex != currentTabIndex) {
-                                currentTabIndex = safeIndex
+                            val vel = velocity
+                            val targetIndex = when {
+                                vel > 0.5f -> (value + 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
+                                vel < -0.5f -> (value - 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
+                                else -> value.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
                             }
-                            updateValue(navToValue(currentTabIndex))
+                            val safeIndex =
+                                if (targetIndex in navRoutes.indices) targetIndex else currentTabIndex
+                            currentTabIndex = safeIndex
+                            animateToValue(navToValue(safeIndex))
+                            if (safeIndex != navIndex) {
+                                PosterTrace.reset()
+                                PosterStagger.reset()
+                                currentOnNavigate(navRoutes[safeIndex])
+                            }
                         }
                     },
                     onDrag = { _, dragAmount ->
                         if (dragAmount.x != 0f) draggedFlag[0] = true
-                        val slotWidth = barWidthPx / totalSlots
-                        updateValue(
-                            (targetValue + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f),
-                        )
+                        val slotWidth = if (totalSlots > 0) barWidthPx / totalSlots else 0f
+                        if (slotWidth > 0f) {
+                            val next = (value + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f)
+                            snapValue(next)
+                            currentTabIndex = next.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                        }
                     },
                 )
             }
@@ -298,7 +310,7 @@ fun LiquidGlassNavBar(
                 snapshotFlow { currentTabIndex }
                     .drop(1)
                     .collectLatest { index ->
-                        if (draggedFlag[0]) {
+                        if (draggedFlag[0] && !userInteracting) {
                             PosterTrace.reset()
                             PosterStagger.reset()
                             currentOnNavigate(navRoutes[index])
@@ -593,9 +605,9 @@ class DampedDragAnimation(
 
     val modifier: Modifier =
         Modifier.pointerInput(Unit) {
-            inspectDragGestures(
-                onDragStart = { down ->
-                    onDragStarted(down.position)
+            detectHorizontalDragGestures(
+                onDragStart = { offset ->
+                    onDragStarted(offset)
                     press()
                 },
                 onDragEnd = {
@@ -606,9 +618,11 @@ class DampedDragAnimation(
                     onDragStopped()
                     release()
                 },
-            ) { _, dragAmount ->
-                onDrag(size, dragAmount)
-            }
+                onHorizontalDrag = { change, dragAmount ->
+                    change.consume()
+                    onDrag(size, Offset(dragAmount, 0f))
+                }
+            )
         }
 
     fun press() {
@@ -635,16 +649,23 @@ class DampedDragAnimation(
         }
     }
 
-    fun updateValue(value: Float) {
+    fun snapValue(value: Float) {
         val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
         animationScope.launch {
-            valueAnimation.animateTo(target, valueAnimationSpec) { updateVelocity() }
+            mutatorMutex.mutate(MutatePriority.UserInput) {
+                valueAnimation.snapTo(target)
+                updateVelocity()
+            }
         }
+    }
+
+    fun updateValue(value: Float) {
+        snapValue(value)
     }
 
     fun animateToValue(value: Float) {
         animationScope.launch {
-            mutatorMutex.mutate {
+            mutatorMutex.mutate(MutatePriority.Default) {
                 press()
                 val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
                 launch { valueAnimation.animateTo(target, snapAnimationSpec) }
