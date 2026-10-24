@@ -111,6 +111,29 @@ object AdBlocker {
                 lower.startsWith("twitter:")
     }
 
+    fun isAntiAdblockProbe(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val lower = url.lowercase()
+        return lower.contains("p21=") || lower.contains("p21img=") || lower.contains("p21-check") || lower.contains("p21-front") || lower.contains("/ads/ads.js")
+    }
+
+    fun createProbeResponse(url: String?): WebResourceResponse {
+        val lower = url?.lowercase() ?: ""
+        return if (lower.contains("p21img=") || lower.contains("&img=")) {
+            val transparentPng = android.util.Base64.decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+                android.util.Base64.DEFAULT
+            )
+            WebResourceResponse("image/png", "UTF-8", ByteArrayInputStream(transparentPng))
+        } else {
+            WebResourceResponse(
+                "application/javascript",
+                "UTF-8",
+                ByteArrayInputStream("window.p21Bait = (window.p21Bait || 0) + 1; window.p21ControlLoaded = true;".toByteArray())
+            )
+        }
+    }
+
     fun createEmptyResponse(): WebResourceResponse {
         return WebResourceResponse(
             "text/plain",

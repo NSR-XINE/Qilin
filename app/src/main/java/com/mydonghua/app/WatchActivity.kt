@@ -1326,6 +1326,69 @@ class WatchActivity : ComponentActivity() {
                         }
 
                         webViewClient = object : WebViewClient() {
+                            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                super.onPageStarted(view, url, favicon)
+                                val defuseScript = """
+                                    (function() {
+                                        try {
+                                            window.P21G = { on: 0 };
+                                            if (window.P21 && window.P21.ab) {
+                                                window.P21.ab.on = 0;
+                                                window.P21.ab.mode = 'none';
+                                            }
+                                            Object.defineProperty(window, 'P21G', {
+                                                get: function() { return { on: 0 }; },
+                                                set: function() {},
+                                                configurable: true
+                                            });
+                                        } catch(e) {}
+                                    })();
+                                """.trimIndent()
+                                view?.evaluateJavascript(defuseScript, null)
+                            }
+
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                super.onPageFinished(view, url)
+                                val cleanupScript = """
+                                    (function() {
+                                        try {
+                                            if (window.P21 && window.P21.ab) {
+                                                window.P21.ab.on = 0;
+                                                window.P21.ab.mode = 'none';
+                                            }
+                                            if (window.P21G) {
+                                                window.P21G.on = 0;
+                                            }
+                                        } catch(e) {}
+                                        function purgeOverlays() {
+                                            try {
+                                                var elms = document.querySelectorAll('div[style*="z-index:2147483647"], div[style*="z-index: 2147483647"]');
+                                                elms.forEach(function(el) { el.remove(); });
+                                                document.querySelectorAll('div').forEach(function(d) {
+                                                    if (d.textContent && (d.textContent.indexOf('turn off your ad blocker') !== -1 || d.textContent.indexOf('Open your blocker') !== -1)) {
+                                                        var root = d;
+                                                        while (root.parentElement && root.parentElement !== document.body && root.parentElement !== document.documentElement) {
+                                                            root = root.parentElement;
+                                                        }
+                                                        root.remove();
+                                                    }
+                                                });
+                                                document.documentElement.style.setProperty('overflow', 'auto', 'important');
+                                                document.body.style.setProperty('overflow', 'auto', 'important');
+                                            } catch(e) {}
+                                        }
+                                        purgeOverlays();
+                                        setInterval(purgeOverlays, 350);
+                                        try {
+                                            var s = document.createElement('style');
+                                            s.textContent = 'div[style*="z-index:2147483647"], div[style*="z-index: 2147483647"] { display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; } html, body { overflow: auto !important; }';
+                                            document.head.appendChild(s);
+                                        } catch(e) {}
+                                    })();
+                                """.trimIndent()
+                                view?.evaluateJavascript(cleanupScript, null)
+                            }
+
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url?.toString() ?: return false
                                 if (AdBlocker.isEnabled(context)) {
@@ -1353,8 +1416,11 @@ class WatchActivity : ComponentActivity() {
                                 view: WebView?,
                                 request: WebResourceRequest?
                             ): WebResourceResponse? {
+                                val url = request?.url?.toString()
+                                if (AdBlocker.isAntiAdblockProbe(url)) {
+                                    return AdBlocker.createProbeResponse(url)
+                                }
                                 if (AdBlocker.isEnabled(context)) {
-                                    val url = request?.url?.toString()
                                     if (AdBlocker.isAdUrl(url)) {
                                         return AdBlocker.createEmptyResponse()
                                     }
