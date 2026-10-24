@@ -25,6 +25,7 @@ object CornerRadius {
 
     // ColorOS 17 Aquamorphic Design Tokens
     val chip = md       // 14.dp
+    val surface = 20.dp // 20.dp - Floating capsule and header docks
     val card = 22.dp    // 22.dp - Signature continuous curvature squircle
     val banner = 26.dp  // 26.dp
     val sheet = 30.dp   // 30.dp

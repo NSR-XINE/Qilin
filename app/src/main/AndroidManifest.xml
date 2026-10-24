@@ -37,7 +37,8 @@
             android:name=".WatchActivity"
             android:exported="false"
             android:hardwareAccelerated="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
             android:theme="@style/Theme.MyDonghua.NoActionBar" />
 
         <!-- Broadcast Receivers -->
