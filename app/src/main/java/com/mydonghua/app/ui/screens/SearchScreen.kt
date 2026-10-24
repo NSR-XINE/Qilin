@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
@@ -74,6 +75,7 @@ import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.rounded.Close
@@ -229,12 +231,22 @@ fun SearchScreen(
                 .height(56.dp)
                 .clip(RoundedCornerShape(CornerRadius.banner))
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f)
+                        )
+                    ),
                     shape = RoundedCornerShape(CornerRadius.banner)
                 )
                 .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+                    width = 0.85.dp,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.35f),
+                            Color.White.copy(alpha = 0.08f)
+                        )
+                    ),
                     shape = RoundedCornerShape(CornerRadius.banner)
                 ),
             verticalAlignment = Alignment.CenterVertically
@@ -244,6 +256,7 @@ fun SearchScreen(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
+                    .colorOSPressBounce(pressedScale = 0.88f)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -312,6 +325,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.88f)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -331,6 +345,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.88f)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -372,12 +387,7 @@ fun SearchScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(
-                                        text = "Recent Searches",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    SearchSectionTitle("Recent Searches", MaterialTheme.colorScheme.primary)
                                     Text(
                                         text = "Clear all",
                                         fontSize = 12.sp,
@@ -399,13 +409,9 @@ fun SearchScreen(
 
                         if (populars.isNotEmpty()) {
                             item {
-                                Text(
-                                    text = "Popular Searches",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
-                                )
+                                Box(modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)) {
+                                    SearchSectionTitle("Popular Searches", MaterialTheme.colorScheme.secondary)
+                                }
                             }
                             items(populars) { item ->
                                 SuggestionRow(text = item.text, isRecent = false, onClick = { viewModel.selectQuery(item.text) })
@@ -479,13 +485,9 @@ fun SearchScreen(
 
                         if (isSearchActive && showMatches.isNotEmpty()) {
                             item {
-                                Text(
-                                    text = "Suggestions",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)
-                                )
+                                Box(modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)) {
+                                    SearchSectionTitle("Suggestions", MaterialTheme.colorScheme.primary)
+                                }
                             }
                             items(showMatches) { match ->
                                 SuggestionMatchRow(
@@ -505,13 +507,9 @@ fun SearchScreen(
 
                         if (results.isNotEmpty()) {
                             item {
-                                Text(
-                                    text = "My Library",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-                                )
+                                Box(modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
+                                    SearchSectionTitle("My Library", MaterialTheme.colorScheme.primary)
+                                }
                             }
                             items(results, key = { it.id }) { show ->
                                 ShowCard(
@@ -568,13 +566,9 @@ fun SearchScreen(
                             }
                         } else if (onlineResults.isNotEmpty()) {
                             item {
-                                Text(
-                                    text = "Online Results (AniList / MyAnimeList)",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-                                )
+                                Box(modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
+                                    SearchSectionTitle("Online Results (AniList / MyAnimeList)", MaterialTheme.colorScheme.secondary)
+                                }
                             }
                             items(onlineResults, key = { it.id }) { show ->
                                 ShowCard(
@@ -1200,5 +1194,25 @@ private fun AnimatedDialog(
         ) {
             content(dismissWithAction)
         }
+    }
+}
+
+@Composable
+private fun SearchSectionTitle(title: String, color: Color = MaterialTheme.colorScheme.primary) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(13.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
     }
 }

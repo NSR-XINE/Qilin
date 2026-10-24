@@ -42,7 +42,7 @@ import kotlin.math.sign
 class GlassInteraction(
     private val animationScope: CoroutineScope,
 ) {
-    private val pressSpec = spring(dampingRatio = 0.5f, stiffness = 300f, visibilityThreshold = 0.001f)
+    private val pressSpec = spring(dampingRatio = 0.62f, stiffness = 650f, visibilityThreshold = 0.001f)
     private val pressAnimation = Animatable(0f, 0.001f)
 
     val pressProgress: Float get() = pressAnimation.value
@@ -77,7 +77,7 @@ fun Modifier.drawInteractiveGlass(
     luminanceAnimation: Float,
     shape: Shape,
     interaction: GlassInteraction?,
-    pressedScale: Float = 1.12f,
+    pressedScale: Float = 0.95f,
 ): Modifier =
     this
         .drawBackdrop(

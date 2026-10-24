@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -35,6 +36,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -129,12 +131,7 @@ fun AddEditShowScreen(
 
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    Text(
-                        text = "Basic Info",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    AddEditSectionTitle("Basic Info")
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -147,7 +144,7 @@ fun AddEditShowScreen(
                             label = { Text("English Title *") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
 
                         FilledTonalButton(
@@ -176,8 +173,10 @@ fun AddEditShowScreen(
                                 }
                             },
                             enabled = !isAutoFilling,
-                            shape = RoundedCornerShape(CornerRadius.sm),
-                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(CornerRadius.md),
+                            modifier = Modifier
+                                .height(56.dp)
+                                .colorOSPressBounce(pressedScale = 0.92f),
                             contentPadding = PaddingValues(horizontal = 14.dp)
                         ) {
                             if (isAutoFilling) {
@@ -200,7 +199,7 @@ fun AddEditShowScreen(
                         label = { Text("Chinese / Alternate Title") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.sm)
+                        shape = RoundedCornerShape(CornerRadius.md)
                     )
 
                     var statusExpanded by remember { mutableStateOf(false) }
@@ -217,7 +216,7 @@ fun AddEditShowScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor(),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
                         ExposedDropdownMenu(
                             expanded = statusExpanded,
@@ -237,12 +236,7 @@ fun AddEditShowScreen(
             if (status == "ongoing") {
                 GlassSection {
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                        Text(
-                            text = "Schedule",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        AddEditSectionTitle("Schedule")
 
                         var dayExpanded by remember { mutableStateOf(false) }
                         val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -259,7 +253,7 @@ fun AddEditShowScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(),
-                                shape = RoundedCornerShape(CornerRadius.sm)
+                                shape = RoundedCornerShape(CornerRadius.md)
                             )
                             ExposedDropdownMenu(
                                 expanded = dayExpanded,
@@ -284,7 +278,7 @@ fun AddEditShowScreen(
                                 label = { Text("Time (HH:MM)") },
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(CornerRadius.sm)
+                                shape = RoundedCornerShape(CornerRadius.md)
                             )
                             OutlinedTextField(
                                 value = releaseYear,
@@ -292,7 +286,7 @@ fun AddEditShowScreen(
                                 label = { Text("Year") },
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(CornerRadius.sm)
+                                shape = RoundedCornerShape(CornerRadius.md)
                             )
                         }
                     }
@@ -301,12 +295,7 @@ fun AddEditShowScreen(
 
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    Text(
-                        text = "Episodes",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    AddEditSectionTitle("Episodes")
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -318,7 +307,7 @@ fun AddEditShowScreen(
                             label = { Text("Current") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
                         OutlinedTextField(
                             value = totalEp,
@@ -326,7 +315,7 @@ fun AddEditShowScreen(
                             label = { Text("Total") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
                     }
                 }
@@ -334,12 +323,7 @@ fun AddEditShowScreen(
 
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    Text(
-                        text = "Media & Links",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    AddEditSectionTitle("Media & Links")
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -352,7 +336,7 @@ fun AddEditShowScreen(
                             label = { Text("Poster URL") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
 
                         FilledTonalButton(
@@ -372,8 +356,10 @@ fun AddEditShowScreen(
                                     }
                                 }
                             },
-                            shape = RoundedCornerShape(CornerRadius.sm),
-                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(CornerRadius.md),
+                            modifier = Modifier
+                                .height(56.dp)
+                                .colorOSPressBounce(pressedScale = 0.92f),
                             contentPadding = PaddingValues(horizontal = 14.dp)
                         ) {
                             Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -386,7 +372,7 @@ fun AddEditShowScreen(
                             title = title.ifBlank { "New Show" },
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(RoundedCornerShape(CornerRadius.sm)),
+                                .clip(RoundedCornerShape(CornerRadius.md)),
                             contentScale = ContentScale.Crop,
                             fontSize = 16.sp
                         )
@@ -398,7 +384,7 @@ fun AddEditShowScreen(
                         label = { Text("Watch URL") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.sm)
+                        shape = RoundedCornerShape(CornerRadius.md)
                     )
 
                     Row(
@@ -410,6 +396,7 @@ fun AddEditShowScreen(
                                 val t = title.ifBlank { "donghua" }
                                 watchUrl = com.mydonghua.app.data.service.PosterFetchService.getDonghuaStreamUrl(t)
                             },
+                            shape = RoundedCornerShape(CornerRadius.pill),
                             label = { Text("Set DonghuaStream", fontSize = 11.sp) }
                         )
                         AssistChip(
@@ -417,6 +404,7 @@ fun AddEditShowScreen(
                                 val t = title.ifBlank { "donghua" }
                                 watchUrl = com.mydonghua.app.data.service.PosterFetchService.getLuciferDonghuaUrl(t)
                             },
+                            shape = RoundedCornerShape(CornerRadius.pill),
                             label = { Text("Set LuciferDonghua", fontSize = 11.sp) }
                         )
                     }
@@ -427,7 +415,7 @@ fun AddEditShowScreen(
                         label = { Text("Countdown / Calendar URL") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.sm)
+                        shape = RoundedCornerShape(CornerRadius.md)
                     )
 
                     OutlinedTextField(
@@ -436,19 +424,14 @@ fun AddEditShowScreen(
                         label = { Text("Collection ID") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.sm)
+                        shape = RoundedCornerShape(CornerRadius.md)
                     )
                 }
             }
 
             GlassSection {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    Text(
-                        text = "Details",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    AddEditSectionTitle("Details")
 
                     OutlinedTextField(
                         value = notes,
@@ -456,7 +439,7 @@ fun AddEditShowScreen(
                         label = { Text("Synopsis / Notes") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 4,
-                        shape = RoundedCornerShape(CornerRadius.sm)
+                        shape = RoundedCornerShape(CornerRadius.md)
                     )
 
                     Row(
@@ -469,7 +452,7 @@ fun AddEditShowScreen(
                             label = { Text("Genres") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
                         OutlinedTextField(
                             value = studio,
@@ -477,7 +460,7 @@ fun AddEditShowScreen(
                             label = { Text("Studio") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
                     }
 
@@ -491,7 +474,7 @@ fun AddEditShowScreen(
                             label = { Text("Language") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.sm)
+                            shape = RoundedCornerShape(CornerRadius.md)
                         )
                     }
                 }
@@ -556,15 +539,56 @@ fun AddEditShowScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(ButtonHeight.xl),
-                shape = RoundedCornerShape(CornerRadius.md)
+                    .height(52.dp)
+                    .colorOSPressBounce(pressedScale = 0.96f)
+                    .clip(RoundedCornerShape(CornerRadius.card))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        )
+                    ),
+                shape = RoundedCornerShape(CornerRadius.card),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(IconSize.md))
+                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(IconSize.md), tint = Color.White)
                 Spacer(Modifier.width(Spacing.sm))
-                Text("Save Show", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text("Save Show", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(Spacing.xxxl))
         }
+    }
+}
+
+@Composable
+private fun AddEditSectionTitle(title: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(bottom = Spacing.xs)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(14.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary
+                        )
+                    )
+                )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }

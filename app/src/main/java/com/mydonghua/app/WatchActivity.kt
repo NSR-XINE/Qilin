@@ -15,9 +15,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
@@ -27,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +40,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -155,13 +159,21 @@ class WatchActivity : ComponentActivity() {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(Color.Black.copy(alpha = 0.65f))
+                            .border(
+                                width = 0.75.dp,
+                                color = Color.White.copy(alpha = 0.20f),
+                                shape = RoundedCornerShape(13.dp)
+                            )
+                            .colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
@@ -178,8 +190,15 @@ class WatchActivity : ComponentActivity() {
                 IconButton(
                     onClick = onDownload,
                     modifier = Modifier
-                        .size(40.dp)
-                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .border(
+                            width = 0.75.dp,
+                            color = Color.White.copy(alpha = 0.20f),
+                            shape = RoundedCornerShape(13.dp)
+                        )
+                        .colorOSPressBounce(pressedScale = 0.90f)
                 ) {
                     Icon(Icons.Default.Download, contentDescription = "Download Episode", tint = Color.White)
                 }
@@ -214,7 +233,18 @@ class WatchActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .background(Color(0xFF141416))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF161822), Color(0xFF0F1017))
+                        )
+                    )
+                    .border(
+                        width = 0.5.dp,
+                        brush = Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.15f), Color.Transparent)
+                        ),
+                        shape = RoundedCornerShape(0.dp)
+                    )
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -224,7 +254,12 @@ class WatchActivity : ComponentActivity() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                     Text(
@@ -238,10 +273,20 @@ class WatchActivity : ComponentActivity() {
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    IconButton(onClick = onDownload) {
+                    IconButton(
+                        onClick = onDownload,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
                         Icon(Icons.Default.Download, contentDescription = "Download Episode", tint = Color(0xFF00F2FE))
                     }
-                    IconButton(onClick = onOpenExternal) {
+                    IconButton(
+                        onClick = onOpenExternal,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
                         Icon(Icons.Default.OpenInBrowser, contentDescription = "Open in Browser", tint = Color.White)
                     }
                 }
