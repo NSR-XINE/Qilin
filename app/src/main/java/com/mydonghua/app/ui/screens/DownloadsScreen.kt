@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,6 +125,9 @@ fun DownloadsScreen(
         )
     }
 
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val glassBorder = rememberLiquidGlassBorder(isLight)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -146,13 +151,7 @@ fun DownloadsScreen(
                     )
                     .border(
                         width = 0.65.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.22f),
-                                Color(0xFF00E5FF).copy(alpha = 0.18f),
-                                Color.White.copy(alpha = 0.05f)
-                            )
-                        ),
+                        brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -415,13 +414,7 @@ private fun StorageOverviewCard(
             )
             .border(
                 width = 0.65.dp,
-                brush = Brush.linearGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.20f),
-                        Color(0xFF00E5FF).copy(alpha = 0.15f),
-                        Color.Transparent
-                    )
-                ),
+                brush = rememberLiquidGlassBorder(),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
             .padding(Spacing.md)
@@ -537,13 +530,7 @@ private fun ActiveDownloadCard(
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
             .border(
                 width = 0.65.dp,
-                brush = Brush.linearGradient(
-                    listOf(
-                        Color(0xFF00E5FF).copy(alpha = 0.35f),
-                        Color.White.copy(alpha = 0.10f),
-                        Color.Transparent
-                    )
-                ),
+                brush = rememberLiquidGlassBorder(),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
             .padding(Spacing.md)

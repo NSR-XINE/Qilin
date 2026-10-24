@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -54,21 +55,7 @@ fun EmptyState(
         ) {
             if (icon != null || painter != null) {
                 val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-                val iconBorderBrush = if (isLight) {
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.80f),
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-                        )
-                    )
-                } else {
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.25f),
-                            Color.White.copy(alpha = 0.05f)
-                        )
-                    )
-                }
+                val iconBorderBrush = rememberLiquidGlassBorder(isLight)
                 val iconBgBrush = Brush.radialGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.primary.copy(alpha = if (isLight) 0.12f else 0.16f),

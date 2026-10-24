@@ -41,6 +41,8 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.shimmerEffect
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.colorOSPressBounce
@@ -137,16 +139,8 @@ fun HeroBanner(
         }
     }
 
-    // ColorOS 17 Aurora rim gradient (banner sits on dark poster image)
-    val bannerBorderBrush = remember(isLight) {
-        Brush.linearGradient(
-            colors = listOf(
-                Color(0xFF00E5FF).copy(alpha = 0.55f),
-                Color(0xFF0072FF).copy(alpha = 0.28f),
-                Color.White.copy(alpha = 0.18f)
-            )
-        )
-    }
+    // Unified liquid glass border across all boxes
+    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
 
     val overlayBrush = remember {
         Brush.verticalGradient(
@@ -211,7 +205,7 @@ fun HeroBanner(
                     .padding(14.dp)
                     .clip(RoundedCornerShape(CornerRadius.chip))
                     .background(Color.Black.copy(alpha = 0.55f))
-                    .border(0.6.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(CornerRadius.chip))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(CornerRadius.chip))
                     .padding(horizontal = 9.dp, vertical = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -223,7 +217,7 @@ fun HeroBanner(
                         modifier = Modifier
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF00E5FF))
+                            .background(if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF))
                     )
                     Text(
                         text = if (remainingTime.airingNow) "AIRING NOW" else "NEXT UP",
@@ -271,9 +265,14 @@ fun HeroBanner(
                             .clip(RoundedCornerShape(12.dp))
                             .background(
                                 Brush.horizontalGradient(
-                                    listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                    if (isLight) {
+                                        listOf(Color(0xFF009AA6), Color(0xFF0072FF))
+                                    } else {
+                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                    }
                                 )
                             )
+                            .border(0.5.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(12.dp))
                             .clickable { onWatchClick() }
                             .colorOSPressBounce(pressedScale = 0.92f)
                             .padding(horizontal = 16.dp),
@@ -322,6 +321,7 @@ private fun BannerTimeBox(
     modifier: Modifier = Modifier
 ) {
     val hazeState = LocalHazeState.current
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val shape = RoundedCornerShape(CornerRadius.md)
     val bgBrush = remember {
         Brush.verticalGradient(
@@ -331,22 +331,16 @@ private fun BannerTimeBox(
             )
         )
     }
-    val borderBrush = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                Color(0xFF00E5FF).copy(alpha = 0.42f),
-                Color.White.copy(alpha = 0.20f),
-                Color.Transparent
-            )
-        )
-    }
+    // Unified liquid glass border
+    val borderBrush = rememberLiquidGlassBorder(isLight)
+
     Box(
         modifier = modifier
             .height(48.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(brush = bgBrush)
-            .border(width = 0.85.dp, brush = borderBrush, shape = shape)
+            .border(width = 0.75.dp, brush = borderBrush, shape = shape)
             .padding(vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -365,7 +359,7 @@ private fun BannerTimeBox(
                 text = label,
                 fontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF00E5FF).copy(alpha = 0.92f),
+                color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF).copy(alpha = 0.92f),
                 letterSpacing = 0.5.sp,
                 textAlign = TextAlign.Center
             )
@@ -414,25 +408,8 @@ fun ContinueWatchingRow(
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val cardShape = RoundedCornerShape(CornerRadius.card)
 
-    val cardBorder = remember(isLight) {
-        if (isLight) {
-            Brush.linearGradient(
-                listOf(
-                    Color.Black.copy(alpha = 0.12f),
-                    Color(0xFF009AA6).copy(alpha = 0.20f),
-                    Color.Black.copy(alpha = 0.05f)
-                )
-            )
-        } else {
-            Brush.linearGradient(
-                listOf(
-                    Color.White.copy(alpha = 0.20f),
-                    Color(0xFF00E5FF).copy(alpha = 0.12f),
-                    Color.Transparent
-                )
-            )
-        }
-    }
+    // Unified liquid glass border across all boxes
+    val cardBorder = rememberLiquidGlassBorder(isLight)
 
     val cardBg = if (isLight) {
         MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
@@ -453,7 +430,7 @@ fun ContinueWatchingRow(
                     .hazeChild(state = hazeState, shape = cardShape)
                     .background(cardBg)
                     .border(
-                        width = 0.65.dp,
+                        width = 0.75.dp,
                         brush = cardBorder,
                         shape = cardShape
                     )
@@ -571,25 +548,8 @@ fun RecentlyUpdatedRow(
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
     val cardShape = RoundedCornerShape(CornerRadius.card)
 
-    val cardBorder = remember(isLight) {
-        if (isLight) {
-            Brush.linearGradient(
-                listOf(
-                    Color.Black.copy(alpha = 0.12f),
-                    Color(0xFF009AA6).copy(alpha = 0.20f),
-                    Color.Black.copy(alpha = 0.05f)
-                )
-            )
-        } else {
-            Brush.linearGradient(
-                listOf(
-                    Color.White.copy(alpha = 0.20f),
-                    Color(0xFF00E5FF).copy(alpha = 0.12f),
-                    Color.Transparent
-                )
-            )
-        }
-    }
+    // Unified liquid glass border across all boxes
+    val cardBorder = rememberLiquidGlassBorder(isLight)
 
     val cardBg = if (isLight) {
         MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
@@ -612,7 +572,7 @@ fun RecentlyUpdatedRow(
                     .hazeChild(state = hazeState, shape = cardShape)
                     .background(cardBg)
                     .border(
-                        width = 0.65.dp,
+                        width = 0.75.dp,
                         brush = cardBorder,
                         shape = cardShape
                     )

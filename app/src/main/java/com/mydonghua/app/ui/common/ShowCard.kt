@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.colorOSPressBounce
@@ -84,28 +86,9 @@ fun ShowCard(
         }
     }
 
-    // Specular border brush (ColorOS 17 Aurora rim reflection, light/dark adaptive)
-    val cardBorderBrush = remember(isLight) {
-        if (isLight) {
-            Brush.linearGradient(
-                colors = listOf(
-                    Color.Black.copy(alpha = 0.12f),
-                    Color(0xFF009AA6).copy(alpha = 0.22f),
-                    Color.Black.copy(alpha = 0.05f),
-                    Color.Black.copy(alpha = 0.08f)
-                )
-            )
-        } else {
-            Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.22f),
-                    Color(0xFF00E5FF).copy(alpha = 0.14f),
-                    Color.Transparent,
-                    Color.White.copy(alpha = 0.08f)
-                )
-            )
-        }
-    }
+    // Unified liquid glass border across all boxes
+    val cardBorderBrush = rememberLiquidGlassBorder(isLight)
+    val chipBorderColor = rememberLiquidGlassChipBorder(isLight)
 
     val cardBgColor = if (isLight) {
         MaterialTheme.colorScheme.surface.copy(alpha = 0.90f)
@@ -231,7 +214,7 @@ fun ShowCard(
                         .padding(12.dp)
                         .clip(RoundedCornerShape(CornerRadius.chip))
                         .background(Color.Black.copy(alpha = 0.55f))
-                        .border(0.6.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(CornerRadius.chip))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(CornerRadius.chip))
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -262,7 +245,7 @@ fun ShowCard(
                         .padding(12.dp)
                         .clip(RoundedCornerShape(CornerRadius.chip))
                         .background(Color.Black.copy(alpha = 0.55f))
-                        .border(0.6.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(CornerRadius.chip))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(CornerRadius.chip))
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -275,7 +258,7 @@ fun ShowCard(
                     )
                 }
 
-                // Title & Subtitle inside bottom vignette (aligned flush with bottom content)
+                // Title & Subtitle inside bottom vignette
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -385,7 +368,7 @@ fun ShowCard(
                         }
                     }
 
-                    // Right: Tactile Quick Stepper Pill [ − ] Ep X [ + ] (Exact 34.dp height)
+                    // Right: Tactile Quick Stepper Pill [ − ] Ep X [ + ] (Liquid glass border)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -397,9 +380,8 @@ fun ShowCard(
                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                             )
                             .border(
-                                width = 0.6.dp,
-                                color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
-                                else Color.White.copy(alpha = 0.12f),
+                                width = 0.5.dp,
+                                color = chipBorderColor,
                                 shape = RoundedCornerShape(CornerRadius.chip)
                             )
                             .padding(horizontal = 3.dp, vertical = 2.dp)
@@ -409,6 +391,10 @@ fun ShowCard(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isLight) Color.Black.copy(alpha = 0.04f)
+                                    else Color.White.copy(alpha = 0.06f)
+                                )
                                 .clickable(enabled = show.currentEp > 0) { onEpDecrement(show) }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center
@@ -439,12 +425,8 @@ fun ShowCard(
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    Brush.linearGradient(
-                                        listOf(
-                                            (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)).copy(alpha = 0.25f),
-                                            Color(0xFF0072FF).copy(alpha = 0.25f)
-                                        )
-                                    )
+                                    if (isLight) Color.Black.copy(alpha = 0.04f)
+                                    else Color.White.copy(alpha = 0.06f)
                                 )
                                 .clickable { onEpIncrement(show) }
                                 .colorOSPressBounce(pressedScale = 0.88f),
@@ -455,7 +437,7 @@ fun ShowCard(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                color = if (isLight) Color(0xFF009AA6) else Color.White
+                                color = if (isLight) MaterialTheme.colorScheme.onSurface else Color.White
                             )
                         }
                     }
@@ -463,7 +445,7 @@ fun ShowCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Faint divider line (adaptive to light/dark mode)
+                // Faint divider line
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -476,7 +458,7 @@ fun ShowCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Tier 2: Action Chips Row (Watch Action + Icon Squircle Chips)
+                // Tier 2: Action Chips Row (Same Liquid Glass Border Across All Chips)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -485,29 +467,14 @@ fun ShowCard(
                     val chipBgColor = if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
 
-                    val chipBorderColor = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.60f)
-                    else Color.White.copy(alpha = 0.10f)
-
                     // Left Hero Action: Watch pill if URL exists, or Details pill if no direct stream URL
                     if (!show.watchUrl.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
                                 .height(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(
-                                    Brush.linearGradient(
-                                        if (isLight) {
-                                            listOf(Color(0xFF009AA6).copy(alpha = 0.14f), Color(0xFF0072FF).copy(alpha = 0.14f))
-                                        } else {
-                                            listOf(Color(0xFF00E5FF).copy(alpha = 0.16f), Color(0xFF0072FF).copy(alpha = 0.16f))
-                                        }
-                                    )
-                                )
-                                .border(
-                                    0.6.dp,
-                                    if (isLight) Color(0xFF009AA6).copy(alpha = 0.45f) else Color(0xFF00E5FF).copy(alpha = 0.45f),
-                                    RoundedCornerShape(10.dp)
-                                )
+                                .background(chipBgColor)
+                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { onWatchClick(show.watchUrl ?: "") }
                                 .colorOSPressBounce(pressedScale = 0.92f)
                                 .padding(horizontal = 12.dp),
@@ -532,13 +499,13 @@ fun ShowCard(
                             }
                         }
                     } else {
-                        // Clean Details pill to maintain perfect row alignment
+                        // Clean Details pill
                         Box(
                             modifier = Modifier
                                 .height(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(chipBgColor)
-                                .border(0.6.dp, chipBorderColor, RoundedCornerShape(10.dp))
+                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { onCardClick(show) }
                                 .colorOSPressBounce(pressedScale = 0.92f)
                                 .padding(horizontal = 10.dp),
@@ -564,7 +531,7 @@ fun ShowCard(
                         }
                     }
 
-                    // Action Squircle Chips (Favorite, Notify, Edit, Delete) - each exact 34.dp height
+                    // Action Squircle Chips (Favorite, Notify, Edit, Delete) - exact same liquid glass border
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -578,12 +545,7 @@ fun ShowCard(
                                     if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = if (isLight) 0.12f else 0.20f)
                                     else chipBgColor
                                 )
-                                .border(
-                                    0.6.dp,
-                                    if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = if (isLight) 0.40f else 0.50f)
-                                    else chipBorderColor,
-                                    RoundedCornerShape(10.dp)
-                                )
+                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { onFavoriteToggle(show) }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center
@@ -607,12 +569,7 @@ fun ShowCard(
                                     if (show.alarmRequestCode != null) (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)).copy(alpha = if (isLight) 0.12f else 0.20f)
                                     else chipBgColor
                                 )
-                                .border(
-                                    0.6.dp,
-                                    if (show.alarmRequestCode != null) (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)).copy(alpha = if (isLight) 0.40f else 0.50f)
-                                    else chipBorderColor,
-                                    RoundedCornerShape(10.dp)
-                                )
+                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { onNotifyToggle(show) }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center
@@ -633,7 +590,7 @@ fun ShowCard(
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(chipBgColor)
-                                .border(0.6.dp, chipBorderColor, RoundedCornerShape(10.dp))
+                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { onEditClick(show) }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center
@@ -652,7 +609,7 @@ fun ShowCard(
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.error.copy(alpha = if (isLight) 0.08f else 0.12f))
-                                .border(0.6.dp, MaterialTheme.colorScheme.error.copy(alpha = if (isLight) 0.25f else 0.35f), RoundedCornerShape(10.dp))
+                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { showDeleteDialog = true }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center

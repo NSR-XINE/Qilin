@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
@@ -198,9 +199,8 @@ fun FavoritesScreen(
                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
                                 )
                                 .border(
-                                    width = 0.6.dp,
-                                    color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
-                                    else Color.White.copy(alpha = 0.12f),
+                                    width = 0.5.dp,
+                                    color = rememberLiquidGlassChipBorder(isLight),
                                     shape = RoundedCornerShape(CornerRadius.chip)
                                 )
                                 .padding(horizontal = 10.dp, vertical = 4.dp),

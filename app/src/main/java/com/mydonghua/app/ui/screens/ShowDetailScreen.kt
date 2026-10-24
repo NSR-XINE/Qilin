@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -93,6 +95,9 @@ fun ShowDetailScreen(
     }
 
     var isSynopsisExpanded by remember { mutableStateOf(false) }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val glassBorder = rememberLiquidGlassBorder(isLight)
+    val chipBorder = rememberLiquidGlassChipBorder(isLight)
 
     Column(
         modifier = modifier
@@ -117,13 +122,7 @@ fun ShowDetailScreen(
                     )
                     .border(
                         width = 0.65.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.22f),
-                                Color(0xFF00E5FF).copy(alpha = 0.18f),
-                                Color.White.copy(alpha = 0.05f)
-                            )
-                        ),
+                        brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -211,13 +210,7 @@ fun ShowDetailScreen(
                     .background(Color(0xFF0F121C))
                     .border(
                         width = 0.75.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color(0xFF00E5FF).copy(alpha = 0.35f),
-                                Color.White.copy(alpha = 0.15f),
-                                Color(0xFF0072FF).copy(alpha = 0.25f)
-                            )
-                        ),
+                        brush = glassBorder,
                         shape = bannerShape
                     )
             ) {
@@ -460,9 +453,8 @@ fun ShowDetailScreen(
                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
                         )
                         .border(
-                            width = 0.65.dp,
-                            color = if (hasNotification) Color(0xFF00E5FF).copy(alpha = 0.45f)
-                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            width = 0.5.dp,
+                            color = chipBorder,
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
                         .colorOSPressBounce(pressedScale = 0.90f)
@@ -484,13 +476,7 @@ fun ShowDetailScreen(
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
                     .border(
                         width = 0.65.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.20f),
-                                Color(0xFF00E5FF).copy(alpha = 0.15f),
-                                Color.Transparent
-                            )
-                        ),
+                        brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.card)
                     )
                     .padding(Spacing.md)
@@ -616,13 +602,7 @@ fun ShowDetailScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
                         .border(
                             width = 0.65.dp,
-                            brush = Brush.linearGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.20f),
-                                    Color(0xFF00E5FF).copy(alpha = 0.15f),
-                                    Color.Transparent
-                                )
-                            ),
+                            brush = glassBorder,
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
                         .padding(Spacing.md)
@@ -789,12 +769,7 @@ private fun DetailCountdownBox(value: Long, label: String) {
             .background(Color.Black.copy(alpha = 0.25f))
             .border(
                 width = 0.65.dp,
-                brush = Brush.verticalGradient(
-                    listOf(
-                        Color(0xFF00E5FF).copy(alpha = 0.40f),
-                        Color.White.copy(alpha = 0.08f)
-                    )
-                ),
+                brush = rememberLiquidGlassBorder(),
                 shape = shape
             ),
         contentAlignment = Alignment.Center

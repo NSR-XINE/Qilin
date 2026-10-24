@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -193,6 +194,46 @@ fun GlassBackground(
         content()
     }
 }
+@Composable
+fun rememberLiquidGlassBorder(
+    isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f,
+    isAmoled: Boolean = MaterialTheme.colorScheme.background == Color.Black || MaterialTheme.colorScheme.background.luminance() < 0.01f
+): Brush {
+    return remember(isLight, isAmoled) {
+        Brush.verticalGradient(
+            colors = when {
+                isAmoled -> listOf(
+                    Color.White.copy(alpha = 0.55f),
+                    Color.White.copy(alpha = 0.20f),
+                    Color.White.copy(alpha = 0.06f),
+                    Color.White.copy(alpha = 0.02f)
+                )
+                isLight -> listOf(
+                    Color.White.copy(alpha = 0.85f),
+                    Color.White.copy(alpha = 0.35f),
+                    Color.Black.copy(alpha = 0.12f),
+                    Color.Black.copy(alpha = 0.05f)
+                )
+                else -> listOf(
+                    Color.White.copy(alpha = 0.45f),
+                    Color.White.copy(alpha = 0.16f),
+                    Color.White.copy(alpha = 0.05f),
+                    Color.White.copy(alpha = 0.02f)
+                )
+            }
+        )
+    }
+}
+
+@Composable
+fun rememberLiquidGlassChipBorder(
+    isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f
+): Color {
+    return remember(isLight) {
+        if (isLight) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.12f)
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GlassSection(
@@ -223,28 +264,7 @@ fun GlassSection(
         else -> Color.Black.copy(alpha = 0.25f)
     }
 
-    val specularGlassBorder = Brush.verticalGradient(
-        colors = when {
-            isAmoled -> listOf(
-                Color.White.copy(alpha = 0.60f),
-                Color.White.copy(alpha = 0.25f),
-                Color.White.copy(alpha = 0.08f),
-                Color.White.copy(alpha = 0.02f)
-            )
-            isLight -> listOf(
-                Color.White.copy(alpha = 0.85f),
-                Color.White.copy(alpha = 0.40f),
-                Color.Black.copy(alpha = 0.12f),
-                Color.Black.copy(alpha = 0.05f)
-            )
-            else -> listOf(
-                Color.White.copy(alpha = 0.55f),
-                Color.White.copy(alpha = 0.20f),
-                Color.White.copy(alpha = 0.08f),
-                Color.White.copy(alpha = 0.03f)
-            )
-        }
-    )
+    val specularGlassBorder = rememberLiquidGlassBorder(isLight, isAmoled)
 
     val baseModifier = modifier
         .fillMaxWidth()

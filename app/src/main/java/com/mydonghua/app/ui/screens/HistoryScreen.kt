@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,6 +54,8 @@ fun HistoryScreen(
             getRelativeDateGroup(item.watchedAt)
         }
     }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val glassBorder = rememberLiquidGlassBorder(isLight)
 
     Column(
         modifier = modifier
@@ -77,13 +80,7 @@ fun HistoryScreen(
                     )
                     .border(
                         width = 0.65.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.22f),
-                                Color(0xFF00E5FF).copy(alpha = 0.18f),
-                                Color.White.copy(alpha = 0.05f)
-                            )
-                        ),
+                        brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -232,13 +229,7 @@ fun HistoryScreen(
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                                 .border(
                                     width = 0.55.dp,
-                                    brush = Brush.linearGradient(
-                                        listOf(
-                                            Color.White.copy(alpha = 0.18f),
-                                            Color(0xFF00E5FF).copy(alpha = 0.12f),
-                                            Color.Transparent
-                                        )
-                                    ),
+                                    brush = glassBorder,
                                     shape = RoundedCornerShape(CornerRadius.card)
                                 )
                                 .colorOSPressBounce(

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,8 @@ fun CollectionsScreen(
     val sortedCollections = remember(collectionsMap) {
         collectionsMap.entries.sortedBy { it.key.lowercase() }
     }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val glassBorder = rememberLiquidGlassBorder(isLight)
 
     Column(
         modifier = modifier
@@ -73,13 +76,7 @@ fun CollectionsScreen(
                     )
                     .border(
                         width = 0.65.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.22f),
-                                Color(0xFF00E5FF).copy(alpha = 0.18f),
-                                Color.White.copy(alpha = 0.05f)
-                            )
-                        ),
+                        brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -201,13 +198,7 @@ fun CollectionsScreen(
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                             .border(
                                 width = 0.65.dp,
-                                brush = Brush.linearGradient(
-                                    listOf(
-                                        Color.White.copy(alpha = 0.20f),
-                                        Color(0xFF00E5FF).copy(alpha = 0.15f),
-                                        Color.Transparent
-                                    )
-                                ),
+                                brush = glassBorder,
                                 shape = RoundedCornerShape(CornerRadius.card)
                             )
                             .padding(Spacing.md)
