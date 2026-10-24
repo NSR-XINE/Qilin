@@ -4,24 +4,28 @@ import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,7 +35,6 @@ import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
-import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
@@ -43,7 +46,6 @@ import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
 
 @Composable
 fun HomeScreen(
@@ -57,7 +59,6 @@ fun HomeScreen(
     defaultStreamProvider: String = "donghuastream",
 ) {
     val state by viewModel.uiState.collectAsState()
-
     val effectiveTopPadding = if (topPadding.value > 0f) topPadding + Spacing.md else 88.dp
 
     val listState = rememberLazyListState()
@@ -69,7 +70,7 @@ fun HomeScreen(
             .background(Color.Transparent)
             .navigationBarsPadding(),
         state = listState,
-        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 80.dp)
+        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
     ) {
         if (state.isLoading) {
             item { HeroBannerSkeleton() }
@@ -134,32 +135,37 @@ fun HeroBanner(
         }
     }
 
+    // ColorOS 17 Aurora rim gradient
     val bannerBorderBrush = remember {
-        Brush.verticalGradient(
+        Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.45f),
-                Color.White.copy(alpha = 0.12f)
+                Color(0xFF00E5FF).copy(alpha = 0.50f),
+                Color(0xFF0072FF).copy(alpha = 0.25f),
+                Color.White.copy(alpha = 0.15f)
             )
         )
     }
+
     val overlayBrush = remember {
         Brush.verticalGradient(
-            0.0f to Color.Transparent,
-            0.25f to Color.Transparent,
-            0.55f to Color.Black.copy(alpha = 0.04f),
-            0.8f to Color.Black.copy(alpha = 0.15f),
-            1.0f to Color.Black.copy(alpha = 0.45f)
+            0.0f to Color.Black.copy(alpha = 0.40f),
+            0.20f to Color.Transparent,
+            0.45f to Color.Black.copy(alpha = 0.25f),
+            0.75f to Color.Black.copy(alpha = 0.70f),
+            1.0f to Color.Black.copy(alpha = 0.90f)
         )
     }
+
     val textShadow = remember {
         Shadow(
-            color = Color.Black.copy(alpha = 0.5f),
-            offset = Offset(0f, 1f),
-            blurRadius = 3f
+            color = Color.Black.copy(alpha = 0.65f),
+            offset = Offset(0f, 1.5f),
+            blurRadius = 4f
         )
     }
 
     val bannerShape = RoundedCornerShape(CornerRadius.banner)
+
     Card(
         shape = bannerShape,
         border = androidx.compose.foundation.BorderStroke(
@@ -170,7 +176,7 @@ fun HeroBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(250.dp)
+            .height(260.dp)
             .colorOSPressBounce(pressedScale = 0.98f)
             .clickable { onBannerClick() }
     ) {
@@ -189,40 +195,119 @@ fun HeroBanner(
                 showAcronym = false
             )
 
+            // Multi-stop liquid gradient overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(overlayBrush)
             )
 
+            // Top-Left: "NEXT UP" / "AIRING" Pill Badge
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(14.dp)
+                    .clip(RoundedCornerShape(CornerRadius.chip))
+                    .background(Color.Black.copy(alpha = 0.50f))
+                    .border(0.6.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(CornerRadius.chip))
+                    .padding(horizontal = 9.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF00E5FF))
+                    )
+                    Text(
+                        text = if (remainingTime.airingNow) "AIRING NOW" else "NEXT UP",
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 0.6.sp
+                    )
+                }
+            }
+
+            // Bottom Content
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = 18.dp, end = 18.dp, bottom = Spacing.xl, top = 10.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
                 Text(
                     text = show.title,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(shadow = textShadow)
                 )
+
                 Spacer(modifier = Modifier.height(3.dp))
+
                 Text(
                     text = if (remainingTime.airingNow) "New episode available now"
-                    else "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                    fontSize = 13.sp,
+                    else "Ep ${show.currentEp + 1} • ${show.releaseDay ?: "Sunday"} ${show.releaseTime ?: ""}",
+                    fontSize = 12.5.sp,
                     color = Color.White.copy(alpha = 0.85f),
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    BannerTimeBox(value = remainingTime.days, label = "days")
-                    BannerTimeBox(value = remainingTime.hours, label = "hours")
-                    BannerTimeBox(value = remainingTime.minutes, label = "mins")
-                    BannerTimeBox(value = remainingTime.seconds, label = "secs")
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (remainingTime.airingNow) {
+                        Box(
+                            modifier = Modifier
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                    )
+                                )
+                                .clickable { onWatchClick() }
+                                .colorOSPressBounce(pressedScale = 0.92f)
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.PlayArrow,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
+                                Text(
+                                    text = "Watch Now",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            BannerTimeBox(value = remainingTime.days, label = "DAYS")
+                            BannerTimeBox(value = remainingTime.hours, label = "HOURS")
+                            BannerTimeBox(value = remainingTime.minutes, label = "MINS")
+                            BannerTimeBox(value = remainingTime.seconds, label = "SECS")
+                        }
+                    }
                 }
             }
         }
@@ -242,17 +327,18 @@ private fun BannerTimeBox(value: Long, label: String) {
         )
     }
     val borderBrush = remember {
-        Brush.verticalGradient(
+        Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.50f),
-                Color.White.copy(alpha = 0.15f)
+                Color(0xFF00E5FF).copy(alpha = 0.40f),
+                Color.White.copy(alpha = 0.18f),
+                Color.Transparent
             )
         )
     }
     Box(
         modifier = Modifier
             .width(54.dp)
-            .height(46.dp)
+            .height(48.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(brush = bgBrush)
@@ -266,16 +352,17 @@ private fun BannerTimeBox(value: Long, label: String) {
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.5.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = label,
-                fontSize = 9.sp,
+                fontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White.copy(alpha = 0.85f),
+                color = Color(0xFF00E5FF).copy(alpha = 0.90f),
+                letterSpacing = 0.5.sp,
                 textAlign = TextAlign.Center
             )
         }
@@ -291,13 +378,13 @@ fun SectionHeader(title: String) {
         Box(
             modifier = Modifier
                 .width(4.dp)
-                .height(16.dp)
+                .height(18.dp)
                 .clip(RoundedCornerShape(2.dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary
+                            Color(0xFF00E5FF),
+                            Color(0xFF0072FF)
                         )
                     )
                 )
@@ -319,28 +406,34 @@ fun ContinueWatchingRow(
     onShowClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val hazeState = LocalHazeState.current
+    val cardShape = RoundedCornerShape(CornerRadius.card)
+    val cardBorder = remember {
+        Brush.linearGradient(
+            listOf(
+                Color.White.copy(alpha = 0.20f),
+                Color(0xFF00E5FF).copy(alpha = 0.12f),
+                Color.Transparent
+            )
+        )
+    }
+
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = Spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         items(shows, key = { it.id }) { show ->
             Box(
                 modifier = Modifier
-                    .width(250.dp)
-                    .clip(RoundedCornerShape(CornerRadius.card))
+                    .width(260.dp)
+                    .clip(cardShape)
+                    .hazeChild(state = hazeState, shape = cardShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
                     .border(
-                        width = 0.55.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.18f),
-                                Color(0xFF00E5FF).copy(alpha = 0.12f),
-                                Color.Transparent
-                            )
-                        ),
-                        shape = RoundedCornerShape(CornerRadius.card)
+                        width = 0.65.dp,
+                        brush = cardBorder,
+                        shape = cardShape
                     )
                     .colorOSPressBounce(
                         pressedScale = 0.98f,
@@ -354,7 +447,7 @@ fun ContinueWatchingRow(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 54.dp, height = 74.dp)
+                            .size(width = 58.dp, height = 78.dp)
                             .clip(RoundedCornerShape(CornerRadius.md))
                     ) {
                         DonghuaPoster(
@@ -362,10 +455,30 @@ fun ContinueWatchingRow(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 7.5.sp
+                            fontSize = 8.sp
                         )
+
+                        // Subtle play icon badge overlay
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(4.dp)
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.55f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = Color(0xFF00E5FF)
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.width(Spacing.sm))
+
+                    Spacer(modifier = Modifier.width(Spacing.md))
+
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
@@ -375,6 +488,7 @@ fun ContinueWatchingRow(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+
                         val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
                         Text(
                             text = "Ep ${show.currentEp}$totalStr",
@@ -383,6 +497,7 @@ fun ContinueWatchingRow(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 2.dp)
                         )
+
                         if (show.totalEp > 0) {
                             Spacer(modifier = Modifier.height(Spacing.xs))
                             val fraction = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f)
@@ -390,20 +505,20 @@ fun ContinueWatchingRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(4.5.dp)
-                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth(fraction)
                                         .fillMaxHeight()
-                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .clip(CircleShape)
                                         .background(
                                             Brush.horizontalGradient(
                                                 listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
                                             )
                                         )
-                                    )
+                                )
                             }
                         }
                     }
@@ -419,8 +534,19 @@ fun RecentlyUpdatedRow(
     onShowClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hazeState = LocalHazeState.current
     val lazyListState = rememberLazyListState()
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
+    val cardShape = RoundedCornerShape(CornerRadius.card)
+    val cardBorder = remember {
+        Brush.linearGradient(
+            listOf(
+                Color.White.copy(alpha = 0.20f),
+                Color(0xFF00E5FF).copy(alpha = 0.12f),
+                Color.Transparent
+            )
+        )
+    }
 
     LazyRow(
         state = lazyListState,
@@ -432,19 +558,14 @@ fun RecentlyUpdatedRow(
         items(shows, key = { it.id }) { show ->
             Box(
                 modifier = Modifier
-                    .fillParentMaxWidth()
-                    .clip(RoundedCornerShape(CornerRadius.card))
+                    .width(260.dp)
+                    .clip(cardShape)
+                    .hazeChild(state = hazeState, shape = cardShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
                     .border(
-                        width = 0.55.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.18f),
-                                Color(0xFF00E5FF).copy(alpha = 0.12f),
-                                Color.Transparent
-                            )
-                        ),
-                        shape = RoundedCornerShape(CornerRadius.card)
+                        width = 0.65.dp,
+                        brush = cardBorder,
+                        shape = cardShape
                     )
                     .colorOSPressBounce(
                         pressedScale = 0.98f,
@@ -458,7 +579,7 @@ fun RecentlyUpdatedRow(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 54.dp, height = 72.dp)
+                            .size(width = 58.dp, height = 78.dp)
                             .clip(RoundedCornerShape(CornerRadius.md))
                     ) {
                         DonghuaPoster(
@@ -466,30 +587,45 @@ fun RecentlyUpdatedRow(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 7.5.sp
+                            fontSize = 8.sp
                         )
                     }
+
                     Spacer(modifier = Modifier.width(Spacing.md))
+
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
-                            fontSize = 14.sp,
+                            fontSize = 13.5.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+
                         val relativeTime = if (show.lastUpdated != null) {
                             DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
                         } else ""
+
                         if (relativeTime.isNotEmpty()) {
-                            Text(
-                                text = relativeTime,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = Spacing.xs),
-                                maxLines = 1
-                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_clock),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = relativeTime,
+                                    fontSize = 11.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
@@ -504,8 +640,8 @@ private fun HeroBannerSkeleton() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(250.dp)
-            .clip(RoundedCornerShape(CornerRadius.card))
+            .height(260.dp)
+            .clip(RoundedCornerShape(CornerRadius.banner))
             .shimmerEffect()
     )
 }
@@ -528,14 +664,14 @@ private fun HorizontalRowSkeleton() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         repeat(3) {
             Box(
                 modifier = Modifier
-                    .width(240.dp)
-                    .height(72.dp)
-                    .clip(RoundedCornerShape(CornerRadius.sm))
+                    .width(260.dp)
+                    .height(86.dp)
+                    .clip(RoundedCornerShape(CornerRadius.card))
                     .shimmerEffect()
             )
         }

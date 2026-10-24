@@ -1,6 +1,7 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,14 +15,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mydonghua.app.domain.model.Show
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
+import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
@@ -33,10 +36,10 @@ import com.mydonghua.app.ui.theme.CornerRadius
 fun CompletedScreen(
     viewModel: ShowsViewModel,
     onWatchClick: (String) -> Unit,
-    onEditClick: (com.mydonghua.app.domain.model.Show) -> Unit,
-    onCardClick: (com.mydonghua.app.domain.model.Show) -> Unit,
+    onEditClick: (Show) -> Unit,
+    onCardClick: (Show) -> Unit,
     modifier: Modifier = Modifier,
-    topPadding: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp(0f),
+    topPadding: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val shows by viewModel.completedShows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -67,13 +70,13 @@ fun CompletedScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
+                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
             ) {
-                item {
+                item(key = "completed_header") {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -81,23 +84,39 @@ fun CompletedScreen(
                             Box(
                                 modifier = Modifier
                                     .width(4.dp)
-                                    .height(14.dp)
+                                    .height(16.dp)
                                     .clip(RoundedCornerShape(2.dp))
-                                    .background(Color(0xFF4CAF50))
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(Color(0xFF00E676), Color(0xFF00B0FF))
+                                        )
+                                    )
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "Completed",
+                                text = "Completed Series",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                        Text(
-                            text = if (shows.size == 1) "1 show" else "${shows.size} shows",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+
+                        // Frosted pill show counter badge
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(CornerRadius.chip))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(CornerRadius.chip))
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (shows.size == 1) "1 show" else "${shows.size} shows",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF00E676)
+                            )
+                        }
                     }
                 }
 
@@ -125,8 +144,32 @@ private fun SkeletonList(topPadding: Dp = 0.dp) {
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 80.dp)
+        contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
     ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(130.dp)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(CornerRadius.xs))
+                        .shimmerEffect()
+                )
+                Box(
+                    modifier = Modifier
+                        .width(58.dp)
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(CornerRadius.chip))
+                        .shimmerEffect()
+                )
+            }
+        }
         items(5) {
             Card(
                 modifier = Modifier
@@ -146,7 +189,7 @@ private fun SkeletonList(topPadding: Dp = 0.dp) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 64.dp)
+                            .heightIn(min = 72.dp)
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -154,8 +197,8 @@ private fun SkeletonList(topPadding: Dp = 0.dp) {
                         Column(modifier = Modifier.weight(1f)) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.6f)
-                                    .height(12.dp)
+                                    .fillMaxWidth(0.55f)
+                                    .height(14.dp)
                                     .clip(RoundedCornerShape(CornerRadius.xs))
                                     .shimmerEffect()
                             )
@@ -172,8 +215,8 @@ private fun SkeletonList(topPadding: Dp = 0.dp) {
                             repeat(4) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .size(34.dp)
+                                        .clip(RoundedCornerShape(10.dp))
                                         .shimmerEffect()
                                 )
                             }

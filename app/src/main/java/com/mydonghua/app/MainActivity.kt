@@ -245,6 +245,16 @@ class MainActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .layerBackdrop(navBackdrop)
                                 ) {
+                                    val launchWatch: (String) -> Unit = remember(allShows) {
+                                        { url: String ->
+                                            val targetShow = allShows.find { it.watchUrl == url }
+                                            val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                                                putExtra("watch_url", url)
+                                                putExtra("show_title", targetShow?.title ?: "Donghua Episode")
+                                            }
+                                            startActivity(intent)
+                                        }
+                                    }
                             NavHost(
                                 navController = navController,
                                 startDestination = "home",
@@ -353,24 +363,14 @@ class MainActivity : ComponentActivity() {
                                 onShowClick = { showId ->
                                     navController.navigate("show_detail/$showId")
                                 },
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                }
+                                onWatchClick = launchWatch
                             )
                         }
                         composable("airing") {
                                 AiringScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
+                                onWatchClick = launchWatch,
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
@@ -383,12 +383,7 @@ class MainActivity : ComponentActivity() {
                                 CompletedScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
+                                onWatchClick = launchWatch,
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
@@ -401,12 +396,7 @@ class MainActivity : ComponentActivity() {
                                 StoppedScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
+                                onWatchClick = launchWatch,
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
@@ -419,12 +409,7 @@ class MainActivity : ComponentActivity() {
                                 FavoritesScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
-                                onWatchClick = { url ->
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                    }
-                                    startActivity(intent)
-                                },
+                                onWatchClick = launchWatch,
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
