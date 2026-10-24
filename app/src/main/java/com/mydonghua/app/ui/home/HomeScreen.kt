@@ -326,9 +326,27 @@ fun ContinueWatchingRow(
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         items(shows, key = { it.id }) { show ->
-            GlassSection(
-                modifier = Modifier.width(240.dp),
-                onClick = { onShowClick(show.id) }
+            Box(
+                modifier = Modifier
+                    .width(250.dp)
+                    .clip(RoundedCornerShape(CornerRadius.card))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
+                    .border(
+                        width = 0.55.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.18f),
+                                Color(0xFF00E5FF).copy(alpha = 0.12f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(CornerRadius.card)
+                    )
+                    .colorOSPressBounce(
+                        pressedScale = 0.98f,
+                        onClick = { onShowClick(show.id) }
+                    )
+                    .padding(Spacing.sm + 2.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -351,7 +369,7 @@ fun ContinueWatchingRow(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = show.title,
-                            fontSize = 13.sp,
+                            fontSize = 13.5.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 2,
@@ -360,21 +378,33 @@ fun ContinueWatchingRow(
                         val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
                         Text(
                             text = "Ep ${show.currentEp}$totalStr",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF00E5FF),
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 2.dp)
                         )
                         if (show.totalEp > 0) {
-                            Spacer(modifier = Modifier.height(Spacing.sm))
-                            LinearProgressIndicator(
-                                progress = { (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f) },
+                            Spacer(modifier = Modifier.height(Spacing.xs))
+                            val fraction = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f)
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(4.dp)
-                                    .clip(RoundedCornerShape(CornerRadius.xs)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
+                                    .height(4.5.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction)
+                                        .fillMaxHeight()
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                            )
+                                        )
+                                    )
+                            }
                         }
                     }
                 }
@@ -400,50 +430,66 @@ fun RecentlyUpdatedRow(
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         items(shows, key = { it.id }) { show ->
-            Box(modifier = Modifier.fillParentMaxWidth()) {
-                GlassSection(
+            Box(
+                modifier = Modifier
+                    .fillParentMaxWidth()
+                    .clip(RoundedCornerShape(CornerRadius.card))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
+                    .border(
+                        width = 0.55.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.18f),
+                                Color(0xFF00E5FF).copy(alpha = 0.12f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(CornerRadius.card)
+                    )
+                    .colorOSPressBounce(
+                        pressedScale = 0.98f,
+                        onClick = { onShowClick(show.id) }
+                    )
+                    .padding(Spacing.sm + 2.dp)
+            ) {
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { onShowClick(show.id) }
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .size(width = 54.dp, height = 72.dp)
+                            .clip(RoundedCornerShape(CornerRadius.md))
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(width = 54.dp, height = 72.dp)
-                                .clip(RoundedCornerShape(CornerRadius.md))
-                        ) {
-                            DonghuaPoster(
-                                posterUrl = show.poster,
-                                title = show.title,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                                fontSize = 7.5.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(Spacing.md))
-                        Column(modifier = Modifier.weight(1f)) {
+                        DonghuaPoster(
+                            posterUrl = show.poster,
+                            title = show.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            fontSize = 7.5.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(Spacing.md))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = show.title,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val relativeTime = if (show.lastUpdated != null) {
+                            DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
+                        } else ""
+                        if (relativeTime.isNotEmpty()) {
                             Text(
-                                text = show.title,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
+                                text = relativeTime,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = Spacing.xs),
+                                maxLines = 1
                             )
-                            val relativeTime = if (show.lastUpdated != null) {
-                                DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
-                            } else ""
-                            if (relativeTime.isNotEmpty()) {
-                                Text(
-                                    text = relativeTime,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = Spacing.xs),
-                                    maxLines = 1
-                                )
-                            }
                         }
                     }
                 }

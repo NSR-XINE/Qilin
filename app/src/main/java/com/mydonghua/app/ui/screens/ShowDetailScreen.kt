@@ -1,6 +1,7 @@
 package com.mydonghua.app.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import android.widget.Toast
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,7 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,29 +22,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
-import com.mydonghua.app.ui.GlassSection
-import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
-import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
-import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
-
-import com.kyant.backdrop.backdrops.LayerBackdrop
 
 @Composable
 fun ShowDetailScreen(
@@ -72,13 +64,13 @@ fun ShowDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(36.dp),
-                    strokeWidth = 3.dp,
-                    color = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.size(38.dp),
+                    strokeWidth = 3.5.dp,
+                    color = Color(0xFF00E5FF)
                 )
                 Text(
                     text = "Loading show details...",
-                    fontSize = 13.sp,
+                    fontSize = 13.5.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -100,229 +92,542 @@ fun ShowDetailScreen(
         }
     }
 
-    val hazeState = LocalHazeState.current
+    var isSynopsisExpanded by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Floating Liquid Glass Top Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(start = Spacing.md, end = Spacing.md, top = 8.dp, bottom = 6.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(CornerRadius.surface))
+                    .background(
+                        if (MaterialTheme.colorScheme.background.luminance() > 0.5f)
+                            Color.White.copy(alpha = 0.85f)
+                        else Color(0xFF0F121C).copy(alpha = 0.88f)
+                    )
+                    .border(
+                        width = 0.65.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.22f),
+                                Color(0xFF00E5FF).copy(alpha = 0.18f),
+                                Color.White.copy(alpha = 0.05f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(CornerRadius.surface)
+                    )
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = show.title,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val statusText = when (show.status) {
+                            "ongoing" -> "AIRING"
+                            "completed" -> "COMPLETED"
+                            else -> "HIATUS"
+                        }
+                        Text(
+                            text = "$statusText • EP ${show.currentEp}${if (show.totalEp > 0) "/${show.totalEp}" else ""}",
+                            fontSize = 11.sp,
+                            color = Color(0xFF00E5FF),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = { onEditClick(show) },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Edit Show",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+            }
+        }
+
+        // Scrollable Body Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = Spacing.md)
+                .padding(bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Spacer(modifier = Modifier.height(if (topPadding.value > 0f) topPadding + 12.dp else 88.dp))
-            // Hero Backdrop & Title Block
-            val detailBannerShape = RoundedCornerShape(24.dp)
-            Card(
-                shape = detailBannerShape,
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.45f),
-                            Color.White.copy(alpha = 0.12f)
-                        )
-                    )
-                ),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            // Hero Backdrop Banner
+            val bannerShape = RoundedCornerShape(CornerRadius.banner)
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-                    .height(220.dp)
+                    .height(230.dp)
+                    .clip(bannerShape)
+                    .background(Color(0xFF0F121C))
+                    .border(
+                        width = 0.75.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color(0xFF00E5FF).copy(alpha = 0.35f),
+                                Color.White.copy(alpha = 0.15f),
+                                Color(0xFF0072FF).copy(alpha = 0.25f)
+                            )
+                        ),
+                        shape = bannerShape
+                    )
             ) {
+                // Background Poster Art with Blur Gradient
+                DonghuaPoster(
+                    posterUrl = show.poster,
+                    title = show.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    showAcronym = false,
+                    crossfade = true
+                )
+
+                // Dark Liquid Glass Gradient overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(detailBannerShape)
-                ) {
-                    // Background Poster Art
-                    DonghuaPoster(
-                        posterUrl = show.poster,
-                        title = show.title,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(detailBannerShape),
-                        contentScale = ContentScale.Crop,
-                        showAcronym = false,
-                        crossfade = true
-                    )
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.Black.copy(alpha = 0.35f),
+                                    Color.Black.copy(alpha = 0.15f),
+                                    Color.Black.copy(alpha = 0.85f)
+                                )
+                            )
+                        )
+                )
 
-                    // Liquid Gradient Overlays for high poster clarity & text readability
+                // Content inside Hero (Poster Thumbnail + Title details)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomStart)
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Floating Poster Thumbnail Card
+                    val thumbShape = RoundedCornerShape(CornerRadius.md)
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    0.0f to Color.Black.copy(alpha = 0.35f),
-                                    0.4f to Color.Transparent,
-                                    1.0f to Color.Black.copy(alpha = 0.75f)
-                                )
-                            )
-                    )
-
-                    // Content Overlay in Hero
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomStart)
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        // Floating Poster Thumbnail Card
-                        val thumbnailShape = RoundedCornerShape(CornerRadius.md)
-                        Card(
-                            shape = thumbnailShape,
-                            border = androidx.compose.foundation.BorderStroke(
+                            .size(width = 86.dp, height = 120.dp)
+                            .clip(thumbShape)
+                            .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.35f)
-                            ),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                            modifier = Modifier.size(width = 84.dp, height = 116.dp)
+                                brush = Brush.linearGradient(
+                                    listOf(Color.White.copy(alpha = 0.45f), Color.White.copy(alpha = 0.10f))
+                                ),
+                                shape = thumbShape
+                            )
+                    ) {
+                        DonghuaPoster(
+                            posterUrl = show.poster,
+                            title = show.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    // Title & Badges
+                    Column(modifier = Modifier.weight(1f)) {
+                        val statusColor = when (show.status) {
+                            "ongoing" -> Color(0xFF00E5FF)
+                            "completed" -> Color(0xFF4ADE80)
+                            else -> Color(0xFFFFA726)
+                        }
+
+                        // Status Chip
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(statusColor.copy(alpha = 0.20f))
+                                .border(0.6.dp, statusColor.copy(alpha = 0.40f), CircleShape)
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
-                            DonghuaPoster(
-                                posterUrl = show.poster,
-                                title = show.title,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                                fontSize = 11.sp
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Text(
+                                text = when (show.status) {
+                                    "ongoing" -> "Airing"
+                                    "completed" -> "Completed"
+                                    else -> "Hiatus"
+                                },
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor
                             )
                         }
 
-                    Spacer(modifier = Modifier.width(Spacing.md))
-
-                    // Title & Metadata Stack
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        // Status Badge Pill
-                        val statusText = when (show.status) {
-                            "ongoing" -> "Airing"
-                            "completed" -> "Completed"
-                            else -> "Hiatus"
-                        }
-                        val statusBg = when (show.status) {
-                            "ongoing" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                            "completed" -> Color(0xFF4CAF50).copy(alpha = 0.25f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        }
-                        val statusColor = when (show.status) {
-                            "ongoing" -> MaterialTheme.colorScheme.primary
-                            "completed" -> Color(0xFF81C784)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(CornerRadius.xs),
-                            color = statusBg,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.4f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 3.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(statusColor)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = statusText,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = statusColor
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
                             text = show.title,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
                             color = Color.White,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+
                         if (!show.titleZh.isNullOrEmpty()) {
                             Text(
                                 text = show.titleZh,
                                 fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.7f),
-                                modifier = Modifier.padding(top = 2.dp),
+                                color = Color.White.copy(alpha = 0.70f),
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 2.dp)
                             )
                         }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // Quick Actions Bar (Watch Online Hero Button + Favorite + Notify + Edit)
+            val providerLabel = when (defaultStreamProvider.lowercase()) {
+                "luciferdonghua" -> "LuciferDonghua ⚡"
+                "donghuastream" -> "DonghuaStream 🎬"
+                else -> "Direct Link 🔗"
+            }
 
-            // Main Body Content
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Next Episode Countdown Section (If Airing)
-                if (show.status == "ongoing") {
-                    GlassSection(modifier = Modifier.fillMaxWidth()) {
-                        Column(
+                // Main "Watch Online" Hero Button
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(54.dp)
+                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                            )
+                        )
+                        .colorOSPressBounce(
+                            pressedScale = 0.96f,
+                            onClick = {
+                                val targetUrl = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                    showTitle = show.title,
+                                    customWatchUrl = show.watchUrl,
+                                    providerPreference = defaultStreamProvider
+                                )
+                                onWatchClick(targetUrl)
+                            }
+                        )
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Spacing.md)
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.25f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "NEXT RELEASE",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        letterSpacing = 0.5.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = if (countdownTime.airingNow) "New Episode Available Now!"
-                                        else "Episode ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime ?: ""}",
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
+                            Icon(
+                                imageVector = Icons.Rounded.PlayArrow,
+                                contentDescription = "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
 
-                            if (!countdownTime.airingNow && !countdownTime.elapsed) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    DetailCountdownBox(value = countdownTime.days, label = "days")
-                                    DetailCountdownBox(value = countdownTime.hours, label = "hours")
-                                    DetailCountdownBox(value = countdownTime.minutes, label = "mins")
-                                    DetailCountdownBox(value = countdownTime.seconds, label = "secs")
-                                }
-                            }
+                        Column {
+                            Text(
+                                text = "WATCH NOW",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = providerLabel,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
                 }
 
-                // Interactive Episode Progress Card
-                GlassSection(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(Spacing.md)
+                val isFavorite = show.isFavorite == 1
+                val hasNotification = show.alarmRequestCode != null
+
+                // Favorite Toggle Button
+                IconButton(
+                    onClick = { viewModel.toggleFavorite(show) },
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .background(
+                            if (isFavorite) Color(0xFFFF4081).copy(alpha = 0.18f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                        )
+                        .border(
+                            width = 0.65.dp,
+                            color = if (isFavorite) Color(0xFFFF4081).copy(alpha = 0.45f)
+                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(CornerRadius.card)
+                        )
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = "Toggle Favorite",
+                        tint = if (isFavorite) Color(0xFFFF4081) else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Notification Bell Button
+                IconButton(
+                    onClick = {
+                        viewModel.toggleNotification(context, show)
+                        Toast.makeText(
+                            context,
+                            if (hasNotification) "Notifications turned off" else "Notifications turned on for ${show.title}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .background(
+                            if (hasNotification) Color(0xFF00E5FF).copy(alpha = 0.18f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                        )
+                        .border(
+                            width = 0.65.dp,
+                            color = if (hasNotification) Color(0xFF00E5FF).copy(alpha = 0.45f)
+                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(CornerRadius.card)
+                        )
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = if (hasNotification) Icons.Rounded.NotificationsActive else Icons.Rounded.NotificationsNone,
+                        contentDescription = "Toggle Notifications",
+                        tint = if (hasNotification) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Episode Progress Card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(CornerRadius.card))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                    .border(
+                        width = 0.65.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.20f),
+                                Color(0xFF00E5FF).copy(alpha = 0.15f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(CornerRadius.card)
+                    )
+                    .padding(Spacing.md)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Column {
+                            Text(
+                                text = "WATCH PROGRESS",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF00E5FF),
+                                letterSpacing = 0.5.sp
+                            )
+                            val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
+                            Text(
+                                text = "Episode ${show.currentEp}$totalStr",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        // Tactile Stepper Buttons (+ / -)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(
+                                onClick = { viewModel.decrementEpisode(show) },
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(RoundedCornerShape(11.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                                    .border(
+                                        width = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                        shape = RoundedCornerShape(11.dp)
+                                    )
+                                    .colorOSPressBounce(pressedScale = 0.90f)
+                            ) {
+                                Text(
+                                    text = "-",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { viewModel.incrementEpisode(show) },
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(RoundedCornerShape(11.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                        )
+                                    )
+                                    .colorOSPressBounce(pressedScale = 0.90f)
+                            ) {
+                                Text(
+                                    text = "+",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+
+                    // Fluid Progress Bar
+                    if (show.totalEp > 0) {
+                        val progressFraction = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progressFraction)
+                                    .fillMaxHeight()
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                        )
+                                    )
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${(progressFraction * 100).toInt()}% completed",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            val remaining = (show.totalEp - show.currentEp).coerceAtLeast(0)
+                            Text(
+                                text = "$remaining episodes left",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Airing Countdown Widget (if status == ongoing)
+            if (show.status == "ongoing") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                        .border(
+                            width = 0.65.dp,
+                            brush = Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.20f),
+                                    Color(0xFF00E5FF).copy(alpha = 0.15f),
+                                    Color.Transparent
+                                )
+                            ),
+                            shape = RoundedCornerShape(CornerRadius.card)
+                        )
+                        .padding(Spacing.md)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -330,243 +635,144 @@ fun ShowDetailScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "WATCH PROGRESS",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    text = "NEXT AIRING EPISODE",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF00E5FF),
                                     letterSpacing = 0.5.sp
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
                                 Text(
-                                    text = "Episode ${show.currentEp}$totalStr",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onBackground
+                                    text = if (countdownTime.airingNow) "New Episode Releasing Now!"
+                                    else "Episode ${show.currentEp + 1} • Every ${show.releaseDay} ${show.releaseTime ?: ""}",
+                                    fontSize = 13.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium
                                 )
-                            }
-
-                            // Interactive Episode Increment / Decrement Buttons
-                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                                Surface(
-                                    onClick = { viewModel.decrementEpisode(show) },
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .colorOSPressBounce(pressedScale = 0.90f),
-                                    shape = RoundedCornerShape(CornerRadius.sm),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("-", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                                    }
-                                }
-                                Surface(
-                                    onClick = { viewModel.incrementEpisode(show) },
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .colorOSPressBounce(pressedScale = 0.90f),
-                                    shape = RoundedCornerShape(CornerRadius.sm),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("+", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-                                    }
-                                }
                             }
                         }
 
-                        if (show.totalEp > 0) {
-                            Spacer(modifier = Modifier.height(Spacing.md))
-                            LinearProgressIndicator(
-                                progress = { (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(5.dp)
-                                    .clip(RoundedCornerShape(CornerRadius.xs)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
+                        if (!countdownTime.airingNow && !countdownTime.elapsed) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                DetailCountdownBox(value = countdownTime.days, label = "days")
+                                DetailCountdownBox(value = countdownTime.hours, label = "hours")
+                                DetailCountdownBox(value = countdownTime.minutes, label = "mins")
+                                DetailCountdownBox(value = countdownTime.seconds, label = "secs")
+                            }
                         }
                     }
                 }
+            }
 
-                // Formatted Language Display
-                val formattedLanguage = when (show.language?.trim()?.lowercase()) {
-                    "cn", "zh", "chinese", "mandarin" -> "🇨🇳 Chinese"
-                    "en", "english" -> "🇬🇧 English"
-                    "jp", "ja", "japanese" -> "🇯🇵 Japanese"
-                    null, "" -> "🇨🇳 Chinese"
-                    else -> show.language!!
+            // Quick Info Chips Row
+            val formattedLanguage = when (show.language?.trim()?.lowercase()) {
+                "cn", "zh", "chinese", "mandarin" -> "🇨🇳 Chinese"
+                "en", "english" -> "🇬🇧 English"
+                "jp", "ja", "japanese" -> "🇯🇵 Japanese"
+                null, "" -> "🇨🇳 Chinese"
+                else -> show.language!!
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                DetailGlassChip(label = "Language", value = formattedLanguage, modifier = Modifier.weight(1.2f))
+                if (show.totalEp > 0) {
+                    DetailGlassChip(label = "Episodes", value = "${show.totalEp}", modifier = Modifier.weight(0.9f))
                 }
-
-                // Info Chips Grid (Language, Episodes, Year)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    DetailGlassChip(label = "Language", value = formattedLanguage, modifier = Modifier.weight(1.2f))
-                    if (show.totalEp > 0) {
-                        DetailGlassChip(label = "Episodes", value = "${show.totalEp}", modifier = Modifier.weight(0.9f))
-                    }
-                    if (show.releaseYear != null && show.releaseYear!! > 0) {
-                        DetailGlassChip(label = "Year", value = "${show.releaseYear}", modifier = Modifier.weight(0.9f))
-                    }
+                if (show.releaseYear != null && show.releaseYear!! > 0) {
+                    DetailGlassChip(label = "Year", value = "${show.releaseYear}", modifier = Modifier.weight(0.9f))
                 }
+            }
 
-                // Redesigned Ultra-Premium Watch Online Glass Action Card
-                val providerLabel = when (defaultStreamProvider.lowercase()) {
-                    "luciferdonghua" -> "Streaming via LuciferDonghua ⚡"
-                    "donghuastream" -> "Streaming via DonghuaStream 🎬"
-                    else -> "Streaming via Custom Link 🔗"
-                }
+            // Genres Chips
+            if (!show.genres.isNullOrEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "GENRES",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF00E5FF),
+                        letterSpacing = 0.5.sp
+                    )
 
-                Surface(
-                    onClick = {
-                        val targetUrl = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
-                            showTitle = show.title,
-                            customWatchUrl = show.watchUrl,
-                            providerPreference = defaultStreamProvider
-                        )
-                        onWatchClick(targetUrl)
-                    },
-                    shape = RoundedCornerShape(CornerRadius.card),
-                    color = Color.Transparent,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .colorOSPressBounce(pressedScale = 0.97f)
-                        .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary
-                                )
-                            )
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color.White.copy(alpha = 0.25f),
-                            shape = RoundedCornerShape(CornerRadius.card)
-                        )
-                ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = Spacing.lg),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                        ) {
+                        show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.forEach { genre ->
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.22f)),
-                                contentAlignment = Alignment.Center
+                                    .clip(RoundedCornerShape(CornerRadius.sm))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                                    .border(
+                                        width = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                                        shape = RoundedCornerShape(CornerRadius.sm)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 5.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.PlayArrow,
-                                    contentDescription = "Play",
-                                    tint = Color.White,
-                                    modifier = Modifier
-                                        .size(26.dp)
-                                        .offset(x = 1.dp)
-                                )
-                            }
-
-                            Column(verticalArrangement = Arrangement.Center) {
                                 Text(
-                                    text = "WATCH ONLINE",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                    color = Color.White,
-                                    letterSpacing = 0.5.sp
-                                )
-                                Text(
-                                    text = providerLabel,
-                                    fontSize = 11.sp,
+                                    text = genre,
+                                    fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.White.copy(alpha = 0.85f)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_tv),
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.75f),
-                            modifier = Modifier.size(22.dp)
-                        )
                     }
                 }
+            }
 
-                // Genres Pill Chips
-                if (!show.genres.isNullOrEmpty()) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+            // Synopsis Section
+            if (!show.notes.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                        .border(
+                            width = 0.65.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(CornerRadius.card)
+                        )
+                        .padding(Spacing.md)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "GENRES",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
+                            text = "SYNOPSIS",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF00E5FF),
                             letterSpacing = 0.5.sp
                         )
-                        Spacer(modifier = Modifier.height(Spacing.xs))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.forEach { genre ->
-                                Surface(
-                                    shape = RoundedCornerShape(CornerRadius.xs),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-                                ) {
-                                    Text(
-                                        text = genre,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.xs)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
 
-                // Synopsis Card
-                if (!show.notes.isNullOrEmpty()) {
-                    GlassSection(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Spacing.md)
-                        ) {
+                        Text(
+                            text = show.notes!!,
+                            fontSize = 13.5.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f),
+                            lineHeight = 20.sp,
+                            fontFamily = JustSansFamily,
+                            maxLines = if (isSynopsisExpanded) Int.MAX_VALUE else 4,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        if (show.notes!!.length > 150) {
                             Text(
-                                text = "SYNOPSIS",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary,
-                                letterSpacing = 0.5.sp
-                            )
-                            Spacer(modifier = Modifier.height(Spacing.xs))
-                            Text(
-                                text = show.notes!!,
-                                fontSize = 13.5.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 21.sp,
-                                fontFamily = JustSansFamily
+                                text = if (isSynopsisExpanded) "Show Less" else "Read More",
+                                color = Color(0xFF00E5FF),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clickable { isSynopsisExpanded = !isSynopsisExpanded }
+                                    .padding(top = 2.dp)
                             )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(Spacing.xxl))
             }
         }
     }
@@ -574,40 +780,23 @@ fun ShowDetailScreen(
 
 @Composable
 private fun DetailCountdownBox(value: Long, label: String) {
-    val hazeState = LocalHazeState.current
     val shape = RoundedCornerShape(CornerRadius.md)
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = Modifier
-            .width(52.dp)
-            .height(44.dp)
+            .width(56.dp)
+            .height(48.dp)
             .clip(shape)
-            .hazeChild(state = hazeState, shape = shape)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        Color.Black.copy(alpha = 0.38f),
-                        Color.Black.copy(alpha = 0.22f)
-                    ) else listOf(
-                        Color.White.copy(alpha = 0.65f),
-                        Color.White.copy(alpha = 0.35f)
-                    )
-                )
-            )
+            .background(Color.Black.copy(alpha = 0.25f))
             .border(
-                width = 0.75.dp,
+                width = 0.65.dp,
                 brush = Brush.verticalGradient(
-                    colors = if (isDark) listOf(
-                        Color.White.copy(alpha = 0.45f),
-                        Color.White.copy(alpha = 0.12f)
-                    ) else listOf(
-                        Color.Black.copy(alpha = 0.18f),
-                        Color.Black.copy(alpha = 0.08f)
+                    listOf(
+                        Color(0xFF00E5FF).copy(alpha = 0.40f),
+                        Color.White.copy(alpha = 0.08f)
                     )
                 ),
                 shape = shape
-            )
-            .padding(vertical = 2.dp),
+            ),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -616,17 +805,18 @@ private fun DetailCountdownBox(value: Long, label: String) {
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
                 textAlign = TextAlign.Center
             )
             Text(
-                text = label,
+                text = label.uppercase(),
                 fontSize = 8.5.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF00E5FF),
+                textAlign = TextAlign.Center,
+                letterSpacing = 0.5.sp
             )
         }
     }
@@ -634,28 +824,35 @@ private fun DetailCountdownBox(value: Long, label: String) {
 
 @Composable
 private fun DetailGlassChip(label: String, value: String, modifier: Modifier = Modifier) {
-    val hazeState = LocalHazeState.current
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(CornerRadius.md))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.md))
-            .background(
-                color = if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.04f),
-                shape = RoundedCornerShape(CornerRadius.md)
-            )
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
             .border(
-                width = 1.dp,
-                color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.1f),
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
                 shape = RoundedCornerShape(CornerRadius.md)
             )
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            .padding(horizontal = Spacing.md, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label.uppercase(), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 0.5.sp)
+            Text(
+                text = label.uppercase(),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF00E5FF),
+                letterSpacing = 0.5.sp
+            )
             Spacer(modifier = Modifier.height(2.dp))
-            Text(value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onBackground)
+            Text(
+                text = value,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }

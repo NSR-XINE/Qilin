@@ -1,41 +1,42 @@
 package com.mydonghua.app.ui.screens
 
 import android.text.format.DateUtils
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
+import com.mydonghua.app.R
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     showsViewModel: ShowsViewModel,
@@ -53,80 +54,122 @@ fun HistoryScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("Watch History Log", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Floating Liquid Glass Top Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(start = Spacing.md, end = Spacing.md, top = 8.dp, bottom = 6.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(CornerRadius.surface))
+                    .background(
+                        if (MaterialTheme.colorScheme.background.luminance() > 0.5f)
+                            Color.White.copy(alpha = 0.85f)
+                        else Color(0xFF0F121C).copy(alpha = 0.88f)
+                    )
+                    .border(
+                        width = 0.65.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.22f),
+                                Color(0xFF00E5FF).copy(alpha = 0.18f),
+                                Color.White.copy(alpha = 0.05f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(CornerRadius.surface)
+                    )
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            imageVector = Icons.Rounded.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(IconSize.md)
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = "Watch History",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "${historyList.size} logged episodes",
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF00E5FF),
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
-            )
-        },
-        modifier = modifier
-    ) { paddingValues ->
+            }
+        }
+
         if (isLoading) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = Spacing.lg)
+                    .padding(horizontal = Spacing.md)
                     .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-                contentPadding = PaddingValues(bottom = Spacing.sm)
+                verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                contentPadding = PaddingValues(top = Spacing.sm, bottom = 96.dp)
             ) {
-                items(2) { groupIndex ->
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                        Box(
-                            modifier = Modifier
-                                .width(80.dp)
-                                .height(16.dp)
-                                .clip(RoundedCornerShape(CornerRadius.xs))
-                                .shimmerEffect()
-                        )
-                        repeat(2) {
-                            Row(
+                items(3) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(CornerRadius.card))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                            .padding(Spacing.md)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                        ) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .size(46.dp)
                                     .clip(RoundedCornerShape(CornerRadius.sm))
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .padding(Spacing.sm),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                            ) {
+                                    .shimmerEffect()
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
                                 Box(
                                     modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .fillMaxWidth(0.6f)
+                                        .height(14.dp)
+                                        .clip(RoundedCornerShape(CornerRadius.xs))
                                         .shimmerEffect()
                                 )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.7f)
-                                            .height(14.dp)
-                                            .clip(RoundedCornerShape(CornerRadius.xs))
-                                            .shimmerEffect()
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.45f)
-                                            .height(11.dp)
-                                            .clip(RoundedCornerShape(CornerRadius.xs))
-                                            .shimmerEffect()
-                                    )
-                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Box(
                                     modifier = Modifier
-                                        .width(48.dp)
+                                        .fillMaxWidth(0.35f)
                                         .height(11.dp)
                                         .clip(RoundedCornerShape(CornerRadius.xs))
                                         .shimmerEffect()
@@ -138,104 +181,126 @@ fun HistoryScreen(
             }
         } else if (historyList.isEmpty()) {
             EmptyState(
-                title = "No watch history recorded yet",
-                subtitle = "Track your episodes to start building your history",
+                title = "No Watch History Yet",
+                subtitle = "Episodes you watch and update will be logged here automatically.",
                 painter = painterResource(id = R.drawable.ic_history),
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(horizontal = Spacing.lg, vertical = 40.dp)
             )
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = Spacing.lg)
+                    .padding(horizontal = Spacing.md)
                     .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-                contentPadding = PaddingValues(bottom = Spacing.sm)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(top = Spacing.sm, bottom = 96.dp)
             ) {
                 groupedHistory.forEach { (dateHeader, items) ->
                     item {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = Spacing.md, bottom = Spacing.xs)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(top = 10.dp, bottom = 2.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .width(4.dp)
+                                    .width(3.5.dp)
                                     .height(14.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(MaterialTheme.colorScheme.primary)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF00E5FF))
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = dateHeader,
-                                fontSize = 13.5.sp,
+                                text = dateHeader.uppercase(),
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = Color(0xFF00E5FF),
+                                letterSpacing = 0.5.sp
                             )
                         }
                     }
 
                     itemsIndexed(items, key = { index, item -> "${item.showId}_${item.watchedAt}_$index" }) { _, item ->
-                        val onItemClick = remember(item.showId) { { onShowClick(item.showId) } }
-                        Row(
+                        val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+                        val formattedTime = remember(item.watchedAt) {
+                            timeFormat.format(Date(item.watchedAt))
+                        }
+
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(CornerRadius.card))
-                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.60f))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                                 .border(
-                                    width = 0.5.dp,
-                                    brush = Brush.verticalGradient(
+                                    width = 0.55.dp,
+                                    brush = Brush.linearGradient(
                                         listOf(
                                             Color.White.copy(alpha = 0.18f),
-                                            Color.White.copy(alpha = 0.04f)
+                                            Color(0xFF00E5FF).copy(alpha = 0.12f),
+                                            Color.Transparent
                                         )
                                     ),
                                     shape = RoundedCornerShape(CornerRadius.card)
                                 )
-                                .colorOSPressBounce(pressedScale = 0.98f)
-                                .clickable(onClick = onItemClick)
-                                .padding(Spacing.sm + 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                                .colorOSPressBounce(
+                                    pressedScale = 0.98f,
+                                    onClick = { onShowClick(item.showId) }
+                                )
+                                .padding(Spacing.sm + 2.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(RoundedCornerShape(CornerRadius.md))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                             ) {
-                                com.mydonghua.app.ui.common.DonghuaPoster(
-                                    posterUrl = item.poster,
-                                    title = item.showTitle,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                    fontSize = 13.sp
-                                )
-                            }
+                                Box(
+                                    modifier = Modifier
+                                        .size(46.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    DonghuaPoster(
+                                        posterUrl = item.poster,
+                                        title = item.showTitle,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop,
+                                        fontSize = 11.sp
+                                    )
+                                }
 
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = item.showTitle,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1
-                                )
-                                Text(
-                                    text = "Watched Episode ${item.episodeNum}",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.showTitle,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = "Episode ${item.episodeNum}",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "•",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = formattedTime,
+                                            fontSize = 11.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
-
-                            Text(
-                                text = formatTimeOfDay(item.watchedAt),
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                fontWeight = FontWeight.Medium
-                            )
                         }
                     }
                 }
@@ -245,13 +310,18 @@ fun HistoryScreen(
 }
 
 private fun getRelativeDateGroup(timestamp: Long): String {
-    return when {
-        DateUtils.isToday(timestamp) -> "Today"
-        DateUtils.isToday(timestamp + 86400000L) -> "Yesterday"
-        else -> SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
-    }
-}
+    val now = Calendar.getInstance()
+    val itemTime = Calendar.getInstance().apply { timeInMillis = timestamp }
 
-private fun formatTimeOfDay(timestamp: Long): String {
-    return SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(timestamp))
+    return if (now.get(Calendar.YEAR) == itemTime.get(Calendar.YEAR)) {
+        val diffDays = now.get(Calendar.DAY_OF_YEAR) - itemTime.get(Calendar.DAY_OF_YEAR)
+        when (diffDays) {
+            0 -> "Today"
+            1 -> "Yesterday"
+            in 2..6 -> "${diffDays} days ago"
+            else -> SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
+        }
+    } else {
+        SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
+    }
 }
