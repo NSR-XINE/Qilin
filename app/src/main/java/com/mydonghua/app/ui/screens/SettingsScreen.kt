@@ -8,50 +8,40 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Contrast
-import androidx.compose.material.icons.rounded.Link
-import androidx.compose.material.icons.rounded.NightsStay
-import androidx.compose.material.icons.rounded.Tv
-import androidx.compose.material.icons.rounded.WbSunny
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.mydonghua.app.R
-import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.LocalHazeState
-import com.mydonghua.app.ui.GlassSection
-import com.mydonghua.app.ui.theme.ButtonHeight
-import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
-import dev.chrisbanes.haze.hazeChild
+import com.mydonghua.app.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +55,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
-    val hazeState = LocalHazeState.current
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -100,27 +90,102 @@ fun SettingsScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text("App Settings", fontWeight = FontWeight.SemiBold, fontSize = 20.sp) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+            // OxygenOS 17 Liquid Glass Top Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    val backInteraction = remember { MutableInteractionSource() }
+                    val isBackPressed by backInteraction.collectIsPressedAsState()
+                    val backScale by animateFloatAsState(
+                        targetValue = if (isBackPressed) 0.88f else 1f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                        label = "backScale"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .graphicsLayer {
+                                scaleX = backScale
+                                scaleY = backScale
+                            }
+                            .clip(CircleShape)
+                            .background(
+                                if (isDark) Color.White.copy(alpha = 0.10f)
+                                else Color.Black.copy(alpha = 0.06f)
+                            )
+                            .border(
+                                width = 0.75.dp,
+                                color = if (isDark) Color.White.copy(alpha = 0.20f)
+                                else Color.Black.copy(alpha = 0.10f),
+                                shape = CircleShape
+                            )
+                            .clickable(
+                                interactionSource = backInteraction,
+                                indication = null,
+                                onClick = onNavigateBack
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(IconSize.md)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-                ),
-                modifier = Modifier
-                    .border(
-                        width = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
+
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "Settings",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Preferences, appearance & system",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // OxygenOS Fluid Engine Tag
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(
+                            if (isDark) Color(0xFFE50914).copy(alpha = 0.18f)
+                            else Color(0xFFE50914).copy(alpha = 0.10f)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE50914))
                     )
-            )
+                    Text(
+                        text = "OXYGEN 17",
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        color = if (isDark) Color(0xFFFF5252) else Color(0xFFC60000)
+                    )
+                }
+            }
         },
         modifier = modifier
     ) { paddingValues ->
@@ -128,66 +193,111 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = Spacing.lg)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xl)
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            Spacer(modifier = Modifier.height(Spacing.xs))
+            Spacer(modifier = Modifier.height(2.dp))
 
-            SectionHeader("Theme Mode Options")
-            SettingsGlassSection {
+            // 1. THEME MODE SELECTION
+            OxygenSectionHeader(
+                title = "APPEARANCE & THEME",
+                subtitle = "Choose interface style and ambient illumination"
+            )
+            OxygenGlassGroup(isDark = isDark) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(Spacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val themesList = listOf(
-                        Triple("light", "Light Mode", Icons.Rounded.WbSunny to Pair(Color(0xFFF6F7F9), Color(0xFFFFFFFF))),
-                        Triple("dark", "Dark Mode", Icons.Rounded.NightsStay to Pair(Color(0xFF0F141F), Color(0xFF1B2433))),
+                        Triple("light", "Light", Icons.Rounded.WbSunny to Pair(Color(0xFFF6F7F9), Color(0xFFFFFFFF))),
+                        Triple("dark", "Dark", Icons.Rounded.NightsStay to Pair(Color(0xFF0F141F), Color(0xFF1B2433))),
                         Triple("amoled", "AMOLED", Icons.Rounded.Contrast to Pair(Color(0xFF000000), Color(0xFF0C0F17)))
                     )
                     themesList.forEach { (modeKey, modeTitle, modeData) ->
                         val (modeIcon, colors) = modeData
                         val (bgPreview, cardPreview) = colors
                         val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
-                        val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
-                        val cardBg = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.14f) else Color.Transparent
 
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            border = androidx.compose.foundation.BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
-                            colors = CardDefaults.cardColors(containerColor = cardBg),
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val cardScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.95f else 1f,
+                            animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                            label = "themeScale"
+                        )
+
+                        val cardBg = if (isSelected) {
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
+                        } else {
+                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
+                        }
+
+                        val specularBorder = if (isSelected) {
+                            Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
+                                )
+                            )
+                        } else {
+                            Brush.verticalGradient(
+                                listOf(
+                                    if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.08f),
+                                    if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.02f)
+                                )
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(18.dp),
+                            border = androidx.compose.foundation.BorderStroke(if (isSelected) 1.75.dp else 0.8.dp, specularBorder),
+                            color = cardBg,
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable { viewModel.setThemeMode(modeKey) }
+                                .graphicsLayer {
+                                    scaleX = cardScale
+                                    scaleY = cardScale
+                                }
+                                .clip(RoundedCornerShape(18.dp))
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                    onClick = { viewModel.setThemeMode(modeKey) }
+                                )
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(Spacing.sm)
+                                    .padding(10.dp)
                             ) {
+                                // Live Mockup Box
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(56.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .height(58.dp)
+                                        .clip(RoundedCornerShape(12.dp))
                                         .background(bgPreview)
-                                        .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
-                                        .padding(5.dp)
+                                        .border(
+                                            0.5.dp,
+                                            if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f),
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                        .padding(6.dp)
                                 ) {
                                     Column(
                                         modifier = Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .height(8.dp)
+                                                .height(7.dp)
                                                 .clip(RoundedCornerShape(3.dp))
                                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.80f))
                                         )
@@ -200,8 +310,8 @@ fun SettingsScreen(
                                         )
                                         Box(
                                             modifier = Modifier
-                                                .fillMaxWidth(0.65f)
-                                                .height(8.dp)
+                                                .fillMaxWidth(0.60f)
+                                                .height(7.dp)
                                                 .clip(RoundedCornerShape(2.dp))
                                                 .background(cardPreview.copy(alpha = 0.70f))
                                         )
@@ -210,18 +320,18 @@ fun SettingsScreen(
                                     if (isSelected) {
                                         Box(
                                             modifier = Modifier
-                                                .size(18.dp)
+                                                .size(20.dp)
                                                 .align(Alignment.Center)
-                                                .offset(y = Spacing.xs)
-                                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                                .background(MaterialTheme.colorScheme.primary),
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary)
+                                                .border(1.5.dp, Color.White, CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Rounded.Check,
                                                 contentDescription = "Selected",
                                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                                modifier = Modifier.size(11.dp)
+                                                modifier = Modifier.size(12.dp)
                                             )
                                         }
                                     }
@@ -229,7 +339,7 @@ fun SettingsScreen(
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
                                     Icon(
                                         imageVector = modeIcon,
@@ -239,8 +349,8 @@ fun SettingsScreen(
                                     )
                                     Text(
                                         text = modeTitle,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
@@ -250,67 +360,83 @@ fun SettingsScreen(
                 }
             }
 
-            SectionHeader("Accent Color Palette")
-            SettingsGlassSection {
+            // 2. ACCENT COLOR PALETTE
+            OxygenSectionHeader(
+                title = "COLOR ACCENT & SYSTEM GLOW",
+                subtitle = "Fluid dynamic wallpaper extraction or curated shades"
+            )
+            OxygenGlassGroup(isDark = isDark) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(Spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    // Material You Dynamic Palette Card
+                    // Material You Dynamic Card
                     val isDynamicSelected = uiState.accentColor.equals("dynamic", ignoreCase = true)
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
+                    val dynamicCardBg = if (isDynamicSelected) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
+                    } else {
+                        if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
                         border = androidx.compose.foundation.BorderStroke(
-                            width = if (isDynamicSelected) 2.dp else 1.dp,
-                            color = if (isDynamicSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
+                            width = if (isDynamicSelected) 1.75.dp else 0.8.dp,
+                            color = if (isDynamicSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f))
                         ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDynamicSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f) else Color.Transparent
-                        ),
+                        color = dynamicCardBg,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(18.dp))
                             .clickable { viewModel.setAccentColor("dynamic") }
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(
                                         Brush.sweepGradient(
-                                            listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+                                            listOf(
+                                                Color(0xFFFF3366),
+                                                Color(0xFFFF9933),
+                                                Color(0xFF33CC66),
+                                                Color(0xFF3399FF),
+                                                Color(0xFF9933FF),
+                                                Color(0xFFFF3366)
+                                            )
                                         )
-                                    ),
+                                    )
+                                    .border(1.dp, Color.White.copy(alpha = 0.40f), RoundedCornerShape(12.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.AutoAwesome,
                                     contentDescription = "Dynamic Material You",
                                     tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.width(Spacing.md))
+                            Spacer(modifier = Modifier.width(14.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Material You Dynamic",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Extracts colors from system wallpaper",
-                                    fontSize = 11.sp,
+                                    text = "Real-time extraction from your device wallpaper",
+                                    fontSize = 11.5.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -319,7 +445,7 @@ fun SettingsScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(22.dp)
-                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .clip(CircleShape)
                                         .background(MaterialTheme.colorScheme.primary),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -334,12 +460,12 @@ fun SettingsScreen(
                         }
                     }
 
-                    // Curated Dual-Tone Presets
+                    // Liquid Gemstone Droplets
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val accentPresets = listOf(
@@ -368,16 +494,16 @@ fun SettingsScreen(
                             val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(14.dp))
                                     .clickable { viewModel.setAccentColor(accentKey) }
-                                    .padding(horizontal = Spacing.xs, vertical = Spacing.xs)
+                                    .padding(vertical = 4.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .size(46.dp)
+                                        .clip(CircleShape)
                                         .background(
                                             Brush.linearGradient(
                                                 colors = listOf(colorPair.first, colorPair.second)
@@ -385,17 +511,31 @@ fun SettingsScreen(
                                         )
                                         .border(
                                             width = if (isSelected) 2.5.dp else 1.dp,
-                                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.25f),
-                                            shape = androidx.compose.foundation.shape.CircleShape
+                                            color = if (isSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.12f)),
+                                            shape = CircleShape
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
+                                    // 3D Glass Specular Reflection
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape)
+                                            .background(
+                                                Brush.radialGradient(
+                                                    colors = listOf(Color.White.copy(alpha = 0.40f), Color.Transparent),
+                                                    center = androidx.compose.ui.geometry.Offset(14f, 14f),
+                                                    radius = 28f
+                                                )
+                                            )
+                                    )
+
                                     if (isSelected) {
                                         Box(
                                             modifier = Modifier
                                                 .size(20.dp)
-                                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                                .background(Color.Black.copy(alpha = 0.40f)),
+                                                .clip(CircleShape)
+                                                .background(Color.Black.copy(alpha = 0.50f)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
@@ -410,7 +550,7 @@ fun SettingsScreen(
                                 Text(
                                     text = accentName,
                                     fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                             }
@@ -419,146 +559,179 @@ fun SettingsScreen(
                 }
             }
 
-            SectionHeader("Dashboard Display Options")
-            SettingsGlassSection {
+            // 3. DASHBOARD DISPLAY PREFERENCES
+            OxygenSectionHeader(
+                title = "HOME DASHBOARD DISPLAY",
+                subtitle = "Customize interactive widgets and feeds on home screen"
+            )
+            OxygenGlassGroup(isDark = isDark) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    TogglePreferenceItem(
+                    OxygenTogglePreferenceItem(
                         title = "Hero Countdown Banner",
-                        subtitle = "Show upcoming episode countdown card at top of Home Screen",
+                        subtitle = "Featured next-airing show countdown at top of Home Screen",
+                        iconRes = R.drawable.ic_clock,
+                        iconGradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
                         checked = uiState.showBanner,
                         onCheckedChange = { viewModel.setShowBanner(it) }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    TogglePreferenceItem(
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                    )
+                    OxygenTogglePreferenceItem(
                         title = "Continue Watching Row",
-                        subtitle = "Show horizontal carousel for currently watching series",
+                        subtitle = "Horizontal carousel for currently active series",
+                        iconRes = R.drawable.ic_play,
+                        iconGradient = listOf(Color(0xFFFF7043), Color(0xFFFF8A65)),
                         checked = uiState.showContinue,
                         onCheckedChange = { viewModel.setShowContinue(it) }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    TogglePreferenceItem(
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                    )
+                    OxygenTogglePreferenceItem(
                         title = "Recently Updated Row",
-                        subtitle = "Display cards for series with newly released episodes",
+                        subtitle = "Quick cards for newly released donghua episodes",
+                        iconRes = R.drawable.ic_tv,
+                        iconGradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
                         checked = uiState.showRecent,
                         onCheckedChange = { viewModel.setShowRecent(it) }
                     )
                 }
             }
 
-            SectionHeader("Search & Streaming Options")
-            SettingsGlassSection {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = Spacing.xs)
-                ) {
-                    TogglePreferenceItem(
+            // 4. SEARCH & STREAMING OPTIONS
+            OxygenSectionHeader(
+                title = "SEARCH & STREAMING PROVIDER",
+                subtitle = "Keyboard behavior and preferred streaming search engine"
+            )
+            OxygenGlassGroup(isDark = isDark) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    OxygenTogglePreferenceItem(
                         title = "Auto-open Keyboard",
-                        subtitle = "Automatically open soft keyboard when tapping the search button",
+                        subtitle = "Automatically pop soft keyboard on search tab entry",
+                        iconVector = Icons.Rounded.Search,
+                        iconGradient = listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)),
                         checked = uiState.autoOpenKeyboard,
                         onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
                     )
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                    )
 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "Default Watch Provider",
-                            fontWeight = FontWeight.SemiBold,
+                            text = "Default Watch Online Provider",
+                            fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Choose which streaming provider to open when tapping \"Watch Online\"",
+                            text = "Select preferred streaming catalog when tapping \"Watch Online\"",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(Spacing.xs))
 
                         val providers = listOf(
-                            Triple("donghuastream", "DonghuaStream", "donghuastream.org to search & stream"),
-                            Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in to search & stream"),
+                            Triple("donghuastream", "DonghuaStream", "donghuastream.org • Fast HD Direct Streaming"),
+                            Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in • Multi-Server Mirrored"),
                             Triple("direct", "Custom Saved URL", "Direct watch link specified in show details")
                         )
 
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             providers.forEach { (key, title, domain) ->
                                 val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
-                                val emoji = when (key) {
-                                    "donghuastream" -> "🎬"
-                                    "luciferdonghua" -> "⚡"
-                                    else -> "🔗"
+                                val providerIcon: ImageVector = when (key) {
+                                    "donghuastream" -> Icons.Rounded.Tv
+                                    "luciferdonghua" -> Icons.Rounded.AutoAwesome
+                                    else -> Icons.Rounded.Link
+                                }
+                                val providerGradient = when (key) {
+                                    "donghuastream" -> listOf(Color(0xFF0288D1), Color(0xFF26C6DA))
+                                    "luciferdonghua" -> listOf(Color(0xFFF57C00), Color(0xFFFFB74D))
+                                    else -> listOf(Color(0xFF43A047), Color(0xFF66BB6A))
                                 }
 
                                 Surface(
                                     onClick = { viewModel.setDefaultStreamProvider(key) },
-                                    shape = RoundedCornerShape(CornerRadius.sm),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.40f)
+                                    else (if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f)),
                                     border = androidx.compose.foundation.BorderStroke(
-                                        width = if (isSelected) 1.5.dp else 0.5.dp,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.12f)
+                                        width = if (isSelected) 1.5.dp else 0.8.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f))
                                     ),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                            modifier = Modifier.weight(1f)
                                         ) {
-                                            val providerIcon: ImageVector = when (key) {
-                                                "donghuastream" -> Icons.Rounded.Tv
-                                                "luciferdonghua" -> Icons.Rounded.AutoAwesome
-                                                else -> Icons.Rounded.Link
-                                            }
-
                                             Box(
                                                 modifier = Modifier
-                                                    .size(40.dp)
-                                                    .clip(androidx.compose.foundation.shape.CircleShape)
-                                                    .background(
-                                                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
-                                                    ),
+                                                    .size(38.dp)
+                                                    .clip(RoundedCornerShape(11.dp))
+                                                    .background(Brush.linearGradient(providerGradient)),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = providerIcon,
                                                     contentDescription = null,
-                                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.size(20.dp)
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(19.dp)
                                                 )
                                             }
 
                                             Column(verticalArrangement = Arrangement.Center) {
                                                 Text(
                                                     text = title,
-                                                    fontSize = 13.5.sp,
-                                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.SemiBold,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                                 )
                                                 Text(
                                                     text = domain,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Normal,
+                                                    fontSize = 11.5.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-                                    }
+                                        }
+
+                                        if (isSelected) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(20.dp)
+                                                    .clip(CircleShape)
+                                                    .background(MaterialTheme.colorScheme.primary),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Check,
+                                                    contentDescription = "Selected",
+                                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -567,55 +740,71 @@ fun SettingsScreen(
                 }
             }
 
-            SectionHeader("Data Backups Management")
-            SettingsGlassSection {
+            // 5. DATA BACKUPS & STORAGE
+            OxygenSectionHeader(
+                title = "DATA BACKUPS & MIGRATION",
+                subtitle = "Export database or restore your full watchlist safely"
+            )
+            OxygenGlassGroup(isDark = isDark) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Export your shows, watch progress, and custom collections to a JSON backup file or restore from a previous backup.",
+                        text = "Safely export your watchlist, episodes history, and custom collections into an encrypted JSON file, or restore existing backups.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp
                     )
 
                     if (!storageGranted) {
-                        Text(
-                            text = "Storage permission is required to save or import backups. Allow it below to enable backup export and import.",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 16.sp
-                        )
-                        Button(
-                            onClick = {
-                                storagePermissionLauncher.launch(currentStoragePermission())
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                contentColor = MaterialTheme.colorScheme.primary
-                            ),
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = if (isDark) 0.20f else 0.35f),
                             border = androidx.compose.foundation.BorderStroke(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                0.75.dp,
+                                MaterialTheme.colorScheme.error.copy(alpha = 0.40f)
                             ),
-                            shape = RoundedCornerShape(CornerRadius.sm),
-                            contentPadding = PaddingValues(horizontal = Spacing.sm)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Grant Storage Permission", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Storage Permission Required",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "Grant storage permission to allow exporting backups to device storage or importing backup files.",
+                                    fontSize = 11.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Button(
+                                    onClick = {
+                                        storagePermissionLauncher.launch(currentStoragePermission())
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text("Grant Permission", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
                         }
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        val buttonShape = RoundedCornerShape(CornerRadius.sm)
+                        val buttonShape = RoundedCornerShape(14.dp)
                         Button(
                             onClick = {
                                 coroutineScope.launch {
@@ -635,19 +824,19 @@ fun SettingsScreen(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp),
+                                .height(46.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                contentColor = MaterialTheme.colorScheme.primary
+                                containerColor = MaterialTheme.colorScheme.primary
                             ),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            ),
-                            shape = buttonShape,
-                            contentPadding = PaddingValues(horizontal = Spacing.sm)
+                            shape = buttonShape
                         ) {
-                            Text("Export Backup JSON", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(Icons.Rounded.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Text("Export Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
                         }
 
                         OutlinedButton(
@@ -656,81 +845,115 @@ fun SettingsScreen(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp),
+                                .height(46.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = androidx.compose.foundation.BorderStroke(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                width = 1.dp,
+                                color = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f)
                             ),
-                            shape = buttonShape,
-                            contentPadding = PaddingValues(horizontal = Spacing.sm)
+                            shape = buttonShape
                         ) {
-                            Text("Import Backup JSON", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Text("Import Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
                         }
                     }
                 }
             }
 
-            SectionHeader("About My Donghua")
-            SettingsGlassSection {
+            // 6. ABOUT MY DONGHUA (OXYGENOS SYSTEM CARD)
+            OxygenSectionHeader(
+                title = "ABOUT SYSTEM & APP",
+                subtitle = "Build engine, software version and repository"
+            )
+            OxygenGlassGroup(isDark = isDark) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+                            .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
                             painter = painterResource(id = R.mipmap.ic_launcher),
                             contentDescription = "App Icon",
                             modifier = Modifier
-                                .size(52.dp)
-                                .clip(RoundedCornerShape(14.dp)),
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(
+                                    1.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.10f),
+                                    RoundedCornerShape(16.dp)
+                                ),
                             contentScale = ContentScale.Fit
                         )
 
-                        Spacer(modifier = Modifier.width(Spacing.md))
+                        Spacer(modifier = Modifier.width(14.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = "My Donghua",
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                Spacer(modifier = Modifier.width(Spacing.sm))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Surface(
-                                    shape = RoundedCornerShape(CornerRadius.xs),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                    shape = CircleShape,
+                                    color = Color(0xFFE50914).copy(alpha = if (isDark) 0.20f else 0.12f)
                                 ) {
                                     Text(
-                                        text = "v2.4.0",
+                                        text = "OxygenOS 17",
                                         fontSize = 10.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDark) Color(0xFFFF5252) else Color(0xFFC60000),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                     )
                                 }
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Smart Donghua Tracker • Build 2026.07",
+                                text = "Liquid Glass Edition • v6.8.8 (Build 2026.10)",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    SettingsInfoItem(
-                        title = "Developer & License",
-                        value = "NSR-XINE • Open Source"
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
-                    SettingsActionItem(
-                        title = "GitHub Repository",
+
+                    OxygenSettingsInfoItem(
+                        title = "Architecture",
+                        value = "Clean Architecture + Kotlin 2.0"
+                    )
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                    )
+
+                    OxygenSettingsInfoItem(
+                        title = "UI Framework",
+                        value = "Jetpack Compose + Haze 0.7.3"
+                    )
+
+                    HorizontalDivider(
+                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                    )
+
+                    OxygenSettingsActionItem(
+                        title = "GitHub Source Repository",
                         subtitle = "github.com/NSR-XINE/my_donguha",
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE/my_donguha"))
@@ -744,38 +967,95 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.xxl))
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// OxygenOS 17 Liquid Glass Helper UI Components
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun OxygenSectionHeader(
+    title: String,
+    subtitle: String? = null
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 4.dp, height = 13.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+            Text(
+                text = title,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.1.sp
+            )
+        }
+        if (!subtitle.isNullOrEmpty()) {
+            Text(
+                text = subtitle,
+                fontSize = 11.5.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                modifier = Modifier.padding(start = 12.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-        modifier = Modifier.padding(top = Spacing.sm)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 4.dp, height = 14.dp)
-                .clip(RoundedCornerShape(CornerRadius.xs))
-                .background(MaterialTheme.colorScheme.primary)
+private fun OxygenGlassGroup(
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val shape = RoundedCornerShape(24.dp)
+    val cardBg = if (isDark) {
+        Color(0xFF131722).copy(alpha = 0.65f)
+    } else {
+        Color.White.copy(alpha = 0.75f)
+    }
+
+    val specularBorder = Brush.verticalGradient(
+        colors = listOf(
+            if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.90f),
+            if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.08f)
         )
-        Text(
-            text = title.uppercase(),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            letterSpacing = 1.sp
+    )
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = shape,
+        color = cardBg,
+        border = androidx.compose.foundation.BorderStroke(0.8.dp, specularBorder)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            content = content
         )
     }
 }
 
 @Composable
-private fun TogglePreferenceItem(
+private fun OxygenTogglePreferenceItem(
     title: String,
     subtitle: String? = null,
+    iconRes: Int? = null,
+    iconVector: ImageVector? = null,
+    iconGradient: List<Color>,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -783,122 +1063,144 @@ private fun TogglePreferenceItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-            if (!subtitle.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(subtitle, fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 15.sp)
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Brush.linearGradient(iconGradient))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.30f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (iconRes != null) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else if (iconVector != null) {
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = title,
+                    fontSize = 14.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (!subtitle.isNullOrEmpty()) {
+                    Text(
+                        text = subtitle,
+                        fontSize = 11.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 15.sp
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.width(Spacing.md))
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // OxygenOS Liquid Switch
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary
+                checkedThumbColor = Color.White,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                uncheckedThumbColor = Color.White.copy(alpha = 0.70f),
+                uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
             )
         )
     }
 }
 
 @Composable
-private fun SettingsActionItem(
+private fun OxygenSettingsActionItem(
     title: String,
     subtitle: String? = null,
-    iconRes: Int? = null,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (iconRes != null) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(CornerRadius.sm))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = null,
-                        modifier = Modifier.size(IconSize.md),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            Column {
-                Text(title, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                if (!subtitle.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(subtitle, fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 15.sp)
-                }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (!subtitle.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-        Text("\u2192", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "›",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
 @Composable
-private fun SettingsInfoItem(
+private fun OxygenSettingsInfoItem(
     title: String,
     value: String
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(title, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-        Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-    }
-}
-
-@Composable
-private fun SettingsGlassSection(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val surfaceBg = if (isDark) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-    } else {
-        Color.White.copy(alpha = 0.75f)
-    }
-    val borderColor = if (isDark) {
-        Color.White.copy(alpha = 0.12f)
-    } else {
-        Color.Black.copy(alpha = 0.08f)
-    }
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = surfaceBg,
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, borderColor)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Spacing.md),
-            content = content
+        Text(
+            text = title,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = value,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }

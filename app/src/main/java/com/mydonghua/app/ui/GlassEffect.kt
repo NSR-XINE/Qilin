@@ -335,27 +335,29 @@ fun MenuGlassPanel(
     val isDark = !isLightMode
 
     val baseColor = when {
-        isAmoledMode -> Color.Black.copy(alpha = 0.65f)
-        isLightMode -> Color.White.copy(alpha = 0.45f)
-        else -> Color.Black.copy(alpha = 0.40f)
+        isAmoledMode -> Color.Black.copy(alpha = 0.85f)
+        isLightMode -> Color(0xFFF8F9FA).copy(alpha = 0.88f)
+        else -> Color(0xFF0C0E14).copy(alpha = 0.80f)
     }
 
     val accentColor = MaterialTheme.colorScheme.primary
     val borderColor = if (isDark) {
-        Color.White.copy(alpha = 0.12f)
+        Color.White.copy(alpha = 0.16f)
     } else {
         Color.Black.copy(alpha = 0.08f)
     }
     val glassBorderBrush = Brush.verticalGradient(
         colors = listOf(
-            accentColor.copy(alpha = if (isLightMode) 0.50f else 0.30f),
-            borderColor,
-            borderColor.copy(alpha = 0.30f)
+            if (isLightMode) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.35f),
+            accentColor.copy(alpha = if (isLightMode) 0.35f else 0.25f),
+            borderColor.copy(alpha = 0.15f)
         )
     )
 
     Box(
-        modifier = modifier.clip(shape)
+        modifier = modifier
+            .clip(shape)
+            .border(0.8.dp, glassBorderBrush, shape)
     ) {
         if (backdrop != null) {
             Box(

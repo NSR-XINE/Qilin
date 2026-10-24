@@ -17,8 +17,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -526,7 +528,7 @@ class MainActivity : ComponentActivity() {
                     animationSpec = tween(500, easing = FastOutSlowInEasing)
                 ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing))
             ) {
-                val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                val menuShape = RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
                 val isLightMode = settingsState.themeMode.lowercase() == "light"
 
@@ -549,106 +551,252 @@ class MainActivity : ComponentActivity() {
                             .statusBarsPadding()
                             .navigationBarsPadding()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
-                        verticalArrangement = Arrangement.SpaceBetween
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // OxygenOS 17 Fluid Header
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isLightMode) Color(0xFFE50914).copy(alpha = 0.10f)
+                                            else Color(0xFFE50914).copy(alpha = 0.18f)
+                                        )
+                                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFE50914))
+                                    )
+                                    Text(
+                                        text = "OXYGEN FLUID ENGINE",
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.2.sp,
+                                        color = if (isLightMode) Color(0xFFC60000) else Color(0xFFFF5252)
+                                    )
+                                }
                                 Text(
                                     text = "Navigation",
                                     fontSize = 24.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "My Donghua App",
-                                    fontSize = 13.sp,
+                                    text = "Quick access to hub & tools",
+                                    fontSize = 12.5.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
-                            IconButton(
-                                onClick = { isDrawerOpen = false },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                ),
-                                modifier = Modifier.size(44.dp)
+                            // Frosted Liquid Close Button
+                            val closeInteraction = remember { MutableInteractionSource() }
+                            val isClosePressed by closeInteraction.collectIsPressedAsState()
+                            val closeScale by animateFloatAsState(
+                                targetValue = if (isClosePressed) 0.88f else 1f,
+                                animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                                label = "closeScale"
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .graphicsLayer {
+                                        scaleX = closeScale
+                                        scaleY = closeScale
+                                    }
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isLightMode) Color.Black.copy(alpha = 0.06f)
+                                        else Color.White.copy(alpha = 0.10f)
+                                    )
+                                    .border(
+                                        width = 0.75.dp,
+                                        color = if (isLightMode) Color.Black.copy(alpha = 0.10f)
+                                        else Color.White.copy(alpha = 0.20f),
+                                        shape = CircleShape
+                                    )
+                                    .clickable(
+                                        interactionSource = closeInteraction,
+                                        indication = null,
+                                        onClick = { isDrawerOpen = false }
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = "Close Menu",
-                                    modifier = Modifier.size(24.dp)
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
 
+                        // OxygenOS 17 Liquid Glass Quick Tiles (2x2 Grid)
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "ESSENTIAL HUB",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                OxygenDrawerTile(
+                                    title = "Statistics",
+                                    subtitle = "Hours & streaks",
+                                    iconRes = R.drawable.ic_stats,
+                                    gradient = listOf(Color(0xFFFF5722), Color(0xFFFF8A65)),
+                                    isSelected = currentRoute == "stats",
+                                    isLight = isLightMode,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { isDrawerOpen = false; navController.navigate("stats") }
+                                )
+                                OxygenDrawerTile(
+                                    title = "Schedule",
+                                    subtitle = "Weekly airings",
+                                    iconRes = R.drawable.ic_calendar,
+                                    gradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
+                                    isSelected = currentRoute == "calendar",
+                                    isLight = isLightMode,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { isDrawerOpen = false; navController.navigate("calendar") }
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                OxygenDrawerTile(
+                                    title = "Collections",
+                                    subtitle = "Custom folders",
+                                    iconRes = R.drawable.ic_collections,
+                                    gradient = listOf(Color(0xFF7B1FA2), Color(0xFFBA68C8)),
+                                    isSelected = currentRoute == "collections",
+                                    isLight = isLightMode,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { isDrawerOpen = false; navController.navigate("collections") }
+                                )
+                                OxygenDrawerTile(
+                                    title = "Downloads",
+                                    subtitle = "Offline videos",
+                                    iconRes = R.drawable.ic_history,
+                                    gradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
+                                    isSelected = currentRoute == "downloads",
+                                    isLight = isLightMode,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { isDrawerOpen = false; navController.navigate("downloads") }
+                                )
+                            }
+                        }
+
+                        // OxygenOS 17 Grouped Island List
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "MORE DESTINATIONS",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            val listCardShape = RoundedCornerShape(22.dp)
+                            val listCardBg = if (isLightMode) Color.White.copy(alpha = 0.70f)
+                            else Color.White.copy(alpha = 0.05f)
+                            val listBorder = if (isLightMode) Color.Black.copy(alpha = 0.08f)
+                            else Color.White.copy(alpha = 0.12f)
+
+                            Surface(
+                                shape = listCardShape,
+                                color = listCardBg,
+                                border = androidx.compose.foundation.BorderStroke(0.8.dp, listBorder),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    OxygenDrawerListItem(
+                                        title = "Watch History",
+                                        subtitle = "Recent episodes & progress",
+                                        iconRes = R.drawable.ic_history,
+                                        iconGradient = listOf(Color(0xFF334155), Color(0xFF64748B)),
+                                        isSelected = currentRoute == "history",
+                                        isLight = isLightMode,
+                                        onClick = { isDrawerOpen = false; navController.navigate("history") }
+                                    )
+                                    HorizontalDivider(
+                                        color = if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f),
+                                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                                    )
+                                    OxygenDrawerListItem(
+                                        title = "Seasonal View",
+                                        subtitle = "Quarterly broadcast lists",
+                                        iconRes = R.drawable.ic_seasonal,
+                                        iconGradient = listOf(Color(0xFFD97706), Color(0xFFF59E0B)),
+                                        isSelected = currentRoute == "seasonal",
+                                        isLight = isLightMode,
+                                        onClick = { isDrawerOpen = false }
+                                    )
+                                    HorizontalDivider(
+                                        color = if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f),
+                                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                                    )
+                                    OxygenDrawerListItem(
+                                        title = "Settings",
+                                        subtitle = "Themes, streaming & backups",
+                                        iconRes = R.drawable.ic_settings,
+                                        iconGradient = listOf(Color(0xFFE50914), Color(0xFFFF5252)),
+                                        isSelected = currentRoute == "settings",
+                                        isLight = isLightMode,
+                                        onClick = { isDrawerOpen = false; navController.navigate("settings") }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Bottom Pill & Footer
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = Spacing.md),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                                .padding(top = 4.dp, bottom = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            DrawerItem(
-                                iconRes = R.drawable.ic_stats,
-                                label = "Statistics",
-                                isSelected = currentRoute == "stats",
-                                onClick = { isDrawerOpen = false; navController.navigate("stats") }
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 36.dp, height = 4.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isLightMode) Color.Black.copy(alpha = 0.15f)
+                                        else Color.White.copy(alpha = 0.25f)
+                                    )
                             )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_calendar,
-                                label = "Weekly Schedule",
-                                isSelected = currentRoute == "calendar",
-                                onClick = { isDrawerOpen = false; navController.navigate("calendar") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_collections,
-                                label = "Collections",
-                                isSelected = currentRoute == "collections",
-                                onClick = { isDrawerOpen = false; navController.navigate("collections") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_history,
-                                label = "Downloads",
-                                isSelected = currentRoute == "downloads",
-                                onClick = { isDrawerOpen = false; navController.navigate("downloads") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_history,
-                                label = "Watch History",
-                                isSelected = currentRoute == "history",
-                                onClick = { isDrawerOpen = false; navController.navigate("history") }
-                            )
-                            DrawerItem(
-                                iconRes = R.drawable.ic_seasonal,
-                                label = "Seasonal View",
-                                isSelected = currentRoute == "seasonal",
-                                onClick = { isDrawerOpen = false }
-                            )
-
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                modifier = Modifier.padding(vertical = Spacing.xs)
-                            )
-
-                            DrawerItem(
-                                iconRes = R.drawable.ic_settings,
-                                label = "Settings",
-                                isSelected = currentRoute == "settings",
-                                onClick = { isDrawerOpen = false; navController.navigate("settings") }
+                            Text(
+                                text = "My Donghua • OxygenOS 17 Liquid Glass Edition",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
                             )
                         }
-
-                        Text(
-                            text = "My Donghua • v1.0.0",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
                     }
                 }
             }
@@ -746,56 +894,202 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun DrawerItem(
+private fun OxygenDrawerTile(
+    title: String,
+    subtitle: String,
     iconRes: Int,
-    label: String,
-    isSelected: Boolean = false,
+    gradient: List<Color>,
+    isSelected: Boolean,
+    isLight: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val pillShape = CircleShape
-    val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+        label = "tileScale"
+    )
+
+    val shape = RoundedCornerShape(20.dp)
+    val cardBg = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isLight) 0.35f else 0.25f)
     } else {
-        Color.Transparent
+        if (isLight) Color.White.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.05f)
     }
-    val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val borderStroke = if (isSelected) {
-        androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f))
-    } else null
+
+    val specularBorder = Brush.verticalGradient(
+        colors = if (isSelected) {
+            listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.80f),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+            )
+        } else {
+            listOf(
+                if (isLight) Color.White.copy(alpha = 0.80f) else Color.White.copy(alpha = 0.22f),
+                if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.05f)
+            )
+        }
+    )
 
     Surface(
         onClick = onClick,
-        selected = isSelected,
-        shape = pillShape,
-        color = containerColor,
-        border = borderStroke,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
+        interactionSource = interactionSource,
+        shape = shape,
+        color = cardBg,
+        border = androidx.compose.foundation.BorderStroke(if (isSelected) 1.5.dp else 0.8.dp, specularBorder),
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .height(108.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Squircle Icon Badge
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Brush.linearGradient(gradient))
+                        .border(
+                            0.5.dp,
+                            Color.White.copy(alpha = 0.35f),
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = title,
+                        tint = Color.White,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+
+                if (isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = title,
+                    fontSize = 14.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OxygenDrawerListItem(
+    title: String,
+    subtitle: String,
+    iconRes: Int,
+    iconGradient: List<Color>,
+    isSelected: Boolean,
+    isLight: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val bgAlpha = if (isPressed) {
+        if (isLight) 0.12f else 0.10f
+    } else if (isSelected) {
+        if (isLight) 0.08f else 0.07f
+    } else {
+        0f
+    }
+
+    Surface(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = bgAlpha),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 18.dp),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = label,
-                modifier = Modifier.size(22.dp),
-                tint = contentColor
-            )
-            Text(
-                text = label,
-                fontSize = 14.5.sp,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                color = contentColor
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Brush.linearGradient(iconGradient))
+                    .border(
+                        0.5.dp,
+                        Color.White.copy(alpha = 0.30f),
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = title,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = 14.5.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isLight) Color.Black.copy(alpha = 0.04f)
+                        else Color.White.copy(alpha = 0.06f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "›",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
