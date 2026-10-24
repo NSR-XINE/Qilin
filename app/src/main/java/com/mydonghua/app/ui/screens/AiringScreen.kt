@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,14 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.Show
-import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
-import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun AiringScreen(
@@ -44,6 +43,8 @@ fun AiringScreen(
 ) {
     val shows by viewModel.airingShows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     val context = LocalContext.current
     val onDelete = remember { { s: Show -> viewModel.deleteShow(s.id) } }
     val onFavorite = remember { { s: Show -> viewModel.toggleFavorite(s) } }
@@ -94,29 +95,41 @@ fun AiringScreen(
                             Box(
                                 modifier = Modifier
                                     .width(4.dp)
-                                    .height(16.dp)
+                                    .height(18.dp)
                                     .clip(RoundedCornerShape(2.dp))
                                     .background(
                                         Brush.verticalGradient(
-                                            listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                            if (isLight) {
+                                                listOf(Color(0xFF009AA6), Color(0xFF0072FF))
+                                            } else {
+                                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                            }
                                         )
                                     )
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = "Airing Schedule",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
-                        // Frosted pill show counter badge
+                        // Frosted pill show counter badge (adaptive to light/dark mode)
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(CornerRadius.chip))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
-                                .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(CornerRadius.chip))
+                                .background(
+                                    if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                )
+                                .border(
+                                    width = 0.6.dp,
+                                    color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+                                    else Color.White.copy(alpha = 0.12f),
+                                    shape = RoundedCornerShape(CornerRadius.chip)
+                                )
                                 .padding(horizontal = 10.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -124,7 +137,7 @@ fun AiringScreen(
                                 text = if (shows.size == 1) "1 show" else "${shows.size} shows",
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF00E5FF)
+                                color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
                             )
                         }
                     }
@@ -159,7 +172,7 @@ private fun HeaderSkeleton() {
     ) {
         Box(
             modifier = Modifier
-                .width(110.dp)
+                .width(130.dp)
                 .height(18.dp)
                 .clip(RoundedCornerShape(CornerRadius.xs))
                 .shimmerEffect()

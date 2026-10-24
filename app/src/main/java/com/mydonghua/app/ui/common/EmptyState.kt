@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -52,26 +53,37 @@ fun EmptyState(
             modifier = Modifier.padding(horizontal = Spacing.xxxl)
         ) {
             if (icon != null || painter != null) {
+                val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+                val iconBorderBrush = if (isLight) {
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.80f),
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                        )
+                    )
+                } else {
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.25f),
+                            Color.White.copy(alpha = 0.05f)
+                        )
+                    )
+                }
+                val iconBgBrush = Brush.radialGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = if (isLight) 0.12f else 0.16f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = if (isLight) 0.03f else 0.04f)
+                    )
+                )
+
                 Box(
                     modifier = Modifier
                         .size(76.dp)
                         .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
-                                )
-                            )
-                        )
+                        .background(iconBgBrush)
                         .border(
                             width = 1.dp,
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.25f),
-                                    Color.White.copy(alpha = 0.05f)
-                                )
-                            ),
+                            brush = iconBorderBrush,
                             shape = RoundedCornerShape(CornerRadius.card)
                         ),
                     contentAlignment = Alignment.Center

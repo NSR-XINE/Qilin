@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -42,7 +43,6 @@ import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
@@ -118,6 +118,8 @@ fun HeroBanner(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     var remainingTime by remember(show.id) {
         mutableStateOf(
             CountdownCalculator.calculateTimeRemaining(
@@ -135,13 +137,13 @@ fun HeroBanner(
         }
     }
 
-    // ColorOS 17 Aurora rim gradient
-    val bannerBorderBrush = remember {
+    // ColorOS 17 Aurora rim gradient (banner sits on dark poster image)
+    val bannerBorderBrush = remember(isLight) {
         Brush.linearGradient(
             colors = listOf(
-                Color(0xFF00E5FF).copy(alpha = 0.50f),
-                Color(0xFF0072FF).copy(alpha = 0.25f),
-                Color.White.copy(alpha = 0.15f)
+                Color(0xFF00E5FF).copy(alpha = 0.55f),
+                Color(0xFF0072FF).copy(alpha = 0.28f),
+                Color.White.copy(alpha = 0.18f)
             )
         )
     }
@@ -150,15 +152,15 @@ fun HeroBanner(
         Brush.verticalGradient(
             0.0f to Color.Black.copy(alpha = 0.40f),
             0.20f to Color.Transparent,
-            0.45f to Color.Black.copy(alpha = 0.25f),
-            0.75f to Color.Black.copy(alpha = 0.70f),
-            1.0f to Color.Black.copy(alpha = 0.90f)
+            0.45f to Color.Black.copy(alpha = 0.28f),
+            0.75f to Color.Black.copy(alpha = 0.72f),
+            1.0f to Color.Black.copy(alpha = 0.92f)
         )
     }
 
     val textShadow = remember {
         Shadow(
-            color = Color.Black.copy(alpha = 0.65f),
+            color = Color.Black.copy(alpha = 0.70f),
             offset = Offset(0f, 1.5f),
             blurRadius = 4f
         )
@@ -208,7 +210,7 @@ fun HeroBanner(
                     .align(Alignment.TopStart)
                     .padding(14.dp)
                     .clip(RoundedCornerShape(CornerRadius.chip))
-                    .background(Color.Black.copy(alpha = 0.50f))
+                    .background(Color.Black.copy(alpha = 0.55f))
                     .border(0.6.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(CornerRadius.chip))
                     .padding(horizontal = 9.dp, vertical = 4.dp),
                 contentAlignment = Alignment.Center
@@ -262,51 +264,50 @@ fun HeroBanner(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (remainingTime.airingNow) {
-                        Box(
-                            modifier = Modifier
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                                    )
+                if (remainingTime.airingNow) {
+                    Box(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
                                 )
-                                .clickable { onWatchClick() }
-                                .colorOSPressBounce(pressedScale = 0.92f)
-                                .padding(horizontal = 16.dp),
-                            contentAlignment = Alignment.Center
+                            )
+                            .clickable { onWatchClick() }
+                            .colorOSPressBounce(pressedScale = 0.92f)
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.PlayArrow,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = Color.White
-                                )
-                                Text(
-                                    text = "Watch Now",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                text = "Watch Now",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         }
-                    } else {
-                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                            BannerTimeBox(value = remainingTime.days, label = "DAYS")
-                            BannerTimeBox(value = remainingTime.hours, label = "HOURS")
-                            BannerTimeBox(value = remainingTime.minutes, label = "MINS")
-                            BannerTimeBox(value = remainingTime.seconds, label = "SECS")
-                        }
+                    }
+                } else {
+                    // Symmetrical countdown boxes filling the available width evenly
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BannerTimeBox(value = remainingTime.days, label = "DAYS", modifier = Modifier.weight(1f))
+                        BannerTimeBox(value = remainingTime.hours, label = "HOURS", modifier = Modifier.weight(1f))
+                        BannerTimeBox(value = remainingTime.minutes, label = "MINS", modifier = Modifier.weight(1f))
+                        BannerTimeBox(value = remainingTime.seconds, label = "SECS", modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -315,29 +316,32 @@ fun HeroBanner(
 }
 
 @Composable
-private fun BannerTimeBox(value: Long, label: String) {
+private fun BannerTimeBox(
+    value: Long,
+    label: String,
+    modifier: Modifier = Modifier
+) {
     val hazeState = LocalHazeState.current
     val shape = RoundedCornerShape(CornerRadius.md)
     val bgBrush = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color.Black.copy(alpha = 0.45f),
-                Color.Black.copy(alpha = 0.25f)
+                Color.Black.copy(alpha = 0.48f),
+                Color.Black.copy(alpha = 0.28f)
             )
         )
     }
     val borderBrush = remember {
         Brush.linearGradient(
             colors = listOf(
-                Color(0xFF00E5FF).copy(alpha = 0.40f),
-                Color.White.copy(alpha = 0.18f),
+                Color(0xFF00E5FF).copy(alpha = 0.42f),
+                Color.White.copy(alpha = 0.20f),
                 Color.Transparent
             )
         )
     }
     Box(
-        modifier = Modifier
-            .width(54.dp)
+        modifier = modifier
             .height(48.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
@@ -361,7 +365,7 @@ private fun BannerTimeBox(value: Long, label: String) {
                 text = label,
                 fontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF00E5FF).copy(alpha = 0.90f),
+                color = Color(0xFF00E5FF).copy(alpha = 0.92f),
                 letterSpacing = 0.5.sp,
                 textAlign = TextAlign.Center
             )
@@ -407,15 +411,33 @@ fun ContinueWatchingRow(
     modifier: Modifier = Modifier
 ) {
     val hazeState = LocalHazeState.current
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val cardShape = RoundedCornerShape(CornerRadius.card)
-    val cardBorder = remember {
-        Brush.linearGradient(
-            listOf(
-                Color.White.copy(alpha = 0.20f),
-                Color(0xFF00E5FF).copy(alpha = 0.12f),
-                Color.Transparent
+
+    val cardBorder = remember(isLight) {
+        if (isLight) {
+            Brush.linearGradient(
+                listOf(
+                    Color.Black.copy(alpha = 0.12f),
+                    Color(0xFF009AA6).copy(alpha = 0.20f),
+                    Color.Black.copy(alpha = 0.05f)
+                )
             )
-        )
+        } else {
+            Brush.linearGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.20f),
+                    Color(0xFF00E5FF).copy(alpha = 0.12f),
+                    Color.Transparent
+                )
+            )
+        }
+    }
+
+    val cardBg = if (isLight) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
     }
 
     LazyRow(
@@ -429,7 +451,7 @@ fun ContinueWatchingRow(
                     .width(260.dp)
                     .clip(cardShape)
                     .hazeChild(state = hazeState, shape = cardShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
+                    .background(cardBg)
                     .border(
                         width = 0.65.dp,
                         brush = cardBorder,
@@ -479,7 +501,12 @@ fun ContinueWatchingRow(
 
                     Spacer(modifier = Modifier.width(Spacing.md))
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 78.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
                         Text(
                             text = show.title,
                             fontSize = 13.5.sp,
@@ -493,7 +520,7 @@ fun ContinueWatchingRow(
                         Text(
                             text = "Ep ${show.currentEp}$totalStr",
                             fontSize = 11.5.sp,
-                            color = Color(0xFF00E5FF),
+                            color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 2.dp)
                         )
@@ -506,7 +533,7 @@ fun ContinueWatchingRow(
                                     .fillMaxWidth()
                                     .height(4.5.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLight) 0.10f else 0.08f))
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -515,7 +542,11 @@ fun ContinueWatchingRow(
                                         .clip(CircleShape)
                                         .background(
                                             Brush.horizontalGradient(
-                                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                                if (isLight) {
+                                                    listOf(Color(0xFF009AA6), Color(0xFF0072FF))
+                                                } else {
+                                                    listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                                }
                                             )
                                         )
                                 )
@@ -535,17 +566,35 @@ fun RecentlyUpdatedRow(
     modifier: Modifier = Modifier
 ) {
     val hazeState = LocalHazeState.current
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val lazyListState = rememberLazyListState()
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
     val cardShape = RoundedCornerShape(CornerRadius.card)
-    val cardBorder = remember {
-        Brush.linearGradient(
-            listOf(
-                Color.White.copy(alpha = 0.20f),
-                Color(0xFF00E5FF).copy(alpha = 0.12f),
-                Color.Transparent
+
+    val cardBorder = remember(isLight) {
+        if (isLight) {
+            Brush.linearGradient(
+                listOf(
+                    Color.Black.copy(alpha = 0.12f),
+                    Color(0xFF009AA6).copy(alpha = 0.20f),
+                    Color.Black.copy(alpha = 0.05f)
+                )
             )
-        )
+        } else {
+            Brush.linearGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.20f),
+                    Color(0xFF00E5FF).copy(alpha = 0.12f),
+                    Color.Transparent
+                )
+            )
+        }
+    }
+
+    val cardBg = if (isLight) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
     }
 
     LazyRow(
@@ -561,7 +610,7 @@ fun RecentlyUpdatedRow(
                     .width(260.dp)
                     .clip(cardShape)
                     .hazeChild(state = hazeState, shape = cardShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
+                    .background(cardBg)
                     .border(
                         width = 0.65.dp,
                         brush = cardBorder,
@@ -593,7 +642,12 @@ fun RecentlyUpdatedRow(
 
                     Spacer(modifier = Modifier.width(Spacing.md))
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 78.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
                         Text(
                             text = show.title,
                             fontSize = 13.5.sp,

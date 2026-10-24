@@ -14,9 +14,9 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,10 +28,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +42,6 @@ import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 
@@ -62,12 +63,14 @@ fun ShowCard(
     val hazeState = LocalHazeState.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     // Status aesthetics
     val (statusDotColor, statusText) = remember(show.status) {
         when (show.status) {
             "completed" -> Color(0xFF00E676) to "COMPLETED"
             "stopped" -> Color(0xFFFF9100) to "HIATUS"
-            else -> Color(0xFF00E5FF) to "AIRING"
+            else -> (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)) to "AIRING"
         }
     }
 
@@ -81,32 +84,49 @@ fun ShowCard(
         }
     }
 
-    // Specular border brush (ColorOS 17 Aurora edge reflection)
-    val cardBorderBrush = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.22f),
-                Color(0xFF00E5FF).copy(alpha = 0.14f),
-                Color.Transparent,
-                Color.White.copy(alpha = 0.08f)
+    // Specular border brush (ColorOS 17 Aurora rim reflection, light/dark adaptive)
+    val cardBorderBrush = remember(isLight) {
+        if (isLight) {
+            Brush.linearGradient(
+                colors = listOf(
+                    Color.Black.copy(alpha = 0.12f),
+                    Color(0xFF009AA6).copy(alpha = 0.22f),
+                    Color.Black.copy(alpha = 0.05f),
+                    Color.Black.copy(alpha = 0.08f)
+                )
             )
-        )
+        } else {
+            Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.22f),
+                    Color(0xFF00E5FF).copy(alpha = 0.14f),
+                    Color.Transparent,
+                    Color.White.copy(alpha = 0.08f)
+                )
+            )
+        }
+    }
+
+    val cardBgColor = if (isLight) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.90f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
     }
 
     // Multi-stop liquid gradient overlay for cinematic poster readability
     val posterOverlayBrush = remember {
         Brush.verticalGradient(
-            0.0f to Color.Black.copy(alpha = 0.35f),
-            0.30f to Color.Transparent,
-            0.55f to Color.Transparent,
-            0.78f to Color.Black.copy(alpha = 0.55f),
-            1.0f to Color.Black.copy(alpha = 0.88f)
+            0.0f to Color.Black.copy(alpha = 0.40f),
+            0.25f to Color.Transparent,
+            0.50f to Color.Transparent,
+            0.75f to Color.Black.copy(alpha = 0.60f),
+            1.0f to Color.Black.copy(alpha = 0.92f)
         )
     }
 
     val titleShadow = remember {
         Shadow(
-            color = Color.Black.copy(alpha = 0.65f),
+            color = Color.Black.copy(alpha = 0.70f),
             offset = Offset(0f, 1.5f),
             blurRadius = 4f
         )
@@ -166,7 +186,7 @@ fun ShowCard(
             }
             .hazeChild(state = hazeState, shape = cardShape)
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
+                color = cardBgColor,
                 shape = cardShape
             )
             .border(
@@ -208,10 +228,10 @@ fun ShowCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(Spacing.sm + 2.dp)
+                        .padding(12.dp)
                         .clip(RoundedCornerShape(CornerRadius.chip))
-                        .background(Color.Black.copy(alpha = 0.50f))
-                        .border(0.6.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(CornerRadius.chip))
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .border(0.6.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(CornerRadius.chip))
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -239,10 +259,10 @@ fun ShowCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(Spacing.sm + 2.dp)
+                        .padding(12.dp)
                         .clip(RoundedCornerShape(CornerRadius.chip))
-                        .background(Color.Black.copy(alpha = 0.50f))
-                        .border(0.6.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(CornerRadius.chip))
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .border(0.6.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(CornerRadius.chip))
                         .padding(horizontal = 9.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -255,43 +275,12 @@ fun ShowCard(
                     )
                 }
 
-                // Quick Play Circle Button (Center Overlay when watchUrl exists)
-                if (!show.watchUrl.isNullOrEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(46.dp)
-                            .clip(CircleShape)
-                            .background(Color.Black.copy(alpha = 0.42f))
-                            .border(
-                                1.dp,
-                                Brush.linearGradient(
-                                    listOf(
-                                        Color(0xFF00E5FF).copy(alpha = 0.70f),
-                                        Color.White.copy(alpha = 0.25f)
-                                    )
-                                ),
-                                CircleShape
-                            )
-                            .clickable { onWatchClick(show.watchUrl ?: "") }
-                            .colorOSPressBounce(pressedScale = 0.90f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.PlayArrow,
-                            contentDescription = "Quick Watch",
-                            modifier = Modifier.size(26.dp),
-                            tint = Color(0xFF00E5FF)
-                        )
-                    }
-                }
-
-                // Title & Subtitle inside bottom vignette
+                // Title & Subtitle inside bottom vignette (aligned flush with bottom content)
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth()
-                        .padding(start = 14.dp, end = 14.dp, bottom = 12.dp)
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
                     if (highlightQuery.isNullOrBlank()) {
                         Text(
@@ -313,7 +302,7 @@ fun ShowCard(
                                 fontWeight = FontWeight.Bold,
                                 shadow = titleShadow
                             ),
-                            highlightColor = Color(0xFF00E5FF),
+                            highlightColor = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF),
                             highlightWeight = FontWeight.ExtraBold,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
@@ -325,7 +314,7 @@ fun ShowCard(
                         Text(
                             text = show.titleZh,
                             fontSize = 11.5.sp,
-                            color = Color.White.copy(alpha = 0.75f),
+                            color = Color.White.copy(alpha = 0.80f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -337,7 +326,7 @@ fun ShowCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
                 // Tier 1: Episode Counter + Progress Bar + Quick Episode Stepper
                 Row(
@@ -349,26 +338,27 @@ fun ShowCard(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 12.dp)
+                            .padding(end = 12.dp),
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
+                        val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
                         Text(
                             text = "Episode ${show.currentEp}$totalStr",
-                            fontSize = 12.5.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(5.dp))
 
                         if (show.totalEp > 0) {
                             val progressFraction = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f)
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(4.dp)
+                                    .height(4.5.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLight) 0.10f else 0.08f))
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -377,7 +367,11 @@ fun ShowCard(
                                         .clip(CircleShape)
                                         .background(
                                             Brush.horizontalGradient(
-                                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                                if (isLight) {
+                                                    listOf(Color(0xFF009AA6), Color(0xFF0072FF))
+                                                } else {
+                                                    listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                                }
                                             )
                                         )
                                 )
@@ -385,20 +379,29 @@ fun ShowCard(
                         } else {
                             Text(
                                 text = "Ongoing series",
-                                fontSize = 11.sp,
+                                fontSize = 11.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // Right: Tactile Quick Stepper Pill [ − ] Ep X [ + ]
+                    // Right: Tactile Quick Stepper Pill [ − ] Ep X [ + ] (Exact 34.dp height)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
                         modifier = Modifier
+                            .height(34.dp)
                             .clip(RoundedCornerShape(CornerRadius.chip))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(CornerRadius.chip))
+                            .background(
+                                if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                            )
+                            .border(
+                                width = 0.6.dp,
+                                color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+                                else Color.White.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(CornerRadius.chip)
+                            )
                             .padding(horizontal = 3.dp, vertical = 2.dp)
                     ) {
                         // Decrement Button
@@ -414,6 +417,7 @@ fun ShowCard(
                                 text = "−",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
                                 color = if (show.currentEp > 0) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
                             )
@@ -424,8 +428,9 @@ fun ShowCard(
                             text = "EP ${show.currentEp}",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00E5FF),
-                            modifier = Modifier.padding(horizontal = 4.dp)
+                            color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF),
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            textAlign = TextAlign.Center
                         )
 
                         // Increment Button
@@ -436,7 +441,7 @@ fun ShowCard(
                                 .background(
                                     Brush.linearGradient(
                                         listOf(
-                                            Color(0xFF00E5FF).copy(alpha = 0.25f),
+                                            (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)).copy(alpha = 0.25f),
                                             Color(0xFF0072FF).copy(alpha = 0.25f)
                                         )
                                     )
@@ -449,23 +454,27 @@ fun ShowCard(
                                 text = "+",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                textAlign = TextAlign.Center,
+                                color = if (isLight) Color(0xFF009AA6) else Color.White
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Faint divider line
+                // Faint divider line (adaptive to light/dark mode)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(0.5.dp)
-                        .background(Color.White.copy(alpha = 0.06f))
+                        .height(0.6.dp)
+                        .background(
+                            if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                            else Color.White.copy(alpha = 0.06f)
+                        )
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Tier 2: Action Chips Row (Watch Action + Icon Squircle Chips)
                 Row(
@@ -473,24 +482,35 @@ fun ShowCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Watch button pill if URL exists
+                    val chipBgColor = if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+
+                    val chipBorderColor = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.60f)
+                    else Color.White.copy(alpha = 0.10f)
+
+                    // Left Hero Action: Watch pill if URL exists, or Details pill if no direct stream URL
                     if (!show.watchUrl.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
-                                .height(32.dp)
+                                .height(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
                                     Brush.linearGradient(
-                                        listOf(
-                                            Color(0xFF00E5FF).copy(alpha = 0.16f),
-                                            Color(0xFF0072FF).copy(alpha = 0.16f)
-                                        )
+                                        if (isLight) {
+                                            listOf(Color(0xFF009AA6).copy(alpha = 0.14f), Color(0xFF0072FF).copy(alpha = 0.14f))
+                                        } else {
+                                            listOf(Color(0xFF00E5FF).copy(alpha = 0.16f), Color(0xFF0072FF).copy(alpha = 0.16f))
+                                        }
                                     )
                                 )
-                                .border(0.6.dp, Color(0xFF00E5FF).copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                                .border(
+                                    0.6.dp,
+                                    if (isLight) Color(0xFF009AA6).copy(alpha = 0.45f) else Color(0xFF00E5FF).copy(alpha = 0.45f),
+                                    RoundedCornerShape(10.dp)
+                                )
                                 .clickable { onWatchClick(show.watchUrl ?: "") }
                                 .colorOSPressBounce(pressedScale = 0.92f)
-                                .padding(horizontal = 10.dp),
+                                .padding(horizontal = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -501,21 +521,50 @@ fun ShowCard(
                                     imageVector = Icons.Outlined.PlayCircle,
                                     contentDescription = "Watch",
                                     modifier = Modifier.size(15.dp),
-                                    tint = Color(0xFF00E5FF)
+                                    tint = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
                                 )
                                 Text(
                                     text = "Watch",
-                                    fontSize = 12.sp,
+                                    fontSize = 12.5.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
+                                    color = if (isLight) Color(0xFF009AA6) else Color.White
                                 )
                             }
                         }
                     } else {
-                        Spacer(modifier = Modifier.width(1.dp))
+                        // Clean Details pill to maintain perfect row alignment
+                        Box(
+                            modifier = Modifier
+                                .height(34.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(chipBgColor)
+                                .border(0.6.dp, chipBorderColor, RoundedCornerShape(10.dp))
+                                .clickable { onCardClick(show) }
+                                .colorOSPressBounce(pressedScale = 0.92f)
+                                .padding(horizontal = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Details",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
 
-                    // Action Squircle Chips (Favorite, Notify, Edit, Delete)
+                    // Action Squircle Chips (Favorite, Notify, Edit, Delete) - each exact 34.dp height
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -526,13 +575,13 @@ fun ShowCard(
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = 0.20f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                    if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = if (isLight) 0.12f else 0.20f)
+                                    else chipBgColor
                                 )
                                 .border(
-                                    0.5.dp,
-                                    if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = 0.50f)
-                                    else Color.White.copy(alpha = 0.10f),
+                                    0.6.dp,
+                                    if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = if (isLight) 0.40f else 0.50f)
+                                    else chipBorderColor,
                                     RoundedCornerShape(10.dp)
                                 )
                                 .clickable { onFavoriteToggle(show) }
@@ -555,13 +604,13 @@ fun ShowCard(
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (show.alarmRequestCode != null) Color(0xFF00E5FF).copy(alpha = 0.20f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                    if (show.alarmRequestCode != null) (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)).copy(alpha = if (isLight) 0.12f else 0.20f)
+                                    else chipBgColor
                                 )
                                 .border(
-                                    0.5.dp,
-                                    if (show.alarmRequestCode != null) Color(0xFF00E5FF).copy(alpha = 0.50f)
-                                    else Color.White.copy(alpha = 0.10f),
+                                    0.6.dp,
+                                    if (show.alarmRequestCode != null) (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)).copy(alpha = if (isLight) 0.40f else 0.50f)
+                                    else chipBorderColor,
                                     RoundedCornerShape(10.dp)
                                 )
                                 .clickable { onNotifyToggle(show) }
@@ -573,7 +622,7 @@ fun ShowCard(
                                 else Icons.Outlined.NotificationsNone,
                                 contentDescription = "Notifications",
                                 modifier = Modifier.size(16.dp),
-                                tint = if (show.alarmRequestCode != null) Color(0xFF00E5FF)
+                                tint = if (show.alarmRequestCode != null) (if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF))
                                 else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -583,8 +632,8 @@ fun ShowCard(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-                                .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                .background(chipBgColor)
+                                .border(0.6.dp, chipBorderColor, RoundedCornerShape(10.dp))
                                 .clickable { onEditClick(show) }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center
@@ -602,8 +651,8 @@ fun ShowCard(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
-                                .border(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.error.copy(alpha = if (isLight) 0.08f else 0.12f))
+                                .border(0.6.dp, MaterialTheme.colorScheme.error.copy(alpha = if (isLight) 0.25f else 0.35f), RoundedCornerShape(10.dp))
                                 .clickable { showDeleteDialog = true }
                                 .colorOSPressBounce(pressedScale = 0.88f),
                             contentAlignment = Alignment.Center

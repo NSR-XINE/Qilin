@@ -38,6 +38,7 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -240,10 +241,17 @@ fun SearchScreen(
                 .border(
                     width = 0.85.dp,
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.35f),
-                            Color.White.copy(alpha = 0.08f)
-                        )
+                        colors = if (MaterialTheme.colorScheme.background.luminance() > 0.5f) {
+                            listOf(
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.80f),
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                            )
+                        } else {
+                            listOf(
+                                Color.White.copy(alpha = 0.35f),
+                                Color.White.copy(alpha = 0.08f)
+                            )
+                        }
                     ),
                     shape = RoundedCornerShape(CornerRadius.banner)
                 ),

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,8 @@ fun FavoritesScreen(
 ) {
     val shows by viewModel.favoriteShows.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     val context = LocalContext.current
     val onDelete = remember { { s: Show -> viewModel.deleteShow(s.id) } }
     val onFavorite = remember { { s: Show -> viewModel.toggleFavorite(s) } }
@@ -72,7 +75,7 @@ fun FavoritesScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .width(110.dp)
+                                .width(130.dp)
                                 .height(18.dp)
                                 .clip(RoundedCornerShape(CornerRadius.xs))
                                 .shimmerEffect()
@@ -169,7 +172,7 @@ fun FavoritesScreen(
                             Box(
                                 modifier = Modifier
                                     .width(4.dp)
-                                    .height(16.dp)
+                                    .height(18.dp)
                                     .clip(RoundedCornerShape(2.dp))
                                     .background(
                                         Brush.verticalGradient(
@@ -180,18 +183,26 @@ fun FavoritesScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = "Favorites",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
-                        // Frosted pill show counter badge
+                        // Frosted pill show counter badge (adaptive to light/dark mode)
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(CornerRadius.chip))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
-                                .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(CornerRadius.chip))
+                                .background(
+                                    if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                )
+                                .border(
+                                    width = 0.6.dp,
+                                    color = if (isLight) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+                                    else Color.White.copy(alpha = 0.12f),
+                                    shape = RoundedCornerShape(CornerRadius.chip)
+                                )
                                 .padding(horizontal = 10.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
