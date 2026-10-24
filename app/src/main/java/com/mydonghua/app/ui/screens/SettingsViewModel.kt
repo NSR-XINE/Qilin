@@ -4,11 +4,13 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mydonghua.app.data.service.AdBlocker
 import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.repository.WatchHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -26,7 +28,8 @@ data class SettingsUiState(
     val showContinue: Boolean = true,
     val showRecent: Boolean = true,
     val autoOpenKeyboard: Boolean = true,
-    val defaultStreamProvider: String = "donghuastream"
+    val defaultStreamProvider: String = "donghuastream",
+    val adBlockerEnabled: Boolean = true
 )
 
 data class DashboardPrefs(
@@ -35,18 +38,37 @@ data class DashboardPrefs(
     val showRecent: Boolean
 )
 
+data class StreamPrefs(
+    val autoOpenKeyboard: Boolean,
+    val defaultStreamProvider: String,
+    val adBlockerEnabled: Boolean
+)
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val settingsRepository: SettingsRepository,
     private val showRepository: ShowRepository,
     private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
 
+    init {
+        viewModelScope.launch {
+            val enabled = settingsRepository.getBool(SettingsKeys.AD_BLOCKER_ENABLED, true)
+            AdBlocker.setEnabled(appContext, enabled)
+        }
+    }
+
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.getSettingFlow(SettingsKeys.THEME_MODE, "dark"),
         settingsRepository.getSettingFlow(SettingsKeys.ACCENT_COLOR, "default"),
-        settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true),
-        settingsRepository.getSettingFlow(SettingsKeys.DEFAULT_STREAM_PROVIDER, "donghuastream"),
+        combine(
+            settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true),
+            settingsRepository.getSettingFlow(SettingsKeys.DEFAULT_STREAM_PROVIDER, "donghuastream"),
+            settingsRepository.getBoolFlow(SettingsKeys.AD_BLOCKER_ENABLED, true)
+        ) { autoOpen, provider, adBlocker ->
+            StreamPrefs(autoOpen, provider, adBlocker)
+        },
         combine(
             settingsRepository.getBoolFlow(SettingsKeys.SHOW_BANNER, true),
             settingsRepository.getBoolFlow(SettingsKeys.SHOW_CONTINUE, true),
@@ -54,15 +76,16 @@ class SettingsViewModel @Inject constructor(
         ) { banner, cont, recent ->
             DashboardPrefs(banner, cont, recent)
         }
-    ) { theme, accent, autoOpen, provider, prefs ->
+    ) { theme, accent, streamPrefs, prefs ->
         SettingsUiState(
             themeMode = theme,
             accentColor = accent,
             showBanner = prefs.showBanner,
             showContinue = prefs.showContinue,
             showRecent = prefs.showRecent,
-            autoOpenKeyboard = autoOpen,
-            defaultStreamProvider = provider
+            autoOpenKeyboard = streamPrefs.autoOpenKeyboard,
+            defaultStreamProvider = streamPrefs.defaultStreamProvider,
+            adBlockerEnabled = streamPrefs.adBlockerEnabled
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -88,6 +111,11 @@ class SettingsViewModel @Inject constructor(
 
     fun setAutoOpenKeyboard(autoOpen: Boolean) {
         viewModelScope.launch { settingsRepository.putBool(SettingsKeys.AUTO_OPEN_KEYBOARD, autoOpen) }
+    }
+
+    fun setAdBlockerEnabled(enabled: Boolean) {
+        AdBlocker.setEnabled(appContext, enabled)
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.AD_BLOCKER_ENABLED, enabled) }
     }
 
     suspend fun storagePermissionPrompted(): Boolean =

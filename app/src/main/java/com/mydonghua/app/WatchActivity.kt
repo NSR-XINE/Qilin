@@ -64,6 +64,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.mydonghua.app.data.service.AdBlocker
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.colorOSPressBounce
@@ -1084,6 +1085,7 @@ class WatchActivity : ComponentActivity() {
         var webViewRef by remember { mutableStateOf<WebView?>(null) }
         var webProgress by remember { mutableIntStateOf(0) }
         var detectedVideoUrl by remember { mutableStateOf<String?>(null) }
+        var isAdBlockerActive by remember { mutableStateOf(AdBlocker.isEnabled(context)) }
 
         DisposableEffect(Unit) {
             onDispose {
@@ -1182,11 +1184,45 @@ class WatchActivity : ComponentActivity() {
                         }
                     }
 
-                    // Action Buttons (Reload, Download, Open External)
+                    // Action Buttons (Ad Blocker, Reload, Download, Open External)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        IconButton(
+                            onClick = {
+                                val nextState = !isAdBlockerActive
+                                isAdBlockerActive = nextState
+                                AdBlocker.setEnabled(context, nextState)
+                                Toast.makeText(
+                                    context,
+                                    if (nextState) "Ad Blocker: Enabled" else "Ad Blocker: Disabled",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                webViewRef?.reload()
+                            },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isAdBlockerActive) Color(0xFF00E5FF).copy(alpha = 0.20f)
+                                    else Color.White.copy(alpha = 0.08f)
+                                )
+                                .border(
+                                    width = 0.75.dp,
+                                    color = if (isAdBlockerActive) Color(0xFF00E5FF).copy(alpha = 0.65f) else Color.Transparent,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .colorOSPressBounce(pressedScale = 0.90f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Shield,
+                                contentDescription = if (isAdBlockerActive) "Ad Blocker Enabled" else "Ad Blocker Disabled",
+                                tint = if (isAdBlockerActive) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.40f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
                         IconButton(
                             onClick = { webViewRef?.reload() },
                             modifier = Modifier
@@ -1288,11 +1324,28 @@ class WatchActivity : ComponentActivity() {
                         webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url?.toString() ?: return false
-                                // Intercept popup ads and redirect loops
-                                if (url.contains("popads") || url.contains("adsterra") || url.contains("doubleclick")) {
-                                    return true
+                                if (isAdBlockerActive) {
+                                    if (AdBlocker.isDisallowedScheme(url)) {
+                                        return true
+                                    }
+                                    if (AdBlocker.isAdUrl(url)) {
+                                        return true
+                                    }
                                 }
                                 return false
+                            }
+
+                            override fun shouldInterceptRequest(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): WebResourceResponse? {
+                                if (isAdBlockerActive) {
+                                    val url = request?.url?.toString()
+                                    if (AdBlocker.isAdUrl(url)) {
+                                        return AdBlocker.createEmptyResponse()
+                                    }
+                                }
+                                return super.shouldInterceptRequest(view, request)
                             }
 
                             override fun onLoadResource(view: WebView?, url: String?) {
@@ -1300,7 +1353,8 @@ class WatchActivity : ComponentActivity() {
                                 if (url != null) {
                                     val clean = url.lowercase()
                                     if ((clean.contains(".m3u8") || clean.contains(".mp4") || clean.contains(".mkv")) &&
-                                        !clean.contains("analytics") && !clean.contains("stats") && !clean.contains("doubleclick")
+                                        !clean.contains("analytics") && !clean.contains("stats") &&
+                                        (!isAdBlockerActive || !AdBlocker.isAdUrl(clean))
                                     ) {
                                         detectedVideoUrl = url
                                     }

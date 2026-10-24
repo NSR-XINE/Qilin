@@ -523,6 +523,20 @@ fun SettingsScreen(
                 OxygenGlassGroup(isDark = isDark) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         OxygenTogglePreferenceItem(
+                            title = "Ad & Popup Blocker",
+                            subtitle = "Block invasive stream ads, redirects, and popups",
+                            iconVector = Icons.Rounded.Shield,
+                            iconGradient = listOf(Color(0xFF00B0FF), Color(0xFF00E5FF)),
+                            checked = uiState.adBlockerEnabled,
+                            onCheckedChange = { viewModel.setAdBlockerEnabled(it) }
+                        )
+
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+
+                        OxygenTogglePreferenceItem(
                             title = "Auto-open Keyboard",
                             iconVector = Icons.Rounded.Search,
                             iconGradient = listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)),
