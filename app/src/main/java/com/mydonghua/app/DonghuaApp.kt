@@ -15,6 +15,7 @@ class DonghuaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.mydonghua.app.data.service.DownloadEngine.init(this)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             settingsMigrator.migrate()
         }

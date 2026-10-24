@@ -81,7 +81,11 @@ fun DownloadsScreen(
     }
 
     val activeTasks = remember(tasks) {
-        tasks.filter { it.status == DownloadStatus.DOWNLOADING || it.status == DownloadStatus.QUEUED }
+        tasks.filter {
+            it.status == DownloadStatus.DOWNLOADING ||
+            it.status == DownloadStatus.QUEUED ||
+            it.status == DownloadStatus.PAUSED
+        }
     }
 
     val totalDownloadsBytes = remember(offlineFiles) {
@@ -569,30 +573,91 @@ private fun ActiveDownloadCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = task.title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-
-                IconButton(
-                    onClick = onCancel,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
-                        .colorOSPressBounce(pressedScale = 0.90f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "Cancel Download",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(16.dp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = task.title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val badgeText = if (task.isHls) "HLS Stream" else if (task.numThreads > 1) "${task.numThreads} Threads" else "Direct Stream"
+                        Text(
+                            text = badgeText,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF00E5FF)
+                        )
+                        if (task.status == DownloadStatus.PAUSED) {
+                            Text(
+                                text = "• PAUSED",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    val context = LocalContext.current
+                    if (task.status == DownloadStatus.DOWNLOADING) {
+                        IconButton(
+                            onClick = { DownloadEngine.pauseDownload(context, task.id) },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .colorOSPressBounce(pressedScale = 0.90f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Pause,
+                                contentDescription = "Pause",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else if (task.status == DownloadStatus.PAUSED) {
+                        IconButton(
+                            onClick = { DownloadEngine.resumeDownload(context, task.id) },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF00E5FF).copy(alpha = 0.2f))
+                                .colorOSPressBounce(pressedScale = 0.90f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.PlayArrow,
+                                contentDescription = "Resume",
+                                tint = Color(0xFF00E5FF),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onCancel,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = "Cancel Download",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
 
