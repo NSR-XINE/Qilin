@@ -120,7 +120,6 @@ fun LiquidGlassNavBar(
         while (isActive) {
             try {
                 if (!userInteracting && layer.size.width > 0 && layer.size.height > 0) {
-                    val readT0 = SystemClock.elapsedRealtime()
                     val avg = withContext(Dispatchers.Default) {
                         val imageBitmap = layer.toImageBitmap()
                         android.graphics.Canvas(thumbnail).drawBitmap(
@@ -135,10 +134,6 @@ fun LiquidGlassNavBar(
                             val b = (c and 0xFF) / 255.0
                             0.2126 * r + 0.7152 * g + 0.0722 * b
                         } / 25.0
-                    }
-                    val readMs = SystemClock.elapsedRealtime() - readT0
-                    if (readMs > 8) {
-                        android.util.Log.d("NavLag", "readback took ${readMs}ms")
                     }
                     luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
                 }
@@ -156,12 +151,7 @@ fun LiquidGlassNavBar(
     val slotWidthPx = if (barWidthPx > 0) barWidthPx / totalSlots else 0f
     val coroutineScope = rememberCoroutineScope()
     var currentTabIndex by remember { mutableIntStateOf(navIndex) }
-
-    LaunchedEffect(Unit) {
-        android.util.Log.e("NavLag", "diagnostic build running")
-    }
-
-    fun navToValue(index: Int): Float = index.toFloat()
+    val currentRouteState = rememberUpdatedState(currentRoute)
 
     BoxWithConstraints(
         modifier = modifier
@@ -187,13 +177,12 @@ fun LiquidGlassNavBar(
             )
         )
 
-        val draggedFlag = remember { booleanArrayOf(false) }
         var activeTouchPosition by remember { mutableStateOf(Offset.Zero) }
         val dampedDrag =
             remember(coroutineScope, navRoutes.size) {
                 DampedDragAnimation(
                     animationScope = coroutineScope,
-                    initialValue = navToValue(navIndex),
+                    initialValue = navIndex.toFloat(),
                     valueRange = 0f..(totalSlots - 1f),
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
@@ -201,50 +190,35 @@ fun LiquidGlassNavBar(
                     totalSlots = totalSlots,
                     getBarWidthPx = { barWidthPx },
                     onDragStarted = { position ->
-                        draggedFlag[0] = false
                         userInteracting = true
                         activeTouchPosition = position
                     },
-                    onDragStopped = {
-                        userInteracting = false
-                        activeTouchPosition = Offset.Zero
-                        if (draggedFlag[0]) {
-                            val vel = velocity
-                            val targetIndex = when {
-                                vel > 0.4f -> (value + 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
-                                vel < -0.4f -> (value - 0.4f).toInt().coerceIn(0, totalSlots.toInt() - 1)
-                                else -> value.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
-                            }
-                            val safeIndex =
-                                if (targetIndex in navRoutes.indices) targetIndex else currentTabIndex
-                            currentTabIndex = safeIndex
-                            animateToValue(navToValue(safeIndex))
-                            if (safeIndex != navIndex) {
-                                PosterTrace.reset()
-                                PosterStagger.reset()
-                                currentOnNavigate(navRoutes[safeIndex])
-                            }
+                    onDrag = { currentSlot, position ->
+                        activeTouchPosition = position
+                        val hoveredIndex = currentSlot.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                        if (currentTabIndex != hoveredIndex) {
+                            currentTabIndex = hoveredIndex
                         }
                     },
-                    onDrag = { _, dragAmount, position ->
-                        if (dragAmount.x != 0f) draggedFlag[0] = true
-                        activeTouchPosition = position
-                        val slotWidth = if (totalSlots > 0) barWidthPx / totalSlots else 0f
-                        if (slotWidth > 0f) {
-                            val next = (value + dragAmount.x / slotWidth).coerceIn(0f, totalSlots - 1f)
-                            snapValue(next)
-                            currentTabIndex = next.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                    onDragFinished = { targetIndex ->
+                        userInteracting = false
+                        currentTabIndex = targetIndex
+                        val targetRoute = navRoutes[targetIndex]
+                        if (targetRoute != currentRouteState.value) {
+                            PosterTrace.reset()
+                            PosterStagger.reset()
+                            currentOnNavigate(targetRoute)
                         }
                     },
                     onTap = { slot ->
-                        activeTouchPosition = Offset.Zero
-                        if (slot != currentTabIndex) {
+                        userInteracting = false
+                        currentTabIndex = slot
+                        val targetRoute = navRoutes[slot]
+                        if (targetRoute != currentRouteState.value) {
                             PosterTrace.reset()
                             PosterStagger.reset()
-                            currentTabIndex = slot
-                            currentOnNavigate(navRoutes[slot])
+                            currentOnNavigate(targetRoute)
                         }
-                        animateToValue(navToValue(slot))
                     },
                 )
             }
@@ -283,44 +257,12 @@ fun LiquidGlassNavBar(
                 )
 
             LaunchedEffect(navIndex) {
-                currentTabIndex = navIndex
-                android.util.Log.e(
-                    "NavLag",
-                    "navIndex=$navIndex barWidthPx=$barWidthPx"
-                )
-                if (barWidthPx > 0) {
-                    userInteracting = true
-                    val slideT0 = System.nanoTime()
-                    dampedDrag.animateToValue(navToValue(navIndex))
-                    val target = navToValue(navIndex)
-                    var last = 0L
-                    var maxGap = 0L
-                    var frames = 0
-                    while (abs(dampedDrag.value - target) > 0.01f) {
-                        val now = withFrameNanos { it }
-                        if (last != 0L) maxGap = maxOf(maxGap, now - last)
-                        frames++
-                        last = now
+                if (!userInteracting) {
+                    currentTabIndex = navIndex
+                    if (barWidthPx > 0) {
+                        dampedDrag.animateToValue(navIndex.toFloat())
                     }
-                    val slideMs = (System.nanoTime() - slideT0) / 1_000_000
-                    android.util.Log.e(
-                        "NavLag",
-                        "slide=${slideMs}ms frames=$frames maxFrameGapMs=${maxGap / 1_000_000L} posters=${PosterTrace.composedCount}"
-                    )
-                    userInteracting = false
                 }
-            }
-
-            LaunchedEffect(dampedDrag) {
-                snapshotFlow { currentTabIndex }
-                    .drop(1)
-                    .collectLatest { index ->
-                        if (draggedFlag[0] && !userInteracting) {
-                            PosterTrace.reset()
-                            PosterStagger.reset()
-                            currentOnNavigate(navRoutes[index])
-                        }
-                    }
             }
 
             if (capsuleAlpha > 0.15f) {
@@ -368,9 +310,10 @@ fun LiquidGlassNavBar(
                             layerBlock = {
                                 scaleX = dampedDrag.scaleX
                                 scaleY = dampedDrag.scaleY
-                                val velocity = dampedDrag.velocity / 10f
-                                scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
-                                scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                                val speed = abs(dampedDrag.velocity / 10f)
+                                val stretch = (speed * 0.75f).fastCoerceIn(0f, 0.2f)
+                                scaleX /= (1f - stretch)
+                                scaleY *= (1f - stretch * 0.4f)
                             },
                             onDrawSurface = {
                                 val darken = lerp(0.22f, 0.55f, ((luminanceAnimation.value - 0.3f) / 0.5f).coerceIn(0f, 1f))
@@ -520,13 +463,8 @@ private fun Modifier.drawBackdropCustomShape(
             refraction(size.minDimension / 8f + 2f.dp.toPx() * press, size.minDimension / 4f, false)
         },
         onDrawBackdrop = { drawBackdrop ->
-            val recT0 = SystemClock.elapsedRealtime()
             drawBackdrop()
             layer.record { drawBackdrop() }
-            val recMs = SystemClock.elapsedRealtime() - recT0
-            if (recMs > 6) {
-                android.util.Log.d("NavLag", "backdrop record took ${recMs}ms")
-            }
         },
         onDrawSurface = {
             val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
@@ -570,23 +508,21 @@ class DampedDragAnimation(
     val totalSlots: Float,
     val getBarWidthPx: () -> Int,
     val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
-    val onDragStopped: DampedDragAnimation.() -> Unit,
-    val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset, position: Offset) -> Unit,
+    val onDrag: DampedDragAnimation.(currentSlot: Float, position: Offset) -> Unit,
+    val onDragFinished: DampedDragAnimation.(targetIndex: Int) -> Unit,
     val onTap: DampedDragAnimation.(slot: Int) -> Unit,
 ) {
-    private val valueAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow)
-    private val smoothAnimationSpec = spring<Float>(dampingRatio = 0.60f, stiffness = Spring.StiffnessMediumLow)
-    private val velocityAnimationSpec = spring<Float>(dampingRatio = 0.50f, stiffness = 300f)
+    private val snapAnimationSpec = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
     private val pressProgressAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 400f)
     private val scaleXAnimationSpec = spring<Float>(dampingRatio = 0.55f, stiffness = 250f)
     private val scaleYAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 250f)
-    private val snapAnimationSpec = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
+    private val velocityAnimationSpec = spring<Float>(dampingRatio = 0.50f, stiffness = 300f)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
-    private val velocityAnimation = Animatable(0f, 5f)
     private val pressProgressAnimation = Animatable(0f, 0.001f)
     private val scaleXAnimation = Animatable(initialScale, 0.001f)
     private val scaleYAnimation = Animatable(initialScale, 0.001f)
+    private val velocityAnimation = Animatable(0f, 5f)
 
     private val mutatorMutex = MutatorMutex()
     private val velocityTracker = VelocityTracker()
@@ -603,8 +539,13 @@ class DampedDragAnimation(
             val touchSlop = viewConfiguration.touchSlop
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                val startX = down.position.x
+                val startTouchX = down.position.x
+                val startSlotValue = valueAnimation.value
+                val startSlotIndex = startSlotValue.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
                 var hasDragged = false
+
+                velocityTracker.resetTracking()
+                velocityTracker.addPosition(down.uptimeMillis, down.position)
 
                 onDragStarted(down.position)
                 press()
@@ -612,33 +553,78 @@ class DampedDragAnimation(
                 val pointerId = down.id
                 while (true) {
                     val event = awaitPointerEvent()
-                    val change = event.changes.firstOrNull { it.id == pointerId } ?: break
-
-                    if (change.changedToUpIgnoreConsumed()) {
-                        change.consume()
-                        val barWidth = getBarWidthPx()
-                        val slotWidth = if (totalSlots > 0 && barWidth > 0) barWidth / totalSlots else 0f
-                        if (!hasDragged) {
-                            val slot = if (slotWidth > 0f) {
-                                (down.position.x / slotWidth).toInt().coerceIn(0, totalSlots.toInt() - 1)
-                            } else 0
-                            onTap(slot)
-                        } else {
-                            onDragStopped()
+                    val change = event.changes.firstOrNull { it.id == pointerId }
+                    if (change == null) {
+                        if (hasDragged) {
+                            val currentSlot = valueAnimation.value
+                            val targetIndex = currentSlot.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                            animateToValue(targetIndex.toFloat())
+                            onDragFinished(targetIndex)
                         }
                         release()
                         break
                     }
 
-                    val dragAmountX = change.positionChange().x
-                    if (!hasDragged && abs(change.position.x - startX) > touchSlop) {
+                    velocityTracker.addPosition(change.uptimeMillis, change.position)
+
+                    if (change.changedToUpIgnoreConsumed()) {
+                        change.consume()
+                        val barWidth = getBarWidthPx()
+                        val slotWidth = if (totalSlots > 0 && barWidth > 0) barWidth / totalSlots else 0f
+
+                        if (!hasDragged) {
+                            val slot = if (slotWidth > 0f) {
+                                (down.position.x / slotWidth).toInt().coerceIn(0, totalSlots.toInt() - 1)
+                            } else 0
+                            animateToValue(slot.toFloat())
+                            onTap(slot)
+                        } else {
+                            val totalDeltaX = change.position.x - startTouchX
+                            val currentSlot = if (slotWidth > 0f) {
+                                (startSlotValue + totalDeltaX / slotWidth).coerceIn(0f, totalSlots - 1f)
+                            } else startSlotValue
+
+                            val vx = velocityTracker.calculateVelocity().x
+                            val flingThreshold = 400f
+                            val targetIndex = when {
+                                vx > flingThreshold -> {
+                                    val minAdvance = (startSlotIndex + 1).coerceAtMost(totalSlots.toInt() - 1)
+                                    maxOf(minAdvance, currentSlot.roundToInt()).coerceIn(0, totalSlots.toInt() - 1)
+                                }
+                                vx < -flingThreshold -> {
+                                    val maxRetreat = (startSlotIndex - 1).coerceAtLeast(0)
+                                    minOf(maxRetreat, currentSlot.roundToInt()).coerceIn(0, totalSlots.toInt() - 1)
+                                }
+                                else -> {
+                                    currentSlot.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
+                                }
+                            }
+                            animateToValue(targetIndex.toFloat())
+                            onDragFinished(targetIndex)
+                        }
+                        release()
+                        break
+                    }
+
+                    val totalDeltaX = change.position.x - startTouchX
+                    if (!hasDragged && abs(totalDeltaX) > touchSlop) {
                         hasDragged = true
                     }
 
                     if (hasDragged) {
                         change.consume()
-                        if (dragAmountX != 0f) {
-                            onDrag(size, Offset(dragAmountX, 0f), change.position)
+                        val barWidth = getBarWidthPx()
+                        val slotWidth = if (totalSlots > 0 && barWidth > 0) barWidth / totalSlots else 0f
+                        if (slotWidth > 0f) {
+                            val currentSlot = (startSlotValue + totalDeltaX / slotWidth).coerceIn(0f, totalSlots - 1f)
+                            snapValue(currentSlot)
+                            val vx = velocityTracker.calculateVelocity().x
+                            val slotVelocity = vx / slotWidth
+                            val targetVelocity = (slotVelocity / 3f).coerceIn(-2.5f, 2.5f)
+                            animationScope.launch {
+                                velocityAnimation.snapTo(targetVelocity)
+                            }
+                            onDrag(currentSlot, change.position)
                         }
                     }
                 }
@@ -656,16 +642,10 @@ class DampedDragAnimation(
 
     fun release() {
         animationScope.launch {
-            withFrameNanos {}
-            if (value != targetValue) {
-                val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
-                while (abs(valueAnimation.value - valueAnimation.targetValue) >= threshold) {
-                    withFrameNanos {}
-                }
-            }
             launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
             launch { scaleXAnimation.animateTo(initialScale, scaleXAnimationSpec) }
             launch { scaleYAnimation.animateTo(initialScale, scaleYAnimationSpec) }
+            launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
         }
     }
 
@@ -674,7 +654,6 @@ class DampedDragAnimation(
         animationScope.launch {
             mutatorMutex.mutate(MutatePriority.UserInput) {
                 valueAnimation.snapTo(target)
-                updateVelocity()
             }
         }
     }
@@ -684,23 +663,11 @@ class DampedDragAnimation(
     }
 
     fun animateToValue(value: Float) {
+        val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
         animationScope.launch {
             mutatorMutex.mutate(MutatePriority.Default) {
-                press()
-                val target = value.coerceIn(valueRange.start, valueRange.endInclusive)
-                launch { valueAnimation.animateTo(target, snapAnimationSpec) }
-                if (velocity != 0f) {
-                    launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
-                }
-                release()
+                valueAnimation.animateTo(target, snapAnimationSpec)
             }
         }
-    }
-
-    private fun updateVelocity() {
-        velocityTracker.addPosition(SystemClock.uptimeMillis(), Offset(value, 0f))
-        val targetVelocity =
-            velocityTracker.calculateVelocity().x / (valueRange.endInclusive - valueRange.start)
-        animationScope.launch { velocityAnimation.animateTo(targetVelocity, velocityAnimationSpec) }
     }
 }
