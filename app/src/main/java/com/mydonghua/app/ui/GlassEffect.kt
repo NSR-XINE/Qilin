@@ -371,6 +371,8 @@ fun MenuGlassPanel(
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { shape },
+                        highlight = null,
+                        shadow = null,
                         effects = {
                             vibrancy()
                             colorControls(

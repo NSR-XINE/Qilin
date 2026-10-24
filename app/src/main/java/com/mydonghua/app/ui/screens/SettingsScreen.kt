@@ -152,12 +152,6 @@ fun SettingsScreen(
                                 if (isDark) Color.White.copy(alpha = 0.10f)
                                 else Color.Black.copy(alpha = 0.06f)
                             )
-                            .border(
-                                width = 0.75.dp,
-                                color = if (isDark) Color.White.copy(alpha = 0.20f)
-                                else Color.Black.copy(alpha = 0.10f),
-                                shape = CircleShape
-                            )
                             .clickable(
                                 interactionSource = backInteraction,
                                 indication = null,

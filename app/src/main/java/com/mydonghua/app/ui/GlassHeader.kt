@@ -110,6 +110,8 @@ fun GlassHeader(
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { CircleShape },
+                    highlight = null,
+                    shadow = null,
                     effects = {
                         vibrancy()
                         colorControls(

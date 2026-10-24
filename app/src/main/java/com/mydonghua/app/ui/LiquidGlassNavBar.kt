@@ -66,12 +66,7 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.refraction
-import com.kyant.backdrop.effects.refractionWithDispersion
 import com.kyant.backdrop.effects.vibrancy
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.InnerShadow
-import com.kyant.backdrop.shadow.Shadow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -295,15 +290,10 @@ fun LiquidGlassNavBar(
                                     (if (l > 0f) lerp(4f.dp.toPx(), 8f.dp.toPx(), l)
                                     else lerp(4f.dp.toPx(), 1f.dp.toPx(), -l)) + 6f.dp.toPx(),
                                 )
-                                val pressProg = dampedDrag.pressProgress
-                                refractionWithDispersion(5f.dp.toPx() * pressProg, 7f.dp.toPx() * pressProg, hasDepthEffect = false)
                             },
-                            highlight = { Highlight.Default.copy(alpha = if (isDark) 0.6f else 0.8f) },
-                            shadow = { Shadow(radius = 4f.dp, alpha = if (isDark) 0.4f else 0.2f) },
-                            innerShadow = {
-                                val pressProg = dampedDrag.pressProgress
-                                InnerShadow(radius = 8f.dp * pressProg, alpha = pressProg)
-                            },
+                            highlight = null,
+                            shadow = null,
+                            innerShadow = null,
                             layerBlock = {
                                 scaleX = dampedDrag.scaleX
                                 scaleY = dampedDrag.scaleY
@@ -441,6 +431,8 @@ private fun Modifier.drawBackdropCustomShape(
     this.drawBackdrop(
         backdrop = backdrop,
         shape = { shape },
+        highlight = null,
+        shadow = null,
         effects = {
             val l = (luminanceAnimation * 2f - 1f).let { sign(it) * it * it }
             val press = pressProgress
