@@ -48,8 +48,8 @@ private val DefaultOnDrawContent: ContentDrawScope.() -> Unit = { drawContent() 
 fun Modifier.drawBackdrop(
     backdrop: Backdrop,
     shape: () -> Shape,
-    highlight: (() -> Highlight?)? = null,
-    shadow: (() -> Shadow?)? = null,
+    highlight: (() -> Highlight?)? = DefaultHighlight,
+    shadow: (() -> Shadow?)? = DefaultShadow,
     innerShadow: (() -> InnerShadow?)? = null,
     effects: (BackdropEffectScope.() -> Unit)? = null,
     layerBlock: (GraphicsLayerScope.() -> Unit)? = null,

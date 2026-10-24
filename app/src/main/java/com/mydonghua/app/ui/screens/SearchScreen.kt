@@ -239,6 +239,11 @@ fun SearchScreen(
                         )
                     ),
                     shape = RoundedCornerShape(CornerRadius.banner)
+                )
+                .border(
+                    width = 0.85.dp,
+                    brush = rememberLiquidGlassBorder(MaterialTheme.colorScheme.background.luminance() > 0.5f),
+                    shape = RoundedCornerShape(CornerRadius.banner)
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {

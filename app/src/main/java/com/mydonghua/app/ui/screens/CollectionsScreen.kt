@@ -74,6 +74,11 @@ fun CollectionsScreen(
                             Color.White.copy(alpha = 0.85f)
                         else Color(0xFF0F121C).copy(alpha = 0.88f)
                     )
+                    .border(
+                        width = 0.65.dp,
+                        brush = glassBorder,
+                        shape = RoundedCornerShape(CornerRadius.surface)
+                    )
                     .padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
