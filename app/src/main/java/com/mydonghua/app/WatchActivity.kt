@@ -63,6 +63,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.delay
 
@@ -452,8 +453,8 @@ class WatchActivity : ComponentActivity() {
             // Double Tap Seek Ripple Badge
             AnimatedVisibility(
                 visible = doubleTapSeekBadge != null && !isInPip,
-                enter = fadeIn(tween(150)) + scaleIn(tween(150), initialScale = 0.85f),
-                exit = fadeOut(tween(200)),
+                enter = fadeIn(ColorOSMotion.FadeInFloat) + scaleIn(ColorOSMotion.ScaleInFloat, initialScale = 0.88f),
+                exit = fadeOut(ColorOSMotion.FadeOutFloat),
                 modifier = Modifier.align(Alignment.Center)
             ) {
                 Box(
@@ -493,8 +494,8 @@ class WatchActivity : ComponentActivity() {
             // Brightness HUD Pill
             AnimatedVisibility(
                 visible = brightnessHud != null && !isInPip,
-                enter = fadeIn(tween(150)),
-                exit = fadeOut(tween(200)),
+                enter = fadeIn(ColorOSMotion.FadeInFloat),
+                exit = fadeOut(ColorOSMotion.FadeOutFloat),
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 24.dp)
@@ -553,8 +554,8 @@ class WatchActivity : ComponentActivity() {
             // Volume HUD Pill
             AnimatedVisibility(
                 visible = volumeHud != null && !isInPip,
-                enter = fadeIn(tween(150)),
-                exit = fadeOut(tween(200)),
+                enter = fadeIn(ColorOSMotion.FadeInFloat),
+                exit = fadeOut(ColorOSMotion.FadeOutFloat),
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = 24.dp)
@@ -613,8 +614,8 @@ class WatchActivity : ComponentActivity() {
             // Complete ColorOS 17 Liquid Glass Controls Overlay
             AnimatedVisibility(
                 visible = showControls && !isInPip,
-                enter = fadeIn(tween(220, easing = FastOutSlowInEasing)),
-                exit = fadeOut(tween(260, easing = FastOutSlowInEasing)),
+                enter = fadeIn(ColorOSMotion.FadeInFloat),
+                exit = fadeOut(ColorOSMotion.FadeOutFloat),
                 modifier = Modifier.fillMaxSize()
             ) {
                 Box(

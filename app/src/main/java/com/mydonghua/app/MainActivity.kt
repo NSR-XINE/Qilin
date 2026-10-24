@@ -529,15 +529,12 @@ class MainActivity : ComponentActivity() {
                     visible = isSearchOpen,
                     enter = slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = tween(
-                            durationMillis = 280,
-                            easing = FastOutSlowInEasing
-                        )
-                    ) + fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing)),
+                        animationSpec = ColorOSMotion.SheetIntOffset
+                    ) + fadeIn(animationSpec = ColorOSMotion.FadeInFloat),
                     exit = slideOutVertically(
                         targetOffsetY = { it },
-                        animationSpec = tween(280, easing = FastOutSlowInEasing)
-                    ) + fadeOut(animationSpec = tween(240, easing = FastOutSlowInEasing)),
+                        animationSpec = ColorOSMotion.SheetExitIntOffset
+                    ) + fadeOut(animationSpec = ColorOSMotion.FadeOutFloat),
                 ) {
                     Surface(
                         modifier = Modifier
@@ -619,7 +616,7 @@ class MainActivity : ComponentActivity() {
                     initialValue = 0.35f,
                     targetValue = 1.0f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(1300, easing = FastOutSlowInEasing),
+                        animation = tween(1300, easing = ColorOSMotion.FluidCubic),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseAlpha"
@@ -628,7 +625,7 @@ class MainActivity : ComponentActivity() {
                     initialValue = 0.85f,
                     targetValue = 1.35f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(1300, easing = FastOutSlowInEasing),
+                        animation = tween(1300, easing = ColorOSMotion.FluidCubic),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseScale"

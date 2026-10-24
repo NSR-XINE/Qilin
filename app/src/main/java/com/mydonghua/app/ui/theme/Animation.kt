@@ -2,11 +2,15 @@ package com.mydonghua.app.ui.theme
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
@@ -15,139 +19,102 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-
-object AnimDuration {
-    val instant = 0
-    val fast = 100
-    val normal = 200
-    val medium = 250
-    val slow = 300
-    val extraSlow = 300
-}
-
-object AnimSpec {
-    val springDefault = tween<Float>(AnimDuration.normal, easing = FastOutSlowInEasing)
-    val springStiff = tween<Float>(AnimDuration.fast, easing = FastOutSlowInEasing)
-    val springSmooth = tween<Float>(AnimDuration.slow, easing = FastOutSlowInEasing)
-    val fadeIn = tween<Float>(AnimDuration.normal)
-    val fadeOut = tween<Float>(AnimDuration.fast)
-    val slide = tween<Int>(AnimDuration.medium)
-}
+import androidx.compose.ui.unit.dp
 
 /**
- * ColorOS 17 & OxygenOS 17 Unified Aurora & Tidal Engine Motion System.
- * Smooth fluid cubic curves with zero bounce and zero spring wobble.
+ * ColorOS 17 & OxygenOS 17 Unified Aurora & Tidal Engine 2.0 Motion System.
+ * Signature fluid cubic deceleration, viscous sheet transitions, and tactile spring dynamics.
  */
 object ColorOSMotion {
-    // Standard Durations
+    // Timing Tokens (ms)
+    const val DurationInstant = 0
+    const val DurationMicro = 120
     const val DurationQuick = 180
     const val DurationNormal = 280
     const val DurationExpanded = 380
+    const val DurationLong = 480
 
     // ColorOS 17 Signature Easings
     val FluidCubic = CubicBezierEasing(0.25f, 1.0f, 0.5f, 1.0f)
     val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
     val EmphasizedAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
+    val SnappyEase = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 
-    /**
-     * Aquamorphic Fluid Motion: ColorOS 17 natural fluid curve for surfaces, sheets, and drawers.
-     * Soft entry, zero drag, non-wobbly settle.
-     */
-    val FluidSpring = tween<Float>(
-        durationMillis = DurationNormal,
-        easing = FluidCubic
-    )
+    // Float Transitions
+    val FluidFloat = tween<Float>(DurationNormal, easing = FluidCubic)
+    val QuickFloat = tween<Float>(DurationQuick, easing = FluidCubic)
+    val FadeInFloat = tween<Float>(DurationNormal, easing = EmphasizedDecelerate)
+    val FadeOutFloat = tween<Float>(DurationQuick, easing = EmphasizedAccelerate)
+    val ScaleInFloat = tween<Float>(DurationNormal, easing = EmphasizedDecelerate)
+    val ScaleOutFloat = tween<Float>(DurationQuick, easing = EmphasizedAccelerate)
 
-    /**
-     * Touch Ease: ColorOS 17 smooth tactile press and release curve without spring bounce.
-     */
-    val TouchBounceSpring = tween<Float>(
-        durationMillis = DurationQuick,
-        easing = FluidCubic
-    )
+    // Springs (ColorOS 17 Fluid & Tactile Physics)
+    val FluidSpring = tween<Float>(durationMillis = DurationNormal, easing = FluidCubic)
+    val TouchBounceSpring = tween<Float>(durationMillis = DurationQuick, easing = FluidCubic)
+    val SnappySpring = tween<Float>(durationMillis = DurationQuick, easing = FluidCubic)
+    val TactileSpring = spring<Float>(dampingRatio = 0.70f, stiffness = 400f)
+    val BouncySpring = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
+    val PopSpring = spring<Float>(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow)
 
-    /**
-     * Snappy Motion: For switches, radio dots, chips, and small controls.
-     */
-    val SnappySpring = tween<Float>(
-        durationMillis = DurationQuick,
-        easing = FluidCubic
-    )
+    // Dp Transitions
+    val FluidDp = tween<Dp>(durationMillis = DurationNormal, easing = FluidCubic)
+    val SnappyDp = tween<Dp>(durationMillis = DurationQuick, easing = FluidCubic)
+    val SheetDp = tween<Dp>(durationMillis = DurationExpanded, easing = EmphasizedDecelerate)
 
-    /**
-     * Sheet & Drawer Motion: Smooth viscous deceleration for expansive overlays.
-     */
-    val SheetSpring = tween<Float>(
-        durationMillis = DurationNormal,
-        easing = FluidCubic
-    )
-
-    /**
-     * Sheet IntOffset Motion: Used for sheet slide transitions.
-     */
-    val SheetIntOffset = tween<IntOffset>(
-        durationMillis = DurationNormal,
-        easing = FluidCubic
-    )
-
-    /**
-     * Fluid IntOffset Motion: Used for parallel slide navigation transitions.
-     */
-    val FluidIntOffset = tween<IntOffset>(
-        durationMillis = DurationNormal,
-        easing = FluidCubic
-    )
-
-    /**
-     * Snappy Dp Motion: For displacement and offsets.
-     */
-    val SnappyDp = tween<Dp>(
-        durationMillis = DurationQuick,
-        easing = FluidCubic
-    )
-
-    /**
-     * Fluid Dp Motion: For smooth offset translations.
-     */
-    val FluidDp = tween<Dp>(
-        durationMillis = DurationNormal,
-        easing = FluidCubic
-    )
+    // IntOffset Transitions (Sheet, Drawer, Navigation)
+    val SheetIntOffset = tween<IntOffset>(durationMillis = DurationExpanded, easing = EmphasizedDecelerate)
+    val SheetExitIntOffset = tween<IntOffset>(durationMillis = DurationNormal, easing = EmphasizedAccelerate)
+    val FluidIntOffset = tween<IntOffset>(durationMillis = DurationNormal, easing = FluidCubic)
 }
 
 /**
- * ColorOS 17 Interactive Elastic Press Modifier.
- * Provides the signature ColorOS press-down squish (scale down) and elastic rebound.
+ * ColorOS 17 Interactive Tactile Press Modifier.
+ * Provides the signature ColorOS press squish and elastic rebound on any composable.
  */
 fun Modifier.colorOSPressBounce(
     pressedScale: Float = 0.95f,
-    interactionSource: MutableInteractionSource? = null,
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null
 ): Modifier = composed {
-    val source = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by source.collectIsPressedAsState()
+    var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) pressedScale else 1.0f,
         animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "colorOSScale"
     )
 
-    val mod = this.graphicsLayer {
-        scaleX = scale
-        scaleY = scale
-    }
+    val pointerMod = if (enabled) {
+        Modifier.pointerInput(enabled) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false)
+                isPressed = true
+                try {
+                    waitForUpOrCancellation()
+                } finally {
+                    isPressed = false
+                }
+            }
+        }
+    } else Modifier
 
-    if (onClick != null) {
-        mod.clickable(
-            interactionSource = source,
+    val clickableMod = if (onClick != null && enabled) {
+        Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
             indication = null,
             onClick = onClick
         )
-    } else {
-        mod
-    }
+    } else Modifier
+
+    this
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
+        .then(pointerMod)
+        .then(clickableMod)
 }
 
 /**

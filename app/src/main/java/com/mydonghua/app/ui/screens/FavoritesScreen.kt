@@ -32,6 +32,7 @@ import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 
 @Composable
 fun FavoritesScreen(
@@ -194,6 +195,7 @@ fun FavoritesScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(CornerRadius.chip))
+                                .colorOSPressBounce(pressedScale = 0.94f)
                                 .background(
                                     if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)

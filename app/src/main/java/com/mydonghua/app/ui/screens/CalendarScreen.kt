@@ -21,6 +21,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.common.EmptyState
@@ -77,7 +78,10 @@ fun CalendarScreen(
             TopAppBar(
                 title = { Text("$monthName $yearName", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Back",
@@ -189,6 +193,7 @@ fun CalendarScreen(
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(CornerRadius.sm))
                                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.45f))
+                                            .colorOSPressBounce(pressedScale = 0.97f)
                                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween

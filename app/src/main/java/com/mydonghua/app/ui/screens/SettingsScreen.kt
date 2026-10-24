@@ -101,7 +101,7 @@ fun SettingsScreen(
         initialValue = 0.35f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1300, easing = FastOutSlowInEasing),
+            animation = tween(1300, easing = ColorOSMotion.FluidCubic),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseAlpha"
@@ -110,7 +110,7 @@ fun SettingsScreen(
         initialValue = 0.85f,
         targetValue = 1.35f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1300, easing = FastOutSlowInEasing),
+            animation = tween(1300, easing = ColorOSMotion.FluidCubic),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"

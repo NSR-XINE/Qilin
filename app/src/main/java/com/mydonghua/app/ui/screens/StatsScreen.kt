@@ -25,6 +25,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import java.util.Calendar
@@ -62,7 +63,10 @@ fun StatsScreen(
             TopAppBar(
                 title = { Text("Detailed Statistics", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Back",
@@ -332,6 +336,7 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                             .fillMaxHeight()
                             .defaultMinSize(minHeight = 64.dp)
                             .clip(RoundedCornerShape(CornerRadius.card))
+                            .colorOSPressBounce(pressedScale = 0.96f)
                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.70f))
                             .border(
                                 width = 0.75.dp,

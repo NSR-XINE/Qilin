@@ -108,7 +108,7 @@ fun LiquidGlassNavBar(
 
     val capsuleAlpha by animateFloatAsState(
         targetValue = if (isSearchOpen) 0f else 1f,
-        animationSpec = tween(durationMillis = 250)
+        animationSpec = ColorOSMotion.FluidFloat
     )
 
     var userInteracting by remember { mutableStateOf(false) }
@@ -171,10 +171,7 @@ fun LiquidGlassNavBar(
         val searchSlideDistance = (initialSearchCenterX - targetSearchCenterX).coerceAtLeast(0.dp)
         val searchButtonOffset by animateDpAsState(
             targetValue = if (isSearchOpen) -searchSlideDistance else 0.dp,
-            animationSpec = tween(
-                durationMillis = 250,
-                easing = FastOutSlowInEasing
-            )
+            animationSpec = ColorOSMotion.FluidDp
         )
 
         var activeTouchPosition by remember { mutableStateOf(Offset.Zero) }
@@ -409,7 +406,7 @@ private fun NavBarIcon(
 ) {
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.12f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = ColorOSMotion.PopSpring,
         label = "nav_icon_bounce"
     )
     Box(
