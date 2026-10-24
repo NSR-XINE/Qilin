@@ -395,8 +395,8 @@ fun ShowCard(
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(7.dp))
                                 .background(
-                                    if (isLight) Color.Black.copy(alpha = 0.05f)
-                                    else Color.White.copy(alpha = 0.08f)
+                                    if (isLight) Color.Black.copy(alpha = 0.03f)
+                                    else Color.White.copy(alpha = 0.05f)
                                 )
                                 .border(
                                     width = 0.5.dp,
@@ -432,8 +432,8 @@ fun ShowCard(
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(7.dp))
                                 .background(
-                                    if (isLight) Color.Black.copy(alpha = 0.05f)
-                                    else Color.White.copy(alpha = 0.08f)
+                                    if (isLight) Color.Black.copy(alpha = 0.03f)
+                                    else Color.White.copy(alpha = 0.05f)
                                 )
                                 .border(
                                     width = 0.5.dp,

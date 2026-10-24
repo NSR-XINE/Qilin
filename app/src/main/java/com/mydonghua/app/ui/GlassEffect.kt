@@ -202,9 +202,9 @@ fun rememberLiquidGlassBorderColor(
 ): Color {
     return remember(isLight, isAmoled) {
         when {
-            isAmoled -> Color.White.copy(alpha = 0.22f)
-            isLight -> Color.Black.copy(alpha = 0.14f)
-            else -> Color.White.copy(alpha = 0.18f)
+            isAmoled -> Color.White.copy(alpha = 0.18f)
+            isLight -> Color.Black.copy(alpha = 0.10f)
+            else -> Color.White.copy(alpha = 0.14f)
         }
     }
 }
@@ -225,9 +225,9 @@ fun rememberLiquidGlassChipBorder(
 ): Color {
     return remember(isLight, isAmoled) {
         when {
-            isAmoled -> Color.White.copy(alpha = 0.18f)
-            isLight -> Color.Black.copy(alpha = 0.12f)
-            else -> Color.White.copy(alpha = 0.14f)
+            isAmoled -> Color.White.copy(alpha = 0.11f)
+            isLight -> Color.Black.copy(alpha = 0.07f)
+            else -> Color.White.copy(alpha = 0.08f)
         }
     }
 }
