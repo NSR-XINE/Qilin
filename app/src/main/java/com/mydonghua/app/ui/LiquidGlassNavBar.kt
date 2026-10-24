@@ -457,7 +457,6 @@ private fun Modifier.drawBackdropCustomShape(
                     lerp(4f.dp.toPx(), 1f.dp.toPx(), -l)
                 }) + 2f.dp.toPx() * press,
             )
-            refraction(size.minDimension / 8f + 2f.dp.toPx() * press, size.minDimension / 4f, false)
         },
         onDrawBackdrop = { drawBackdrop ->
             drawBackdrop()

@@ -34,8 +34,6 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.vibrancy
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.IconSize
@@ -120,10 +118,7 @@ fun GlassHeader(
                             saturation = 1.5f
                         )
                         blur((12f + 2f * headerPressProgress).dp.toPx())
-                        refraction(size.minDimension / 4f + 2f.dp.toPx() * headerPressProgress, size.minDimension / 2f, false)
                     },
-                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
-                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
                     onDrawSurface = {
                         val baseColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
                         val radius = size.height / 2f

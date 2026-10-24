@@ -127,7 +127,6 @@ fun DownloadsScreen(
     }
 
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val glassBorder = rememberLiquidGlassBorder(isLight)
 
     Column(
         modifier = Modifier
@@ -149,11 +148,6 @@ fun DownloadsScreen(
                         if (MaterialTheme.colorScheme.surface.hashCode() == Color.White.hashCode())
                             Color.White.copy(alpha = 0.82f)
                         else Color(0xFF0F121C).copy(alpha = 0.85f)
-                    )
-                    .border(
-                        width = 0.65.dp,
-                        brush = glassBorder,
-                        shape = RoundedCornerShape(CornerRadius.surface)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,

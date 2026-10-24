@@ -382,18 +382,6 @@ fun MenuGlassPanel(
                         },
                         onDrawSurface = {
                             drawRect(color = baseColor)
-                            // ColorOS 17 Aurora Top Specular Light Ingress
-                            drawRect(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = if (isLightMode) 0.15f else 0.08f),
-                                        accentColor.copy(alpha = if (isLightMode) 0.05f else 0.03f),
-                                        Color.Transparent
-                                    ),
-                                    startY = 0f,
-                                    endY = 160f
-                                )
-                            )
                         }
                     )
             )
