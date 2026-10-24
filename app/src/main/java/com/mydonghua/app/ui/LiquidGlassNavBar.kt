@@ -5,10 +5,8 @@ import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.animation.expandHorizontally
@@ -177,9 +175,9 @@ fun LiquidGlassNavBar(
         val searchSlideDistance = (initialSearchCenterX - targetSearchCenterX).coerceAtLeast(0.dp)
         val searchButtonOffset by animateDpAsState(
             targetValue = if (isSearchOpen) -searchSlideDistance else 0.dp,
-            animationSpec = spring(
-                stiffness = Spring.StiffnessLow,
-                dampingRatio = Spring.DampingRatioNoBouncy
+            animationSpec = tween(
+                durationMillis = 250,
+                easing = FastOutSlowInEasing
             )
         )
 
@@ -569,12 +567,12 @@ class DampedDragAnimation(
     val onDragStopped: DampedDragAnimation.() -> Unit,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
 ) {
-    private val valueAnimationSpec = spring(1f, 1000f, visibilityThreshold)
-    private val smoothAnimationSpec = spring(0.55f, 200f, visibilityThreshold)
-    private val velocityAnimationSpec = spring(0.5f, 300f, visibilityThreshold * 10f)
-    private val pressProgressAnimationSpec = spring(1f, 1000f, 0.001f)
-    private val scaleXAnimationSpec = spring(0.6f, 250f, 0.001f)
-    private val scaleYAnimationSpec = spring(0.7f, 250f, 0.001f)
+    private val valueAnimationSpec = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
+    private val smoothAnimationSpec = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
+    private val velocityAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+    private val pressProgressAnimationSpec = tween<Float>(durationMillis = 150, easing = FastOutSlowInEasing)
+    private val scaleXAnimationSpec = tween<Float>(durationMillis = 180, easing = FastOutSlowInEasing)
+    private val scaleYAnimationSpec = tween<Float>(durationMillis = 180, easing = FastOutSlowInEasing)
     private val snapAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)

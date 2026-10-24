@@ -19,12 +19,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.TransformOrigin
 import com.mydonghua.app.ui.theme.ColorOSMotion
@@ -519,9 +517,9 @@ class MainActivity : ComponentActivity() {
                     visible = isSearchOpen,
                     enter = slideInVertically(
                         initialOffsetY = { it },
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioLowBouncy,
-                            stiffness = Spring.StiffnessMediumLow
+                        animationSpec = tween(
+                            durationMillis = 280,
+                            easing = FastOutSlowInEasing
                         )
                     ) + fadeIn(animationSpec = tween(260, easing = FastOutSlowInEasing)),
                     exit = slideOutVertically(

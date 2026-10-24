@@ -28,9 +28,9 @@ object AnimDuration {
 }
 
 object AnimSpec {
-    val springDefault = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy)
-    val springStiff = spring<Float>(dampingRatio = 0.5f, stiffness = 300f)
-    val springSmooth = spring<Float>(dampingRatio = 0.7f, stiffness = 200f)
+    val springDefault = tween<Float>(AnimDuration.normal, easing = FastOutSlowInEasing)
+    val springStiff = tween<Float>(AnimDuration.fast, easing = FastOutSlowInEasing)
+    val springSmooth = tween<Float>(AnimDuration.slow, easing = FastOutSlowInEasing)
     val fadeIn = tween<Float>(AnimDuration.normal)
     val fadeOut = tween<Float>(AnimDuration.fast)
     val slide = tween<Int>(AnimDuration.medium)
@@ -38,89 +38,83 @@ object AnimSpec {
 
 /**
  * ColorOS 17 & OxygenOS 17 Unified Aurora & Tidal Engine Motion System.
- * Physics-driven natural springs and continuous velocity curves.
+ * Smooth fluid cubic curves with zero bounce and zero spring wobble.
  */
 object ColorOSMotion {
-    /**
-     * Aquamorphic Fluid Spring: ColorOS 17 natural fluid curve for surfaces, sheets, and drawers.
-     * Soft entry, zero drag, non-wobbly settle.
-     */
-    val FluidSpring = spring<Float>(
-        dampingRatio = 0.78f,
-        stiffness = 380f,
-        visibilityThreshold = 0.001f
-    )
-
-    /**
-     * Touch Elastic Bounce Spring: ColorOS 17 signature tactile press squish and rebound.
-     */
-    val TouchBounceSpring = spring<Float>(
-        dampingRatio = 0.65f,
-        stiffness = 450f,
-        visibilityThreshold = 0.001f
-    )
-
-    /**
-     * Snappy Spring: For switches, radio dots, chips, and small controls.
-     */
-    val SnappySpring = spring<Float>(
-        dampingRatio = 0.82f,
-        stiffness = 550f,
-        visibilityThreshold = 0.001f
-    )
-
-    /**
-     * Sheet & Drawer Spring: Smooth viscous deceleration for expansive overlays.
-     */
-    val SheetSpring = spring<Float>(
-        dampingRatio = 0.80f,
-        stiffness = 320f,
-        visibilityThreshold = 0.001f
-    )
-
-    /**
-     * Sheet IntOffset Spring: Used for sheet slide transitions.
-     */
-    val SheetIntOffset = spring<IntOffset>(
-        dampingRatio = 0.80f,
-        stiffness = 320f,
-        visibilityThreshold = IntOffset(1, 1)
-    )
-
-    /**
-     * Fluid IntOffset Spring: Used for parallel slide navigation transitions.
-     */
-    val FluidIntOffset = spring<IntOffset>(
-        dampingRatio = 0.80f,
-        stiffness = 360f,
-        visibilityThreshold = IntOffset(1, 1)
-    )
-
-    /**
-     * Snappy Dp Spring: For displacement and offsets.
-     */
-    val SnappyDp = spring<Dp>(
-        dampingRatio = 0.82f,
-        stiffness = 550f
-    )
-
-    /**
-     * Fluid Dp Spring: For smooth offset translations.
-     */
-    val FluidDp = spring<Dp>(
-        dampingRatio = 0.78f,
-        stiffness = 380f
-    )
+    // Standard Durations
+    const val DurationQuick = 180
+    const val DurationNormal = 280
+    const val DurationExpanded = 380
 
     // ColorOS 17 Signature Easings
     val FluidCubic = CubicBezierEasing(0.25f, 1.0f, 0.5f, 1.0f)
     val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
     val EmphasizedAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
 
-    // Standard Durations
-    const val DurationQuick = 180
-    const val DurationNormal = 280
-    const val DurationExpanded = 380
+    /**
+     * Aquamorphic Fluid Motion: ColorOS 17 natural fluid curve for surfaces, sheets, and drawers.
+     * Soft entry, zero drag, non-wobbly settle.
+     */
+    val FluidSpring = tween<Float>(
+        durationMillis = DurationNormal,
+        easing = FluidCubic
+    )
+
+    /**
+     * Touch Ease: ColorOS 17 smooth tactile press and release curve without spring bounce.
+     */
+    val TouchBounceSpring = tween<Float>(
+        durationMillis = DurationQuick,
+        easing = FluidCubic
+    )
+
+    /**
+     * Snappy Motion: For switches, radio dots, chips, and small controls.
+     */
+    val SnappySpring = tween<Float>(
+        durationMillis = DurationQuick,
+        easing = FluidCubic
+    )
+
+    /**
+     * Sheet & Drawer Motion: Smooth viscous deceleration for expansive overlays.
+     */
+    val SheetSpring = tween<Float>(
+        durationMillis = DurationNormal,
+        easing = FluidCubic
+    )
+
+    /**
+     * Sheet IntOffset Motion: Used for sheet slide transitions.
+     */
+    val SheetIntOffset = tween<IntOffset>(
+        durationMillis = DurationNormal,
+        easing = FluidCubic
+    )
+
+    /**
+     * Fluid IntOffset Motion: Used for parallel slide navigation transitions.
+     */
+    val FluidIntOffset = tween<IntOffset>(
+        durationMillis = DurationNormal,
+        easing = FluidCubic
+    )
+
+    /**
+     * Snappy Dp Motion: For displacement and offsets.
+     */
+    val SnappyDp = tween<Dp>(
+        durationMillis = DurationQuick,
+        easing = FluidCubic
+    )
+
+    /**
+     * Fluid Dp Motion: For smooth offset translations.
+     */
+    val FluidDp = tween<Dp>(
+        durationMillis = DurationNormal,
+        easing = FluidCubic
+    )
 }
 
 /**

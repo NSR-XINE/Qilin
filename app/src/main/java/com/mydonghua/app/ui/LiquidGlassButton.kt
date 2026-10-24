@@ -1,7 +1,8 @@
 package com.mydonghua.app.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
@@ -42,7 +43,7 @@ import kotlin.math.sign
 class GlassInteraction(
     private val animationScope: CoroutineScope,
 ) {
-    private val pressSpec = spring(dampingRatio = 0.62f, stiffness = 650f, visibilityThreshold = 0.001f)
+    private val pressSpec = tween<Float>(durationMillis = 180, easing = FastOutSlowInEasing)
     private val pressAnimation = Animatable(0f, 0.001f)
 
     val pressProgress: Float get() = pressAnimation.value
