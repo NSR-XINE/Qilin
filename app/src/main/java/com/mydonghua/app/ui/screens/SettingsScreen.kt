@@ -9,13 +9,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -96,26 +90,6 @@ fun SettingsScreen(
         storageGranted = granted
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "settingsPulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1300, easing = ColorOSMotion.FluidCubic),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
-        targetValue = 1.35f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1300, easing = ColorOSMotion.FluidCubic),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
-    )
-
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -125,108 +99,57 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    val backInteraction = remember { MutableInteractionSource() }
-                    val isBackPressed by backInteraction.collectIsPressedAsState()
-                    val backScale by animateFloatAsState(
-                        targetValue = if (isBackPressed) 0.88f else 1f,
-                        animationSpec = ColorOSMotion.TouchBounceSpring,
-                        label = "backScale"
-                    )
+                val backInteraction = remember { MutableInteractionSource() }
+                val isBackPressed by backInteraction.collectIsPressedAsState()
+                val backScale by animateFloatAsState(
+                    targetValue = if (isBackPressed) 0.88f else 1f,
+                    animationSpec = ColorOSMotion.TouchBounceSpring,
+                    label = "backScale"
+                )
 
-                    Box(
-                        modifier = Modifier
-                            .size(42.dp)
-                            .graphicsLayer {
-                                scaleX = backScale
-                                scaleY = backScale
-                            }
-                            .clip(CircleShape)
-                            .background(
-                                if (isDark) Color.White.copy(alpha = 0.10f)
-                                else Color.Black.copy(alpha = 0.06f)
-                            )
-                            .border(
-                                width = 0.75.dp,
-                                color = if (isDark) Color.White.copy(alpha = 0.20f)
-                                else Color.Black.copy(alpha = 0.10f),
-                                shape = CircleShape
-                            )
-                            .clickable(
-                                interactionSource = backInteraction,
-                                indication = null,
-                                onClick = onNavigateBack
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = "Settings",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Preferences, appearance & system",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // ColorOS 17 Aurora Engine Tag
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                Box(
                     modifier = Modifier
+                        .size(42.dp)
+                        .graphicsLayer {
+                            scaleX = backScale
+                            scaleY = backScale
+                        }
                         .clip(CircleShape)
                         .background(
-                            if (isDark) Color(0xFFE50914).copy(alpha = 0.18f)
-                            else Color(0xFFE50914).copy(alpha = 0.10f)
+                            if (isDark) Color.White.copy(alpha = 0.10f)
+                            else Color.Black.copy(alpha = 0.06f)
                         )
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                        .border(
+                            width = 0.75.dp,
+                            color = if (isDark) Color.White.copy(alpha = 0.20f)
+                            else Color.Black.copy(alpha = 0.10f),
+                            shape = CircleShape
+                        )
+                        .clickable(
+                            interactionSource = backInteraction,
+                            indication = null,
+                            onClick = onNavigateBack
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .graphicsLayer {
-                                    scaleX = pulseScale
-                                    scaleY = pulseScale
-                                    alpha = pulseAlpha * 0.45f
-                                }
-                                .clip(CircleShape)
-                                .background(Color(0xFFE50914))
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE50914))
-                        )
-                    }
-                    Text(
-                        text = "COLOROS 17",
-                        fontSize = 9.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        color = if (isDark) Color(0xFFFF5252) else Color(0xFFC60000)
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Text(
+                    text = "Settings",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         },
         modifier = modifier
@@ -242,18 +165,16 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(2.dp))
 
             // 1. THEME MODE SELECTION
-            OxygenSectionHeader(
-                title = "APPEARANCE & THEME",
-                subtitle = "Choose interface style and ambient illumination"
-            )
-            OxygenGlassGroup(isDark = isDark) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "Appearance")
+                OxygenGlassGroup(isDark = isDark) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     val themesList = listOf(
                         Triple("light", "Light", Icons.Rounded.WbSunny to Pair(Color(0xFFF6F7F9), Color(0xFFFFFFFF))),
                         Triple("dark", "Dark", Icons.Rounded.NightsStay to Pair(Color(0xFF0F141F), Color(0xFF1B2433))),
@@ -403,13 +324,12 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
 
             // 2. ACCENT COLOR PALETTE
-            OxygenSectionHeader(
-                title = "COLOR ACCENT & SYSTEM GLOW",
-                subtitle = "Fluid dynamic wallpaper extraction or curated shades"
-            )
-            OxygenGlassGroup(isDark = isDark) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "Accent Color")
+                OxygenGlassGroup(isDark = isDark) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -487,19 +407,13 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.width(14.dp))
 
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Material You Dynamic",
-                                    fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "Real-time extraction from your device wallpaper",
-                                    fontSize = 11.5.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            Text(
+                                text = "Material You Dynamic",
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
 
                             if (isDynamicSelected) {
                                 Box(
@@ -563,121 +477,111 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
 
             // 3. DASHBOARD DISPLAY PREFERENCES
-            OxygenSectionHeader(
-                title = "HOME DASHBOARD DISPLAY",
-                subtitle = "Customize interactive widgets and feeds on home screen"
-            )
-            OxygenGlassGroup(isDark = isDark) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    OxygenTogglePreferenceItem(
-                        title = "Hero Countdown Banner",
-                        subtitle = "Featured next-airing show countdown at top of Home Screen",
-                        iconRes = R.drawable.ic_clock,
-                        iconGradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
-                        checked = uiState.showBanner,
-                        onCheckedChange = { viewModel.setShowBanner(it) }
-                    )
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                    )
-                    OxygenTogglePreferenceItem(
-                        title = "Continue Watching Row",
-                        subtitle = "Horizontal carousel for currently active series",
-                        iconRes = R.drawable.ic_play,
-                        iconGradient = listOf(Color(0xFFFF7043), Color(0xFFFF8A65)),
-                        checked = uiState.showContinue,
-                        onCheckedChange = { viewModel.setShowContinue(it) }
-                    )
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                    )
-                    OxygenTogglePreferenceItem(
-                        title = "Recently Updated Row",
-                        subtitle = "Quick cards for newly released donghua episodes",
-                        iconRes = R.drawable.ic_tv,
-                        iconGradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
-                        checked = uiState.showRecent,
-                        onCheckedChange = { viewModel.setShowRecent(it) }
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "Home Dashboard")
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OxygenTogglePreferenceItem(
+                            title = "Hero Countdown Banner",
+                            iconRes = R.drawable.ic_clock,
+                            iconGradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
+                            checked = uiState.showBanner,
+                            onCheckedChange = { viewModel.setShowBanner(it) }
+                        )
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+                        OxygenTogglePreferenceItem(
+                            title = "Continue Watching Row",
+                            iconRes = R.drawable.ic_play,
+                            iconGradient = listOf(Color(0xFFFF7043), Color(0xFFFF8A65)),
+                            checked = uiState.showContinue,
+                            onCheckedChange = { viewModel.setShowContinue(it) }
+                        )
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+                        OxygenTogglePreferenceItem(
+                            title = "Recently Updated Row",
+                            iconRes = R.drawable.ic_tv,
+                            iconGradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
+                            checked = uiState.showRecent,
+                            onCheckedChange = { viewModel.setShowRecent(it) }
+                        )
+                    }
                 }
             }
 
             // 4. SEARCH & STREAMING OPTIONS
-            OxygenSectionHeader(
-                title = "SEARCH & STREAMING PROVIDER",
-                subtitle = "Keyboard behavior and preferred streaming search engine"
-            )
-            OxygenGlassGroup(isDark = isDark) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    OxygenTogglePreferenceItem(
-                        title = "Auto-open Keyboard",
-                        subtitle = "Automatically pop soft keyboard on search tab entry",
-                        iconVector = Icons.Rounded.Search,
-                        iconGradient = listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)),
-                        checked = uiState.autoOpenKeyboard,
-                        onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
-                    )
-
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "Default Watch Online Provider",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Select preferred streaming catalog when tapping \"Watch Online\"",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "Search & Streaming")
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OxygenTogglePreferenceItem(
+                            title = "Auto-open Keyboard",
+                            iconVector = Icons.Rounded.Search,
+                            iconGradient = listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)),
+                            checked = uiState.autoOpenKeyboard,
+                            onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
                         )
 
-                        val providers = listOf(
-                            Triple("donghuastream", "DonghuaStream", "donghuastream.org • Fast HD Direct Streaming"),
-                            Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in • Multi-Server Mirrored"),
-                            Triple("direct", "Custom Saved URL", "Direct watch link specified in show details")
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
                         )
 
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            providers.forEach { (key, title, domain) ->
-                                val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
-                                val providerIcon: ImageVector = when (key) {
-                                    "donghuastream" -> Icons.Rounded.Tv
-                                    "luciferdonghua" -> Icons.Rounded.AutoAwesome
-                                    else -> Icons.Rounded.Link
-                                }
-                                val providerGradient = when (key) {
-                                    "donghuastream" -> listOf(Color(0xFF0288D1), Color(0xFF26C6DA))
-                                    "luciferdonghua" -> listOf(Color(0xFFF57C00), Color(0xFFFFB74D))
-                                    else -> listOf(Color(0xFF43A047), Color(0xFF66BB6A))
-                                }
+                            Text(
+                                text = "Default Streaming Provider",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
 
-                                OxygenProviderItem(
-                                    key = key,
-                                    title = title,
-                                    domain = domain,
-                                    icon = providerIcon,
-                                    gradient = providerGradient,
-                                    isSelected = isSelected,
-                                    isDark = isDark,
-                                    onClick = { viewModel.setDefaultStreamProvider(key) }
-                                )
+                            val providers = listOf(
+                                Triple("donghuastream", "DonghuaStream", "donghuastream.org"),
+                                Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in"),
+                                Triple("direct", "Custom Saved URL", "Direct show URL")
+                            )
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                providers.forEach { (key, title, domain) ->
+                                    val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
+                                    val providerIcon: ImageVector = when (key) {
+                                        "donghuastream" -> Icons.Rounded.Tv
+                                        "luciferdonghua" -> Icons.Rounded.AutoAwesome
+                                        else -> Icons.Rounded.Link
+                                    }
+                                    val providerGradient = when (key) {
+                                        "donghuastream" -> listOf(Color(0xFF0288D1), Color(0xFF26C6DA))
+                                        "luciferdonghua" -> listOf(Color(0xFFF57C00), Color(0xFFFFB74D))
+                                        else -> listOf(Color(0xFF43A047), Color(0xFF66BB6A))
+                                    }
+
+                                    OxygenProviderItem(
+                                        key = key,
+                                        title = title,
+                                        domain = domain,
+                                        icon = providerIcon,
+                                        gradient = providerGradient,
+                                        isSelected = isSelected,
+                                        isDark = isDark,
+                                        onClick = { viewModel.setDefaultStreamProvider(key) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -685,255 +589,214 @@ fun SettingsScreen(
             }
 
             // 5. DATA BACKUPS & STORAGE
-            OxygenSectionHeader(
-                title = "DATA BACKUPS & MIGRATION",
-                subtitle = "Export database or restore your full watchlist safely"
-            )
-            OxygenGlassGroup(isDark = isDark) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Text(
-                        text = "Safely export your watchlist, episodes history, and custom collections into an encrypted JSON file, or restore existing backups.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 16.sp
-                    )
-
-                    if (!storageGranted) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = if (isDark) 0.20f else 0.35f),
-                            border = androidx.compose.foundation.BorderStroke(
-                                0.75.dp,
-                                MaterialTheme.colorScheme.error.copy(alpha = 0.40f)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Storage Permission Required",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                Text(
-                                    text = "Grant storage permission to allow exporting backups to device storage or importing backup files.",
-                                    fontSize = 11.5.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Button(
-                                    onClick = {
-                                        storagePermissionLauncher.launch(currentStoragePermission())
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.error
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Text("Grant Permission", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                }
-                            }
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "Backup & Restore")
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        val exportInteraction = remember { MutableInteractionSource() }
-                        val isExportPressed by exportInteraction.collectIsPressedAsState()
-                        val exportScale by animateFloatAsState(
-                            targetValue = if (isExportPressed) 0.95f else 1f,
-                            animationSpec = ColorOSMotion.TouchBounceSpring,
-                            label = "exportScale"
-                        )
-
-                        val importInteraction = remember { MutableInteractionSource() }
-                        val isImportPressed by importInteraction.collectIsPressedAsState()
-                        val importScale by animateFloatAsState(
-                            targetValue = if (isImportPressed) 0.95f else 1f,
-                            animationSpec = ColorOSMotion.TouchBounceSpring,
-                            label = "importScale"
-                        )
-
-                        val buttonShape = RoundedCornerShape(14.dp)
-                        Button(
-                            onClick = {
-                                coroutineScope.launch {
-                                    val file = viewModel.exportBackup(context)
-                                    if (file != null) {
-                                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                            type = "application/json"
-                                            putExtra(Intent.EXTRA_STREAM, uri)
-                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                        }
-                                        context.startActivity(Intent.createChooser(shareIntent, "Share Backup JSON"))
-                                    } else {
-                                        Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
+                        if (!storageGranted) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = if (isDark) 0.20f else 0.35f),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    0.75.dp,
+                                    MaterialTheme.colorScheme.error.copy(alpha = 0.40f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Storage Permission Required",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                    Text(
+                                        text = "Grant storage permission to allow exporting or importing backup files.",
+                                        fontSize = 11.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Button(
+                                        onClick = {
+                                            storagePermissionLauncher.launch(currentStoragePermission())
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text("Grant Permission", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                 }
-                            },
-                            interactionSource = exportInteraction,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                                .graphicsLayer {
-                                    scaleX = exportScale
-                                    scaleY = exportScale
-                                },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = buttonShape
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Rounded.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Text("Export Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             }
                         }
 
-                        OutlinedButton(
-                            onClick = {
-                                filePickerLauncher.launch(arrayOf("application/json", "*/*"))
-                            },
-                            interactionSource = importInteraction,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                                .graphicsLayer {
-                                    scaleX = importScale
-                                    scaleY = importScale
-                                },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = 1.dp,
-                                color = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f)
-                            ),
-                            shape = buttonShape
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            val exportInteraction = remember { MutableInteractionSource() }
+                            val isExportPressed by exportInteraction.collectIsPressedAsState()
+                            val exportScale by animateFloatAsState(
+                                targetValue = if (isExportPressed) 0.95f else 1f,
+                                animationSpec = ColorOSMotion.TouchBounceSpring,
+                                label = "exportScale"
+                            )
+
+                            val importInteraction = remember { MutableInteractionSource() }
+                            val isImportPressed by importInteraction.collectIsPressedAsState()
+                            val importScale by animateFloatAsState(
+                                targetValue = if (isImportPressed) 0.95f else 1f,
+                                animationSpec = ColorOSMotion.TouchBounceSpring,
+                                label = "importScale"
+                            )
+
+                            val buttonShape = RoundedCornerShape(14.dp)
+                            Button(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        val file = viewModel.exportBackup(context)
+                                        if (file != null) {
+                                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "application/json"
+                                                putExtra(Intent.EXTRA_STREAM, uri)
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            context.startActivity(Intent.createChooser(shareIntent, "Share Backup JSON"))
+                                        } else {
+                                            Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                interactionSource = exportInteraction,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp)
+                                    .graphicsLayer {
+                                        scaleX = exportScale
+                                        scaleY = exportScale
+                                    },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                ),
+                                shape = buttonShape
                             ) {
-                                Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Text("Import Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(Icons.Rounded.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Text("Export Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    filePickerLauncher.launch(arrayOf("application/json", "*/*"))
+                                },
+                                interactionSource = importInteraction,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp)
+                                    .graphicsLayer {
+                                        scaleX = importScale
+                                        scaleY = importScale
+                                    },
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = 1.dp,
+                                    color = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f)
+                                ),
+                                shape = buttonShape
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Text("Import Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // 6. ABOUT MY DONGHUA (COLOROS & OXYGENOS SYSTEM CARD)
-            OxygenSectionHeader(
-                title = "ABOUT SYSTEM & APP",
-                subtitle = "Build engine, software version and repository"
-            )
-            OxygenGlassGroup(isDark = isDark) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher),
-                            contentDescription = "App Icon",
+            // 6. ABOUT MY DONGHUA
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "About")
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
                             modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(
-                                    1.dp,
-                                    if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.10f),
-                                    RoundedCornerShape(16.dp)
-                                ),
-                            contentScale = ContentScale.Fit
-                        )
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.mipmap.ic_launcher),
+                                contentDescription = "App Icon",
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .border(
+                                        1.dp,
+                                        if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.10f),
+                                        RoundedCornerShape(16.dp)
+                                    ),
+                                contentScale = ContentScale.Fit
+                            )
 
-                        Spacer(modifier = Modifier.width(14.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.Center
+                            ) {
                                 Text(
                                     text = "My Donghua",
-                                    fontSize = 18.sp,
+                                    fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color(0xFFE50914).copy(alpha = if (isDark) 0.20f else 0.12f)
-                                ) {
-                                    Text(
-                                        text = "ColorOS 17",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isDark) Color(0xFFFF5252) else Color(0xFFC60000),
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                    )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Version 6.8.8 (Build 2026.10)",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                        )
+
+                        OxygenSettingsActionItem(
+                            title = "GitHub Repository",
+                            subtitle = "github.com/NSR-XINE/my_donguha",
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE/my_donguha"))
+                                try {
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
                                 }
                             }
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Liquid Glass Edition • v6.8.8 (Build 2026.10)",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        )
                     }
-
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
-                    )
-
-                    OxygenSettingsInfoItem(
-                        title = "Architecture",
-                        value = "Clean Architecture + Kotlin 2.0"
-                    )
-
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
-                    )
-
-                    OxygenSettingsInfoItem(
-                        title = "Motion & UI Engine",
-                        value = "ColorOS 17 Aurora + Jetpack Compose"
-                    )
-
-                    HorizontalDivider(
-                        color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
-                    )
-
-                    OxygenSettingsActionItem(
-                        title = "GitHub Source Repository",
-                        subtitle = "github.com/NSR-XINE/my_donguha",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE/my_donguha"))
-                            try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    )
                 }
             }
 
@@ -949,40 +812,28 @@ fun SettingsScreen(
 @Composable
 private fun OxygenSectionHeader(
     title: String,
-    subtitle: String? = null
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = Modifier
+    Row(
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(width = 4.dp, height = 13.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-            Text(
-                text = title,
-                fontSize = 11.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.1.sp
-            )
-        }
-        if (!subtitle.isNullOrEmpty()) {
-            Text(
-                text = subtitle,
-                fontSize = 11.5.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                modifier = Modifier.padding(start = 12.dp)
-            )
-        }
+        Box(
+            modifier = Modifier
+                .size(width = 3.5.dp, height = 13.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Text(
+            text = title,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            letterSpacing = 0.6.sp
+        )
     }
 }
 
@@ -1079,7 +930,10 @@ private fun OxygenTogglePreferenceItem(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                modifier = Modifier.weight(1f, fill = false),
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
                     text = title,
                     fontSize = 14.5.sp,
@@ -1087,6 +941,7 @@ private fun OxygenTogglePreferenceItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (!subtitle.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = subtitle,
                         fontSize = 11.5.sp,
@@ -1148,10 +1003,13 @@ private fun OxygenSettingsActionItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = title,
-                fontSize = 14.sp,
+                fontSize = 14.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -1159,7 +1017,7 @@ private fun OxygenSettingsActionItem(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    fontSize = 11.5.sp,
+                    fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1182,32 +1040,6 @@ private fun OxygenSettingsActionItem(
     }
 }
 
-@Composable
-private fun OxygenSettingsInfoItem(
-    title: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = value,
-            fontSize = 12.5.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
 
 @Composable
 private fun OxygenDropletItem(
@@ -1382,6 +1214,7 @@ private fun OxygenProviderItem(
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = domain,
                         fontSize = 11.5.sp,

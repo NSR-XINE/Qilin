@@ -44,31 +44,32 @@ object ColorOSMotion {
     val EmphasizedAccelerate = CubicBezierEasing(0.35f, 0.0f, 0.8f, 0.15f)
     val SnappyEase = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 
-    // Float Transitions
-    val FluidFloat = tween<Float>(DurationNormal, easing = FluidCubic)
-    val QuickFloat = tween<Float>(DurationQuick, easing = FluidCubic)
-    val FadeInFloat = tween<Float>(DurationNormal, easing = EmphasizedDecelerate)
-    val FadeOutFloat = tween<Float>(DurationQuick, easing = EmphasizedAccelerate)
-    val ScaleInFloat = tween<Float>(DurationNormal, easing = EmphasizedDecelerate)
-    val ScaleOutFloat = tween<Float>(DurationQuick, easing = EmphasizedAccelerate)
+    // Springs (ColorOS 17 Aquamorphic & Tidal Engine Physics)
+    // Signature fluid spring dynamics: responsive start, gentle physical deceleration, organic settling
+    val FluidSpring = spring<Float>(dampingRatio = 0.74f, stiffness = 260f)
+    val TouchBounceSpring = spring<Float>(dampingRatio = 0.62f, stiffness = 320f)
+    val SnappySpring = spring<Float>(dampingRatio = 0.70f, stiffness = 340f)
+    val TactileSpring = spring<Float>(dampingRatio = 0.75f, stiffness = 280f)
+    val BouncySpring = spring<Float>(dampingRatio = 0.58f, stiffness = 220f)
+    val PopSpring = spring<Float>(dampingRatio = 0.55f, stiffness = 240f)
 
-    // Springs (ColorOS 17 Fluid & Tactile Physics)
-    val FluidSpring = tween<Float>(durationMillis = DurationNormal, easing = FluidCubic)
-    val TouchBounceSpring = spring<Float>(dampingRatio = 0.65f, stiffness = 200f)
-    val SnappySpring = spring<Float>(dampingRatio = 0.70f, stiffness = 260f)
-    val TactileSpring = spring<Float>(dampingRatio = 0.75f, stiffness = 240f)
-    val BouncySpring = spring<Float>(dampingRatio = 0.62f, stiffness = 190f)
-    val PopSpring = spring<Float>(dampingRatio = 0.58f, stiffness = 200f)
+    // Float Transitions (Physics Springs)
+    val FluidFloat = spring<Float>(dampingRatio = 0.75f, stiffness = 260f)
+    val QuickFloat = spring<Float>(dampingRatio = 0.70f, stiffness = 340f)
+    val FadeInFloat = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 300f)
+    val FadeOutFloat = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 380f)
+    val ScaleInFloat = spring<Float>(dampingRatio = 0.72f, stiffness = 260f)
+    val ScaleOutFloat = spring<Float>(dampingRatio = 0.82f, stiffness = 340f)
 
-    // Dp Transitions
-    val FluidDp = tween<Dp>(durationMillis = DurationNormal, easing = FluidCubic)
-    val SnappyDp = tween<Dp>(durationMillis = DurationQuick, easing = FluidCubic)
-    val SheetDp = tween<Dp>(durationMillis = DurationExpanded, easing = EmphasizedDecelerate)
+    // Dp Transitions (Physics Springs)
+    val FluidDp = spring<Dp>(dampingRatio = 0.74f, stiffness = 260f)
+    val SnappyDp = spring<Dp>(dampingRatio = 0.70f, stiffness = 340f)
+    val SheetDp = spring<Dp>(dampingRatio = 0.76f, stiffness = 220f)
 
-    // IntOffset Transitions (Sheet, Drawer, Navigation)
-    val SheetIntOffset = tween<IntOffset>(durationMillis = DurationExpanded, easing = EmphasizedDecelerate)
-    val SheetExitIntOffset = tween<IntOffset>(durationMillis = DurationNormal, easing = EmphasizedAccelerate)
-    val FluidIntOffset = tween<IntOffset>(durationMillis = DurationNormal, easing = FluidCubic)
+    // IntOffset Transitions (Sheet, Drawer, Navigation - ColorOS 17 Physics Springs)
+    val SheetIntOffset = spring<IntOffset>(dampingRatio = 0.76f, stiffness = 220f)
+    val SheetExitIntOffset = spring<IntOffset>(dampingRatio = 0.82f, stiffness = 280f)
+    val FluidIntOffset = spring<IntOffset>(dampingRatio = 0.78f, stiffness = 260f)
 }
 
 /**

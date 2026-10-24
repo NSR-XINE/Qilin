@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -135,7 +134,10 @@ fun LiquidGlassNavBar(
                             0.2126 * r + 0.7152 * g + 0.0722 * b
                         } / 25.0
                     }
-                    luminanceAnimation.animateTo(avg.toFloat().coerceAtMost(0.8f), tween(500))
+                    luminanceAnimation.animateTo(
+                        avg.toFloat().coerceAtMost(0.8f),
+                        spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)
+                    )
                 }
             } catch (_: Throwable) { }
             delay(2.seconds)
