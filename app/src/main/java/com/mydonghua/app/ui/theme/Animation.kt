@@ -29,18 +29,19 @@ import androidx.compose.ui.unit.dp
  * Signature fluid cubic deceleration, viscous sheet transitions, and tactile spring dynamics.
  */
 object ColorOSMotion {
-    // Timing Tokens (ms)
+    // Timing Tokens (ms) - Tuned for luxurious, fluid ColorOS 17 smoothness
     const val DurationInstant = 0
-    const val DurationMicro = 120
-    const val DurationQuick = 180
-    const val DurationNormal = 280
-    const val DurationExpanded = 380
-    const val DurationLong = 480
+    const val DurationMicro = 160
+    const val DurationQuick = 240
+    const val DurationNormal = 360
+    const val DurationExpanded = 460
+    const val DurationLong = 580
 
     // ColorOS 17 Signature Easings
-    val FluidCubic = CubicBezierEasing(0.25f, 1.0f, 0.5f, 1.0f)
-    val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
-    val EmphasizedAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
+    // FluidCubic: signature gentle deceleration curve with ultra-smooth tail
+    val FluidCubic = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1.0f)
+    val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.85f, 0.15f, 1.0f)
+    val EmphasizedAccelerate = CubicBezierEasing(0.35f, 0.0f, 0.8f, 0.15f)
     val SnappyEase = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 
     // Float Transitions
@@ -53,11 +54,11 @@ object ColorOSMotion {
 
     // Springs (ColorOS 17 Fluid & Tactile Physics)
     val FluidSpring = tween<Float>(durationMillis = DurationNormal, easing = FluidCubic)
-    val TouchBounceSpring = tween<Float>(durationMillis = DurationQuick, easing = FluidCubic)
-    val SnappySpring = tween<Float>(durationMillis = DurationQuick, easing = FluidCubic)
-    val TactileSpring = spring<Float>(dampingRatio = 0.70f, stiffness = 400f)
-    val BouncySpring = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
-    val PopSpring = spring<Float>(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow)
+    val TouchBounceSpring = spring<Float>(dampingRatio = 0.65f, stiffness = 200f)
+    val SnappySpring = spring<Float>(dampingRatio = 0.70f, stiffness = 260f)
+    val TactileSpring = spring<Float>(dampingRatio = 0.75f, stiffness = 240f)
+    val BouncySpring = spring<Float>(dampingRatio = 0.62f, stiffness = 190f)
+    val PopSpring = spring<Float>(dampingRatio = 0.58f, stiffness = 200f)
 
     // Dp Transitions
     val FluidDp = tween<Dp>(durationMillis = DurationNormal, easing = FluidCubic)

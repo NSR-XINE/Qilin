@@ -44,7 +44,7 @@ import kotlin.math.sign
 class GlassInteraction(
     private val animationScope: CoroutineScope,
 ) {
-    private val pressSpec = spring<Float>(dampingRatio = 0.5f, stiffness = 300f, visibilityThreshold = 0.001f)
+    private val pressSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 220f, visibilityThreshold = 0.001f)
     private val pressAnimation = Animatable(0f, 0.001f)
 
     val pressProgress: Float get() = pressAnimation.value

@@ -1168,7 +1168,7 @@ private fun AnimatedDialog(
     val dismissWithAction: (action: () -> Unit) -> Unit = { action ->
         animateTrigger = false
         coroutineScope.launch {
-            delay(150) // matches exit animation duration
+            delay(ColorOSMotion.DurationQuick.toLong()) // matches exit animation duration
             action()
         }
     }
