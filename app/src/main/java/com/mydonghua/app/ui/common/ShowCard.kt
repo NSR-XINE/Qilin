@@ -18,6 +18,8 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -321,6 +323,7 @@ fun ShowCard(
                     Column(
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 34.dp)
                             .padding(end = 12.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -368,13 +371,13 @@ fun ShowCard(
                         }
                     }
 
-                    // Right: Tactile Quick Stepper Pill [ − ] Ep X [ + ] (Liquid glass border)
+                    // Right: Tactile Quick Stepper Dock [ − ] EP X [ + ] (Liquid glass border)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(3.dp),
                         modifier = Modifier
                             .height(34.dp)
-                            .clip(RoundedCornerShape(CornerRadius.chip))
+                            .clip(RoundedCornerShape(10.dp))
                             .background(
                                 if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
@@ -382,29 +385,34 @@ fun ShowCard(
                             .border(
                                 width = 0.5.dp,
                                 color = chipBorderColor,
-                                shape = RoundedCornerShape(CornerRadius.chip)
+                                shape = RoundedCornerShape(10.dp)
                             )
-                            .padding(horizontal = 3.dp, vertical = 2.dp)
+                            .padding(3.dp)
                     ) {
                         // Decrement Button
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(7.dp))
                                 .background(
-                                    if (isLight) Color.Black.copy(alpha = 0.04f)
-                                    else Color.White.copy(alpha = 0.06f)
+                                    if (isLight) Color.Black.copy(alpha = 0.05f)
+                                    else Color.White.copy(alpha = 0.08f)
+                                )
+                                .border(
+                                    width = 0.5.dp,
+                                    color = if (show.currentEp > 0) chipBorderColor.copy(alpha = 0.6f)
+                                    else chipBorderColor.copy(alpha = 0.25f),
+                                    shape = RoundedCornerShape(7.dp)
                                 )
                                 .clickable(enabled = show.currentEp > 0) { onEpDecrement(show) }
-                                .colorOSPressBounce(pressedScale = 0.88f),
+                                .colorOSPressBounce(pressedScale = 0.90f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "−",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                color = if (show.currentEp > 0) MaterialTheme.colorScheme.onSurface
+                            Icon(
+                                imageVector = Icons.Rounded.Remove,
+                                contentDescription = "Decrement episode",
+                                modifier = Modifier.size(15.dp),
+                                tint = if (show.currentEp > 0) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
                             )
                         }
@@ -415,7 +423,7 @@ fun ShowCard(
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF),
-                            modifier = Modifier.padding(horizontal = 4.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp),
                             textAlign = TextAlign.Center
                         )
 
@@ -423,21 +431,25 @@ fun ShowCard(
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(7.dp))
                                 .background(
-                                    if (isLight) Color.Black.copy(alpha = 0.04f)
-                                    else Color.White.copy(alpha = 0.06f)
+                                    if (isLight) Color.Black.copy(alpha = 0.05f)
+                                    else Color.White.copy(alpha = 0.08f)
+                                )
+                                .border(
+                                    width = 0.5.dp,
+                                    color = chipBorderColor.copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(7.dp)
                                 )
                                 .clickable { onEpIncrement(show) }
-                                .colorOSPressBounce(pressedScale = 0.88f),
+                                .colorOSPressBounce(pressedScale = 0.90f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "+",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                color = if (isLight) MaterialTheme.colorScheme.onSurface else Color.White
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Increment episode",
+                                modifier = Modifier.size(15.dp),
+                                tint = if (isLight) MaterialTheme.colorScheme.onSurface else Color.White
                             )
                         }
                     }
