@@ -28,6 +28,18 @@ private const val POSTER_STAGGER_STEP_MS = 30L
 private const val POSTER_STAGGER_MAX_ADD_MS = 90L
 private const val SWITCH_BURST_WINDOW_MS = 800L
 
+object PosterMemoryCache {
+    private const val MAX_SIZE = 1000
+    private val loadedSet = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    fun isLoaded(url: String): Boolean = loadedSet.contains(url)
+
+    fun markLoaded(url: String) {
+        if (loadedSet.size > MAX_SIZE) loadedSet.clear()
+        loadedSet.add(url)
+    }
+}
+
 object PosterTrace {
     @Volatile
     var composedCount = 0
@@ -107,16 +119,20 @@ fun DonghuaPoster(
         true
     }
 
-    val staggerDelayMs = remember(posterUrl, immediate) {
-        if (immediate || posterUrl.isNullOrBlank()) 0L else PosterStagger.staggerDelay(posterUrl)
+    val isAlreadyCached = remember(posterUrl) {
+        !posterUrl.isNullOrBlank() && PosterMemoryCache.isLoaded(posterUrl)
     }
-    var posterEnabled by remember(posterUrl, immediate) {
+
+    val staggerDelayMs = remember(posterUrl, immediate, isAlreadyCached) {
+        if (immediate || isAlreadyCached || posterUrl.isNullOrBlank()) 0L else PosterStagger.staggerDelay(posterUrl)
+    }
+    var posterEnabled by remember(posterUrl, immediate, isAlreadyCached) {
         mutableStateOf(
-            immediate || posterUrl.isNullOrBlank() || (staggerDelayMs == 0L && !ScrollGate.scrolling)
+            immediate || isAlreadyCached || posterUrl.isNullOrBlank() || (staggerDelayMs == 0L && !ScrollGate.scrolling)
         )
     }
-    LaunchedEffect(posterUrl, staggerDelayMs, immediate) {
-        if (immediate || posterUrl.isNullOrBlank()) {
+    LaunchedEffect(posterUrl, staggerDelayMs, immediate, isAlreadyCached) {
+        if (immediate || isAlreadyCached || posterUrl.isNullOrBlank()) {
             posterEnabled = true
             return@LaunchedEffect
         }
@@ -125,10 +141,10 @@ fun DonghuaPoster(
         posterEnabled = true
     }
 
-    val imageRequest = remember(posterUrl, context, crossfade, posterEnabled) {
+    val imageRequest = remember(posterUrl, context, crossfade, posterEnabled, isAlreadyCached) {
         ImageRequest.Builder(context)
             .data(if (posterEnabled) posterUrl?.takeIf { it.isNotBlank() && it != "null" } else null)
-            .crossfade(if (crossfade) 300 else 0)
+            .crossfade(if (crossfade && !isAlreadyCached) 250 else 0)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
             .networkCachePolicy(CachePolicy.ENABLED)
@@ -143,13 +159,20 @@ fun DonghuaPoster(
     ) {
         val state = painter.state
         if (state is AsyncImagePainter.State.Success) {
+            if (!posterUrl.isNullOrBlank()) {
+                PosterMemoryCache.markLoaded(posterUrl)
+            }
             SubcomposeAsyncImageContent()
         } else if (state is AsyncImagePainter.State.Loading || !posterEnabled) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .shimmerEffect()
-            )
+            if (isAlreadyCached) {
+                SubcomposeAsyncImageContent()
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .shimmerEffect()
+                )
+            }
         } else {
             PosterAcronymPlaceholder(
                 initials = initials,
