@@ -9,6 +9,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -222,15 +224,25 @@ class MainActivity : ComponentActivity() {
                                                 isSearchOpen = !isSearchOpen
                                             },
                                             onNavigate = { route ->
+                                                val currentDest = navController.currentBackStackEntry?.destination?.route
+                                                if (route == currentDest) {
+                                                    // Already on this tab - ignore re-tap
+                                                    return@LiquidGlassNavBar
+                                                }
                                                 when (route) {
                                                     "home" -> {
-                                                        val currentDest = navController.currentBackStackEntry?.destination?.route
                                                         if (currentDest != "home") {
                                                             navController.popBackStack("home", inclusive = false)
                                                         }
                                                     }
                                                     "add_edit_show" -> navController.navigate("add_edit_show")
-                                                    else -> navController.navigate(route) { popUpTo("home"); launchSingleTop = true; restoreState = true }
+                                                    else -> navController.navigate(route) {
+                                                        popUpTo("home") {
+                                                            saveState = true
+                                                        }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                    }
                                                 }
                                             },
                                             modifier = Modifier
@@ -260,93 +272,119 @@ class MainActivity : ComponentActivity() {
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
                                 enterTransition = {
-                                    val dir = tabTransitionDirection(
-                                        initialState.destination.route,
-                                        targetState.destination.route
-                                    )
-                                    when {
-                                        dir > 0 -> slideInHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
-                                            initialOffsetX = { it }
-                                        ) + scaleIn(
-                                            initialScale = 0.94f,
-                                            animationSpec = ColorOSMotion.FluidSpring
-                                        ) + fadeIn(
-                                            animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
-                                        )
-                                        dir < 0 -> slideInHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
-                                            initialOffsetX = { -it }
-                                        ) + scaleIn(
-                                            initialScale = 0.94f,
-                                            animationSpec = ColorOSMotion.FluidSpring
-                                        ) + fadeIn(
-                                            animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
-                                        )
-                                        else -> slideInHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
-                                            initialOffsetX = { it }
-                                        ) + scaleIn(
-                                            initialScale = 0.95f,
-                                            animationSpec = ColorOSMotion.FluidSpring
-                                        ) + fadeIn(
-                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
-                                        )
+                                    val from = initialState.destination.route
+                                    val to = targetState.destination.route
+                                    if (from == to) {
+                                        EnterTransition.None
+                                    } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
+                                        fadeIn(animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic))
+                                    } else {
+                                        val dir = tabTransitionDirection(from, to)
+                                        when {
+                                            dir > 0 -> slideInHorizontally(
+                                                animationSpec = ColorOSMotion.FluidIntOffset,
+                                                initialOffsetX = { it }
+                                            ) + scaleIn(
+                                                initialScale = 0.94f,
+                                                animationSpec = ColorOSMotion.FluidSpring
+                                            ) + fadeIn(
+                                                animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
+                                            )
+                                            dir < 0 -> slideInHorizontally(
+                                                animationSpec = ColorOSMotion.FluidIntOffset,
+                                                initialOffsetX = { -it }
+                                            ) + scaleIn(
+                                                initialScale = 0.94f,
+                                                animationSpec = ColorOSMotion.FluidSpring
+                                            ) + fadeIn(
+                                                animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
+                                            )
+                                            else -> slideInHorizontally(
+                                                animationSpec = ColorOSMotion.FluidIntOffset,
+                                                initialOffsetX = { it }
+                                            ) + scaleIn(
+                                                initialScale = 0.95f,
+                                                animationSpec = ColorOSMotion.FluidSpring
+                                            ) + fadeIn(
+                                                animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                            )
+                                        }
                                     }
                                 },
                                 exitTransition = {
-                                    val dir = tabTransitionDirection(
-                                        initialState.destination.route,
-                                        targetState.destination.route
-                                    )
-                                    when {
-                                        dir > 0 -> slideOutHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
-                                            targetOffsetX = { -it }
-                                        ) + scaleOut(
-                                            targetScale = 0.96f,
-                                            animationSpec = ColorOSMotion.FluidSpring
-                                        ) + fadeOut(
-                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
-                                        )
-                                        dir < 0 -> slideOutHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
-                                            targetOffsetX = { it }
-                                        ) + scaleOut(
-                                            targetScale = 0.96f,
-                                            animationSpec = ColorOSMotion.FluidSpring
-                                        ) + fadeOut(
-                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
-                                        )
-                                        else -> fadeOut(
-                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
-                                        ) + scaleOut(
-                                            targetScale = 0.96f,
-                                            animationSpec = ColorOSMotion.FluidSpring
-                                        )
+                                    val from = initialState.destination.route
+                                    val to = targetState.destination.route
+                                    if (from == to) {
+                                        ExitTransition.None
+                                    } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
+                                        fadeOut(animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic))
+                                    } else {
+                                        val dir = tabTransitionDirection(from, to)
+                                        when {
+                                            dir > 0 -> slideOutHorizontally(
+                                                animationSpec = ColorOSMotion.FluidIntOffset,
+                                                targetOffsetX = { -it }
+                                            ) + scaleOut(
+                                                targetScale = 0.96f,
+                                                animationSpec = ColorOSMotion.FluidSpring
+                                            ) + fadeOut(
+                                                animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                            )
+                                            dir < 0 -> slideOutHorizontally(
+                                                animationSpec = ColorOSMotion.FluidIntOffset,
+                                                targetOffsetX = { it }
+                                            ) + scaleOut(
+                                                targetScale = 0.96f,
+                                                animationSpec = ColorOSMotion.FluidSpring
+                                            ) + fadeOut(
+                                                animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                            )
+                                            else -> fadeOut(
+                                                animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                            ) + scaleOut(
+                                                targetScale = 0.96f,
+                                                animationSpec = ColorOSMotion.FluidSpring
+                                            )
+                                        }
                                     }
                                 },
                                 popEnterTransition = {
-                                    slideInHorizontally(
-                                        animationSpec = ColorOSMotion.FluidIntOffset,
-                                        initialOffsetX = { -it / 3 }
-                                    ) + scaleIn(
-                                        initialScale = 0.96f,
-                                        animationSpec = ColorOSMotion.FluidSpring
-                                    ) + fadeIn(
-                                        animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
-                                    )
+                                    val from = initialState.destination.route
+                                    val to = targetState.destination.route
+                                    if (from == to) {
+                                        EnterTransition.None
+                                    } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
+                                        fadeIn(animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic))
+                                    } else {
+                                        slideInHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            initialOffsetX = { -it / 3 }
+                                        ) + scaleIn(
+                                            initialScale = 0.96f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeIn(
+                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                        )
+                                    }
                                 },
                                 popExitTransition = {
-                                    slideOutHorizontally(
-                                        animationSpec = ColorOSMotion.FluidIntOffset,
-                                        targetOffsetX = { it / 3 }
-                                    ) + scaleOut(
-                                        targetScale = 0.96f,
-                                        animationSpec = ColorOSMotion.FluidSpring
-                                    ) + fadeOut(
-                                        animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
-                                    )
+                                    val from = initialState.destination.route
+                                    val to = targetState.destination.route
+                                    if (from == to) {
+                                        ExitTransition.None
+                                    } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
+                                        fadeOut(animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic))
+                                    } else {
+                                        slideOutHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            targetOffsetX = { it / 3 }
+                                        ) + scaleOut(
+                                            targetScale = 0.96f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeOut(
+                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                        )
+                                    }
                                 }
                             ) {
                         composable("home") {

@@ -190,7 +190,7 @@ fun LiquidGlassNavBar(
                     valueRange = 0f..(totalSlots - 1f),
                     visibilityThreshold = 0.001f,
                     initialScale = 1f,
-                    pressedScale = 1.1f,
+                    pressedScale = 1.0f,
                     onDragStarted = {
                         draggedFlag[0] = false
                         userInteracting = true
@@ -261,7 +261,7 @@ fun LiquidGlassNavBar(
                             shape = BarShape,
                             pressProgress = unifiedPressProgress,
                             touchPosition = { activeTouchPosition },
-                            pressedScale = 1.12f,
+                            pressedScale = 1.0f,
                         )
                 )
 
@@ -311,12 +311,8 @@ fun LiquidGlassNavBar(
                 val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                 val progress = dampedDrag.pressProgress
                 val restWidth = with(density) { 56.dp.toPx() }
-                val pressedWidth = with(density) { 76.dp.toPx() }
-                val pillWidthPx = lerp(restWidth, pressedWidth, progress)
-
-                val restHeight = restWidth
-                val pressedHeight = with(density) { 56.dp.toPx() }
-                val pillHeightPx = lerp(restHeight, pressedHeight, progress)
+                val pillWidthPx = restWidth
+                val pillHeightPx = restWidth
 
                 val pillCenterPx = (dampedDrag.value + 0.5f) * slotWidthPx
                 val translationX = pillCenterPx - pillWidthPx / 2f
@@ -395,6 +391,7 @@ fun LiquidGlassNavBar(
                             contentDescription = tabDescription,
                             selected = currentTabIndex == position,
                             onClick = {
+                                if (currentTabIndex == position) return@NavBarIcon
                                 PosterTrace.reset()
                                 PosterStagger.reset()
                                 currentTabIndex = position
@@ -412,12 +409,6 @@ fun LiquidGlassNavBar(
     Box(
         modifier = Modifier
             .offset(x = searchButtonOffset)
-            .graphicsLayer {
-                val scale = 1f - unifiedPressProgress * 0.15f
-                scaleX = scale
-                scaleY = scale
-                translationX = unifiedPressProgress * 12.dp.toPx()
-            }
             .size(searchButtonSize)
             .clip(CircleShape)
             .drawBackdropCustomShape(
@@ -455,9 +446,9 @@ private fun NavBarIcon(
     onClick: () -> Unit,
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1.10f else 1.0f,
-        animationSpec = ColorOSMotion.TouchBounceSpring,
-        label = "nav_icon_bounce"
+        targetValue = if (selected) 1.05f else 1.0f,
+        animationSpec = ColorOSMotion.SnappySpring,
+        label = "nav_icon_scale"
     )
     Box(
         modifier = Modifier
@@ -492,7 +483,7 @@ private fun Modifier.drawBackdropCustomShape(
     shape: Shape,
     pressProgress: Float = 0f,
     touchPosition: () -> Offset = { Offset.Zero },
-    pressedScale: Float = 1.12f,
+    pressedScale: Float = 1.0f,
 ): Modifier =
     this.drawBackdrop(
         backdrop = backdrop,
@@ -550,9 +541,11 @@ private fun Modifier.drawBackdropCustomShape(
             }
         },
         layerBlock = {
-            val scale = lerp(1f, pressedScale, pressProgress)
-            scaleX = scale
-            scaleY = scale
+            if (pressedScale != 1f) {
+                val scale = lerp(1f, pressedScale, pressProgress)
+                scaleX = scale
+                scaleY = scale
+            }
         },
     )
 
