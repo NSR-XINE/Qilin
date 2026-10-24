@@ -380,7 +380,6 @@ fun MenuGlassPanel(
                             )
                             blur(12f.dp.toPx())
                         },
-                        shadow = { Shadow(radius = 8f.dp, alpha = if (isLightMode) 0.12f else 0.25f) },
                         onDrawSurface = {
                             drawRect(color = baseColor)
                             // ColorOS 17 Aurora Top Specular Light Ingress
