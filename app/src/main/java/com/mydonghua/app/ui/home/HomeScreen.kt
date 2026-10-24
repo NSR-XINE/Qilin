@@ -340,7 +340,7 @@ private fun BannerTimeBox(
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(brush = bgBrush)
-            .border(width = 0.75.dp, brush = borderBrush, shape = shape)
+            .border(width = 1.dp, brush = borderBrush, shape = shape)
             .padding(vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -430,7 +430,7 @@ fun ContinueWatchingRow(
                     .hazeChild(state = hazeState, shape = cardShape)
                     .background(cardBg)
                     .border(
-                        width = 0.75.dp,
+                        width = 1.dp,
                         brush = cardBorder,
                         shape = cardShape
                     )
@@ -572,7 +572,7 @@ fun RecentlyUpdatedRow(
                     .hazeChild(state = hazeState, shape = cardShape)
                     .background(cardBg)
                     .border(
-                        width = 0.75.dp,
+                        width = 1.dp,
                         brush = cardBorder,
                         shape = cardShape
                     )

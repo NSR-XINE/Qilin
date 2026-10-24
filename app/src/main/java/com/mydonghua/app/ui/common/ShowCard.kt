@@ -173,7 +173,7 @@ fun ShowCard(
                 shape = cardShape
             )
             .border(
-                width = 0.75.dp,
+                width = 1.dp,
                 brush = cardBorderBrush,
                 shape = cardShape
             )

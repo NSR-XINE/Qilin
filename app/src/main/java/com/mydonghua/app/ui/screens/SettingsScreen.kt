@@ -47,6 +47,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.Spacing
 import kotlinx.coroutines.launch
@@ -997,21 +999,14 @@ private fun OxygenGlassGroup(
         Color.White.copy(alpha = 0.75f)
     }
 
-    // ColorOS 17 Prismatic Aurora Specular Border
-    val specularBorder = Brush.linearGradient(
-        colors = listOf(
-            if (isDark) Color.White.copy(alpha = 0.26f) else Color.White.copy(alpha = 0.95f),
-            MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.18f else 0.22f),
-            Color(0xFF26C6DA).copy(alpha = if (isDark) 0.10f else 0.12f),
-            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.06f)
-        )
-    )
+    val isLight = !isDark
+    val glassBorder = rememberLiquidGlassBorder(isLight)
 
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
         color = cardBg,
-        border = androidx.compose.foundation.BorderStroke(0.85.dp, specularBorder)
+        border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),

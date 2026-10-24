@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import android.graphics.RenderEffect
@@ -195,42 +196,39 @@ fun GlassBackground(
     }
 }
 @Composable
-fun rememberLiquidGlassBorder(
+fun rememberLiquidGlassBorderColor(
     isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f,
     isAmoled: Boolean = MaterialTheme.colorScheme.background == Color.Black || MaterialTheme.colorScheme.background.luminance() < 0.01f
-): Brush {
+): Color {
     return remember(isLight, isAmoled) {
-        Brush.verticalGradient(
-            colors = when {
-                isAmoled -> listOf(
-                    Color.White.copy(alpha = 0.55f),
-                    Color.White.copy(alpha = 0.20f),
-                    Color.White.copy(alpha = 0.06f),
-                    Color.White.copy(alpha = 0.02f)
-                )
-                isLight -> listOf(
-                    Color.White.copy(alpha = 0.85f),
-                    Color.White.copy(alpha = 0.35f),
-                    Color.Black.copy(alpha = 0.12f),
-                    Color.Black.copy(alpha = 0.05f)
-                )
-                else -> listOf(
-                    Color.White.copy(alpha = 0.45f),
-                    Color.White.copy(alpha = 0.16f),
-                    Color.White.copy(alpha = 0.05f),
-                    Color.White.copy(alpha = 0.02f)
-                )
-            }
-        )
+        when {
+            isAmoled -> Color.White.copy(alpha = 0.22f)
+            isLight -> Color.Black.copy(alpha = 0.14f)
+            else -> Color.White.copy(alpha = 0.18f)
+        }
     }
 }
 
 @Composable
+fun rememberLiquidGlassBorder(
+    isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f,
+    isAmoled: Boolean = MaterialTheme.colorScheme.background == Color.Black || MaterialTheme.colorScheme.background.luminance() < 0.01f
+): Brush {
+    val borderColor = rememberLiquidGlassBorderColor(isLight, isAmoled)
+    return remember(borderColor) { SolidColor(borderColor) }
+}
+
+@Composable
 fun rememberLiquidGlassChipBorder(
-    isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f,
+    isAmoled: Boolean = MaterialTheme.colorScheme.background == Color.Black || MaterialTheme.colorScheme.background.luminance() < 0.01f
 ): Color {
-    return remember(isLight) {
-        if (isLight) Color.Black.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.12f)
+    return remember(isLight, isAmoled) {
+        when {
+            isAmoled -> Color.White.copy(alpha = 0.18f)
+            isLight -> Color.Black.copy(alpha = 0.12f)
+            else -> Color.White.copy(alpha = 0.14f)
+        }
     }
 }
 

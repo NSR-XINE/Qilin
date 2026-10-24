@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -57,12 +58,7 @@ fun ErrorState(
                     )
                     .border(
                         width = 1.dp,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.25f),
-                                Color.White.copy(alpha = 0.05f)
-                            )
-                        ),
+                        brush = rememberLiquidGlassBorder(),
                         shape = RoundedCornerShape(CornerRadius.card)
                     ),
                 contentAlignment = Alignment.Center

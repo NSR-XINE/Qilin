@@ -690,7 +690,7 @@ fun ShowDetailScreen(
                                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
                                     .border(
                                         width = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                                        color = rememberLiquidGlassChipBorder(),
                                         shape = RoundedCornerShape(CornerRadius.sm)
                                     )
                                     .padding(horizontal = 10.dp, vertical = 5.dp)
@@ -716,7 +716,7 @@ fun ShowDetailScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                         .border(
                             width = 0.65.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            color = rememberLiquidGlassChipBorder(),
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
                         .padding(Spacing.md)
@@ -805,7 +805,7 @@ private fun DetailGlassChip(label: String, value: String, modifier: Modifier = M
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
             .border(
                 width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                color = rememberLiquidGlassChipBorder(),
                 shape = RoundedCornerShape(CornerRadius.md)
             )
             .padding(horizontal = Spacing.md, vertical = 8.dp),

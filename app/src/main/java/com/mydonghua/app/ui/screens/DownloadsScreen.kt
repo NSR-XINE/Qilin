@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
@@ -413,7 +414,7 @@ private fun StorageOverviewCard(
                 )
             )
             .border(
-                width = 0.65.dp,
+                width = 1.dp,
                 brush = rememberLiquidGlassBorder(),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
@@ -529,7 +530,7 @@ private fun ActiveDownloadCard(
             .clip(RoundedCornerShape(CornerRadius.card))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
             .border(
-                width = 0.65.dp,
+                width = 1.dp,
                 brush = rememberLiquidGlassBorder(),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
@@ -627,13 +628,8 @@ private fun OfflineFileCard(
             .clip(RoundedCornerShape(CornerRadius.card))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
             .border(
-                width = 0.55.dp,
-                brush = Brush.linearGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.16f),
-                        Color.Transparent
-                    )
-                ),
+                width = 1.dp,
+                brush = rememberLiquidGlassBorder(),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
             .colorOSPressBounce(
@@ -660,8 +656,8 @@ private fun OfflineFileCard(
                         )
                     )
                     .border(
-                        width = 0.65.dp,
-                        color = Color(0xFF00E5FF).copy(alpha = 0.3f),
+                        width = 0.5.dp,
+                        color = rememberLiquidGlassChipBorder(),
                         shape = RoundedCornerShape(13.dp)
                     ),
                 contentAlignment = Alignment.Center
