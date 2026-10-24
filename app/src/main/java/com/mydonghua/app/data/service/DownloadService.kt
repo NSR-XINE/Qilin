@@ -12,11 +12,14 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
+import android.webkit.CookieManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.mydonghua.app.R
+import com.yausername.aria2c.Aria2c
+import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.CoroutineScope
@@ -52,6 +55,26 @@ class DownloadService : Service() {
             Log.e(TAG, "Failed to create WakeLock", e)
         }
         createNotificationChannel()
+        ensureInitialized(this)
+    }
+
+    private fun ensureInitialized(context: Context) {
+        val app = context.applicationContext
+        try {
+            YoutubeDL.getInstance().init(app)
+        } catch (e: Exception) {
+            Log.e(TAG, "YoutubeDL init error", e)
+        }
+        try {
+            FFmpeg.getInstance().init(app)
+        } catch (e: Exception) {
+            Log.e(TAG, "FFmpeg init error", e)
+        }
+        try {
+            Aria2c.getInstance().init(app)
+        } catch (e: Exception) {
+            Log.e(TAG, "Aria2c init error", e)
+        }
     }
 
     private fun createNotificationChannel() {
@@ -133,7 +156,7 @@ class DownloadService : Service() {
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
-            .setContentText("Connecting 16 Aria2c streams...")
+            .setContentText("Connecting download stream...")
             .setSmallIcon(R.drawable.ic_download)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -149,24 +172,55 @@ class DownloadService : Service() {
 
         val job = serviceScope.launch {
             try {
+                ensureInitialized(this@DownloadService)
+
                 val destDir = File(path)
                 if (!destDir.exists()) destDir.mkdirs()
 
-                val request = YoutubeDLRequest(url)
-                if (!formatId.isNullOrEmpty()) {
-                    request.addOption("-f", formatId)
-                }
                 val sanitizedTitle = title.replace(Regex("[^a-zA-Z0-9._-]"), "_")
-                request.addOption("-o", "$path/$sanitizedTitle.%(ext)s")
-                request.addOption("--external-downloader", "aria2c")
-                request.addOption("--external-downloader-args", "aria2c:-c -j 16 -x 16 -s 16 -k 1M --file-allocation=none")
+                val isHls = url.contains(".m3u8", ignoreCase = true)
+
+                val request = YoutubeDLRequest(url).apply {
+                    if (!formatId.isNullOrEmpty()) {
+                        addOption("-f", formatId)
+                    }
+                    addOption("-o", "$path/$sanitizedTitle.%(ext)s")
+                    addOption("--no-check-certificates")
+                    addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+
+                    try {
+                        val uri = android.net.Uri.parse(url)
+                        val host = uri.host
+                        if (!host.isNullOrEmpty()) {
+                            addOption("--referer", "${uri.scheme}://$host/")
+                        }
+                    } catch (ignored: Exception) {}
+
+                    try {
+                        val cookie = CookieManager.getInstance().getCookie(url)
+                        if (!cookie.isNullOrEmpty()) {
+                            addOption("--add-header", "Cookie:$cookie")
+                        }
+                    } catch (ignored: Exception) {}
+
+                    if (isHls) {
+                        addOption("--downloader", "m3u8:native")
+                        addOption("--concurrent-fragments", "16")
+                        addOption("--hls-use-mpegts")
+                    } else {
+                        addOption("--external-downloader", "aria2c")
+                        addOption("--external-downloader-args", "aria2c:-c -j 16 -x 16 -s 16 -k 1M --file-allocation=none")
+                    }
+                }
 
                 val speedRegex = Regex("(\\d+\\.?\\d*\\s*[KMGT]?i?B/s)")
                 val sizeRegex = Regex("(\\d+\\.?\\d*\\s*[KMGT]?i?B)/(\\d+\\.?\\d*\\s*[KMGT]?i?B)")
                 var finalFilePath: String? = null
+                var lastLogLine = ""
 
-                val response = withContext(Dispatchers.IO) {
+                var response = withContext(Dispatchers.IO) {
                     YoutubeDL.getInstance().execute(request, id) { progress, etaInSeconds, line ->
+                        lastLogLine = line
                         if (line.contains("Destination:")) {
                             finalFilePath = line.substringAfter("Destination:").trim().replace("\"", "")
                         } else if (line.contains("Merging formats into")) {
@@ -211,8 +265,55 @@ class DownloadService : Service() {
                     }
                 }
 
+                // If aria2c failed on direct stream, fallback gracefully to native downloader
+                if (response.exitCode != 0 && !isHls) {
+                    Log.w(TAG, "Aria2c download failed (code ${response.exitCode}). Retrying with native downloader...")
+                    val fallbackRequest = YoutubeDLRequest(url).apply {
+                        if (!formatId.isNullOrEmpty()) addOption("-f", formatId)
+                        addOption("-o", "$path/$sanitizedTitle.%(ext)s")
+                        addOption("--no-check-certificates")
+                        addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                    }
+                    response = withContext(Dispatchers.IO) {
+                        YoutubeDL.getInstance().execute(fallbackRequest, id) { progress, etaInSeconds, line ->
+                            lastLogLine = line
+                            if (line.contains("Destination:")) {
+                                finalFilePath = line.substringAfter("Destination:").trim().replace("\"", "")
+                            } else if (line.contains("Merging formats into")) {
+                                finalFilePath = line.substringAfter("into").trim().replace("\"", "")
+                            }
+
+                            var speed = speedRegex.find(line)?.value ?: "0 MB/s"
+                            speed = speed.replace("MiB", "MB").replace("KiB", "KB")
+
+                            val sizeMatch = sizeRegex.find(line)
+                            val downloadedSize = sizeMatch?.groupValues?.getOrNull(1)?.replace("iB", "B") ?: ""
+                            val totalSize = sizeMatch?.groupValues?.getOrNull(2)?.replace("iB", "B") ?: expectedSize
+
+                            val progressInt = progress.toInt().coerceIn(0, 100)
+                            val etaStr = if (etaInSeconds > 0) "${etaInSeconds}s" else "--:--"
+
+                            builder.setProgress(100, progressInt, false)
+                            builder.setContentText("$speed - $progressInt%")
+                            notificationManager.notify(notificationId, builder.build())
+
+                            val progressIntent = Intent("DOWNLOAD_PROGRESS").apply {
+                                putExtra("id", id)
+                                putExtra("progress", progressInt)
+                                putExtra("speed", speed)
+                                putExtra("downloadedSize", downloadedSize)
+                                putExtra("totalSize", totalSize)
+                                putExtra("eta", etaStr)
+                                setPackage(packageName)
+                            }
+                            sendBroadcast(progressIntent)
+                        }
+                    }
+                }
+
                 if (response.exitCode == 0) {
-                    if (finalFilePath == null || !File(finalFilePath).exists()) {
+                    val currentPath = finalFilePath
+                    if (currentPath == null || !File(currentPath).exists()) {
                         val files = destDir.listFiles()
                         finalFilePath = files?.maxByOrNull { it.lastModified() }?.absolutePath
                     }
@@ -227,10 +328,11 @@ class DownloadService : Service() {
                     }
                     sendBroadcast(successIntent)
                 } else {
-                    Log.e(TAG, "YoutubeDL exit code: ${response.exitCode}")
+                    Log.e(TAG, "YoutubeDL exit code: ${response.exitCode}, last line: $lastLogLine")
                     updatePrefs(id, "Failed", "")
                     val failedIntent = Intent("DOWNLOAD_FAILED").apply {
                         putExtra("id", id)
+                        putExtra("error", "Exit code ${response.exitCode}: $lastLogLine")
                         setPackage(packageName)
                     }
                     sendBroadcast(failedIntent)
@@ -240,6 +342,7 @@ class DownloadService : Service() {
                 updatePrefs(id, "Failed", "")
                 val failedIntent = Intent("DOWNLOAD_FAILED").apply {
                     putExtra("id", id)
+                    putExtra("error", e.message ?: "Download failed")
                     setPackage(packageName)
                 }
                 sendBroadcast(failedIntent)

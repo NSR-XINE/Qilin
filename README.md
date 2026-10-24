@@ -1,6 +1,6 @@
 # 东画 My Donghua (Android App)
 
-A sleek, high-aesthetic dark-themed native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, install home screen widgets, and receive native push notifications.
+A sleek, high-aesthetic dark-themed native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, download episodes with 16-stream accelerated downloading, install home screen widgets, and receive native push notifications.
 
 ---
 
@@ -8,14 +8,24 @@ A sleek, high-aesthetic dark-themed native Android application designed for Chin
 
 - **Language & Runtime**: 100% Native Kotlin 2.0.0 (JVM 17)
 - **UI Framework**: Jetpack Compose (BOM `2024.09.00`), Material 3, Navigation-Compose
-- **Visual Design**:
+- **Visual Design & Motion**:
+  - **ColorOS 17 Fluid Motion** — Natural spring physics, fluid press bounce responses (`colorOSPressBounce`), and smooth easing curves across all interactive cards and controls
   - **Haze 0.7.3** — Real-time backdrop blur & glassmorphism
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
-  - **Performance-tuned**: static glass background (no per-frame gradient animation), off-main-thread GPU luminance sampling, short pure cross-fade route transitions — tuned to keep scrolling, search, settings, and tab switches smooth
+  - **Performance-tuned**: Static glass background (zero per-frame gradient overhead), off-main-thread GPU luminance sampling, tuned cross-fade transitions
+- **Accelerated Download Engine**:
+  - **YoutubeDL-Android 0.18.1** (embedded Python runtime + `yt-dlp` core)
+  - **Aria2c 16-Connection Acceleration** — Multi-stream split downloading for ultra-fast transfers (`-j 16 -x 16 -s 16 -k 1M -c`)
+  - **Multi-Fragment HLS Downloader** — Concurrent 16-fragment downloading for `.m3u8` streams with on-the-fly AES-128 segment decryption
+  - **Embedded FFmpeg & FFprobe** — Video processing, stream extraction, and format muxing
+  - **Foreground Service Architecture** — `DownloadService` with ongoing notification progress bar, cancel intent receiver (`DownloadReceiver`), and `PowerManager.WakeLock`
+- **Ad Blocker & Stream Defusal Engine**:
+  - Built-in multi-layered Ad Blocker with dynamic anti-adblock defusal (P21 probe spoofing, transparent pixel interception, anti-anti-adblock bypass)
+  - User-configurable toggle switch in Settings
 - **Architecture**: Clean Architecture + MVVM + Dagger Hilt Dependency Injection
-- **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries — a single Room-backed settings store (theme, UI toggles, search history, notification prefs) replaces the legacy DataStore/SharedPreferences split
+- **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries — unified Room-backed settings store
 - **Network & Parsing**: Retrofit 2.11 + OkHttp 4.12 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
-- **Media Playback**: ExoPlayer / Media3 1.3.1 (Supports `.mp4`, `.m3u8`, `.mkv` direct streaming & custom web player fallback)
+- **Media Playback**: ExoPlayer / Media3 1.3.1 (Supports direct `.mp4`, `.m3u8`, `.mkv` playback, hardware acceleration, and in-app web player fallback with stream sniffer)
 - **Background & Scheduling**: Android `AlarmManager` (DST-aware exact alarms), `PowerManager.WakeLock` boot receivers, App Widgets
 
 ---
@@ -25,16 +35,20 @@ A sleek, high-aesthetic dark-themed native Android application designed for Chin
 ```
 my_donghua/
 ├── app/
-│   ├── build.gradle                          # Dependencies, Kotlin 2.0 Compose compiler, Hilt config
+│   ├── build.gradle                          # Dependencies, NDK abiFilters (arm64-v8a), packaging options
 │   ├── proguard-rules.pro
 │   └── src/main/
-│       ├── AndroidManifest.xml               # Permissions, receivers, activities, widget providers
+│       ├── AndroidManifest.xml               # Foreground service dataSync, receivers, activities, widget providers
+│       ├── res/
+│       │   ├── drawable/                     # Vector assets, ic_download, liquid glass graphics
+│       │   └── raw/
+│       │       └── ytdlp                     # Bundled yt-dlp core executable archive
 │       └── java/
-│           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system (22 files)
+│           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system
 │           └── com/mydonghua/app/
-│               ├── DonghuaApp.kt             # Application class (@HiltAndroidApp)
-│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav, search keyboard focus
-│               ├── WatchActivity.kt          # ExoPlayer / Media3 full-screen video player
+│               ├── DonghuaApp.kt             # Application class (@HiltAndroidApp), engine bootstrap
+│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav
+│               ├── WatchActivity.kt          # Media3 ExoPlayer & In-App Web Player with stream sniffer
 │               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
 │               ├── BootReceiver.kt           # Re-schedules alarms on boot or app update (WakeLock)
 │               ├── NotificationReceiver.kt   # High-priority Heads-up Notification creator
@@ -45,22 +59,23 @@ my_donghua/
 │               ├── data/
 │               │   ├── db/                   # Room v3 (shows, settings, watch_history) + DAOs
 │               │   ├── pref/
-│               │   │   └── LegacySettingsMigrator.kt # One-time DataStore/SharedPreferences → Room settings migration
-│               │   ├── repository/           # Show / Settings / WatchHistory repository impls (Room-backed)
+│               │   │   └── LegacySettingsMigrator.kt # Settings migration
+│               │   ├── repository/           # Show / Settings / WatchHistory repository impls
 │               │   └── service/
+│               │       ├── AdBlocker.kt      # Multi-tier ad blocking & anti-adblock defusal engine
+│               │       ├── DownloadEngine.kt # Unified reactive download facade (StateFlow)
+│               │       ├── DownloadModel.kt  # Download metadata & progress model
+│               │       ├── DownloadReceiver.kt# Broadcast receiver for notification cancel actions
+│               │       ├── DownloadService.kt# Foreground service with Aria2c & YoutubeDL
 │               │       └── PosterFetchService.kt # Jikan, AniList GraphQL & HTML scrapers
 │               ├── domain/
 │               │   ├── model/                # Show, CountdownCalculator (DST-safe), StatsCalculator
 │               │   └── repository/           # Domain repository interfaces
 │               └── ui/
-│                   ├── GlassEffect.kt        # Static glass background, GlassSection glass components
-│                   ├── GlassHeader.kt        # Top glass header
-│                   ├── LiquidGlassButton.kt  # Liquid glass button
-│                   ├── LiquidGlassNavBar.kt  # Custom liquid glass bottom navigation bar
-│                   ├── common/               # ShowCard, DonghuaPoster, EmptyState, ErrorState, ShimmerEffect
-│                   ├── home/                 # HomeScreen layout, hero banner, continue watching, recent searches
-│                   ├── theme/                # Color palettes, Material 3 theme, animations & dynamic wallpaper matching
-│                   └── screens/              # Airing, Completed, Stopped, Favorites, Detail, Search, Settings, Stats, Calendar, Collections, History, Add/Edit
+│                   ├── theme/                # Color palettes, Material 3, ColorOS 17 animations
+│                   ├── common/               # ShowCard, DonghuaPoster, EmptyState, ShimmerEffect
+│                   ├── home/                 # HomeScreen layout, hero banner, continue watching
+│                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, Calendar, History
 ├── AGENTS.md
 └── README.md
 ```
@@ -69,18 +84,18 @@ my_donghua/
 
 ## ✨ Features
 
+- ⚡ **16-Stream Accelerated Downloads**: Download episodes with Aria2c multi-connection parallel acceleration. Full support for direct streams (`.mp4`, `.mkv`), HLS multi-fragment streams (`.m3u8`), and popular video hosting extractors with pause, resume, and real-time progress notifications.
+- 🛡️ **Intelligent Ad Blocker**: Blocks intrusive popups, banners, redirects, and defuses anti-adblock probes (P21/Anti-Adblocker trap evasion) with an on/off switch in Settings.
 - 📺 **Watchlist Tracking**: Categorize shows into Airing (`ongoing`), Completed (`completed`), and Stopped/Hiatus (`stopped`).
 - ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
-- 🎨 **Kyant Liquid Glass & Haze Backgrounds**: Ultra-sleek glassmorphism UI with liquid refraction, adaptive brightness/saturation, and real-time backdrop blur.
-- 🔍 **Smart Search**: Search bar auto-focuses and opens the keyboard on tap, with a recent-search history that supports per-item delete and "Clear all". Searches across every content type (English/Chinese titles, fuzzy matches, genres, studios, plus AniList/MyAnimeList online results), with matched-text highlighting, debounced online lookup, loading/empty/error states with retry, and a voice-search architecture placeholder.
+- 🎨 **ColorOS 17 Fluid Motion & Liquid Glass**: Bouncy physics-driven tap interactions, fluid card press effects, and Kyant liquid glass shader navigation bar.
+- 🔍 **Smart Search**: Auto-focus search bar, recent search history with individual delete or clear-all, and debounced online search across AniList and MyAnimeList.
 - 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
 - 🔔 **Native Push Notifications**: Automatic DST-aware heads-up notifications when a new episode releases.
-- 📊 **Statistics Dashboard**: 8-card analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.
-- 🎬 **Native Media Playback**: ExoPlayer / Media3 video player supporting direct streams (`.mp4`, `.m3u8`, `.mkv`) and external web stream browser fallbacks.
-- 🖼️ **Automated Poster Fetching**: Auto-fills high-res cover art from Jikan (MyAnimeList), AniList GraphQL, DonghuaStream, and AnimeCountdown.
-- 📁 **Collections & Favorites**: Group related donghua series into collection folders and bookmark favorites with one tap.
-- 💾 **JSON Backup & Restore**: Export and import full watchlists via the Android document picker, plus FileProvider sharing.
+- 📊 **Statistics Dashboard**: Analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.
+- 🎬 **Dual Video Player**: Switch between high-performance hardware-accelerated ExoPlayer / Media3 and in-app web player with automatic video stream sniffing.
+- 💾 **Offline Storage Management**: Manage saved downloads with device storage gauges, direct playback from local disk, and one-tap file deletion.
 - 🌓 **Multiple Themes**: Dark Mode, AMOLED (True Black), Light Mode, and Material You dynamic color extraction on Android 12+.
 
 ---
@@ -119,9 +134,7 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 | Column | Type | Description |
 |---|---|---|
 | `key` | TEXT (PK) | Setting key |
-| `value` | TEXT | Setting value (e.g. `recent_searches` stores a JSON array) |
-
-All app settings live in this single key-value store (theme mode, accent color, UI visibility toggles, auto-open keyboard, default stream provider, recent searches, notification prefs). Legacy DataStore / SharedPreferences values are migrated here once on first launch.
+| `value` | TEXT | Setting value (theme mode, accent color, ad_blocker_enabled, etc.) |
 
 ### 3. `watch_history`
 | Column | Type | Description |
@@ -152,5 +165,3 @@ All app settings live in this single key-value store (theme mode, accent color, 
 # Run Unit Tests
 ./gradlew test
 ```
-
-> **Note**: This project is developed and built from within AndroidIDE (the Java 17 JDK is embedded there; there is no shell-level `java` command).

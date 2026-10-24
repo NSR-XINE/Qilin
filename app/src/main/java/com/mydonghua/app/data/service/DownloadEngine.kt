@@ -134,18 +134,21 @@ object DownloadEngine {
                             )
                             _tasksState.value = activeTasks.values.toList()
                         }
+                        showToast(app, "Download complete: ${current?.title ?: "Video"}")
                     }
                     "DOWNLOAD_FAILED" -> {
+                        val error = intent.getStringExtra("error") ?: "Download failed or interrupted"
                         val current = activeTasks[id]
                         if (current != null) {
                             activeTasks[id] = current.copy(
                                 status = DownloadStatus.FAILED,
                                 speedBps = 0L,
                                 etaSeconds = 0L,
-                                errorMessage = "Download failed or interrupted"
+                                errorMessage = error
                             )
                             _tasksState.value = activeTasks.values.toList()
                         }
+                        showToast(app, "Download failed: $error")
                     }
                     "DOWNLOAD_CANCELLED" -> {
                         activeTasks.remove(id)
