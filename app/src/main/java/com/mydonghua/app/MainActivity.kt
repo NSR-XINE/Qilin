@@ -458,8 +458,10 @@ class MainActivity : ComponentActivity() {
                                 topPadding = innerPadding.calculateTopPadding(),
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
                                 onWatchClick = { url ->
+                                    val targetShow = showsViewModel.allShows.value.find { it.id == showIdArg }
                                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                                         putExtra("watch_url", url)
+                                        putExtra("show_title", targetShow?.title ?: "Donghua Episode")
                                     }
                                     startActivity(intent)
                                 },

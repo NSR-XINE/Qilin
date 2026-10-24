@@ -28,8 +28,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -55,6 +55,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -99,15 +100,17 @@ class WatchActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val isInPip by remember { isInPipModeState }
+            var useWebPlayer by remember { mutableStateOf(!isDirectVideo) }
 
-            if (isDirectVideo) {
+            if (!useWebPlayer) {
                 DirectVideoPlayerScreen(
                     watchUrl = watchUrl,
                     showTitle = showTitle,
                     isInPip = isInPip,
                     onBack = { finish() },
                     onDownload = { downloadVideo(context, watchUrl, showTitle) },
-                    onEnterPip = { enterPipMode() }
+                    onEnterPip = { enterPipMode() },
+                    onSwitchToWeb = { useWebPlayer = true }
                 )
             } else {
                 InAppWebPlayerScreen(
@@ -148,6 +151,20 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        if (customView != null) {
+            (window.decorView as ViewGroup).removeView(fullscreenContainer)
+            fullscreenContainer = null
+            customView = null
+            customViewCallback?.onCustomViewHidden()
+            if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
+                showSystemUI()
+            }
+            return
+        }
+        super.onBackPressed()
+    }
+
     @OptIn(UnstableApi::class)
     @Composable
     private fun DirectVideoPlayerScreen(
@@ -156,7 +173,8 @@ class WatchActivity : ComponentActivity() {
         isInPip: Boolean,
         onBack: () -> Unit,
         onDownload: () -> Unit,
-        onEnterPip: () -> Unit
+        onEnterPip: () -> Unit,
+        onSwitchToWeb: () -> Unit
     ) {
         val context = LocalContext.current
         val activity = context as? Activity
@@ -172,6 +190,7 @@ class WatchActivity : ComponentActivity() {
         var durationMs by remember { mutableLongStateOf(0L) }
         var bufferedPosMs by remember { mutableLongStateOf(0L) }
         var isBuffering by remember { mutableStateOf(false) }
+        var playerError by remember { mutableStateOf<String?>(null) }
 
         var isScrubbing by remember { mutableStateOf(false) }
         var scrubPositionMs by remember { mutableLongStateOf(0L) }
@@ -192,6 +211,12 @@ class WatchActivity : ComponentActivity() {
                 setMediaItem(mediaItem)
                 prepare()
                 playWhenReady = true
+
+                addListener(object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        playerError = error.message ?: "Failed to play direct video stream."
+                    }
+                })
             }
             exoPlayerState = playerInstance
             player = playerInstance
@@ -268,7 +293,7 @@ class WatchActivity : ComponentActivity() {
                 }
             )
 
-            // Gesture Detector Layer (Tap, Double Tap, Drag)
+            // Gesture Detector Layer (Tap & Double Tap across screen)
             if (!isInPip) {
                 Box(
                     modifier = Modifier
@@ -297,24 +322,50 @@ class WatchActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        .pointerInput(context) {
-                            detectDragGestures(
-                                onDrag = { change, dragAmount ->
-                                    val isLeft = change.position.x < size.width / 2f
-                                    val deltaRatio = -dragAmount.y / 600f
-                                    if (isLeft) {
-                                        val lp = activity?.window?.attributes
-                                        val currentB = if (lp != null && lp.screenBrightness >= 0f) lp.screenBrightness else 0.5f
-                                        val newB = (currentB + deltaRatio).coerceIn(0.02f, 1.0f)
-                                        lp?.screenBrightness = newB
-                                        activity?.window?.attributes = lp
-                                        brightnessHud = newB
-                                    } else {
-                                        val currentV = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
-                                        val newV = (currentV + deltaRatio * maxVolume).coerceIn(0f, maxVolume)
-                                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newV.toInt(), 0)
-                                        volumeHud = newV / maxVolume
-                                    }
+                )
+
+                // Left 25% Edge Strip for Brightness Drag
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.25f)
+                        .align(Alignment.CenterStart)
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { lastInteractionTime = System.currentTimeMillis() },
+                                onDragEnd = { lastInteractionTime = System.currentTimeMillis() },
+                                onDragCancel = { lastInteractionTime = System.currentTimeMillis() },
+                                onVerticalDrag = { _, dragAmount ->
+                                    val deltaRatio = -dragAmount / 500f
+                                    val lp = activity?.window?.attributes
+                                    val currentB = if (lp != null && lp.screenBrightness >= 0f) lp.screenBrightness else 0.5f
+                                    val newB = (currentB + deltaRatio).coerceIn(0.02f, 1.0f)
+                                    lp?.screenBrightness = newB
+                                    activity?.window?.attributes = lp
+                                    brightnessHud = newB
+                                    lastInteractionTime = System.currentTimeMillis()
+                                }
+                            )
+                        }
+                )
+
+                // Right 25% Edge Strip for Volume Drag
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.25f)
+                        .align(Alignment.CenterEnd)
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { lastInteractionTime = System.currentTimeMillis() },
+                                onDragEnd = { lastInteractionTime = System.currentTimeMillis() },
+                                onDragCancel = { lastInteractionTime = System.currentTimeMillis() },
+                                onVerticalDrag = { _, dragAmount ->
+                                    val deltaRatio = -dragAmount / 500f
+                                    val currentV = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+                                    val newV = (currentV + deltaRatio * maxVolume).coerceIn(0f, maxVolume)
+                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newV.toInt(), 0)
+                                    volumeHud = newV / maxVolume
                                     lastInteractionTime = System.currentTimeMillis()
                                 }
                             )
@@ -333,6 +384,68 @@ class WatchActivity : ComponentActivity() {
                         color = Color(0xFF00E5FF),
                         strokeWidth = 3.5.dp
                     )
+                }
+            }
+
+            // Player Error Fallback Dialog
+            if (playerError != null && !isInPip) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.85f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier
+                            .widthIn(max = 340.dp)
+                            .clip(RoundedCornerShape(CornerRadius.card))
+                            .background(Color(0xFF141724))
+                            .border(
+                                width = 0.75.dp,
+                                color = Color.White.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(CornerRadius.card)
+                            )
+                            .padding(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ErrorOutline,
+                            contentDescription = null,
+                            tint = Color(0xFFFF4D4D),
+                            modifier = Modifier.size(44.dp)
+                        )
+                        Text(
+                            text = "Stream Playback Error",
+                            color = Color.White,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Direct stream encountered an issue. Would you like to switch to the Web Player?",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 13.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedButton(
+                                onClick = onBack,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Go Back", color = Color.White)
+                            }
+                            Button(
+                                onClick = onSwitchToWeb,
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+                            ) {
+                                Text("Web Player", color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -517,13 +630,24 @@ class WatchActivity : ComponentActivity() {
                                 )
                             )
                         )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            showControls = false
+                        }
                 ) {
                     // Top Liquid Glass Capsule Bar
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .statusBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {} // Consume click
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -534,7 +658,7 @@ class WatchActivity : ComponentActivity() {
                             modifier = Modifier
                                 .weight(1f, fill = false)
                                 .clip(RoundedCornerShape(CornerRadius.surface))
-                                .background(Color(0xFF0F121C).copy(alpha = 0.75f))
+                                .background(Color(0xFF0F121C).copy(alpha = 0.85f))
                                 .border(
                                     width = 0.65.dp,
                                     brush = Brush.linearGradient(
@@ -588,7 +712,7 @@ class WatchActivity : ComponentActivity() {
                             }
                         }
 
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         // Right Action Buttons Capsule
                         Row(
@@ -596,7 +720,7 @@ class WatchActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(CornerRadius.surface))
-                                .background(Color(0xFF0F121C).copy(alpha = 0.75f))
+                                .background(Color(0xFF0F121C).copy(alpha = 0.85f))
                                 .border(
                                     width = 0.65.dp,
                                     brush = Brush.linearGradient(
@@ -606,6 +730,23 @@ class WatchActivity : ComponentActivity() {
                                 )
                                 .padding(horizontal = 6.dp, vertical = 6.dp)
                         ) {
+                            // Switch to Web Player Button
+                            IconButton(
+                                onClick = onSwitchToWeb,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .colorOSPressBounce(pressedScale = 0.92f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Language,
+                                    contentDescription = "Web Player",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
+
                             // Aspect Ratio Toggle
                             IconButton(
                                 onClick = {
@@ -672,7 +813,13 @@ class WatchActivity : ComponentActivity() {
 
                     // Center Control Buttons (Rewind 10, Play/Pause Hero, Fast Forward 10)
                     Row(
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {} // Consume click
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(28.dp)
                     ) {
@@ -783,13 +930,18 @@ class WatchActivity : ComponentActivity() {
                             .navigationBarsPadding()
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                             .clip(RoundedCornerShape(CornerRadius.surface))
-                            .background(Color(0xFF0F121C).copy(alpha = 0.78f))
+                            .background(Color(0xFF0F121C).copy(alpha = 0.85f))
                             .border(
                                 width = 0.65.dp,
                                 brush = Brush.linearGradient(
                                     listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.05f))
                                 ),
                                 shape = RoundedCornerShape(CornerRadius.surface)
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {} // Consume click
                             )
                             .padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
@@ -1014,7 +1166,7 @@ class WatchActivity : ComponentActivity() {
                                         .size(6.dp)
                                         .clip(CircleShape)
                                         .background(Color(0xFF00E5FF))
-                                    )
+                                )
                                 Text(
                                     text = parsedHost.uppercase(),
                                     color = Color(0xFF00E5FF),
