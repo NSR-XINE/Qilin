@@ -15,19 +15,19 @@ object Spacing {
 }
 
 object CornerRadius {
-    val xs = 4.dp
-    val sm = 8.dp
-    val md = 12.dp
-    val lg = 16.dp
-    val xl = 20.dp
-    val pill = 30.dp
+    val xs = 6.dp
+    val sm = 10.dp
+    val md = 14.dp
+    val lg = 18.dp
+    val xl = 22.dp
+    val pill = 32.dp
     val full = RoundedCornerShape(percent = 50)
 
-    // Design System Tokens
-    val chip = md       // 12.dp
-    val card = lg       // 16.dp
-    val banner = 28.dp  // 28.dp
-    val sheet = 28.dp   // 28.dp
+    // ColorOS 17 Aquamorphic Design Tokens
+    val chip = md       // 14.dp
+    val card = 22.dp    // 22.dp - Signature continuous curvature squircle
+    val banner = 26.dp  // 26.dp
+    val sheet = 30.dp   // 30.dp
     val dialog = 28.dp  // 28.dp
 }
 

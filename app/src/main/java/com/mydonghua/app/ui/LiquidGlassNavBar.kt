@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.*
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.common.PosterStagger
 import com.mydonghua.app.ui.common.PosterTrace
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
@@ -455,9 +456,18 @@ private fun NavBarIcon(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.10f else 1.0f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "nav_icon_bounce"
+    )
     Box(
         modifier = Modifier
             .size(NavBarHeight.icon)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(CapsuleShape)
             .clickable(
                 interactionSource = null,

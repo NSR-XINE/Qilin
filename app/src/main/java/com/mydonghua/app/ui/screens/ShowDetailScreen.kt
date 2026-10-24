@@ -39,6 +39,7 @@ import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.JustSansFamily
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 
@@ -166,7 +167,7 @@ fun ShowDetailScreen(
                         verticalAlignment = Alignment.Bottom
                     ) {
                         // Floating Poster Thumbnail Card
-                        val thumbnailShape = RoundedCornerShape(14.dp)
+                        val thumbnailShape = RoundedCornerShape(CornerRadius.md)
                         Card(
                             shape = thumbnailShape,
                             border = androidx.compose.foundation.BorderStroke(
@@ -349,7 +350,9 @@ fun ShowDetailScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                                 Surface(
                                     onClick = { viewModel.decrementEpisode(show) },
-                                    modifier = Modifier.size(36.dp),
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .colorOSPressBounce(pressedScale = 0.90f),
                                     shape = RoundedCornerShape(CornerRadius.sm),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
@@ -360,7 +363,9 @@ fun ShowDetailScreen(
                                 }
                                 Surface(
                                     onClick = { viewModel.incrementEpisode(show) },
-                                    modifier = Modifier.size(36.dp),
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .colorOSPressBounce(pressedScale = 0.90f),
                                     shape = RoundedCornerShape(CornerRadius.sm),
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
                                 ) {
@@ -425,12 +430,13 @@ fun ShowDetailScreen(
                         )
                         onWatchClick(targetUrl)
                     },
-                    shape = RoundedCornerShape(CornerRadius.lg),
+                    shape = RoundedCornerShape(CornerRadius.card),
                     color = Color.Transparent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp)
-                        .clip(RoundedCornerShape(CornerRadius.lg))
+                        .colorOSPressBounce(pressedScale = 0.97f)
+                        .clip(RoundedCornerShape(CornerRadius.card))
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
@@ -442,7 +448,7 @@ fun ShowDetailScreen(
                         .border(
                             width = 1.dp,
                             color = Color.White.copy(alpha = 0.25f),
-                            shape = RoundedCornerShape(CornerRadius.lg)
+                            shape = RoundedCornerShape(CornerRadius.card)
                         )
                 ) {
                     Row(
@@ -569,12 +575,12 @@ fun ShowDetailScreen(
 @Composable
 private fun DetailCountdownBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(CornerRadius.md)
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = Modifier
-            .width(48.dp)
-            .height(42.dp)
+            .width(52.dp)
+            .height(44.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(

@@ -44,6 +44,7 @@ import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.Spacing
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
@@ -298,13 +299,13 @@ fun GlassSection(
 
     val interactiveModifier = when {
         onClick != null && onLongClick != null -> {
-            liquidGlassModifier.clip(shape).combinedClickable(
+            liquidGlassModifier.clip(shape).colorOSPressBounce(pressedScale = 0.98f).combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
         }
         onClick != null -> {
-            liquidGlassModifier.clip(shape).clickable(onClick = onClick)
+            liquidGlassModifier.clip(shape).colorOSPressBounce(pressedScale = 0.98f).clickable(onClick = onClick)
         }
         else -> liquidGlassModifier
     }
@@ -341,23 +342,9 @@ fun MenuGlassPanel(
     }
 
     val accentColor = MaterialTheme.colorScheme.primary
-    val borderColor = if (isDark) {
-        Color.White.copy(alpha = 0.16f)
-    } else {
-        Color.Black.copy(alpha = 0.08f)
-    }
-    val glassBorderBrush = Brush.verticalGradient(
-        colors = listOf(
-            if (isLightMode) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.35f),
-            accentColor.copy(alpha = if (isLightMode) 0.35f else 0.25f),
-            borderColor.copy(alpha = 0.15f)
-        )
-    )
 
     Box(
-        modifier = modifier
-            .clip(shape)
-            .border(0.8.dp, glassBorderBrush, shape)
+        modifier = modifier.clip(shape)
     ) {
         if (backdrop != null) {
             Box(
@@ -375,11 +362,21 @@ fun MenuGlassPanel(
                             )
                             blur(12f.dp.toPx())
                         },
-                        highlight = { Highlight.Default.copy(alpha = if (isLightMode) 0.60f else 0.35f) },
-                        shadow = { Shadow(radius = 6f.dp, alpha = 0.20f) },
-                        innerShadow = { InnerShadow(radius = 8f.dp, alpha = 0.15f) },
+                        shadow = { Shadow(radius = 8f.dp, alpha = if (isLightMode) 0.12f else 0.25f) },
                         onDrawSurface = {
                             drawRect(color = baseColor)
+                            // ColorOS 17 Aurora Top Specular Light Ingress
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = if (isLightMode) 0.15f else 0.08f),
+                                        accentColor.copy(alpha = if (isLightMode) 0.05f else 0.03f),
+                                        Color.Transparent
+                                    ),
+                                    startY = 0f,
+                                    endY = 160f
+                                )
+                            )
                         }
                     )
             )

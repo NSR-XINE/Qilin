@@ -1,8 +1,11 @@
 package com.mydonghua.app.ui.common
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -33,8 +37,10 @@ import coil.request.ImageRequest
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 
 @Composable
@@ -99,10 +105,22 @@ fun ShowCard(
         )
     }
 
+    val cardInteractionSource = remember { MutableInteractionSource() }
+    val isCardPressed by cardInteractionSource.collectIsPressedAsState()
+    val cardScale by animateFloatAsState(
+        targetValue = if (isCardPressed) 0.965f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "showCardScale"
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+            .graphicsLayer {
+                scaleX = cardScale
+                scaleY = cardScale
+            }
             .hazeChild(state = hazeState, shape = RoundedCornerShape(CornerRadius.card))
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
@@ -113,7 +131,11 @@ fun ShowCard(
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(CornerRadius.card)
             )
-            .clickable { onCardClick(show) },
+            .clickable(
+                interactionSource = cardInteractionSource,
+                indication = null,
+                onClick = { onCardClick(show) }
+            ),
         shape = RoundedCornerShape(CornerRadius.card),
         colors = transparentCardColors
     ) {
@@ -254,7 +276,7 @@ fun ShowCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                     IconButton(
                         onClick = { onFavoriteToggle(show) },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp).colorOSPressBounce(pressedScale = 0.88f)
                     ) {
                         Icon(
                             imageVector = if (show.isFavorite == 1) Icons.Outlined.Favorite
@@ -268,7 +290,7 @@ fun ShowCard(
 
                     IconButton(
                         onClick = { onNotifyToggle(show) },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp).colorOSPressBounce(pressedScale = 0.88f)
                     ) {
                         Icon(
                             imageVector = if (show.alarmRequestCode != null) Icons.Outlined.Notifications
@@ -283,7 +305,7 @@ fun ShowCard(
                     if (!show.watchUrl.isNullOrEmpty()) {
                         IconButton(
                             onClick = { onWatchClick(show.watchUrl ?: "") },
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp).colorOSPressBounce(pressedScale = 0.88f)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.PlayCircle,
@@ -296,7 +318,7 @@ fun ShowCard(
 
                     IconButton(
                         onClick = { onEditClick(show) },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp).colorOSPressBounce(pressedScale = 0.88f)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
@@ -308,7 +330,7 @@ fun ShowCard(
 
                     IconButton(
                         onClick = { showDeleteDialog = true },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp).colorOSPressBounce(pressedScale = 0.88f)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,

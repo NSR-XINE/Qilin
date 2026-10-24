@@ -40,6 +40,7 @@ import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -158,7 +159,7 @@ fun HeroBanner(
         )
     }
 
-    val bannerShape = RoundedCornerShape(CornerRadius.card)
+    val bannerShape = RoundedCornerShape(CornerRadius.banner)
     Card(
         shape = bannerShape,
         border = androidx.compose.foundation.BorderStroke(
@@ -170,6 +171,7 @@ fun HeroBanner(
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(250.dp)
+            .colorOSPressBounce(pressedScale = 0.98f)
             .clickable { onBannerClick() }
     ) {
         Box(
@@ -230,32 +232,32 @@ fun HeroBanner(
 @Composable
 private fun BannerTimeBox(value: Long, label: String) {
     val hazeState = LocalHazeState.current
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(CornerRadius.md)
     val bgBrush = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color.Black.copy(alpha = 0.38f),
-                Color.Black.copy(alpha = 0.22f)
+                Color.Black.copy(alpha = 0.45f),
+                Color.Black.copy(alpha = 0.25f)
             )
         )
     }
     val borderBrush = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.45f),
-                Color.White.copy(alpha = 0.12f)
+                Color.White.copy(alpha = 0.50f),
+                Color.White.copy(alpha = 0.15f)
             )
         )
     }
     Box(
         modifier = Modifier
-            .width(52.dp)
-            .height(44.dp)
+            .width(54.dp)
+            .height(46.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(brush = bgBrush)
-            .border(width = 0.75.dp, brush = borderBrush, shape = shape)
-            .padding(vertical = 2.dp),
+            .border(width = 0.85.dp, brush = borderBrush, shape = shape)
+            .padding(vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -264,15 +266,15 @@ private fun BannerTimeBox(value: Long, label: String) {
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 15.5.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = label,
-                fontSize = 9.5.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.White.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center
             )
@@ -282,13 +284,33 @@ private fun BannerTimeBox(value: Long, label: String) {
 
 @Composable
 fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onBackground,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xxl, bottom = Spacing.md)
-    )
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(16.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary
+                        )
+                    )
+                )
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-0.2).sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
 }
 
 @Composable
@@ -314,8 +336,8 @@ fun ContinueWatchingRow(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 52.dp, height = 72.dp)
-                            .clip(RoundedCornerShape(CornerRadius.sm))
+                            .size(width = 54.dp, height = 74.dp)
+                            .clip(RoundedCornerShape(CornerRadius.md))
                     ) {
                         DonghuaPoster(
                             posterUrl = show.poster,
@@ -348,7 +370,7 @@ fun ContinueWatchingRow(
                                 progress = { (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(3.dp)
+                                    .height(4.dp)
                                     .clip(RoundedCornerShape(CornerRadius.xs)),
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.surfaceVariant
@@ -389,8 +411,8 @@ fun RecentlyUpdatedRow(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(width = 52.dp, height = 70.dp)
-                                .clip(RoundedCornerShape(CornerRadius.sm))
+                                .size(width = 54.dp, height = 72.dp)
+                                .clip(RoundedCornerShape(CornerRadius.md))
                         ) {
                             DonghuaPoster(
                                 posterUrl = show.poster,

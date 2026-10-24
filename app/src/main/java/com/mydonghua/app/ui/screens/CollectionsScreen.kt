@@ -23,12 +23,14 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 
@@ -157,86 +159,82 @@ fun CollectionsScreen(
                 contentPadding = PaddingValues(top = Spacing.md, bottom = Spacing.sm)
             ) {
                 items(sortedCollections, key = { it.key }) { (collectionName, showsList) ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(CornerRadius.sm))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .border(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(CornerRadius.sm)
-                            )
-                            .padding(Spacing.md),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    GlassSection(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                            ) {
-                                Text("\u25B8", fontSize = 16.sp)
-                                Text(
-                                    text = collectionName,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(CornerRadius.sm))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                    .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-                            ) {
-                                Text(
-                                    text = "${showsList.size} shows",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                         ) {
-                            showsList.forEach { show ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(CornerRadius.sm))
-                                        .background(MaterialTheme.colorScheme.surface)
-                                        .border(
-                                            width = 0.5.dp,
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            shape = RoundedCornerShape(CornerRadius.sm)
-                                        )
-                                        .clickable { onShowClick(show.id) }
-                                        .padding(Spacing.sm),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(32.dp)
+                                            .width(4.dp)
+                                            .height(14.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(MaterialTheme.colorScheme.primary)
+                                    )
+                                    Text(
+                                        text = collectionName,
+                                        fontSize = 14.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(CornerRadius.pill))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                        .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                                ) {
+                                    Text(
+                                        text = "${showsList.size} shows",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            ) {
+                                showsList.forEach { show ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
                                             .clip(RoundedCornerShape(CornerRadius.sm))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                                        contentAlignment = Alignment.Center
+                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.45f))
+                                            .colorOSPressBounce(pressedScale = 0.98f)
+                                            .clickable { onShowClick(show.id) }
+                                            .padding(Spacing.sm),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                                     ) {
-                                        com.mydonghua.app.ui.common.DonghuaPoster(
-                                            posterUrl = show.poster,
-                                            title = show.title,
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop,
-                                            fontSize = 11.sp
-                                        )
-                                    }
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(RoundedCornerShape(CornerRadius.sm))
+                                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            com.mydonghua.app.ui.common.DonghuaPoster(
+                                                posterUrl = show.poster,
+                                                title = show.title,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop,
+                                                fontSize = 11.sp
+                                            )
+                                        }
 
                                     Text(
                                         text = show.title,
@@ -273,4 +271,5 @@ fun CollectionsScreen(
             }
         }
     }
+}
 }

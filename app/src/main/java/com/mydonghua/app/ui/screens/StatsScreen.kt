@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import com.mydonghua.app.ui.GlassSection
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -118,7 +120,7 @@ fun StatsScreen(
                     )
                 }
             } else {
-                Text("Core Track Statistics", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                StatsSectionHeader("Core Track Statistics")
                 StatsGrid(
                     items = listOf(
                         StatItem("Total Tracked", stats.total.toString()),
@@ -132,7 +134,7 @@ fun StatsScreen(
                     )
                 )
 
-                Text("Completion & Activity Metrics", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                StatsSectionHeader("Completion & Activity Metrics")
                 StatsGrid(
                     items = listOf(
                         StatItem("Completion Rate", "${stats.completionRate}%"),
@@ -146,7 +148,7 @@ fun StatsScreen(
                 )
 
                     if (stats.topGenres.isNotEmpty()) {
-                        Text("Top Genres", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        StatsSectionHeader("Top Genres")
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -155,13 +157,13 @@ fun StatsScreen(
                             stats.topGenres.forEach { (genre, count) ->
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .clip(RoundedCornerShape(CornerRadius.pill))
                                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                                         .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                                 ) {
                                     Text(
                                         text = "$genre ($count)",
-                                        fontSize = 11.sp,
+                                        fontSize = 11.5.sp,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold
                                     )
@@ -171,7 +173,7 @@ fun StatsScreen(
                     }
 
                     if (stats.topStudios.isNotEmpty()) {
-                        Text("Top Studios", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        StatsSectionHeader("Top Studios")
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -180,13 +182,13 @@ fun StatsScreen(
                             stats.topStudios.forEach { (studio, count) ->
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(CornerRadius.sm))
+                                        .clip(RoundedCornerShape(CornerRadius.pill))
                                         .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
                                         .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                                 ) {
                                     Text(
                                         text = "$studio ($count)",
-                                        fontSize = 11.sp,
+                                        fontSize = 11.5.sp,
                                         color = MaterialTheme.colorScheme.secondary,
                                         fontWeight = FontWeight.SemiBold
                                     )
@@ -195,7 +197,7 @@ fun StatsScreen(
                         }
                     }
 
-                    Text("This Week's Remaining Releases", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    StatsSectionHeader("This Week's Remaining Releases")
                     if (thisWeekShows.isEmpty()) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -217,54 +219,50 @@ fun StatsScreen(
                             )
                         }
                     } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(CornerRadius.sm))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(
-                                    width = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(CornerRadius.sm)
-                                )
-                                .padding(Spacing.sm),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        GlassSection(
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            thisWeekShows.forEach { show ->
-                                val isToday = show.releaseDay == todayName
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(
-                                            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                            else Color.Transparent,
-                                            RoundedCornerShape(CornerRadius.xs)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                            ) {
+                                thisWeekShows.forEach { show ->
+                                    val isToday = show.releaseDay == todayName
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(CornerRadius.sm))
+                                            .background(
+                                                if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                                else MaterialTheme.colorScheme.surface.copy(alpha = 0.40f)
+                                            )
+                                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = show.releaseDay?.substring(0, 3) ?: "Sun",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.width(48.dp)
                                         )
-                                        .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = show.releaseDay?.substring(0, 3) ?: "Sun",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.width(48.dp)
-                                    )
-                                    Text(
-                                        text = show.title,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = show.releaseTime ?: "10:00",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                        Text(
+                                            text = show.title,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f),
+                                            maxLines = 1
+                                        )
+                                        Spacer(modifier = Modifier.width(Spacing.sm))
+                                        Text(
+                                            text = show.releaseTime ?: "10:00",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -273,6 +271,37 @@ fun StatsScreen(
                     Spacer(modifier = Modifier.height(Spacing.xxxl))
             }
         }
+    }
+}
+
+@Composable
+private fun StatsSectionHeader(title: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = Spacing.md, bottom = Spacing.xs)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(14.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary
+                        )
+                    )
+                )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-0.1).sp,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
@@ -302,12 +331,17 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                             .weight(1f)
                             .fillMaxHeight()
                             .defaultMinSize(minHeight = 64.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                            .clip(RoundedCornerShape(CornerRadius.card))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.70f))
                             .border(
-                                width = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f),
-                                shape = RoundedCornerShape(16.dp)
+                                width = 0.75.dp,
+                                brush = Brush.verticalGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.22f),
+                                        Color.White.copy(alpha = 0.05f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(CornerRadius.card)
                             )
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm + 2.dp),
                         contentAlignment = Alignment.CenterStart

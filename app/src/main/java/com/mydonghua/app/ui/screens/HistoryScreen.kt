@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R
 import java.text.SimpleDateFormat
@@ -153,13 +155,25 @@ fun HistoryScreen(
             ) {
                 groupedHistory.forEach { (dateHeader, items) ->
                     item {
-                        Text(
-                            text = dateHeader,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(top = Spacing.sm)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = Spacing.md, bottom = Spacing.xs)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .height(14.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(MaterialTheme.colorScheme.primary)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = dateHeader,
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
 
                     itemsIndexed(items, key = { index, item -> "${item.showId}_${item.watchedAt}_$index" }) { _, item ->
@@ -167,22 +181,28 @@ fun HistoryScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(CornerRadius.sm))
-                                .background(MaterialTheme.colorScheme.surface)
+                                .clip(RoundedCornerShape(CornerRadius.card))
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.60f))
                                 .border(
                                     width = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(CornerRadius.sm)
+                                    brush = Brush.verticalGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = 0.18f),
+                                            Color.White.copy(alpha = 0.04f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(CornerRadius.card)
                                 )
+                                .colorOSPressBounce(pressedScale = 0.98f)
                                 .clickable(onClick = onItemClick)
-                                .padding(Spacing.sm),
+                                .padding(Spacing.sm + 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(RoundedCornerShape(CornerRadius.sm))
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(CornerRadius.md))
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {

@@ -9,8 +9,15 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -25,6 +32,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -87,10 +95,30 @@ fun SettingsScreen(
         storageGranted = granted
     }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "settingsPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1300, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1300, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            // OxygenOS 17 Liquid Glass Top Header
+            // ColorOS 17 Liquid Glass Top Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,7 +135,7 @@ fun SettingsScreen(
                     val isBackPressed by backInteraction.collectIsPressedAsState()
                     val backScale by animateFloatAsState(
                         targetValue = if (isBackPressed) 0.88f else 1f,
-                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                        animationSpec = ColorOSMotion.TouchBounceSpring,
                         label = "backScale"
                     )
 
@@ -159,10 +187,10 @@ fun SettingsScreen(
                     }
                 }
 
-                // OxygenOS Fluid Engine Tag
+                // ColorOS 17 Aurora Engine Tag
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(
@@ -171,14 +199,27 @@ fun SettingsScreen(
                         )
                         .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE50914))
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .graphicsLayer {
+                                    scaleX = pulseScale
+                                    scaleY = pulseScale
+                                    alpha = pulseAlpha * 0.45f
+                                }
+                                .clip(CircleShape)
+                                .background(Color(0xFFE50914))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFE50914))
+                        )
+                    }
                     Text(
-                        text = "OXYGEN 17",
+                        text = "COLOROS 17",
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp,
@@ -225,8 +266,8 @@ fun SettingsScreen(
                         val interactionSource = remember { MutableInteractionSource() }
                         val isPressed by interactionSource.collectIsPressedAsState()
                         val cardScale by animateFloatAsState(
-                            targetValue = if (isPressed) 0.95f else 1f,
-                            animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                            targetValue = if (isPressed) 0.94f else 1f,
+                            animationSpec = ColorOSMotion.TouchBounceSpring,
                             label = "themeScale"
                         )
 
@@ -236,10 +277,12 @@ fun SettingsScreen(
                             if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
                         }
 
+                        // ColorOS 17 Prismatic Aurora Specular Border
                         val specularBorder = if (isSelected) {
-                            Brush.verticalGradient(
+                            Brush.linearGradient(
                                 listOf(
                                     MaterialTheme.colorScheme.primary,
+                                    Color(0xFF26C6DA),
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
                                 )
                             )
@@ -374,6 +417,14 @@ fun SettingsScreen(
                 ) {
                     // Material You Dynamic Card
                     val isDynamicSelected = uiState.accentColor.equals("dynamic", ignoreCase = true)
+                    val dynamicInteraction = remember { MutableInteractionSource() }
+                    val isDynamicPressed by dynamicInteraction.collectIsPressedAsState()
+                    val dynamicScale by animateFloatAsState(
+                        targetValue = if (isDynamicPressed) 0.965f else 1f,
+                        animationSpec = ColorOSMotion.TouchBounceSpring,
+                        label = "dynamicScale"
+                    )
+
                     val dynamicCardBg = if (isDynamicSelected) {
                         MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
                     } else {
@@ -389,8 +440,16 @@ fun SettingsScreen(
                         color = dynamicCardBg,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .graphicsLayer {
+                                scaleX = dynamicScale
+                                scaleY = dynamicScale
+                            }
                             .clip(RoundedCornerShape(18.dp))
-                            .clickable { viewModel.setAccentColor("dynamic") }
+                            .clickable(
+                                interactionSource = dynamicInteraction,
+                                indication = null,
+                                onClick = { viewModel.setAccentColor("dynamic") }
+                            )
                     ) {
                         Row(
                             modifier = Modifier
@@ -492,68 +551,13 @@ fun SettingsScreen(
                         )
                         accentPresets.forEach { (accentKey, accentName, colorPair) ->
                             val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .clickable { viewModel.setAccentColor(accentKey) }
-                                    .padding(vertical = 4.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            Brush.linearGradient(
-                                                colors = listOf(colorPair.first, colorPair.second)
-                                            )
-                                        )
-                                        .border(
-                                            width = if (isSelected) 2.5.dp else 1.dp,
-                                            color = if (isSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.12f)),
-                                            shape = CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    // 3D Glass Specular Reflection
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape)
-                                            .background(
-                                                Brush.radialGradient(
-                                                    colors = listOf(Color.White.copy(alpha = 0.40f), Color.Transparent),
-                                                    center = androidx.compose.ui.geometry.Offset(14f, 14f),
-                                                    radius = 28f
-                                                )
-                                            )
-                                    )
-
-                                    if (isSelected) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(20.dp)
-                                                .clip(CircleShape)
-                                                .background(Color.Black.copy(alpha = 0.50f)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Check,
-                                                contentDescription = "Selected",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(13.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                                Text(
-                                    text = accentName,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                            OxygenDropletItem(
+                                accentName = accentName,
+                                colorPair = colorPair,
+                                isSelected = isSelected,
+                                isDark = isDark,
+                                onClick = { viewModel.setAccentColor(accentKey) }
+                            )
                         }
                     }
                 }
@@ -663,77 +667,16 @@ fun SettingsScreen(
                                     else -> listOf(Color(0xFF43A047), Color(0xFF66BB6A))
                                 }
 
-                                Surface(
-                                    onClick = { viewModel.setDefaultStreamProvider(key) },
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.40f)
-                                    else (if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f)),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        width = if (isSelected) 1.5.dp else 0.8.dp,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f))
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(38.dp)
-                                                    .clip(RoundedCornerShape(11.dp))
-                                                    .background(Brush.linearGradient(providerGradient)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = providerIcon,
-                                                    contentDescription = null,
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(19.dp)
-                                                )
-                                            }
-
-                                            Column(verticalArrangement = Arrangement.Center) {
-                                                Text(
-                                                    text = title,
-                                                    fontSize = 14.sp,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                                )
-                                                Text(
-                                                    text = domain,
-                                                    fontSize = 11.5.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-
-                                        if (isSelected) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(20.dp)
-                                                    .clip(CircleShape)
-                                                    .background(MaterialTheme.colorScheme.primary),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Check,
-                                                    contentDescription = "Selected",
-                                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                                OxygenProviderItem(
+                                    key = key,
+                                    title = title,
+                                    domain = domain,
+                                    icon = providerIcon,
+                                    gradient = providerGradient,
+                                    isSelected = isSelected,
+                                    isDark = isDark,
+                                    onClick = { viewModel.setDefaultStreamProvider(key) }
+                                )
                             }
                         }
                     }
@@ -804,6 +747,22 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        val exportInteraction = remember { MutableInteractionSource() }
+                        val isExportPressed by exportInteraction.collectIsPressedAsState()
+                        val exportScale by animateFloatAsState(
+                            targetValue = if (isExportPressed) 0.95f else 1f,
+                            animationSpec = ColorOSMotion.TouchBounceSpring,
+                            label = "exportScale"
+                        )
+
+                        val importInteraction = remember { MutableInteractionSource() }
+                        val isImportPressed by importInteraction.collectIsPressedAsState()
+                        val importScale by animateFloatAsState(
+                            targetValue = if (isImportPressed) 0.95f else 1f,
+                            animationSpec = ColorOSMotion.TouchBounceSpring,
+                            label = "importScale"
+                        )
+
                         val buttonShape = RoundedCornerShape(14.dp)
                         Button(
                             onClick = {
@@ -822,9 +781,14 @@ fun SettingsScreen(
                                     }
                                 }
                             },
+                            interactionSource = exportInteraction,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(46.dp),
+                                .height(46.dp)
+                                .graphicsLayer {
+                                    scaleX = exportScale
+                                    scaleY = exportScale
+                                },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             ),
@@ -843,9 +807,14 @@ fun SettingsScreen(
                             onClick = {
                                 filePickerLauncher.launch(arrayOf("application/json", "*/*"))
                             },
+                            interactionSource = importInteraction,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(46.dp),
+                                .height(46.dp)
+                                .graphicsLayer {
+                                    scaleX = importScale
+                                    scaleY = importScale
+                                },
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
@@ -867,7 +836,7 @@ fun SettingsScreen(
                 }
             }
 
-            // 6. ABOUT MY DONGHUA (OXYGENOS SYSTEM CARD)
+            // 6. ABOUT MY DONGHUA (COLOROS & OXYGENOS SYSTEM CARD)
             OxygenSectionHeader(
                 title = "ABOUT SYSTEM & APP",
                 subtitle = "Build engine, software version and repository"
@@ -910,7 +879,7 @@ fun SettingsScreen(
                                     color = Color(0xFFE50914).copy(alpha = if (isDark) 0.20f else 0.12f)
                                 ) {
                                     Text(
-                                        text = "OxygenOS 17",
+                                        text = "ColorOS 17",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isDark) Color(0xFFFF5252) else Color(0xFFC60000),
@@ -943,8 +912,8 @@ fun SettingsScreen(
                     )
 
                     OxygenSettingsInfoItem(
-                        title = "UI Framework",
-                        value = "Jetpack Compose + Haze 0.7.3"
+                        title = "Motion & UI Engine",
+                        value = "ColorOS 17 Aurora + Jetpack Compose"
                     )
 
                     HorizontalDivider(
@@ -973,7 +942,7 @@ fun SettingsScreen(
 }
 
 // ---------------------------------------------------------------------------
-// OxygenOS 17 Liquid Glass Helper UI Components
+// ColorOS 17 & OxygenOS 17 Liquid Glass Helper UI Components
 // ---------------------------------------------------------------------------
 
 @Composable
@@ -1029,10 +998,13 @@ private fun OxygenGlassGroup(
         Color.White.copy(alpha = 0.75f)
     }
 
-    val specularBorder = Brush.verticalGradient(
+    // ColorOS 17 Prismatic Aurora Specular Border
+    val specularBorder = Brush.linearGradient(
         colors = listOf(
-            if (isDark) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.90f),
-            if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.08f)
+            if (isDark) Color.White.copy(alpha = 0.26f) else Color.White.copy(alpha = 0.95f),
+            MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.18f else 0.22f),
+            Color(0xFF26C6DA).copy(alpha = if (isDark) 0.10f else 0.12f),
+            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.06f)
         )
     )
 
@@ -1040,7 +1012,7 @@ private fun OxygenGlassGroup(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
         color = cardBg,
-        border = androidx.compose.foundation.BorderStroke(0.8.dp, specularBorder)
+        border = androidx.compose.foundation.BorderStroke(0.85.dp, specularBorder)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -1059,10 +1031,26 @@ private fun OxygenTogglePreferenceItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val itemScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.985f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "toggleItemScale"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .graphicsLayer {
+                scaleX = itemScale
+                scaleY = itemScale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = { onCheckedChange(!checked) }
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -1117,7 +1105,7 @@ private fun OxygenTogglePreferenceItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // OxygenOS Liquid Switch
+        // ColorOS 17 Liquid Switch
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -1137,10 +1125,31 @@ private fun OxygenSettingsActionItem(
     subtitle: String? = null,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val itemScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "actionItemScale"
+    )
+    val arrowOffset by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isPressed) 4.dp else 0.dp,
+        animationSpec = ColorOSMotion.SnappyDp,
+        label = "arrowOffset"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .graphicsLayer {
+                scaleX = itemScale
+                scaleY = itemScale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -1163,6 +1172,7 @@ private fun OxygenSettingsActionItem(
         }
         Box(
             modifier = Modifier
+                .offset(x = arrowOffset)
                 .size(28.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)),
@@ -1202,6 +1212,207 @@ private fun OxygenSettingsInfoItem(
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
         )
+    }
+}
+
+@Composable
+private fun OxygenDropletItem(
+    accentName: String,
+    colorPair: Pair<Color, Color>,
+    isSelected: Boolean,
+    isDark: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.86f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "dropletScale"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(vertical = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(colorPair.first, colorPair.second)
+                    )
+                )
+                .border(
+                    width = if (isSelected) 2.5.dp else 1.dp,
+                    color = if (isSelected) Color.White else (if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.12f)),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            // 3D Glass Specular Reflection
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(Color.White.copy(alpha = 0.40f), Color.Transparent),
+                            center = Offset(14f, 14f),
+                            radius = 28f
+                        )
+                    )
+            )
+
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.50f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "Selected",
+                        tint = Color.White,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
+        }
+        Text(
+            text = accentName,
+            fontSize = 11.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun OxygenProviderItem(
+    key: String,
+    title: String,
+    domain: String,
+    icon: ImageVector,
+    gradient: List<Color>,
+    isSelected: Boolean,
+    isDark: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.965f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "providerScale"
+    )
+
+    // ColorOS 17 Aurora Rim Border
+    val specularBorder = if (isSelected) {
+        Brush.linearGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primary,
+                Color(0xFF26C6DA),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
+            )
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f),
+                if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f)
+            )
+        )
+    }
+
+    Surface(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(18.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.40f)
+        else (if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f)),
+        border = androidx.compose.foundation.BorderStroke(if (isSelected) 1.5.dp else 0.8.dp, specularBorder),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Brush.linearGradient(gradient)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = title,
+                        fontSize = 14.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = domain,
+                        fontSize = 11.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "Selected",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -11,15 +11,23 @@ import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.TransformOrigin
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -249,12 +257,33 @@ class MainActivity : ComponentActivity() {
                                         targetState.destination.route
                                     )
                                     when {
-                                        dir > 0 -> slideInHorizontally(initialOffsetX = { it }) +
-                                            fadeIn(animationSpec = tween(240))
-                                        dir < 0 -> slideInHorizontally(initialOffsetX = { -it }) +
-                                            fadeIn(animationSpec = tween(240))
-                                        else -> slideInHorizontally(initialOffsetX = { it }) +
-                                            fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                                        dir > 0 -> slideInHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            initialOffsetX = { it }
+                                        ) + scaleIn(
+                                            initialScale = 0.94f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeIn(
+                                            animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
+                                        )
+                                        dir < 0 -> slideInHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            initialOffsetX = { -it }
+                                        ) + scaleIn(
+                                            initialScale = 0.94f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeIn(
+                                            animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
+                                        )
+                                        else -> slideInHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            initialOffsetX = { it }
+                                        ) + scaleIn(
+                                            initialScale = 0.95f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeIn(
+                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                        )
                                     }
                                 },
                                 exitTransition = {
@@ -263,19 +292,53 @@ class MainActivity : ComponentActivity() {
                                         targetState.destination.route
                                     )
                                     when {
-                                        dir > 0 -> slideOutHorizontally(targetOffsetX = { -it }) +
-                                            fadeOut(animationSpec = tween(200))
-                                        dir < 0 -> slideOutHorizontally(targetOffsetX = { it }) +
-                                            fadeOut(animationSpec = tween(200))
-                                        else -> fadeOut(animationSpec = tween(150, easing = FastOutSlowInEasing))
+                                        dir > 0 -> slideOutHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            targetOffsetX = { -it }
+                                        ) + scaleOut(
+                                            targetScale = 0.96f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeOut(
+                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                        )
+                                        dir < 0 -> slideOutHorizontally(
+                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            targetOffsetX = { it }
+                                        ) + scaleOut(
+                                            targetScale = 0.96f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        ) + fadeOut(
+                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                        )
+                                        else -> fadeOut(
+                                            animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                        ) + scaleOut(
+                                            targetScale = 0.96f,
+                                            animationSpec = ColorOSMotion.FluidSpring
+                                        )
                                     }
                                 },
                                 popEnterTransition = {
-                                    slideInHorizontally(initialOffsetX = { -it / 3 }) +
-                                        fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                                    slideInHorizontally(
+                                        animationSpec = ColorOSMotion.FluidIntOffset,
+                                        initialOffsetX = { -it / 3 }
+                                    ) + scaleIn(
+                                        initialScale = 0.96f,
+                                        animationSpec = ColorOSMotion.FluidSpring
+                                    ) + fadeIn(
+                                        animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                    )
                                 },
                                 popExitTransition = {
-                                    fadeOut(animationSpec = tween(150, easing = FastOutSlowInEasing))
+                                    slideOutHorizontally(
+                                        animationSpec = ColorOSMotion.FluidIntOffset,
+                                        targetOffsetX = { it / 3 }
+                                    ) + scaleOut(
+                                        targetScale = 0.96f,
+                                        animationSpec = ColorOSMotion.FluidSpring
+                                    ) + fadeOut(
+                                        animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                                    )
                                 }
                             ) {
                         composable("home") {
@@ -518,19 +581,48 @@ class MainActivity : ComponentActivity() {
                     },
                 enter = slideInVertically(
                     initialOffsetY = { -it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    )
-                ) + fadeIn(animationSpec = tween(280, easing = FastOutSlowInEasing)),
+                    animationSpec = ColorOSMotion.SheetIntOffset
+                ) + scaleIn(
+                    initialScale = 0.92f,
+                    transformOrigin = TransformOrigin(0.5f, 0f),
+                    animationSpec = ColorOSMotion.FluidSpring
+                ) + fadeIn(
+                    animationSpec = tween(ColorOSMotion.DurationNormal, easing = ColorOSMotion.FluidCubic)
+                ),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
-                    animationSpec = tween(500, easing = FastOutSlowInEasing)
-                ) + fadeOut(animationSpec = tween(260, easing = FastOutSlowInEasing))
+                    animationSpec = ColorOSMotion.SheetIntOffset
+                ) + scaleOut(
+                    targetScale = 0.95f,
+                    transformOrigin = TransformOrigin(0.5f, 0f),
+                    animationSpec = ColorOSMotion.FluidSpring
+                ) + fadeOut(
+                    animationSpec = tween(ColorOSMotion.DurationQuick, easing = ColorOSMotion.FluidCubic)
+                )
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
                 val isLightMode = settingsState.themeMode.lowercase() == "light"
+
+                val infinitePulse = rememberInfiniteTransition(label = "drawerPulse")
+                val pulseAlpha by infinitePulse.animateFloat(
+                    initialValue = 0.35f,
+                    targetValue = 1.0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1300, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseAlpha"
+                )
+                val pulseScale by infinitePulse.animateFloat(
+                    initialValue = 0.85f,
+                    targetValue = 1.35f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1300, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseScale"
+                )
 
                 MenuGlassPanel(
                     modifier = Modifier
@@ -554,7 +646,7 @@ class MainActivity : ComponentActivity() {
                             .padding(horizontal = 20.dp, vertical = 14.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // OxygenOS 17 Fluid Header
+                        // ColorOS 17 & OxygenOS 17 Fluid Header
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -563,23 +655,36 @@ class MainActivity : ComponentActivity() {
                             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(7.dp),
                                     modifier = Modifier
                                         .clip(CircleShape)
                                         .background(
                                             if (isLightMode) Color(0xFFE50914).copy(alpha = 0.10f)
-                                            else Color(0xFFE50914).copy(alpha = 0.18f)
+                                             else Color(0xFFE50914).copy(alpha = 0.18f)
                                         )
                                         .padding(horizontal = 10.dp, vertical = 3.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFFE50914))
-                                    )
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .graphicsLayer {
+                                                    scaleX = pulseScale
+                                                    scaleY = pulseScale
+                                                    alpha = pulseAlpha * 0.45f
+                                                }
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFE50914))
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFE50914))
+                                        )
+                                    }
                                     Text(
-                                        text = "OXYGEN FLUID ENGINE",
+                                        text = "COLOROS 17 • AURORA FLUID",
                                         fontSize = 9.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.2.sp,
@@ -599,12 +704,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-                            // Frosted Liquid Close Button
+                            // Frosted Liquid Close Button with ColorOS 17 elastic bounce
                             val closeInteraction = remember { MutableInteractionSource() }
                             val isClosePressed by closeInteraction.collectIsPressedAsState()
                             val closeScale by animateFloatAsState(
                                 targetValue = if (isClosePressed) 0.88f else 1f,
-                                animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+                                animationSpec = ColorOSMotion.TouchBounceSpring,
                                 label = "closeScale"
                             )
 
@@ -619,12 +724,6 @@ class MainActivity : ComponentActivity() {
                                     .background(
                                         if (isLightMode) Color.Black.copy(alpha = 0.06f)
                                         else Color.White.copy(alpha = 0.10f)
-                                    )
-                                    .border(
-                                        width = 0.75.dp,
-                                        color = if (isLightMode) Color.Black.copy(alpha = 0.10f)
-                                        else Color.White.copy(alpha = 0.20f),
-                                        shape = CircleShape
                                     )
                                     .clickable(
                                         interactionSource = closeInteraction,
@@ -791,7 +890,7 @@ class MainActivity : ComponentActivity() {
                                     )
                             )
                             Text(
-                                text = "My Donghua • OxygenOS 17 Liquid Glass Edition",
+                                text = "My Donghua • ColorOS 17 Liquid Glass Edition",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
@@ -907,31 +1006,36 @@ private fun OxygenDrawerTile(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "tileScale"
     )
 
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(22.dp)
     val cardBg = if (isSelected) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isLight) 0.35f else 0.25f)
     } else {
         if (isLight) Color.White.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.05f)
     }
 
-    val specularBorder = Brush.verticalGradient(
-        colors = if (isSelected) {
-            listOf(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.80f),
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+    // ColorOS 17 Prismatic Aurora Specular Border
+    val specularBorder = if (isSelected) {
+        Brush.linearGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primary,
+                Color(0xFF26C6DA),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
             )
-        } else {
-            listOf(
-                if (isLight) Color.White.copy(alpha = 0.80f) else Color.White.copy(alpha = 0.22f),
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                if (isLight) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.32f),
+                if (isLight) Color.White.copy(alpha = 0.40f) else Color(0xFF26C6DA).copy(alpha = 0.16f),
                 if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.05f)
             )
-        }
-    )
+        )
+    }
 
     Surface(
         onClick = onClick,
@@ -957,16 +1061,16 @@ private fun OxygenDrawerTile(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Squircle Icon Badge
+                // Continuous Curvature Squircle Icon Badge
                 Box(
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(13.dp))
                         .background(Brush.linearGradient(gradient))
                         .border(
                             0.5.dp,
                             Color.White.copy(alpha = 0.35f),
-                            RoundedCornerShape(12.dp)
+                            RoundedCornerShape(13.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -979,12 +1083,20 @@ private fun OxygenDrawerTile(
                 }
 
                 if (isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                    }
                 }
             }
 
@@ -1018,6 +1130,16 @@ private fun OxygenDrawerListItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val itemScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.975f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "itemScale"
+    )
+    val arrowOffset by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isPressed) 4.dp else 0.dp,
+        animationSpec = ColorOSMotion.SnappyDp,
+        label = "arrowOffset"
+    )
     val bgAlpha = if (isPressed) {
         if (isLight) 0.12f else 0.10f
     } else if (isSelected) {
@@ -1030,7 +1152,12 @@ private fun OxygenDrawerListItem(
         onClick = onClick,
         interactionSource = interactionSource,
         color = MaterialTheme.colorScheme.primary.copy(alpha = bgAlpha),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = itemScale
+                scaleY = itemScale
+            }
     ) {
         Row(
             modifier = Modifier
@@ -1042,12 +1169,12 @@ private fun OxygenDrawerListItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(13.dp))
                     .background(Brush.linearGradient(iconGradient))
                     .border(
                         0.5.dp,
                         Color.White.copy(alpha = 0.30f),
-                        RoundedCornerShape(12.dp)
+                        RoundedCornerShape(13.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -1075,6 +1202,7 @@ private fun OxygenDrawerListItem(
 
             Box(
                 modifier = Modifier
+                    .offset(x = arrowOffset)
                     .size(28.dp)
                     .clip(CircleShape)
                     .background(

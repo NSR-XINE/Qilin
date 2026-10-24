@@ -38,6 +38,7 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
 
@@ -56,8 +57,8 @@ fun GlassHeader(
     val menuInteraction = remember { MutableInteractionSource() }
     val isMenuPressed by menuInteraction.collectIsPressedAsState()
     val menuScale by animateFloatAsState(
-        targetValue = if (isMenuPressed) 1.12f else 1f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        targetValue = if (isMenuPressed) 0.90f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "menuScale"
     )
 
@@ -73,12 +74,12 @@ fun GlassHeader(
     val isHeaderPressed by headerInteraction.collectIsPressedAsState()
     val headerPressProgress by animateFloatAsState(
         targetValue = if (isHeaderPressed) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "headerPressProgress"
     )
     var headerTouchPosition by remember { mutableStateOf(Offset.Zero) }
 
-    val capsuleScale = lerp(1f, 1.05f, headerPressProgress)
+    val capsuleScale = lerp(1f, 0.985f, headerPressProgress)
 
     Box(
         modifier = modifier
