@@ -146,6 +146,7 @@ interface HighlightStyle {
             replaceWith = ReplaceWith("HighlightStyle.Default")
         )
         @Stable
+        @Suppress("DEPRECATION")
         val Dynamic: Dynamic = Dynamic()
 
         @Stable

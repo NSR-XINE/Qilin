@@ -34,6 +34,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -151,6 +154,7 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
         if (customView != null) {
             (window.decorView as ViewGroup).removeView(fullscreenContainer)
@@ -574,7 +578,7 @@ class WatchActivity : ComponentActivity() {
                         .padding(vertical = 14.dp, horizontal = 8.dp)
                 ) {
                     Icon(
-                        imageVector = if (vVal > 0f) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
+                        imageVector = if (vVal > 0f) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff,
                         contentDescription = "Volume",
                         tint = Color(0xFF00E5FF),
                         modifier = Modifier.size(20.dp)
@@ -677,7 +681,7 @@ class WatchActivity : ComponentActivity() {
                                     .colorOSPressBounce(pressedScale = 0.92f)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.ArrowBack,
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                                     contentDescription = "Back",
                                     tint = Color.White,
                                     modifier = Modifier.size(20.dp)
@@ -1141,7 +1145,7 @@ class WatchActivity : ComponentActivity() {
                                 .colorOSPressBounce(pressedScale = 0.90f)
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -1271,7 +1275,6 @@ class WatchActivity : ComponentActivity() {
                         settings.apply {
                             javaScriptEnabled = true
                             domStorageEnabled = true
-                            databaseEnabled = true
                             mediaPlaybackRequiresUserGesture = false
                             setSupportMultipleWindows(false)
                             javaScriptCanOpenWindowsAutomatically = false

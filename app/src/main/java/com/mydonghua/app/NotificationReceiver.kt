@@ -58,7 +58,7 @@ class NotificationReceiver : BroadcastReceiver() {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
 
-        val requestCode = if (alarmCode > 0) alarmCode else Math.abs(showId.hashCode())
+        val requestCode = if (alarmCode > 0) alarmCode else (showId.hashCode() and 0x7FFFFFFF)
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -87,7 +87,7 @@ class NotificationReceiver : BroadcastReceiver() {
             }
         }
 
-        val notifyId = Math.abs(dedupKey.hashCode()) and Integer.MAX_VALUE
+        val notifyId = dedupKey.hashCode() and 0x7FFFFFFF
         nm.notify(notifyId, builder.build())
 
         if (releaseDay != null && releaseTime != null && alarmCode > 0) {

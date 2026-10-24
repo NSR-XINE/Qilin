@@ -186,7 +186,7 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
     private val onlineSearchJob = searchQuery
         .onEach { q ->
             if (q.trim().length >= 2) {

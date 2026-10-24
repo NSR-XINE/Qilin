@@ -20,7 +20,7 @@ object AlarmScheduler {
 
     @JvmStatic
     fun schedule(context: Context, showId: String?, title: String?, releaseDay: String?, releaseTime: String?, alarmCode: Int, currentEp: Int) {
-        if (context == null || showId == null || showId.isEmpty()) return
+        if (showId.isNullOrEmpty()) return
         if (releaseDay == null || releaseTime == null) return
 
         val dedupKey = "$showId|$releaseDay|$releaseTime"

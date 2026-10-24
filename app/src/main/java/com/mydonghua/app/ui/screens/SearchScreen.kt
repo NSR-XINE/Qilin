@@ -17,6 +17,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -266,7 +268,7 @@ fun SearchScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (isSearchActive) Icons.Default.ArrowBack else Icons.Default.Search,
+                    imageVector = if (isSearchActive) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Search,
                     contentDescription = if (isSearchActive) "Back" else "Search",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(IconSize.xl)
@@ -689,7 +691,7 @@ private fun SuggestionRow(text: String, isRecent: Boolean, onClick: () -> Unit, 
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         Icon(
-            imageVector = if (isRecent) Icons.Rounded.History else Icons.Rounded.TrendingUp,
+            imageVector = if (isRecent) Icons.Rounded.History else Icons.AutoMirrored.Rounded.TrendingUp,
             contentDescription = null,
             modifier = Modifier.size(20.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)

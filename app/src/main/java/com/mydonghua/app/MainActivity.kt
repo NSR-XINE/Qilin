@@ -74,6 +74,7 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
@@ -97,6 +98,7 @@ class MainActivity : ComponentActivity() {
     private val searchViewModel: SearchViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
+    @OptIn(ExperimentalHazeMaterialsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

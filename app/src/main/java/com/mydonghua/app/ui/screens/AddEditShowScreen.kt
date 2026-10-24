@@ -7,7 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Image
@@ -90,7 +90,7 @@ fun AddEditShowScreen(
             rating = show.rating.toFloat()
             genres = show.genres ?: ""
             studio = show.studio ?: ""
-            releaseYear = show.releaseYear?.toString() ?: ""
+            releaseYear = if (show.releaseYear > 0) show.releaseYear.toString() else ""
             language = show.language ?: ""
             collectionId = show.collectionId ?: ""
         }
@@ -112,7 +112,7 @@ fun AddEditShowScreen(
                         modifier = Modifier.colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -218,7 +218,7 @@ fun AddEditShowScreen(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor(),
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                             shape = RoundedCornerShape(CornerRadius.md)
                         )
                         ExposedDropdownMenu(
@@ -255,7 +255,7 @@ fun AddEditShowScreen(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor(),
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                                 shape = RoundedCornerShape(CornerRadius.md)
                             )
                             ExposedDropdownMenu(

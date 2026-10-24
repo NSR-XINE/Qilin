@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -143,7 +144,7 @@ fun ShowDetailScreen(
                             .colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp)
@@ -663,7 +664,7 @@ fun ShowDetailScreen(
                 if (show.totalEp > 0) {
                     DetailGlassChip(label = "Episodes", value = "${show.totalEp}", modifier = Modifier.weight(0.9f))
                 }
-                if (show.releaseYear != null && show.releaseYear!! > 0) {
+                if (show.releaseYear > 0) {
                     DetailGlassChip(label = "Year", value = "${show.releaseYear}", modifier = Modifier.weight(0.9f))
                 }
             }
