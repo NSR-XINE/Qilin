@@ -1085,7 +1085,7 @@ class WatchActivity : ComponentActivity() {
         var webViewRef by remember { mutableStateOf<WebView?>(null) }
         var webProgress by remember { mutableIntStateOf(0) }
         var detectedVideoUrl by remember { mutableStateOf<String?>(null) }
-        var isAdBlockerActive by remember { mutableStateOf(AdBlocker.isEnabled(context)) }
+        val isAdBlockerActive by AdBlocker.enabledFlow(context).collectAsState(initial = AdBlocker.isEnabled(context))
 
         DisposableEffect(Unit) {
             onDispose {
@@ -1192,8 +1192,11 @@ class WatchActivity : ComponentActivity() {
                         IconButton(
                             onClick = {
                                 val nextState = !isAdBlockerActive
-                                isAdBlockerActive = nextState
                                 AdBlocker.setEnabled(context, nextState)
+                                webViewRef?.settings?.apply {
+                                    setSupportMultipleWindows(!nextState)
+                                    javaScriptCanOpenWindowsAutomatically = !nextState
+                                }
                                 Toast.makeText(
                                     context,
                                     if (nextState) "Ad Blocker: Enabled" else "Ad Blocker: Disabled",
@@ -1312,34 +1315,45 @@ class WatchActivity : ComponentActivity() {
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
 
+                        val adBlockActive = AdBlocker.isEnabled(ctx)
                         settings.apply {
                             javaScriptEnabled = true
                             domStorageEnabled = true
                             mediaPlaybackRequiresUserGesture = false
-                            setSupportMultipleWindows(false)
-                            javaScriptCanOpenWindowsAutomatically = false
+                            setSupportMultipleWindows(!adBlockActive)
+                            javaScriptCanOpenWindowsAutomatically = !adBlockActive
                             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         }
 
                         webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url?.toString() ?: return false
-                                if (isAdBlockerActive) {
+                                if (AdBlocker.isEnabled(context)) {
                                     if (AdBlocker.isDisallowedScheme(url)) {
                                         return true
                                     }
                                     if (AdBlocker.isAdUrl(url)) {
                                         return true
                                     }
+                                    return false
+                                } else {
+                                    if (url.startsWith("intent:") || url.startsWith("market:")) {
+                                        try {
+                                            context.startActivity(Intent.parseUri(url, Intent.URI_INTENT_SCHEME))
+                                            return true
+                                        } catch (ignored: Exception) {
+                                            return true
+                                        }
+                                    }
+                                    return false
                                 }
-                                return false
                             }
 
                             override fun shouldInterceptRequest(
                                 view: WebView?,
                                 request: WebResourceRequest?
                             ): WebResourceResponse? {
-                                if (isAdBlockerActive) {
+                                if (AdBlocker.isEnabled(context)) {
                                     val url = request?.url?.toString()
                                     if (AdBlocker.isAdUrl(url)) {
                                         return AdBlocker.createEmptyResponse()
@@ -1354,7 +1368,7 @@ class WatchActivity : ComponentActivity() {
                                     val clean = url.lowercase()
                                     if ((clean.contains(".m3u8") || clean.contains(".mp4") || clean.contains(".mkv")) &&
                                         !clean.contains("analytics") && !clean.contains("stats") &&
-                                        (!isAdBlockerActive || !AdBlocker.isAdUrl(clean))
+                                        (!AdBlocker.isEnabled(context) || !AdBlocker.isAdUrl(clean))
                                     ) {
                                         detectedVideoUrl = url
                                     }
@@ -1365,6 +1379,31 @@ class WatchActivity : ComponentActivity() {
                         webChromeClient = object : WebChromeClient() {
                             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                                 webProgress = newProgress
+                            }
+
+                            override fun onCreateWindow(
+                                view: WebView?,
+                                isDialog: Boolean,
+                                isUserGesture: Boolean,
+                                resultMsg: android.os.Message?
+                            ): Boolean {
+                                if (AdBlocker.isEnabled(context)) {
+                                    return false
+                                }
+                                val tempWebView = WebView(ctx)
+                                tempWebView.webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
+                                        val popupUrl = req?.url?.toString() ?: return false
+                                        try {
+                                            ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(popupUrl)))
+                                        } catch (ignored: Exception) {}
+                                        return true
+                                    }
+                                }
+                                val transport = resultMsg?.obj as? WebView.WebViewTransport
+                                transport?.webView = tempWebView
+                                resultMsg?.sendToTarget()
+                                return true
                             }
 
                             override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
@@ -1400,6 +1439,12 @@ class WatchActivity : ComponentActivity() {
                         }
 
                         loadUrl(watchUrl)
+                    }
+                },
+                update = { webView ->
+                    webView.settings.apply {
+                        setSupportMultipleWindows(!isAdBlockerActive)
+                        javaScriptCanOpenWindowsAutomatically = !isAdBlockerActive
                     }
                 },
                 modifier = Modifier.fillMaxSize()

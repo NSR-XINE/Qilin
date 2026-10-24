@@ -52,20 +52,13 @@ class SettingsViewModel @Inject constructor(
     private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
 
-    init {
-        viewModelScope.launch {
-            val enabled = settingsRepository.getBool(SettingsKeys.AD_BLOCKER_ENABLED, true)
-            AdBlocker.setEnabled(appContext, enabled)
-        }
-    }
-
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.getSettingFlow(SettingsKeys.THEME_MODE, "dark"),
         settingsRepository.getSettingFlow(SettingsKeys.ACCENT_COLOR, "default"),
         combine(
             settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true),
             settingsRepository.getSettingFlow(SettingsKeys.DEFAULT_STREAM_PROVIDER, "donghuastream"),
-            settingsRepository.getBoolFlow(SettingsKeys.AD_BLOCKER_ENABLED, true)
+            AdBlocker.enabledFlow(appContext)
         ) { autoOpen, provider, adBlocker ->
             StreamPrefs(autoOpen, provider, adBlocker)
         },

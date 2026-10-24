@@ -2,12 +2,17 @@ package com.mydonghua.app.data.service
 
 import android.content.Context
 import android.webkit.WebResourceResponse
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import java.io.ByteArrayInputStream
 
 object AdBlocker {
 
     private const val PREFS_NAME = "ad_blocker_prefs"
     private const val KEY_ENABLED = "ad_blocker_enabled"
+
+    private val _enabledFlow = MutableStateFlow<Boolean?>(null)
 
     // High-frequency video stream and popup ad networks
     private val AD_HOSTS = hashSetOf(
@@ -65,15 +70,26 @@ object AdBlocker {
     )
 
     fun isEnabled(context: Context): Boolean {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        _enabledFlow.value?.let { return it }
+        val value = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getBoolean(KEY_ENABLED, true)
+        _enabledFlow.value = value
+        return value
     }
 
     fun setEnabled(context: Context, enabled: Boolean) {
+        _enabledFlow.value = enabled
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putBoolean(KEY_ENABLED, enabled)
             .apply()
+    }
+
+    fun enabledFlow(context: Context): Flow<Boolean> {
+        if (_enabledFlow.value == null) {
+            _enabledFlow.value = isEnabled(context)
+        }
+        return _enabledFlow.filterNotNull()
     }
 
     fun isAdUrl(url: String?): Boolean {
