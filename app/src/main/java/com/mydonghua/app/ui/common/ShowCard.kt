@@ -400,8 +400,7 @@ fun ShowCard(
                                 )
                                 .border(
                                     width = 0.5.dp,
-                                    color = if (show.currentEp > 0) chipBorderColor.copy(alpha = 0.6f)
-                                    else chipBorderColor.copy(alpha = 0.25f),
+                                    color = chipBorderColor,
                                     shape = RoundedCornerShape(7.dp)
                                 )
                                 .clickable(enabled = show.currentEp > 0) { onEpDecrement(show) }
@@ -438,7 +437,7 @@ fun ShowCard(
                                 )
                                 .border(
                                     width = 0.5.dp,
-                                    color = chipBorderColor.copy(alpha = 0.6f),
+                                    color = chipBorderColor,
                                     shape = RoundedCornerShape(7.dp)
                                 )
                                 .clickable { onEpIncrement(show) }
