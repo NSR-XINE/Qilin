@@ -5,8 +5,10 @@ import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.animation.expandHorizontally
@@ -467,8 +469,8 @@ private fun NavBarIcon(
     onClick: () -> Unit,
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1.10f else 1.0f,
-        animationSpec = ColorOSMotion.TouchBounceSpring,
+        targetValue = if (selected) 1.12f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow),
         label = "nav_icon_bounce"
     )
     Box(
@@ -579,13 +581,13 @@ class DampedDragAnimation(
     val onDragStopped: DampedDragAnimation.() -> Unit,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
 ) {
-    private val valueAnimationSpec = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
-    private val smoothAnimationSpec = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
-    private val velocityAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
-    private val pressProgressAnimationSpec = tween<Float>(durationMillis = 150, easing = FastOutSlowInEasing)
-    private val scaleXAnimationSpec = tween<Float>(durationMillis = 180, easing = FastOutSlowInEasing)
-    private val scaleYAnimationSpec = tween<Float>(durationMillis = 180, easing = FastOutSlowInEasing)
-    private val snapAnimationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+    private val valueAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow)
+    private val smoothAnimationSpec = spring<Float>(dampingRatio = 0.60f, stiffness = Spring.StiffnessMediumLow)
+    private val velocityAnimationSpec = spring<Float>(dampingRatio = 0.50f, stiffness = 300f)
+    private val pressProgressAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 400f)
+    private val scaleXAnimationSpec = spring<Float>(dampingRatio = 0.55f, stiffness = 250f)
+    private val scaleYAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 250f)
+    private val snapAnimationSpec = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val velocityAnimation = Animatable(0f, 5f)
