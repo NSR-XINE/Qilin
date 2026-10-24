@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -188,7 +189,8 @@ fun HeroBanner(
                     .fillMaxSize()
                     .clip(bannerShape),
                 contentScale = ContentScale.Crop,
-                showAcronym = false
+                showAcronym = false,
+                immediate = true
             )
 
             // Multi-stop liquid gradient overlay
@@ -197,6 +199,8 @@ fun HeroBanner(
                     .fillMaxSize()
                     .background(overlayBrush)
             )
+
+            val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
 
             // Top-Left: "NEXT UP" / "AIRING" Pill Badge
             Box(
@@ -220,7 +224,11 @@ fun HeroBanner(
                             .background(if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF))
                     )
                     Text(
-                        text = if (remainingTime.airingNow) "AIRING NOW" else "NEXT UP",
+                        text = when {
+                            remainingTime.airingNow -> "AIRING NOW"
+                            hasSchedule -> "NEXT UP"
+                            else -> "FEATURED"
+                        },
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -250,7 +258,8 @@ fun HeroBanner(
 
                 Text(
                     text = if (remainingTime.airingNow) "New episode available now"
-                    else "Ep ${show.currentEp + 1} • ${show.releaseDay ?: "Sunday"} ${show.releaseTime ?: ""}",
+                    else if (hasSchedule) "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime}"
+                    else "Episode ${show.currentEp} • Ongoing series",
                     fontSize = 12.5.sp,
                     color = Color.White.copy(alpha = 0.85f),
                     maxLines = 1
@@ -296,7 +305,7 @@ fun HeroBanner(
                             )
                         }
                     }
-                } else {
+                } else if (hasSchedule) {
                     // Symmetrical countdown boxes filling the available width evenly
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -307,6 +316,37 @@ fun HeroBanner(
                         BannerTimeBox(value = remainingTime.hours, label = "HOURS", modifier = Modifier.weight(1f))
                         BannerTimeBox(value = remainingTime.minutes, label = "MINS", modifier = Modifier.weight(1f))
                         BannerTimeBox(value = remainingTime.seconds, label = "SECS", modifier = Modifier.weight(1f))
+                    }
+                } else {
+                    // Clean Watch/Details pill when no schedule is configured
+                    Box(
+                        modifier = Modifier
+                            .height(38.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
+                            .border(0.5.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(12.dp))
+                            .clickable { onBannerClick() }
+                            .colorOSPressBounce(pressedScale = 0.94f)
+                            .padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
+                            )
+                            Text(
+                                text = "View Show Details",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -650,14 +690,29 @@ fun RecentlyUpdatedRow(
 
 @Composable
 private fun HeroBannerSkeleton() {
-    Box(
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
+    val bannerShape = RoundedCornerShape(CornerRadius.banner)
+
+    Card(
+        shape = bannerShape,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            brush = bannerBorderBrush
+        ),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(260.dp)
-            .clip(RoundedCornerShape(CornerRadius.banner))
-            .shimmerEffect()
-    )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(bannerShape)
+                .shimmerEffect()
+        )
+    }
 }
 
 @Composable

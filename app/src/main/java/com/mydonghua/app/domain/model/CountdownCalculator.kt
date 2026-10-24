@@ -83,7 +83,7 @@ object CountdownCalculator {
 
     fun getNextUpShow(shows: List<Show>): Show? {
         val ongoing = shows.filter { it.status == "ongoing" }
-        if (ongoing.isEmpty()) return null
+        if (ongoing.isEmpty()) return shows.firstOrNull()
 
         val mapped = ongoing.mapNotNull { show ->
             val targetMs = getNextReleaseDateMs(show.releaseDay, show.releaseTime) ?: return@mapNotNull null
@@ -93,7 +93,9 @@ object CountdownCalculator {
             Triple(show, targetMs, isAiringNow)
         }
 
-        if (mapped.isEmpty()) return null
+        if (mapped.isEmpty()) {
+            return ongoing.maxByOrNull { it.lastUpdated ?: 0L } ?: ongoing.firstOrNull()
+        }
 
         val sorted = mapped.sortedWith(Comparator { a, b ->
             if (a.third && !b.third) return@Comparator -1

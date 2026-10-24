@@ -96,7 +96,8 @@ fun DonghuaPoster(
     contentScale: ContentScale = ContentScale.Crop,
     showAcronym: Boolean = true,
     fontSize: TextUnit = TextUnit.Unspecified,
-    crossfade: Boolean = true
+    crossfade: Boolean = true,
+    immediate: Boolean = false
 ) {
     val context = LocalContext.current
     val initials = remember(title) { getTitleInitials(title) }
@@ -106,16 +107,19 @@ fun DonghuaPoster(
         true
     }
 
-    val staggerDelayMs = remember(posterUrl) {
-        if (posterUrl.isNullOrBlank()) 0L else PosterStagger.staggerDelay(posterUrl)
+    val staggerDelayMs = remember(posterUrl, immediate) {
+        if (immediate || posterUrl.isNullOrBlank()) 0L else PosterStagger.staggerDelay(posterUrl)
     }
-    var posterEnabled by remember(posterUrl) {
+    var posterEnabled by remember(posterUrl, immediate) {
         mutableStateOf(
-            posterUrl.isNullOrBlank() || (staggerDelayMs == 0L && !ScrollGate.scrolling)
+            immediate || posterUrl.isNullOrBlank() || (staggerDelayMs == 0L && !ScrollGate.scrolling)
         )
     }
-    LaunchedEffect(posterUrl, staggerDelayMs) {
-        if (posterUrl.isNullOrBlank()) return@LaunchedEffect
+    LaunchedEffect(posterUrl, staggerDelayMs, immediate) {
+        if (immediate || posterUrl.isNullOrBlank()) {
+            posterEnabled = true
+            return@LaunchedEffect
+        }
         if (staggerDelayMs > 0L) delay(staggerDelayMs)
         while (ScrollGate.scrolling) delay(50L)
         posterEnabled = true
@@ -124,7 +128,7 @@ fun DonghuaPoster(
     val imageRequest = remember(posterUrl, context, crossfade, posterEnabled) {
         ImageRequest.Builder(context)
             .data(if (posterEnabled) posterUrl?.takeIf { it.isNotBlank() && it != "null" } else null)
-            .crossfade(if (crossfade) 200 else 0)
+            .crossfade(if (crossfade) 300 else 0)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
             .networkCachePolicy(CachePolicy.ENABLED)
@@ -140,6 +144,12 @@ fun DonghuaPoster(
         val state = painter.state
         if (state is AsyncImagePainter.State.Success) {
             SubcomposeAsyncImageContent()
+        } else if (state is AsyncImagePainter.State.Loading || !posterEnabled) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .shimmerEffect()
+            )
         } else {
             PosterAcronymPlaceholder(
                 initials = initials,
