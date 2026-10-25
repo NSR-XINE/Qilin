@@ -13,8 +13,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,6 +48,7 @@ import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.colorOSAuroraBorder
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
@@ -80,7 +83,7 @@ fun HomeScreen(
             item { SectionHeaderSkeleton() }
             item { HorizontalRowSkeleton() }
             item { SectionHeaderSkeleton() }
-            item { HorizontalRowSkeleton() }
+            item { RecentlyUpdatedRowSkeleton() }
         } else {
             if (state.showCountdownBanner && state.nextUpShow != null) {
                 item(key = "hero_banner_${state.nextUpShow!!.id}") {
@@ -107,7 +110,20 @@ fun HomeScreen(
 
             if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
                 item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
-                item(key = "section_recent_row") { RecentlyUpdatedRow(shows = state.recentlyUpdated, onShowClick = onShowClick) }
+                item(key = "section_recent_row") {
+                    RecentlyUpdatedRow(
+                        shows = state.recentlyUpdated,
+                        onShowClick = onShowClick,
+                        onWatchClick = { show ->
+                            val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                showTitle = show.title,
+                                customWatchUrl = show.watchUrl,
+                                providerPreference = defaultStreamProvider
+                            )
+                            onWatchClick(url)
+                        }
+                    )
+                }
             }
         }
     }
@@ -580,22 +596,13 @@ fun ContinueWatchingRow(
 fun RecentlyUpdatedRow(
     shows: List<Show>,
     onShowClick: (String) -> Unit,
+    onWatchClick: ((Show) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val hazeState = LocalHazeState.current
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val lazyListState = rememberLazyListState()
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
-    val cardShape = RoundedCornerShape(CornerRadius.card)
-
-    // Unified liquid glass border across all boxes
-    val cardBorder = rememberLiquidGlassBorder(isLight)
-
-    val cardBg = if (isLight) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
-    }
 
     LazyRow(
         state = lazyListState,
@@ -605,82 +612,281 @@ fun RecentlyUpdatedRow(
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         items(shows, key = { it.id }) { show ->
+            RecentlyUpdatedCard(
+                show = show,
+                isLight = isLight,
+                hazeState = hazeState,
+                onCardClick = { onShowClick(show.id) },
+                onWatchClick = if (onWatchClick != null) { { onWatchClick(show) } } else null
+            )
+        }
+    }
+}
+
+@Composable
+fun RecentlyUpdatedCard(
+    show: Show,
+    isLight: Boolean,
+    hazeState: dev.chrisbanes.haze.HazeState?,
+    onCardClick: () -> Unit,
+    onWatchClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    val cardShape = RoundedCornerShape(20.dp)
+    val posterShape = RoundedCornerShape(13.dp)
+
+    // ColorOS 17 Liquid Glass & Aurora Gradient Background
+    val cardBg = if (isLight) {
+        Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.94f),
+                Color(0xFFF1F5F9).copy(alpha = 0.88f)
+            ),
+            start = Offset(0f, 0f),
+            end = Offset(300f, 400f)
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                Color(0xFF171B2B).copy(alpha = 0.82f),
+                Color(0xFF0F121E).copy(alpha = 0.92f)
+            ),
+            start = Offset(0f, 0f),
+            end = Offset(300f, 400f)
+        )
+    }
+
+    // ColorOS 17 Aurora Rim Gradient Border
+    val borderBrush = colorOSAuroraBorder(
+        isDark = !isLight,
+        primaryColor = Color(0xFF00E5FF),
+        accentGlow = if (isLight) 0.35f else 0.45f
+    )
+
+    val relativeTime = remember(show.lastUpdated) {
+        if (show.lastUpdated != null && show.lastUpdated > 0L) {
+            DateUtils.getRelativeTimeSpanString(
+                show.lastUpdated,
+                System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS,
+                DateUtils.FORMAT_ABBREV_RELATIVE
+            ).toString()
+        } else {
+            "Recently"
+        }
+    }
+
+    val primaryAccent = if (isLight) Color(0xFF008D99) else Color(0xFF00E5FF)
+
+    Box(
+        modifier = modifier
+            .width(292.dp)
+            .clip(cardShape)
+            .then(
+                if (hazeState != null) Modifier.hazeChild(state = hazeState, shape = cardShape)
+                else Modifier
+            )
+            .background(cardBg)
+            .border(width = 1.dp, brush = borderBrush, shape = cardShape)
+            .colorOSPressBounce(
+                pressedScale = 0.96f,
+                onClick = onCardClick
+            )
+            .padding(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Poster Column with Badges
             Box(
                 modifier = Modifier
-                    .width(260.dp)
-                    .clip(cardShape)
-                    .hazeChild(state = hazeState, shape = cardShape)
-                    .background(cardBg)
+                    .size(width = 74.dp, height = 100.dp)
+                    .clip(posterShape)
                     .border(
-                        width = 1.dp,
-                        brush = cardBorder,
-                        shape = cardShape
+                        width = 0.75.dp,
+                        color = if (isLight) Color.Black.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.16f),
+                        shape = posterShape
                     )
-                    .colorOSPressBounce(
-                        pressedScale = 0.98f,
-                        onClick = { onShowClick(show.id) }
-                    )
-                    .padding(Spacing.sm + 2.dp)
             ) {
+                DonghuaPoster(
+                    posterUrl = show.poster,
+                    title = show.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    fontSize = 8.5.sp,
+                    showAcronym = true
+                )
+
+                // Aurora Glow "NEW" / "UPDATED" Badge
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(4.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFF00E5FF),
+                                    Color(0xFF7F00FF)
+                                )
+                            )
+                        )
+                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "NEW",
+                        fontSize = 8.5.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                        letterSpacing = 0.6.sp
+                    )
+                }
+
+                // Quick Play Circle Overlay
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(4.dp)
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .clickable(enabled = onWatchClick != null) {
+                            onWatchClick?.invoke()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.PlayArrow,
+                        contentDescription = "Watch now",
+                        modifier = Modifier.size(13.dp),
+                        tint = primaryAccent
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Metadata Column
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(100.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Top Row: Episode Pill + Day/Status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Box(
+                    // Episode Capsule Pill
+                    val epText = if (show.totalEp > 0) "EP ${show.currentEp}/${show.totalEp}" else "EP ${show.currentEp}"
+                    Row(
                         modifier = Modifier
-                            .size(width = 58.dp, height = 78.dp)
-                            .clip(RoundedCornerShape(CornerRadius.md))
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(primaryAccent.copy(alpha = if (isLight) 0.12f else 0.16f))
+                            .border(
+                                width = 0.75.dp,
+                                color = primaryAccent.copy(alpha = if (isLight) 0.35f else 0.40f),
+                                shape = RoundedCornerShape(percent = 50)
+                            )
+                            .padding(horizontal = 7.dp, vertical = 2.5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        DonghuaPoster(
-                            posterUrl = show.poster,
-                            title = show.title,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            fontSize = 8.sp
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(primaryAccent)
+                        )
+                        Text(
+                            text = epText,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryAccent,
+                            letterSpacing = 0.2.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(Spacing.md))
+                    // Release day or status
+                    val statusLabel = when (show.status) {
+                        "completed" -> "END"
+                        else -> show.releaseDay?.take(3)?.uppercase() ?: "AIRING"
+                    }
+                    Text(
+                        text = statusLabel,
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                        letterSpacing = 0.5.sp
+                    )
+                }
 
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 78.dp),
-                        verticalArrangement = Arrangement.Center
-                    ) {
+                // Middle: Show Title (and Chinese subtitle if present)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = show.title,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = if (!show.titleZh.isNullOrBlank()) 1 else 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 17.sp
+                    )
+
+                    if (!show.titleZh.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(1.dp))
                         Text(
-                            text = show.title,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            maxLines = 2,
+                            text = show.titleZh,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                }
 
-                        val relativeTime = if (show.lastUpdated != null) {
-                            DateUtils.getRelativeTimeSpanString(show.lastUpdated).toString()
-                        } else ""
+                // Bottom Row: Relative timestamp + Quick action
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_clock),
+                            contentDescription = null,
+                            modifier = Modifier.size(11.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.80f)
+                        )
+                        Text(
+                            text = relativeTime,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                            maxLines = 1
+                        )
+                    }
 
-                        if (relativeTime.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_clock),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = relativeTime,
-                                    fontSize = 11.5.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1
-                                )
-                            }
-                        }
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                            contentDescription = "Details",
+                            modifier = Modifier.size(11.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -741,6 +947,26 @@ private fun HorizontalRowSkeleton() {
                     .width(260.dp)
                     .height(86.dp)
                     .clip(RoundedCornerShape(CornerRadius.card))
+                    .shimmerEffect()
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentlyUpdatedRowSkeleton() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+    ) {
+        repeat(2) {
+            Box(
+                modifier = Modifier
+                    .width(292.dp)
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(20.dp))
                     .shimmerEffect()
             )
         }
