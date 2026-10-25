@@ -49,6 +49,7 @@ import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.colorOSAuroraBorder
+import com.mydonghua.app.ui.theme.colorOSAuroraShimmer
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
@@ -137,6 +138,7 @@ fun HeroBanner(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val hazeState = LocalHazeState.current
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     var remainingTime by remember(show.id) {
@@ -156,28 +158,25 @@ fun HeroBanner(
         }
     }
 
-    // Unified liquid glass border across all boxes
-    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
+    // ColorOS 17 Aurora Rim Gradient Border
+    val bannerBorderBrush = colorOSAuroraBorder(
+        isDark = !isLight,
+        primaryColor = Color(0xFF00E5FF),
+        accentGlow = if (isLight) 0.35f else 0.50f
+    )
 
-    val overlayBrush = remember {
-        Brush.verticalGradient(
-            0.0f to Color.Black.copy(alpha = 0.40f),
-            0.20f to Color.Transparent,
-            0.45f to Color.Black.copy(alpha = 0.28f),
-            0.75f to Color.Black.copy(alpha = 0.72f),
-            1.0f to Color.Black.copy(alpha = 0.92f)
-        )
-    }
+    val bannerShape = RoundedCornerShape(26.dp)
 
     val textShadow = remember {
         Shadow(
-            color = Color.Black.copy(alpha = 0.70f),
-            offset = Offset(0f, 1.5f),
-            blurRadius = 4f
+            color = Color.Black.copy(alpha = 0.85f),
+            offset = Offset(0f, 2f),
+            blurRadius = 6f
         )
     }
 
-    val bannerShape = RoundedCornerShape(CornerRadius.banner)
+    val primaryAccent = if (isLight) Color(0xFF008D99) else Color(0xFF00E5FF)
+    val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
 
     Card(
         shape = bannerShape,
@@ -189,15 +188,17 @@ fun HeroBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(260.dp)
-            .colorOSPressBounce(pressedScale = 0.98f)
+            .height(275.dp)
+            .colorOSPressBounce(pressedScale = 0.985f)
             .clickable { onBannerClick() }
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(bannerShape)
+                .colorOSAuroraShimmer(enabled = true, shimmerColor = Color.White.copy(alpha = 0.08f))
         ) {
+            // Hero Poster
             DonghuaPoster(
                 posterUrl = show.poster,
                 title = show.title,
@@ -209,46 +210,117 @@ fun HeroBanner(
                 immediate = true
             )
 
-            // Multi-stop liquid gradient overlay
+            // Cinematic Multi-Stop Atmospheric Vignette
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(overlayBrush)
+                    .background(
+                        Brush.verticalGradient(
+                            0.0f to Color.Black.copy(alpha = 0.60f),
+                            0.22f to Color.Transparent,
+                            0.45f to Color.Black.copy(alpha = 0.30f),
+                            0.70f to Color.Black.copy(alpha = 0.78f),
+                            1.0f to Color.Black.copy(alpha = 0.96f)
+                        )
+                    )
             )
 
-            val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
-
-            // Top-Left: "NEXT UP" / "AIRING" Pill Badge
+            // Left soft gradient for title contrast
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(14.dp)
-                    .clip(RoundedCornerShape(CornerRadius.chip))
-                    .background(Color.Black.copy(alpha = 0.55f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(CornerRadius.chip))
-                    .padding(horizontal = 9.dp, vertical = 4.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF))
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            0.0f to Color.Black.copy(alpha = 0.40f),
+                            0.60f to Color.Transparent
+                        )
                     )
+            )
+
+            // Top Row: Status Pill (Left) and Episode / Genre Badge (Right)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp)
+                    .align(Alignment.TopStart),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Top-Left: "AIRING NOW" or "NEXT UP" Capsule
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(percent = 50))
+                        .then(
+                            if (remainingTime.airingNow) {
+                                Modifier.background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Color(0xFF00E676).copy(alpha = 0.88f),
+                                            Color(0xFF00B0FF).copy(alpha = 0.88f)
+                                        )
+                                    )
+                                )
+                            } else {
+                                Modifier
+                                    .background(Color.Black.copy(alpha = 0.58f))
+                                    .border(
+                                        width = 0.75.dp,
+                                        color = primaryAccent.copy(alpha = 0.45f),
+                                        shape = RoundedCornerShape(percent = 50)
+                                    )
+                            }
+                        )
+                        .padding(horizontal = 10.dp, vertical = 4.5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(if (remainingTime.airingNow) Color.White else primaryAccent)
+                        )
+                        Text(
+                            text = when {
+                                remainingTime.airingNow -> "AIRING NOW"
+                                hasSchedule -> "NEXT UP • ${show.releaseDay?.take(3)?.uppercase()} ${show.releaseTime}"
+                                else -> "FEATURED SHOW"
+                            },
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                }
+
+                // Top-Right: Episode / Genre Pill
+                val topRightTag = when {
+                    show.totalEp > 0 -> "EP ${show.currentEp + 1}/${show.totalEp}"
+                    !show.genres.isNullOrBlank() -> show.genres.split(",").firstOrNull()?.trim() ?: "EP ${show.currentEp + 1}"
+                    else -> "EP ${show.currentEp + 1}"
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(Color.Black.copy(alpha = 0.52f))
+                        .border(
+                            width = 0.75.dp,
+                            color = Color.White.copy(alpha = 0.20f),
+                            shape = RoundedCornerShape(percent = 50)
+                        )
+                        .padding(horizontal = 9.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = when {
-                            remainingTime.airingNow -> "AIRING NOW"
-                            hasSchedule -> "NEXT UP"
-                            else -> "FEATURED"
-                        },
+                        text = topRightTag,
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        letterSpacing = 0.6.sp
+                        color = Color.White.copy(alpha = 0.92f),
+                        letterSpacing = 0.4.sp
                     )
                 }
             }
@@ -260,69 +332,102 @@ fun HeroBanner(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
+                // Main English / Romaji Title
                 Text(
                     text = show.title,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(shadow = textShadow)
+                    style = TextStyle(shadow = textShadow),
+                    letterSpacing = (-0.3).sp
                 )
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
-                Text(
-                    text = if (remainingTime.airingNow) "New episode available now"
-                    else if (hasSchedule) "Ep ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime}"
-                    else "Episode ${show.currentEp} • Ongoing series",
-                    fontSize = 12.5.sp,
-                    color = Color.White.copy(alpha = 0.85f),
-                    maxLines = 1
-                )
+                // Subtitle Row (Chinese Title & Genres)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (!show.titleZh.isNullOrBlank()) {
+                        Text(
+                            text = show.titleZh,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = primaryAccent,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    val detailInfo = if (remainingTime.airingNow) {
+                        if (!show.titleZh.isNullOrBlank()) " • New episode live" else "New episode available now"
+                    } else if (hasSchedule) {
+                        if (!show.titleZh.isNullOrBlank()) " • Ep ${show.currentEp + 1} (${show.releaseDay})"
+                        else "Episode ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime}"
+                    } else {
+                        if (!show.titleZh.isNullOrBlank()) " • Episode ${show.currentEp}"
+                        else "Episode ${show.currentEp} • Ongoing"
+                    }
+                    Text(
+                        text = detailInfo,
+                        fontSize = 11.5.sp,
+                        color = Color.White.copy(alpha = 0.80f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 if (remainingTime.airingNow) {
+                    // Vibrant Aurora CTA Button
                     Box(
                         modifier = Modifier
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .fillMaxWidth()
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(13.dp))
                             .background(
                                 Brush.horizontalGradient(
-                                    if (isLight) {
-                                        listOf(Color(0xFF009AA6), Color(0xFF0072FF))
-                                    } else {
-                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                                    }
+                                    listOf(
+                                        Color(0xFF00E5FF),
+                                        Color(0xFF0072FF),
+                                        Color(0xFF7F00FF)
+                                    )
                                 )
                             )
-                            .border(0.5.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(12.dp))
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.35f),
+                                shape = RoundedCornerShape(13.dp)
+                            )
                             .clickable { onWatchClick() }
-                            .colorOSPressBounce(pressedScale = 0.92f)
+                            .colorOSPressBounce(pressedScale = 0.95f)
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.PlayArrow,
+                                imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(20.dp),
                                 tint = Color.White
                             )
                             Text(
-                                text = "Watch Now",
-                                fontSize = 13.sp,
+                                text = "Watch Episode ${show.currentEp + 1} Now",
+                                fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                letterSpacing = 0.3.sp
                             )
                         }
                     }
                 } else if (hasSchedule) {
-                    // Symmetrical countdown boxes filling the available width evenly
+                    // Liquid Glass Countdown Deck
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -334,15 +439,20 @@ fun HeroBanner(
                         BannerTimeBox(value = remainingTime.seconds, label = "SECS", modifier = Modifier.weight(1f))
                     }
                 } else {
-                    // Clean Watch/Details pill when no schedule is configured
+                    // Clean Glass Details Pill
                     Box(
                         modifier = Modifier
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
-                            .border(0.5.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(12.dp))
+                            .fillMaxWidth()
+                            .height(42.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(Color.White.copy(alpha = 0.10f))
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.20f),
+                                shape = RoundedCornerShape(13.dp)
+                            )
                             .clickable { onBannerClick() }
-                            .colorOSPressBounce(pressedScale = 0.94f)
+                            .colorOSPressBounce(pressedScale = 0.96f)
                             .padding(horizontal = 14.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -354,10 +464,10 @@ fun HeroBanner(
                                 imageVector = Icons.Outlined.Info,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
+                                tint = primaryAccent
                             )
                             Text(
-                                text = "View Show Details",
+                                text = "View Show Details & Episodes",
                                 fontSize = 12.5.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
@@ -378,26 +488,32 @@ private fun BannerTimeBox(
 ) {
     val hazeState = LocalHazeState.current
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val shape = RoundedCornerShape(CornerRadius.md)
+    val shape = RoundedCornerShape(13.dp)
+
+    // Liquid Glass Gradient for Timer Pillar
     val bgBrush = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color.Black.copy(alpha = 0.48f),
-                Color.Black.copy(alpha = 0.28f)
+                Color.White.copy(alpha = 0.15f),
+                Color.Black.copy(alpha = 0.45f)
             )
         )
     }
-    // Unified liquid glass border
-    val borderBrush = rememberLiquidGlassBorder(isLight)
+
+    val primaryAccent = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
 
     Box(
         modifier = modifier
-            .height(48.dp)
+            .height(52.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(brush = bgBrush)
-            .border(width = 1.dp, brush = borderBrush, shape = shape)
-            .padding(vertical = 3.dp),
+            .border(
+                width = 0.75.dp,
+                color = primaryAccent.copy(alpha = 0.35f),
+                shape = shape
+            )
+            .padding(vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -406,17 +522,18 @@ private fun BannerTimeBox(
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 16.5.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 17.5.sp,
+                fontWeight = FontWeight.ExtraBold,
                 color = Color.White,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
             )
             Text(
                 text = label,
-                fontSize = 8.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF).copy(alpha = 0.92f),
-                letterSpacing = 0.5.sp,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = primaryAccent,
+                letterSpacing = 1.1.sp,
                 textAlign = TextAlign.Center
             )
         }
@@ -627,7 +744,7 @@ fun RecentlyUpdatedRow(
 fun RecentlyUpdatedCard(
     show: Show,
     isLight: Boolean,
-    hazeState: dev.chrisbanes.haze.HazeState?,
+    hazeState: dev.chrisbanes.haze.HazeState = LocalHazeState.current,
     onCardClick: () -> Unit,
     onWatchClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -682,10 +799,7 @@ fun RecentlyUpdatedCard(
         modifier = modifier
             .width(292.dp)
             .clip(cardShape)
-            .then(
-                if (hazeState != null) Modifier.hazeChild(state = hazeState, shape = cardShape)
-                else Modifier
-            )
+            .hazeChild(state = hazeState, shape = cardShape)
             .background(cardBg)
             .border(width = 1.dp, brush = borderBrush, shape = cardShape)
             .colorOSPressBounce(
@@ -897,8 +1011,12 @@ fun RecentlyUpdatedCard(
 @Composable
 private fun HeroBannerSkeleton() {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
-    val bannerShape = RoundedCornerShape(CornerRadius.banner)
+    val bannerBorderBrush = colorOSAuroraBorder(
+        isDark = !isLight,
+        primaryColor = Color(0xFF00E5FF),
+        accentGlow = if (isLight) 0.35f else 0.50f
+    )
+    val bannerShape = RoundedCornerShape(26.dp)
 
     Card(
         shape = bannerShape,
@@ -910,7 +1028,7 @@ private fun HeroBannerSkeleton() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(260.dp)
+            .height(275.dp)
     ) {
         Box(
             modifier = Modifier
