@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
@@ -131,13 +132,17 @@ class WatchActivity : ComponentActivity() {
             var websiteSyncedQualities by remember { mutableStateOf<List<DownloadQualityOption>>(emptyList()) }
             var isSyncingWebsite by remember { mutableStateOf(false) }
 
-            // Dynamic HLS Master Playlist Fetching & Parsing directly from website playback
-            LaunchedEffect(capturedStreamUrl) {
+            // Dynamic HLS Master Playlist & YoutubeDL Stream Probing directly from website playback
+            LaunchedEffect(capturedStreamUrl, currentPlaybackHeight) {
                 val stream = capturedStreamUrl ?: return@LaunchedEffect
-                if (stream.contains(".m3u8", ignoreCase = true) || stream.contains("/hls", ignoreCase = true)) {
-                    isSyncingWebsite = true
-                    withContext(Dispatchers.IO) {
+                isSyncingWebsite = true
+                withContext(Dispatchers.IO) {
+                    val detectedList = mutableListOf<DownloadQualityOption>()
+                    val isHls = stream.contains(".m3u8", ignoreCase = true) || stream.contains("/hls", ignoreCase = true)
+
+                    if (isHls) {
                         try {
+                            val cookie = try { CookieManager.getInstance().getCookie(stream) } catch (e: Exception) { null }
                             val client = OkHttpClient.Builder()
                                 .followRedirects(true)
                                 .connectTimeout(6, TimeUnit.SECONDS)
@@ -148,6 +153,7 @@ class WatchActivity : ComponentActivity() {
                                 .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
                                 .apply {
                                     if (!capturedReferer.isNullOrEmpty()) header("Referer", capturedReferer!!)
+                                    if (!cookie.isNullOrEmpty()) header("Cookie", cookie)
                                 }
                                 .build()
                             val res = client.newCall(req).execute()
@@ -155,15 +161,91 @@ class WatchActivity : ComponentActivity() {
                             if (body.contains("#EXT-X-STREAM-INF")) {
                                 val parsed = parseHlsMasterPlaylist(stream, body)
                                 if (parsed.isNotEmpty()) {
-                                    withContext(Dispatchers.Main) {
-                                        websiteSyncedQualities = parsed
-                                    }
+                                    detectedList.addAll(parsed)
                                 }
                             }
-                        } catch (ignored: Exception) {
-                        } finally {
-                            isSyncingWebsite = false
+                        } catch (e: Exception) {
+                            Log.w("WatchActivity", "HLS master playlist fetch failed: ${e.message}")
                         }
+                    }
+
+                    // Parallel probe with YoutubeDL getInfo to discover formats from video hosts
+                    if (detectedList.isEmpty()) {
+                        try {
+                            val ytdlReq = YoutubeDLRequest(stream).apply {
+                                addOption("--no-check-certificates")
+                                addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                                if (!capturedReferer.isNullOrEmpty()) addOption("--referer", capturedReferer!!)
+                                val c = try { CookieManager.getInstance().getCookie(stream) } catch (e: Exception) { null }
+                                if (!c.isNullOrEmpty()) addOption("--add-header", "Cookie:$c")
+                            }
+                            val info = YoutubeDL.getInstance().getInfo(ytdlReq)
+                            val formats = info.formats?.filter { (it.height > 0 || !it.formatNote.isNullOrEmpty()) && it.vcodec != "none" }
+                            if (!formats.isNullOrEmpty()) {
+                                val probed = formats.map { f ->
+                                    val h = if (f.height > 0) "${f.height}p" else (f.formatNote ?: "HD")
+                                    val sizeStr = if (f.fileSize > 0) formatBytes(f.fileSize)
+                                                  else if (f.tbr > 0) "${f.tbr} kbps"
+                                                  else null
+                                    DownloadQualityOption(
+                                        id = "ytdl_${f.formatId ?: h}",
+                                        title = when (h) {
+                                            "2160p" -> "4K Ultra HD"
+                                            "1440p" -> "2K Quad HD"
+                                            "1080p" -> "1080p Full HD"
+                                            "720p" -> "720p HD"
+                                            "480p" -> "480p SD"
+                                            "360p" -> "360p Data Saver"
+                                            else -> "$h Stream"
+                                        },
+                                        subtitle = "Synced format (${f.ext ?: "mp4"}) • ${sizeStr ?: "Active website stream"}",
+                                        badge = h,
+                                        formatId = f.url ?: f.formatId ?: stream,
+                                        isAudio = false,
+                                        fileSizeFormatted = sizeStr,
+                                        isSyncedFromWebsite = true,
+                                        isPlayingNow = (f.height == currentPlaybackHeight)
+                                    )
+                                }.distinctBy { it.badge }.sortedByDescending { opt ->
+                                    opt.badge.removeSuffix("p").toIntOrNull() ?: 0
+                                }
+                                if (probed.isNotEmpty()) {
+                                    detectedList.addAll(probed)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.d("WatchActivity", "YoutubeDL getInfo probe skipped: ${e.message}")
+                        }
+                    }
+
+                    // Direct single stream fallback when master is unavailable
+                    if (detectedList.isEmpty()) {
+                        val h = if (currentPlaybackHeight > 0) currentPlaybackHeight else {
+                            when {
+                                stream.contains("1080") -> 1080
+                                stream.contains("720") -> 720
+                                stream.contains("480") -> 480
+                                stream.contains("360") -> 360
+                                else -> 0
+                            }
+                        }
+                        val badge = if (h > 0) "${h}p" else "STREAM"
+                        val single = DownloadQualityOption(
+                            id = "synced_active_direct",
+                            title = if (h > 0) "${h}p Stream (Active Website Stream)" else "Website Video Stream",
+                            subtitle = "Direct stream captured from active website player",
+                            badge = badge,
+                            formatId = stream,
+                            isAudio = false,
+                            isSyncedFromWebsite = true,
+                            isPlayingNow = true
+                        )
+                        detectedList.add(single)
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        websiteSyncedQualities = detectedList
+                        isSyncingWebsite = false
                     }
                 }
             }
@@ -223,20 +305,31 @@ class WatchActivity : ComponentActivity() {
                     onDismiss = { showQualitySheet = false },
                     onOptionSelected = { option ->
                         showQualitySheet = false
-                        val effectiveUrl = if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
+                        if (option.id == "waiting_stream") {
+                            Toast.makeText(context, "Please start video playback first to sync stream qualities", Toast.LENGTH_SHORT).show()
+                            return@QualitySelectorBottomSheet
+                        }
+
+                        val effectiveUrl = if (option.isAudio) {
+                            capturedStreamUrl ?: watchUrl
+                        } else if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
                             option.formatId
                         } else {
                             capturedStreamUrl ?: watchUrl
                         }
-                        val effectiveFormatId = if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
+
+                        val effectiveFormatId = if (option.isAudio) {
+                            option.formatId
+                        } else if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
                             null
                         } else {
                             option.formatId
                         }
+
                         downloadVideo(
                             context = context,
                             videoUrl = effectiveUrl,
-                            title = showTitle,
+                            title = "${showTitle}_${option.badge}",
                             formatId = effectiveFormatId,
                             referer = capturedReferer,
                             isAudioOnly = option.isAudio
@@ -1947,72 +2040,21 @@ class WatchActivity : ComponentActivity() {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var selectedTab by remember { mutableIntStateOf(0) } // 0: Video, 1: Audio
 
-        val defaultVideoOptions = remember {
-            listOf(
-                DownloadQualityOption(
-                    id = "video_1080p",
-                    title = "1080p Full HD",
-                    subtitle = "Crystal clear high definition",
-                    badge = "1080p",
-                    formatId = "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
-                ),
-                DownloadQualityOption(
-                    id = "video_720p",
-                    title = "720p HD",
-                    subtitle = "Smooth playback, recommended for mobile",
-                    badge = "720p",
-                    formatId = "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
-                ),
-                DownloadQualityOption(
-                    id = "video_480p",
-                    title = "480p SD",
-                    subtitle = "Standard quality, faster download",
-                    badge = "480p",
-                    formatId = "bestvideo[height<=480]+bestaudio/best[height<=480]/best"
-                ),
-                DownloadQualityOption(
-                    id = "video_360p",
-                    title = "360p Data Saver",
-                    subtitle = "Smallest file size, saves mobile data",
-                    badge = "360p",
-                    formatId = "bestvideo[height<=360]+bestaudio/best[height<=360]/best"
-                ),
-                DownloadQualityOption(
-                    id = "video_best",
-                    title = "Best Available (Source)",
-                    subtitle = "Highest quality original direct stream",
-                    badge = "AUTO",
-                    formatId = "best"
-                )
-            )
-        }
-
         val hasWebsiteSyncedStreams = syncedWebsiteOptions.isNotEmpty()
 
         // Video options prioritized by actual website streams!
         val videoOptions = remember(syncedWebsiteOptions, currentPlaybackHeight, streamUrl, isWebsiteStreamCaptured) {
             if (hasWebsiteSyncedStreams) {
-                val mapped = syncedWebsiteOptions.map { opt ->
+                syncedWebsiteOptions.map { opt ->
                     val h = opt.badge.removeSuffix("p").toIntOrNull() ?: 0
-                    val isPlaying = (currentPlaybackHeight > 0 && h == currentPlaybackHeight)
+                    val isPlaying = (currentPlaybackHeight > 0 && h == currentPlaybackHeight) || opt.isPlayingNow
                     opt.copy(isPlayingNow = isPlaying)
                 }
-
-                val masterOption = DownloadQualityOption(
-                    id = "synced_master_auto",
-                    title = "Original Stream (Adaptive Auto)",
-                    subtitle = "Master playlist direct from website player",
-                    badge = "AUTO",
-                    formatId = streamUrl,
-                    isAudio = false,
-                    isSyncedFromWebsite = true
-                )
-                mapped + masterOption
             } else if (isWebsiteStreamCaptured) {
                 val badge = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p" else "STREAM"
                 val directOption = DownloadQualityOption(
                     id = "synced_direct_source",
-                    title = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p Stream (Website Stream)" else "Website Video Stream",
+                    title = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p Stream (Active Website Stream)" else "Website Video Stream",
                     subtitle = "Direct stream synced from active website playback",
                     badge = badge,
                     formatId = streamUrl,
@@ -2020,35 +2062,40 @@ class WatchActivity : ComponentActivity() {
                     isSyncedFromWebsite = true,
                     isPlayingNow = true
                 )
-                listOf(directOption) + defaultVideoOptions
+                listOf(directOption)
             } else {
-                defaultVideoOptions
+                listOf(
+                    DownloadQualityOption(
+                        id = "waiting_stream",
+                        title = "Waiting for Website Playback...",
+                        subtitle = "Press play on the video player above to sync stream qualities",
+                        badge = "WAIT",
+                        formatId = streamUrl,
+                        isAudio = false,
+                        isSyncedFromWebsite = false
+                    )
+                )
             }
         }
 
         // Audio options extracted from the website stream!
-        val audioOptions = remember(streamUrl, hasWebsiteSyncedStreams) {
-            val audioSourceUrl = if (hasWebsiteSyncedStreams) {
-                syncedWebsiteOptions.firstOrNull()?.formatId ?: streamUrl
-            } else {
-                streamUrl
-            }
+        val audioOptions = remember(streamUrl, isWebsiteStreamCaptured) {
             listOf(
                 DownloadQualityOption(
                     id = "audio_m4a",
-                    title = "Website Audio (M4A Pristine)",
-                    subtitle = "Lossless AAC extracted directly from website stream",
+                    title = "Pristine Audio (M4A / AAC)",
+                    subtitle = "Lossless AAC extracted with FFmpeg from website stream",
                     badge = "M4A",
-                    formatId = audioSourceUrl,
+                    formatId = "m4a",
                     isAudio = true,
                     isSyncedFromWebsite = isWebsiteStreamCaptured
                 ),
                 DownloadQualityOption(
                     id = "audio_mp3",
-                    title = "Website Audio (MP3 320 kbps)",
-                    subtitle = "Universal high bitrate MP3 extracted from website",
+                    title = "Universal MP3 (320 kbps)",
+                    subtitle = "High bitrate universal MP3 extracted with FFmpeg",
                     badge = "MP3",
-                    formatId = audioSourceUrl,
+                    formatId = "mp3",
                     isAudio = true,
                     isSyncedFromWebsite = isWebsiteStreamCaptured
                 ),
@@ -2057,7 +2104,7 @@ class WatchActivity : ComponentActivity() {
                     title = "Compact Audio (AAC)",
                     subtitle = "Lightweight track extracted from website audio",
                     badge = "AAC",
-                    formatId = audioSourceUrl,
+                    formatId = "aac",
                     isAudio = true,
                     isSyncedFromWebsite = isWebsiteStreamCaptured
                 )
@@ -2348,7 +2395,7 @@ class WatchActivity : ComponentActivity() {
 
                 // Footer note
                 Text(
-                    text = "Downloads will be saved to Movies or Music folder with 16 Aria2c streams.",
+                    text = "Downloads will be saved to Movies or Music folder with accelerated multi-connection streams.",
                     color = Color.White.copy(alpha = 0.35f),
                     fontSize = 11.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -2540,7 +2587,13 @@ class WatchActivity : ComponentActivity() {
                 } else if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
                     val absoluteVariantUrl = if (uriBase != null) {
                         try {
-                            uriBase.resolve(trimmed).toString()
+                            val resolved = uriBase.resolve(trimmed)
+                            if (resolved.query.isNullOrEmpty() && !uriBase.query.isNullOrEmpty()) {
+                                val sep = if (resolved.toString().contains("?")) "&" else "?"
+                                resolved.toString() + sep + uriBase.rawQuery
+                            } else {
+                                resolved.toString()
+                            }
                         } catch (e: Exception) {
                             trimmed
                         }
