@@ -134,7 +134,7 @@ class WatchActivity : ComponentActivity() {
 
             // Dynamic HLS Master Playlist & YoutubeDL Stream Probing directly from website playback
             LaunchedEffect(capturedStreamUrl, currentPlaybackHeight) {
-                val stream = capturedStreamUrl ?: return@LaunchedEffect
+                val stream = capturedStreamUrl?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
                 isSyncingWebsite = true
                 withContext(Dispatchers.IO) {
                     val detectedList = mutableListOf<DownloadQualityOption>()
@@ -295,27 +295,32 @@ class WatchActivity : ComponentActivity() {
 
             if (showQualitySheet) {
                 QualitySelectorBottomSheet(
-                    streamUrl = capturedStreamUrl ?: watchUrl,
+                    streamUrl = capturedStreamUrl,
                     title = showTitle,
                     referer = capturedReferer,
                     syncedWebsiteOptions = websiteSyncedQualities,
                     currentPlaybackHeight = currentPlaybackHeight,
-                    isWebsiteStreamCaptured = (capturedStreamUrl != null),
+                    isWebsiteStreamCaptured = !capturedStreamUrl.isNullOrBlank(),
                     isSyncingWebsite = isSyncingWebsite,
                     onDismiss = { showQualitySheet = false },
                     onOptionSelected = { option ->
                         showQualitySheet = false
-                        if (option.id == "waiting_stream") {
-                            Toast.makeText(context, "Please start video playback first to sync stream qualities", Toast.LENGTH_SHORT).show()
+                        if (option.id == "waiting_stream" || capturedStreamUrl.isNullOrBlank()) {
+                            Toast.makeText(context, "Please start video playback first so the stream can be detected", Toast.LENGTH_SHORT).show()
                             return@QualitySelectorBottomSheet
                         }
 
                         val effectiveUrl = if (option.isAudio) {
-                            capturedStreamUrl ?: watchUrl
+                            capturedStreamUrl
                         } else if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
                             option.formatId
                         } else {
-                            capturedStreamUrl ?: watchUrl
+                            capturedStreamUrl
+                        }
+
+                        if (effectiveUrl.isNullOrBlank()) {
+                            Toast.makeText(context, "No stream detected. Please play the video first.", Toast.LENGTH_SHORT).show()
+                            return@QualitySelectorBottomSheet
                         }
 
                         val effectiveFormatId = if (option.isAudio) {
@@ -1317,7 +1322,7 @@ class WatchActivity : ComponentActivity() {
         onStreamCaptured: (String, String?) -> Unit,
         onPlaybackHeightDetected: (Int) -> Unit,
         onBack: () -> Unit,
-        onDownload: (String, String?) -> Unit,
+        onDownload: (String?, String?) -> Unit,
         onOpenExternal: () -> Unit
     ) {
         val context = LocalContext.current
@@ -1335,29 +1340,40 @@ class WatchActivity : ComponentActivity() {
             }
         }
 
-        fun handleStreamFound(stream: String, referer: String?) {
-            val clean = stream.lowercase()
-            val isM3u8 = clean.contains(".m3u8") || clean.contains("/hls") || clean.contains("manifest")
-            val isMaster = clean.contains("master") || clean.contains("playlist") || clean.contains("index")
-            val ref = referer ?: detectedReferer ?: watchUrl
-
-            if (detectedVideoUrl == null || (isM3u8 && (detectedVideoUrl?.contains(".m3u8") != true || isMaster))) {
-                detectedVideoUrl = stream
-                detectedReferer = ref
-                onStreamCaptured(stream, ref)
+        fun isStaticAsset(url: String): Boolean {
+            val clean = try {
+                val uri = Uri.parse(url)
+                uri.path?.lowercase() ?: url.lowercase()
+            } catch (e: Exception) {
+                url.lowercase()
             }
+            return clean.endsWith(".png") || clean.endsWith(".jpg") || clean.endsWith(".jpeg") ||
+                    clean.endsWith(".webp") || clean.endsWith(".svg") || clean.endsWith(".gif") ||
+                    clean.endsWith(".css") || clean.endsWith(".woff") || clean.endsWith(".woff2") ||
+                    clean.endsWith(".ttf") || clean.endsWith(".ico") || clean.endsWith(".otf") ||
+                    clean.endsWith(".js") || clean.endsWith(".html") || clean.endsWith(".htm") ||
+                    clean.endsWith(".php") || clean.endsWith(".json") || clean.endsWith(".xml") ||
+                    clean.endsWith(".map")
+        }
+
+        fun isSupportedHost(url: String): Boolean {
+            val clean = url.lowercase()
+            val supportedHosts = listOf(
+                "doodstream.com", "dood.to", "dood.so", "dood.ws", "dood.la", "dood.re", "dood.pm", "dood.sh", "doods.pro",
+                "streamtape.com", "streamtape.to", "streamtape.net",
+                "streamwish.to", "streamwish.com", "swish.to", "swish.com", "strwish.com", "wishembed.pro",
+                "mixdrop.co", "mixdrop.to", "mixdrop.sx", "mixdrop.bz",
+                "mp4upload.com",
+                "vidhide.com", "vidhidepro.com", "vidhidepre.com",
+                "youtube.com", "youtu.be",
+                "bilibili.com", "bilibili.tv"
+            )
+            return supportedHosts.any { clean.contains(it) }
         }
 
         fun isVideoUrl(url: String): Boolean {
+            if (isStaticAsset(url)) return false
             val clean = url.lowercase()
-            val pathOnly = try { Uri.parse(clean).path?.lowercase() ?: clean } catch (e: Exception) { clean }
-            if (pathOnly.endsWith(".png") || pathOnly.endsWith(".jpg") || pathOnly.endsWith(".jpeg") ||
-                pathOnly.endsWith(".webp") || pathOnly.endsWith(".svg") || pathOnly.endsWith(".gif") ||
-                pathOnly.endsWith(".css") || pathOnly.endsWith(".woff") || pathOnly.endsWith(".woff2") ||
-                pathOnly.endsWith(".ttf") || pathOnly.endsWith(".ico") || pathOnly.endsWith(".otf")
-            ) {
-                return false
-            }
             if (clean.contains("google-analytics") || clean.contains("/telemetry") ||
                 clean.contains("doubleclick.net") || clean.contains("googlesyndication") ||
                 clean.contains("facebook.com/tr")
@@ -1371,15 +1387,26 @@ class WatchActivity : ComponentActivity() {
                     clean.contains(".mpd") ||
                     clean.contains("/hls/") ||
                     clean.contains("/hls-") ||
-                    clean.contains("/hls") ||
-                    clean.contains("/manifest") ||
-                    clean.contains("master.txt") ||
-                    clean.contains("/stream/") ||
                     clean.contains("mime=video") ||
                     clean.contains("video/") ||
                     clean.contains("mime=application%2fvnd.apple.mpegurl") ||
                     clean.contains("application/x-mpegurl") ||
-                    clean.contains("application/vnd.apple.mpegurl")
+                    clean.contains("application/vnd.apple.mpegurl") ||
+                    isSupportedHost(url)
+        }
+
+        fun handleStreamFound(stream: String, referer: String?) {
+            if (!isVideoUrl(stream)) return
+            val clean = stream.lowercase()
+            val isM3u8 = clean.contains(".m3u8") || clean.contains("/hls") || clean.contains("manifest")
+            val isMaster = clean.contains("master") || clean.contains("playlist") || clean.contains("index")
+            val ref = referer ?: detectedReferer ?: watchUrl
+
+            if (detectedVideoUrl == null || (isM3u8 && (detectedVideoUrl?.contains(".m3u8") != true || isMaster))) {
+                detectedVideoUrl = stream
+                detectedReferer = ref
+                onStreamCaptured(stream, ref)
+            }
         }
 
         DisposableEffect(Unit) {
@@ -1566,12 +1593,12 @@ class WatchActivity : ComponentActivity() {
                                     ) { result ->
                                         isScanningStream = false
                                         val cleanResult = result?.trim('"', ' ', '\n', '\r')?.takeIf { it != "null" && it.isNotBlank() }
-                                        if (!cleanResult.isNullOrBlank()) {
+                                        if (!cleanResult.isNullOrBlank() && isVideoUrl(cleanResult)) {
                                             handleStreamFound(cleanResult, detectedReferer ?: watchUrl)
                                             onDownload(cleanResult, detectedReferer ?: watchUrl)
                                         } else {
-                                            // Fallback to webpage URL so user ALWAYS has quality selection available
-                                            onDownload(watchUrl, detectedReferer ?: watchUrl)
+                                            Toast.makeText(context, "Please start video playback first so the stream can be detected", Toast.LENGTH_SHORT).show()
+                                            onDownload(null, detectedReferer ?: watchUrl)
                                         }
                                     }
                                 }
@@ -1788,6 +1815,19 @@ class WatchActivity : ComponentActivity() {
                                         scanMedia();
                                         setInterval(scanMedia, 1200);
 
+                                        document.addEventListener('play', function(e) {
+                                            if (e.target && e.target.tagName === 'VIDEO') {
+                                                var v = e.target;
+                                                if (v.videoHeight > 0) {
+                                                    window.WebBridge && window.WebBridge.onPlaybackActive(v.videoWidth, v.videoHeight, v.currentTime || 0);
+                                                }
+                                                var s = v.currentSrc || v.src;
+                                                if (s && s.indexOf('blob:') !== 0 && s.indexOf('http') === 0) {
+                                                    window.WebBridge && window.WebBridge.onVideoSourceFoundWithRef(s, window.location.href);
+                                                }
+                                            }
+                                        }, true);
+
                                         try {
                                             var s = document.createElement('style');
                                             s.textContent = 'div[style*="z-index:2147483647"], div[style*="z-index: 2147483647"] { display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; } html, body { overflow: auto !important; }';
@@ -1852,9 +1892,15 @@ class WatchActivity : ComponentActivity() {
                                         if (detectedH > 0) {
                                             view?.post { onPlaybackHeightDetected(detectedH) }
                                         }
+                                        if (detectedVideoUrl == null) {
+                                            val parent = url.substringBeforeLast("/")
+                                            val derived = if (parent.endsWith(".m3u8")) parent else "$parent.m3u8"
+                                            val ref = request.requestHeaders?.get("Referer") ?: view?.url ?: watchUrl
+                                            view?.post { handleStreamFound(derived, ref) }
+                                        }
                                     }
 
-                                    if (isVideoUrl(url) || isMediaAccept) {
+                                    if (isVideoUrl(url) || (isMediaAccept && !isStaticAsset(url))) {
                                         val ref = request.requestHeaders?.get("Referer")
                                             ?: request.requestHeaders?.get("referer")
                                             ?: view?.url
@@ -2027,7 +2073,7 @@ class WatchActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun QualitySelectorBottomSheet(
-        streamUrl: String,
+        streamUrl: String?,
         title: String,
         referer: String?,
         syncedWebsiteOptions: List<DownloadQualityOption>,
@@ -2050,7 +2096,7 @@ class WatchActivity : ComponentActivity() {
                     val isPlaying = (currentPlaybackHeight > 0 && h == currentPlaybackHeight) || opt.isPlayingNow
                     opt.copy(isPlayingNow = isPlaying)
                 }
-            } else if (isWebsiteStreamCaptured) {
+            } else if (isWebsiteStreamCaptured && !streamUrl.isNullOrBlank()) {
                 val badge = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p" else "STREAM"
                 val directOption = DownloadQualityOption(
                     id = "synced_direct_source",
@@ -2068,9 +2114,9 @@ class WatchActivity : ComponentActivity() {
                     DownloadQualityOption(
                         id = "waiting_stream",
                         title = "Waiting for Website Playback...",
-                        subtitle = "Press play on the video player above to sync stream qualities",
+                        subtitle = "Press Play on the video player above to sync stream qualities",
                         badge = "WAIT",
-                        formatId = streamUrl,
+                        formatId = "",
                         isAudio = false,
                         isSyncedFromWebsite = false
                     )
@@ -2084,7 +2130,7 @@ class WatchActivity : ComponentActivity() {
                 DownloadQualityOption(
                     id = "audio_m4a",
                     title = "Pristine Audio (M4A / AAC)",
-                    subtitle = "Lossless AAC extracted with FFmpeg from website stream",
+                    subtitle = if (isWebsiteStreamCaptured && !streamUrl.isNullOrBlank()) "Lossless AAC extracted with FFmpeg from website stream" else "Requires active video stream (play video above)",
                     badge = "M4A",
                     formatId = "m4a",
                     isAudio = true,
@@ -2093,7 +2139,7 @@ class WatchActivity : ComponentActivity() {
                 DownloadQualityOption(
                     id = "audio_mp3",
                     title = "Universal MP3 (320 kbps)",
-                    subtitle = "High bitrate universal MP3 extracted with FFmpeg",
+                    subtitle = if (isWebsiteStreamCaptured && !streamUrl.isNullOrBlank()) "High bitrate universal MP3 extracted with FFmpeg" else "Requires active video stream (play video above)",
                     badge = "MP3",
                     formatId = "mp3",
                     isAudio = true,
@@ -2102,7 +2148,7 @@ class WatchActivity : ComponentActivity() {
                 DownloadQualityOption(
                     id = "audio_aac",
                     title = "Compact Audio (AAC)",
-                    subtitle = "Lightweight track extracted from website audio",
+                    subtitle = if (isWebsiteStreamCaptured && !streamUrl.isNullOrBlank()) "Lightweight track extracted from website audio" else "Requires active video stream (play video above)",
                     badge = "AAC",
                     formatId = "aac",
                     isAudio = true,

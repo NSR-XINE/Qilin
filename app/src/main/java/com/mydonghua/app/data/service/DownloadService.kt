@@ -39,6 +39,13 @@ class DownloadService : Service() {
         const val PREFS_NAME = "donghua_prefs"
         const val SAVED_DOWNLOADS_KEY = "saved_downloads"
         private const val TAG = "DownloadService"
+
+        fun logDebug(msg: String) {
+            try {
+                val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "donghua_debug.log")
+                f.appendText("[${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}] $msg\n")
+            } catch (ignored: Exception) {}
+        }
     }
 
     private val serviceJob = SupervisorJob()
@@ -176,7 +183,24 @@ class DownloadService : Service() {
 
         val job = serviceScope.launch {
             try {
+                logDebug("START_DOWNLOAD: id=$id, url=$url, formatId=$formatId, isAudioOnly=$isAudioOnly, referer=$referer")
                 ensureInitialized(this@DownloadService)
+
+                if (url.isBlank()) {
+                    throw Exception("No stream URL found. Please play the video on the website first so the stream can be captured.")
+                }
+                val cleanUrlStr = url.lowercase()
+                val isDirectStream = cleanUrlStr.contains(".m3u8") || cleanUrlStr.contains(".mp4") || cleanUrlStr.contains(".mkv") ||
+                        cleanUrlStr.contains(".webm") || cleanUrlStr.contains(".mpd") || cleanUrlStr.contains("/hls/") || cleanUrlStr.contains("/hls-")
+                val isKnownHost = cleanUrlStr.contains("youtube.com") || cleanUrlStr.contains("youtu.be") ||
+                        cleanUrlStr.contains("bilibili") || cleanUrlStr.contains("dood") ||
+                        cleanUrlStr.contains("streamtape") || cleanUrlStr.contains("swish") ||
+                        cleanUrlStr.contains("mixdrop") || cleanUrlStr.contains("mp4upload") ||
+                        cleanUrlStr.contains("vidhide")
+
+                if (!isDirectStream && !isKnownHost) {
+                    throw Exception("Cannot download directly from website webpage URL. Please start video playback in the app to capture the video stream.")
+                }
 
                 val destDir = File(path)
                 if (!destDir.exists()) destDir.mkdirs()
@@ -202,11 +226,7 @@ class DownloadService : Service() {
                     }
                 } else null
 
-                val outputTemplate = if (targetAudioExt != null) {
-                    "$path/$sanitizedTitle.$targetAudioExt"
-                } else {
-                    "$path/$sanitizedTitle.%(ext)s"
-                }
+                val outputTemplate = "$path/$sanitizedTitle.%(ext)s"
 
                 val request = YoutubeDLRequest(url).apply {
                     if (!formatId.isNullOrEmpty() && !formatId.startsWith("http://") && !formatId.startsWith("https://") && formatId != "best" && formatId != "auto" && !isAudioOnly) {
@@ -335,6 +355,7 @@ class DownloadService : Service() {
                             ?: files?.maxByOrNull { it.lastModified() }?.absolutePath
                     }
 
+                    logDebug("DOWNLOAD_SUCCESS: id=$id, path=$currentPath")
                     updatePrefs(id, "Completed", currentPath ?: "")
 
                     builder.setContentText("Download complete")
@@ -350,6 +371,7 @@ class DownloadService : Service() {
                     }
                     sendBroadcast(successIntent)
                 } else {
+                    logDebug("DOWNLOAD_FAILED_EXIT_CODE: id=$id, code=${response.exitCode}, lastLine=$lastLogLine")
                     Log.e(TAG, "YoutubeDL exit code: ${response.exitCode}, last line: $lastLogLine")
                     updatePrefs(id, "Failed", "")
                     builder.setContentText("Download failed (code ${response.exitCode})")
@@ -365,6 +387,7 @@ class DownloadService : Service() {
                     sendBroadcast(failedIntent)
                 }
             } catch (e: Exception) {
+                logDebug("DOWNLOAD_EXCEPTION: id=$id, error=${e.message}")
                 Log.e(TAG, "Download failed for ID: $id", e)
                 updatePrefs(id, "Failed", "")
                 val cleanError = when {
