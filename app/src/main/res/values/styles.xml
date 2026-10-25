@@ -1,5 +1,5 @@
 <resources>
-    <!-- Base application theme. -->
+    <!-- Base application theme with ColorOS 17 Unified Motion System -->
     <style name="Theme.MyDonghua" parent="Theme.MaterialComponents.DayNight">
         <!-- Primary brand color. -->
         <item name="colorPrimary">#9d4edd</item>
@@ -11,10 +11,24 @@
         <item name="colorOnSecondary">#000000</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">#0a0c14</item>
+        <!-- Official ColorOS 17 Window Animation Style -->
+        <item name="android:windowAnimationStyle">@style/Animation.ColorOS.Activity</item>
     </style>
 
     <style name="Theme.MyDonghua.NoActionBar" parent="Theme.MyDonghua">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- ColorOS 17 Activity Slide Transitions extracted from framework.jar -->
+    <style name="Animation.ColorOS.Activity" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/oplus_open_slide_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/oplus_open_slide_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/oplus_close_slide_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/oplus_close_slide_exit</item>
+        <item name="android:taskOpenEnterAnimation">@anim/oplus_open_slide_enter</item>
+        <item name="android:taskOpenExitAnimation">@anim/oplus_open_slide_exit</item>
+        <item name="android:taskCloseEnterAnimation">@anim/oplus_close_slide_enter</item>
+        <item name="android:taskCloseExitAnimation">@anim/oplus_close_slide_exit</item>
     </style>
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ColorOS 17 Bottom Sheet Exit Animation -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <translate
+        android:fromYDelta="0%"
+        android:toYDelta="100%"
+        android:interpolator="@interpolator/coloros_emphasized_accelerate"
+        android:duration="240" />
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0"
+        android:interpolator="@interpolator/coloros_emphasized_accelerate"
+        android:duration="@integer/oplus_animation_time_move_veryfast" />
+</set>

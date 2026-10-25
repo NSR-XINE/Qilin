@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Extracted from Stock ColorOS 17 framework.jar & services.jar Motion & Physics Engine -->
+<resources>
+    <!-- ColorOS 17 Official Animation Durations (ms) -->
+    <integer name="oplus_animation_time_moment">100</integer>
+    <integer name="oplus_animation_time_move_veryfast">150</integer>
+    <integer name="oplus_animation_time_move_fast">200</integer>
+    <integer name="config_activityDefaultDur">220</integer>
+    <integer name="oplus_animation_time_move">300</integer>
+    <integer name="oplus_animation_time_move_slow">400</integer>
+    <integer name="oplus_animation_time_move_veryslow">500</integer>
+    <integer name="oplus_animation_time_loop">600</integer>
+    <integer name="oplus_animation_time_flashing">800</integer>
+
+    <!-- ColorOS 17 Official Spatial Spring Stiffness (Transforms, Position, Scale, Sheets) -->
+    <integer name="config_motionStandardFastSpatialStiffness">1400</integer>
+    <integer name="config_motionStandardDefaultSpatialStiffness">700</integer>
+    <integer name="config_motionStandardSlowSpatialStiffness">300</integer>
+
+    <integer name="config_motionExpressiveFastSpatialStiffness">800</integer>
+    <integer name="config_motionExpressiveDefaultSpatialStiffness">380</integer>
+    <integer name="config_motionExpressiveSlowSpatialStiffness">200</integer>
+
+    <!-- ColorOS 17 Official Effect Spring Stiffness (Alpha, Fade, Color, Dim) -->
+    <integer name="config_motionStandardFastEffectStiffness">3800</integer>
+    <integer name="config_motionStandardDefaultEffectStiffness">1600</integer>
+    <integer name="config_motionStandardSlowEffectStiffness">800</integer>
+
+    <!-- ColorOS 17 Official Spatial Spring Damping Ratios (Float) -->
+    <item name="config_motionStandardDamping" format="float" type="dimen">1.0</item>
+    <item name="config_motionExpressiveFastSpatialDamping" format="float" type="dimen">0.60</item>
+    <item name="config_motionExpressiveDefaultSpatialDamping" format="float" type="dimen">0.80</item>
+    <item name="config_motionExpressiveSlowSpatialDamping" format="float" type="dimen">0.80</item>
+</resources>

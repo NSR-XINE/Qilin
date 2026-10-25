@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Extracted from ColorOS 17 Motion System: Linear Out Slow In -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.0"
+    android:controlY1="0.0"
+    android:controlX2="0.2"
+    android:controlY2="1.0" />

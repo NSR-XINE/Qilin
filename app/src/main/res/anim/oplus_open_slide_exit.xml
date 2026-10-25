@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ColorOS 17 Task Open Slide Exit Animation -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <translate
+        android:fromXDelta="0%"
+        android:toXDelta="-25%"
+        android:interpolator="@interpolator/coloros_emphasized_accelerate"
+        android:duration="@integer/config_activityDefaultDur" />
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.7"
+        android:interpolator="@interpolator/coloros_emphasized_accelerate"
+        android:duration="@integer/config_activityDefaultDur" />
+</set>

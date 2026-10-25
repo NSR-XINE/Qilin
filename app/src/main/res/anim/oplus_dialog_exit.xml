@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ColorOS 17 Dialog Exit Animation -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <scale
+        android:fromXScale="1.0"
+        android:toXScale="0.92"
+        android:fromYScale="1.0"
+        android:toYScale="0.92"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:interpolator="@interpolator/coloros_emphasized_accelerate"
+        android:duration="@integer/oplus_animation_time_move_fast" />
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0"
+        android:interpolator="@interpolator/coloros_emphasized_accelerate"
+        android:duration="@integer/oplus_animation_time_move_veryfast" />
+</set>

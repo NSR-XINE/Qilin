@@ -323,11 +323,14 @@ class MainActivity : ComponentActivity() {
                                             ) + fadeOut(
                                                 animationSpec = ColorOSMotion.FadeOutFloat
                                             )
-                                            else -> fadeOut(
-                                                animationSpec = ColorOSMotion.FadeOutFloat
+                                            else -> slideOutHorizontally(
+                                                animationSpec = ColorOSMotion.SheetExitIntOffset,
+                                                targetOffsetX = { -it / 4 }
                                             ) + scaleOut(
                                                 targetScale = 0.96f,
                                                 animationSpec = ColorOSMotion.FluidSpring
+                                            ) + fadeOut(
+                                                animationSpec = ColorOSMotion.FadeOutFloat
                                             )
                                         }
                                     }
@@ -342,7 +345,7 @@ class MainActivity : ComponentActivity() {
                                     } else {
                                         slideInHorizontally(
                                             animationSpec = ColorOSMotion.FluidIntOffset,
-                                            initialOffsetX = { -it / 3 }
+                                            initialOffsetX = { -it / 4 }
                                         ) + scaleIn(
                                             initialScale = 0.96f,
                                             animationSpec = ColorOSMotion.FluidSpring
@@ -360,8 +363,8 @@ class MainActivity : ComponentActivity() {
                                         fadeOut(animationSpec = ColorOSMotion.FadeOutFloat)
                                     } else {
                                         slideOutHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
-                                            targetOffsetX = { it / 3 }
+                                            animationSpec = ColorOSMotion.SheetExitIntOffset,
+                                            targetOffsetX = { it }
                                         ) + scaleOut(
                                             targetScale = 0.96f,
                                             animationSpec = ColorOSMotion.FluidSpring

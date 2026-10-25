@@ -511,11 +511,11 @@ class DampedDragAnimation(
     val onDragFinished: DampedDragAnimation.(targetIndex: Int) -> Unit,
     val onTap: DampedDragAnimation.(slot: Int) -> Unit,
 ) {
-    private val snapAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 200f)
-    private val pressProgressAnimationSpec = spring<Float>(dampingRatio = 0.70f, stiffness = 260f)
-    private val scaleXAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 180f)
-    private val scaleYAnimationSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 180f)
-    private val velocityAnimationSpec = spring<Float>(dampingRatio = 0.55f, stiffness = 220f)
+    private val snapAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
+    private val pressProgressAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
+    private val scaleXAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
+    private val scaleYAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
+    private val velocityAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val pressProgressAnimation = Animatable(0f, 0.001f)
