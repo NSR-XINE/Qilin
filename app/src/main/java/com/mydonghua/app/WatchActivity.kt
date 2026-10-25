@@ -51,6 +51,10 @@ import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import com.yausername.youtubedl_android.mapper.VideoFormat
 import com.yausername.youtubedl_android.mapper.VideoInfo
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.net.URI
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.*
@@ -121,8 +125,48 @@ class WatchActivity : ComponentActivity() {
             var useWebPlayer by remember { mutableStateOf(!isDirectVideo) }
 
             var showQualitySheet by remember { mutableStateOf(false) }
-            var downloadTargetUrl by remember { mutableStateOf(watchUrl) }
-            var downloadTargetReferer by remember { mutableStateOf<String?>(null) }
+            var capturedStreamUrl by remember { mutableStateOf<String?>(if (isDirectVideo) watchUrl else null) }
+            var capturedReferer by remember { mutableStateOf<String?>(null) }
+            var currentPlaybackHeight by remember { mutableIntStateOf(0) }
+            var websiteSyncedQualities by remember { mutableStateOf<List<DownloadQualityOption>>(emptyList()) }
+            var isSyncingWebsite by remember { mutableStateOf(false) }
+
+            // Dynamic HLS Master Playlist Fetching & Parsing directly from website playback
+            LaunchedEffect(capturedStreamUrl) {
+                val stream = capturedStreamUrl ?: return@LaunchedEffect
+                if (stream.contains(".m3u8", ignoreCase = true) || stream.contains("/hls", ignoreCase = true)) {
+                    isSyncingWebsite = true
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val client = OkHttpClient.Builder()
+                                .followRedirects(true)
+                                .connectTimeout(6, TimeUnit.SECONDS)
+                                .readTimeout(6, TimeUnit.SECONDS)
+                                .build()
+                            val req = Request.Builder()
+                                .url(stream)
+                                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                                .apply {
+                                    if (!capturedReferer.isNullOrEmpty()) header("Referer", capturedReferer!!)
+                                }
+                                .build()
+                            val res = client.newCall(req).execute()
+                            val body = res.body?.string() ?: ""
+                            if (body.contains("#EXT-X-STREAM-INF")) {
+                                val parsed = parseHlsMasterPlaylist(stream, body)
+                                if (parsed.isNotEmpty()) {
+                                    withContext(Dispatchers.Main) {
+                                        websiteSyncedQualities = parsed
+                                    }
+                                }
+                            }
+                        } catch (ignored: Exception) {
+                        } finally {
+                            isSyncingWebsite = false
+                        }
+                    }
+                }
+            }
 
             if (!useWebPlayer) {
                 DirectVideoPlayerScreen(
@@ -131,8 +175,8 @@ class WatchActivity : ComponentActivity() {
                     isInPip = isInPip,
                     onBack = { finish() },
                     onDownload = {
-                        downloadTargetUrl = watchUrl
-                        downloadTargetReferer = null
+                        capturedStreamUrl = watchUrl
+                        capturedReferer = null
                         showQualitySheet = true
                     },
                     onEnterPip = { enterPipMode() },
@@ -142,10 +186,19 @@ class WatchActivity : ComponentActivity() {
                 InAppWebPlayerScreen(
                     watchUrl = watchUrl,
                     showTitle = showTitle,
+                    activeCapturedStream = capturedStreamUrl,
+                    activePlaybackHeight = currentPlaybackHeight,
+                    onStreamCaptured = { streamUrl, referer ->
+                        capturedStreamUrl = streamUrl
+                        capturedReferer = referer
+                    },
+                    onPlaybackHeightDetected = { height ->
+                        currentPlaybackHeight = height
+                    },
                     onBack = { finish() },
                     onDownload = { streamUrl, referer ->
-                        downloadTargetUrl = streamUrl
-                        downloadTargetReferer = referer
+                        capturedStreamUrl = streamUrl
+                        capturedReferer = referer
                         showQualitySheet = true
                     },
                     onOpenExternal = {
@@ -160,18 +213,32 @@ class WatchActivity : ComponentActivity() {
 
             if (showQualitySheet) {
                 QualitySelectorBottomSheet(
-                    streamUrl = downloadTargetUrl,
+                    streamUrl = capturedStreamUrl ?: watchUrl,
                     title = showTitle,
-                    referer = downloadTargetReferer,
+                    referer = capturedReferer,
+                    syncedWebsiteOptions = websiteSyncedQualities,
+                    currentPlaybackHeight = currentPlaybackHeight,
+                    isWebsiteStreamCaptured = (capturedStreamUrl != null),
+                    isSyncingWebsite = isSyncingWebsite,
                     onDismiss = { showQualitySheet = false },
                     onOptionSelected = { option ->
                         showQualitySheet = false
+                        val effectiveUrl = if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
+                            option.formatId
+                        } else {
+                            capturedStreamUrl ?: watchUrl
+                        }
+                        val effectiveFormatId = if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
+                            null
+                        } else {
+                            option.formatId
+                        }
                         downloadVideo(
                             context = context,
-                            videoUrl = downloadTargetUrl,
+                            videoUrl = effectiveUrl,
                             title = showTitle,
-                            formatId = option.formatId,
-                            referer = downloadTargetReferer,
+                            formatId = effectiveFormatId,
+                            referer = capturedReferer,
                             isAudioOnly = option.isAudio
                         )
                     }
@@ -1118,13 +1185,32 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
-    class WebStreamBridge(private val onStreamFound: (String) -> Unit) {
+    class WebStreamBridge(
+        private val onStreamFound: (String, String?) -> Unit,
+        private val onPlaybackActive: (Int, Int, Float) -> Unit
+    ) {
         @JavascriptInterface
         fun onVideoSourceFound(src: String?) {
             if (!src.isNullOrBlank() && !src.startsWith("blob:")) {
                 Handler(Looper.getMainLooper()).post {
-                    onStreamFound(src)
+                    onStreamFound(src, null)
                 }
+            }
+        }
+
+        @JavascriptInterface
+        fun onVideoSourceFoundWithRef(src: String?, referer: String?) {
+            if (!src.isNullOrBlank() && !src.startsWith("blob:")) {
+                Handler(Looper.getMainLooper()).post {
+                    onStreamFound(src, referer)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun onPlaybackActive(width: Int, height: Int, currentTime: Float) {
+            Handler(Looper.getMainLooper()).post {
+                onPlaybackActive(width, height, currentTime)
             }
         }
     }
@@ -1133,6 +1219,10 @@ class WatchActivity : ComponentActivity() {
     private fun InAppWebPlayerScreen(
         watchUrl: String,
         showTitle: String,
+        activeCapturedStream: String?,
+        activePlaybackHeight: Int,
+        onStreamCaptured: (String, String?) -> Unit,
+        onPlaybackHeightDetected: (Int) -> Unit,
         onBack: () -> Unit,
         onDownload: (String, String?) -> Unit,
         onOpenExternal: () -> Unit
@@ -1140,7 +1230,7 @@ class WatchActivity : ComponentActivity() {
         val context = LocalContext.current
         var webViewRef by remember { mutableStateOf<WebView?>(null) }
         var webProgress by remember { mutableIntStateOf(0) }
-        var detectedVideoUrl by remember { mutableStateOf<String?>(null) }
+        var detectedVideoUrl by remember(activeCapturedStream) { mutableStateOf(activeCapturedStream) }
         var detectedReferer by remember { mutableStateOf<String?>(null) }
         var isScanningStream by remember { mutableStateOf(false) }
         val isAdBlockerActive by AdBlocker.enabledFlow(context).collectAsState(initial = AdBlocker.isEnabled(context))
@@ -1148,40 +1238,55 @@ class WatchActivity : ComponentActivity() {
 
         LaunchedEffect(detectedVideoUrl) {
             if (!detectedVideoUrl.isNullOrBlank()) {
-                Toast.makeText(context, "Video stream captured! Download ready.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Website stream captured! Download ready.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        fun handleStreamFound(stream: String, referer: String?) {
+            val clean = stream.lowercase()
+            val isM3u8 = clean.contains(".m3u8") || clean.contains("/hls") || clean.contains("manifest")
+            val isMaster = clean.contains("master") || clean.contains("playlist") || clean.contains("index")
+            val ref = referer ?: detectedReferer ?: watchUrl
+
+            if (detectedVideoUrl == null || (isM3u8 && (detectedVideoUrl?.contains(".m3u8") != true || isMaster))) {
+                detectedVideoUrl = stream
+                detectedReferer = ref
+                onStreamCaptured(stream, ref)
             }
         }
 
         fun isVideoUrl(url: String): Boolean {
             val clean = url.lowercase()
-            if (clean.contains("analytics") ||
-                clean.contains("telemetry") ||
-                clean.contains("doubleclick") ||
-                clean.contains("googleads") ||
-                clean.contains("googlesyndication") ||
-                clean.contains("facebook") ||
-                clean.contains(".png") ||
-                clean.contains(".jpg") ||
-                clean.contains(".jpeg") ||
-                clean.contains(".webp") ||
-                clean.contains(".svg") ||
-                clean.contains(".css") ||
-                clean.contains(".js") ||
-                clean.contains(".woff") ||
-                clean.contains(".ttf") ||
-                clean.contains("favicon")
+            val pathOnly = try { Uri.parse(clean).path?.lowercase() ?: clean } catch (e: Exception) { clean }
+            if (pathOnly.endsWith(".png") || pathOnly.endsWith(".jpg") || pathOnly.endsWith(".jpeg") ||
+                pathOnly.endsWith(".webp") || pathOnly.endsWith(".svg") || pathOnly.endsWith(".gif") ||
+                pathOnly.endsWith(".css") || pathOnly.endsWith(".woff") || pathOnly.endsWith(".woff2") ||
+                pathOnly.endsWith(".ttf") || pathOnly.endsWith(".ico") || pathOnly.endsWith(".otf")
+            ) {
+                return false
+            }
+            if (clean.contains("google-analytics") || clean.contains("/telemetry") ||
+                clean.contains("doubleclick.net") || clean.contains("googlesyndication") ||
+                clean.contains("facebook.com/tr")
             ) {
                 return false
             }
             return clean.contains(".m3u8") ||
                     clean.contains(".mp4") ||
                     clean.contains(".mkv") ||
+                    clean.contains(".webm") ||
+                    clean.contains(".mpd") ||
                     clean.contains("/hls/") ||
+                    clean.contains("/hls-") ||
+                    clean.contains("/hls") ||
                     clean.contains("/manifest") ||
                     clean.contains("master.txt") ||
                     clean.contains("/stream/") ||
                     clean.contains("mime=video") ||
-                    clean.contains("mime=application%2Fvnd.apple.mpegurl")
+                    clean.contains("video/") ||
+                    clean.contains("mime=application%2fvnd.apple.mpegurl") ||
+                    clean.contains("application/x-mpegurl") ||
+                    clean.contains("application/vnd.apple.mpegurl")
         }
 
         DisposableEffect(Unit) {
@@ -1369,7 +1474,7 @@ class WatchActivity : ComponentActivity() {
                                         isScanningStream = false
                                         val cleanResult = result?.trim('"', ' ', '\n', '\r')?.takeIf { it != "null" && it.isNotBlank() }
                                         if (!cleanResult.isNullOrBlank()) {
-                                            detectedVideoUrl = cleanResult
+                                            handleStreamFound(cleanResult, detectedReferer ?: watchUrl)
                                             onDownload(cleanResult, detectedReferer ?: watchUrl)
                                         } else {
                                             // Fallback to webpage URL so user ALWAYS has quality selection available
@@ -1462,12 +1567,16 @@ class WatchActivity : ComponentActivity() {
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
 
-                        addJavascriptInterface(WebStreamBridge { stream ->
-                            if (detectedVideoUrl == null || stream.contains("master.m3u8", ignoreCase = true)) {
-                                detectedVideoUrl = stream
-                                if (detectedReferer == null) detectedReferer = watchUrl
+                        addJavascriptInterface(WebStreamBridge(
+                            onStreamFound = { src, ref ->
+                                handleStreamFound(src, ref)
+                            },
+                            onPlaybackActive = { width, height, _ ->
+                                if (height > 0) {
+                                    onPlaybackHeightDetected(height)
+                                }
                             }
-                        }, "WebBridge")
+                        ), "WebBridge")
 
                         val adBlockActive = AdBlocker.isEnabled(ctx)
                         settings.apply {
@@ -1495,6 +1604,33 @@ class WatchActivity : ComponentActivity() {
                                                 set: function() {},
                                                 configurable: true
                                             });
+                                            if (!window.__streamHooked) {
+                                                window.__streamHooked = true;
+                                                var origFetch = window.fetch;
+                                                if (origFetch) {
+                                                    window.fetch = function() {
+                                                        try {
+                                                            var a = arguments[0];
+                                                            var u = typeof a === 'string' ? a : (a && a.url ? a.url : '');
+                                                            if (u && (u.indexOf('.m3u8') !== -1 || u.indexOf('.mp4') !== -1 || u.indexOf('/hls') !== -1)) {
+                                                                window.WebBridge && window.WebBridge.onVideoSourceFoundWithRef(u, window.location.href);
+                                                            }
+                                                        } catch(e) {}
+                                                        return origFetch.apply(this, arguments);
+                                                    };
+                                                }
+                                                var origOpen = XMLHttpRequest.prototype.open;
+                                                if (origOpen) {
+                                                    XMLHttpRequest.prototype.open = function(m, u) {
+                                                        try {
+                                                            if (typeof u === 'string' && (u.indexOf('.m3u8') !== -1 || u.indexOf('.mp4') !== -1 || u.indexOf('/hls') !== -1)) {
+                                                                window.WebBridge && window.WebBridge.onVideoSourceFoundWithRef(u, window.location.href);
+                                                            }
+                                                        } catch(e) {}
+                                                        return origOpen.apply(this, arguments);
+                                                    };
+                                                }
+                                            }
                                         } catch(e) {}
                                     })();
                                 """.trimIndent()
@@ -1539,22 +1675,25 @@ class WatchActivity : ComponentActivity() {
                                                 var vids = document.querySelectorAll('video, audio');
                                                 for (var i = 0; i < vids.length; i++) {
                                                     var v = vids[i];
+                                                    if (v.videoWidth > 0 && v.videoHeight > 0) {
+                                                        window.WebBridge && window.WebBridge.onPlaybackActive(v.videoWidth, v.videoHeight, v.currentTime || 0);
+                                                    }
                                                     var s = v.currentSrc || v.src;
                                                     if (s && s.indexOf('blob:') !== 0 && s.indexOf('http') === 0) {
-                                                        window.WebBridge && window.WebBridge.onVideoSourceFound(s);
+                                                        window.WebBridge && window.WebBridge.onVideoSourceFoundWithRef(s, window.location.href);
                                                     }
                                                     var sources = v.querySelectorAll('source');
                                                     for (var j = 0; j < sources.length; j++) {
                                                         var src = sources[j].src;
                                                         if (src && src.indexOf('blob:') !== 0 && src.indexOf('http') === 0) {
-                                                            window.WebBridge && window.WebBridge.onVideoSourceFound(src);
+                                                            window.WebBridge && window.WebBridge.onVideoSourceFoundWithRef(src, window.location.href);
                                                         }
                                                     }
                                                 }
                                             } catch(e) {}
                                         }
                                         scanMedia();
-                                        setInterval(scanMedia, 1500);
+                                        setInterval(scanMedia, 1200);
 
                                         try {
                                             var s = document.createElement('style');
@@ -1603,16 +1742,32 @@ class WatchActivity : ComponentActivity() {
                                             return AdBlocker.createEmptyResponse()
                                         }
                                     }
-                                    if (isVideoUrl(url)) {
+                                    val accept = request.requestHeaders?.get("Accept")
+                                        ?: request.requestHeaders?.get("accept")
+                                        ?: ""
+                                    val isMediaAccept = accept.contains("video/") || accept.contains("mpegurl")
+
+                                    val cleanUrl = url.lowercase()
+                                    if (cleanUrl.endsWith(".ts") || cleanUrl.contains(".ts?") || cleanUrl.contains(".m4s")) {
+                                        val detectedH = when {
+                                            cleanUrl.contains("1080") -> 1080
+                                            cleanUrl.contains("720") -> 720
+                                            cleanUrl.contains("480") -> 480
+                                            cleanUrl.contains("360") -> 360
+                                            else -> 0
+                                        }
+                                        if (detectedH > 0) {
+                                            view?.post { onPlaybackHeightDetected(detectedH) }
+                                        }
+                                    }
+
+                                    if (isVideoUrl(url) || isMediaAccept) {
                                         val ref = request.requestHeaders?.get("Referer")
                                             ?: request.requestHeaders?.get("referer")
                                             ?: view?.url
                                             ?: watchUrl
                                         view?.post {
-                                            if (detectedVideoUrl == null || url.contains("master.m3u8", ignoreCase = true)) {
-                                                detectedVideoUrl = url
-                                                detectedReferer = ref
-                                            }
+                                            handleStreamFound(url, ref)
                                         }
                                     }
                                 }
@@ -1622,9 +1777,8 @@ class WatchActivity : ComponentActivity() {
                             override fun onLoadResource(view: WebView?, url: String?) {
                                 super.onLoadResource(view, url)
                                 if (url != null && isVideoUrl(url)) {
-                                    if (detectedVideoUrl == null || url.contains("master.m3u8", ignoreCase = true)) {
-                                        detectedVideoUrl = url
-                                        if (detectedReferer == null) detectedReferer = view?.url ?: watchUrl
+                                    view?.post {
+                                        handleStreamFound(url, view.url ?: watchUrl)
                                     }
                                 }
                             }
@@ -1783,6 +1937,10 @@ class WatchActivity : ComponentActivity() {
         streamUrl: String,
         title: String,
         referer: String?,
+        syncedWebsiteOptions: List<DownloadQualityOption>,
+        currentPlaybackHeight: Int,
+        isWebsiteStreamCaptured: Boolean,
+        isSyncingWebsite: Boolean,
         onDismiss: () -> Unit,
         onOptionSelected: (DownloadQualityOption) -> Unit
     ) {
@@ -1829,122 +1987,81 @@ class WatchActivity : ComponentActivity() {
             )
         }
 
-        val defaultAudioOptions = remember {
+        val hasWebsiteSyncedStreams = syncedWebsiteOptions.isNotEmpty()
+
+        // Video options prioritized by actual website streams!
+        val videoOptions = remember(syncedWebsiteOptions, currentPlaybackHeight, streamUrl, isWebsiteStreamCaptured) {
+            if (hasWebsiteSyncedStreams) {
+                val mapped = syncedWebsiteOptions.map { opt ->
+                    val h = opt.badge.removeSuffix("p").toIntOrNull() ?: 0
+                    val isPlaying = (currentPlaybackHeight > 0 && h == currentPlaybackHeight)
+                    opt.copy(isPlayingNow = isPlaying)
+                }
+
+                val masterOption = DownloadQualityOption(
+                    id = "synced_master_auto",
+                    title = "Original Stream (Adaptive Auto)",
+                    subtitle = "Master playlist direct from website player",
+                    badge = "AUTO",
+                    formatId = streamUrl,
+                    isAudio = false,
+                    isSyncedFromWebsite = true
+                )
+                mapped + masterOption
+            } else if (isWebsiteStreamCaptured) {
+                val badge = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p" else "STREAM"
+                val directOption = DownloadQualityOption(
+                    id = "synced_direct_source",
+                    title = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p Stream (Website Stream)" else "Website Video Stream",
+                    subtitle = "Direct stream synced from active website playback",
+                    badge = badge,
+                    formatId = streamUrl,
+                    isAudio = false,
+                    isSyncedFromWebsite = true,
+                    isPlayingNow = true
+                )
+                listOf(directOption) + defaultVideoOptions
+            } else {
+                defaultVideoOptions
+            }
+        }
+
+        // Audio options extracted from the website stream!
+        val audioOptions = remember(streamUrl, hasWebsiteSyncedStreams) {
+            val audioSourceUrl = if (hasWebsiteSyncedStreams) {
+                syncedWebsiteOptions.firstOrNull()?.formatId ?: streamUrl
+            } else {
+                streamUrl
+            }
             listOf(
                 DownloadQualityOption(
                     id = "audio_m4a",
-                    title = "Best Audio (M4A)",
-                    subtitle = "Native AAC stream, pristine sound",
+                    title = "Website Audio (M4A Pristine)",
+                    subtitle = "Lossless AAC extracted directly from website stream",
                     badge = "M4A",
-                    formatId = "bestaudio[ext=m4a]/bestaudio",
-                    isAudio = true
+                    formatId = audioSourceUrl,
+                    isAudio = true,
+                    isSyncedFromWebsite = isWebsiteStreamCaptured
                 ),
                 DownloadQualityOption(
                     id = "audio_mp3",
-                    title = "MP3 Universal (320 kbps)",
-                    subtitle = "Maximum compatibility, high bitrate audio",
+                    title = "Website Audio (MP3 320 kbps)",
+                    subtitle = "Universal high bitrate MP3 extracted from website",
                     badge = "MP3",
-                    formatId = "bestaudio",
-                    isAudio = true
+                    formatId = audioSourceUrl,
+                    isAudio = true,
+                    isSyncedFromWebsite = isWebsiteStreamCaptured
                 ),
                 DownloadQualityOption(
                     id = "audio_aac",
-                    title = "AAC Compact Audio",
-                    subtitle = "Lightweight audio track, minimal storage",
+                    title = "Compact Audio (AAC)",
+                    subtitle = "Lightweight track extracted from website audio",
                     badge = "AAC",
-                    formatId = "bestaudio",
-                    isAudio = true
+                    formatId = audioSourceUrl,
+                    isAudio = true,
+                    isSyncedFromWebsite = isWebsiteStreamCaptured
                 )
             )
-        }
-
-        var videoOptions by remember { mutableStateOf(defaultVideoOptions) }
-        var audioOptions by remember { mutableStateOf(defaultAudioOptions) }
-        var isProbingFormats by remember { mutableStateOf(true) }
-        var probedFormatsCount by remember { mutableIntStateOf(0) }
-
-        // Dynamic metadata probing in background
-        LaunchedEffect(streamUrl) {
-            if (streamUrl.isNotBlank()) {
-                withContext(Dispatchers.IO) {
-                    try {
-                        isProbingFormats = true
-                        val req = YoutubeDLRequest(streamUrl).apply {
-                            addOption("--no-playlist")
-                            addOption("--no-check-certificates")
-                            addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
-                            if (!referer.isNullOrEmpty()) {
-                                addOption("--referer", referer)
-                            }
-                        }
-                        val info = YoutubeDL.getInstance().getInfo(req)
-                        val rawFormats = info.formats ?: emptyList()
-                        probedFormatsCount = rawFormats.size
-
-                        if (rawFormats.isNotEmpty()) {
-                            val sizeMap = mutableMapOf<Int, Long>()
-                            for (f in rawFormats) {
-                                val h = f.height
-                                val s = if (f.fileSize > 0) f.fileSize else f.fileSizeApproximate
-                                if (h > 0 && s > 0) {
-                                    if (!sizeMap.containsKey(h) || (sizeMap[h] ?: 0) < s) {
-                                        sizeMap[h] = s
-                                    }
-                                }
-                            }
-
-                            val updatedVideo = defaultVideoOptions.map { opt ->
-                                val targetH = when (opt.badge) {
-                                    "1080p" -> 1080
-                                    "720p" -> 720
-                                    "480p" -> 480
-                                    "360p" -> 360
-                                    else -> null
-                                }
-                                val sz = targetH?.let { sizeMap[it] } ?: if (opt.badge == "AUTO") {
-                                    if (info.fileSize > 0) info.fileSize else info.fileSizeApproximate
-                                } else null
-
-                                if (sz != null && sz > 0) {
-                                    opt.copy(fileSizeFormatted = formatBytes(sz))
-                                } else {
-                                    opt
-                                }
-                            }
-
-                            val higherHeights = sizeMap.keys.filter { it > 1080 }.sortedDescending()
-                            val extraOptions = higherHeights.map { h ->
-                                DownloadQualityOption(
-                                    id = "video_${h}p",
-                                    title = "${h}p Ultra HD",
-                                    subtitle = "Master resolution source stream",
-                                    badge = "${h}p",
-                                    formatId = "bestvideo[height<=$h]+bestaudio/best[height<=$h]/best",
-                                    fileSizeFormatted = sizeMap[h]?.let { formatBytes(it) }
-                                )
-                            }
-
-                            val audioSize = rawFormats.firstOrNull { it.vcodec == "none" && (it.fileSize > 0 || it.fileSizeApproximate > 0) }?.let {
-                                if (it.fileSize > 0) it.fileSize else it.fileSizeApproximate
-                            }
-                            val updatedAudio = if (audioSize != null && audioSize > 0) {
-                                defaultAudioOptions.map { it.copy(fileSizeFormatted = formatBytes(audioSize)) }
-                            } else {
-                                defaultAudioOptions
-                            }
-
-                            videoOptions = extraOptions + updatedVideo
-                            audioOptions = updatedAudio
-                        }
-                    } catch (ignored: Exception) {
-                        // Gracefully fallback: presets remain completely functional!
-                    } finally {
-                        isProbingFormats = false
-                    }
-                }
-            } else {
-                isProbingFormats = false
-            }
         }
 
         ModalBottomSheet(
@@ -2042,15 +2159,21 @@ class WatchActivity : ComponentActivity() {
                     }
                 }
 
-                // Stream Info & Multi-stream badge
+                // Stream Sync Status Banner
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.04f))
+                        .background(
+                            if (hasWebsiteSyncedStreams) Color(0xFF00E5FF).copy(alpha = 0.10f)
+                            else if (isWebsiteStreamCaptured) Color(0xFF00E5FF).copy(alpha = 0.06f)
+                            else Color(0xFFFFB300).copy(alpha = 0.08f)
+                        )
                         .border(
-                            width = 0.5.dp,
-                            color = Color.White.copy(alpha = 0.08f),
+                            width = 0.65.dp,
+                            color = if (hasWebsiteSyncedStreams) Color(0xFF00E5FF).copy(alpha = 0.45f)
+                                    else if (isWebsiteStreamCaptured) Color(0xFF00E5FF).copy(alpha = 0.25f)
+                                    else Color(0xFFFFB300).copy(alpha = 0.35f),
                             shape = RoundedCornerShape(10.dp)
                         )
                         .padding(horizontal = 12.dp, vertical = 7.dp),
@@ -2065,17 +2188,23 @@ class WatchActivity : ComponentActivity() {
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF00E5FF))
+                                .background(
+                                    if (hasWebsiteSyncedStreams || isWebsiteStreamCaptured) Color(0xFF00E5FF)
+                                    else Color(0xFFFFB300)
+                                )
                         )
                         Text(
-                            text = "16-Stream Aria2c Acceleration",
-                            color = Color(0xFF00E5FF),
+                            text = if (hasWebsiteSyncedStreams) "SYNCED FROM WEBSITE PLAYBACK (${syncedWebsiteOptions.size} streams)"
+                                   else if (isWebsiteStreamCaptured) "SYNCED FROM WEBSITE STREAM"
+                                   else "WEBSITE STREAM NOT STARTED",
+                            color = if (hasWebsiteSyncedStreams || isWebsiteStreamCaptured) Color(0xFF00E5FF)
+                                    else Color(0xFFFFB300),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
-                    if (isProbingFormats) {
+                    if (isSyncingWebsite) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -2086,29 +2215,18 @@ class WatchActivity : ComponentActivity() {
                                 strokeWidth = 1.8.dp
                             )
                             Text(
-                                text = "Checking formats...",
-                                color = Color.White.copy(alpha = 0.5f),
+                                text = "Syncing...",
+                                color = Color.White.copy(alpha = 0.6f),
                                 fontSize = 10.5.sp
                             )
                         }
-                    } else if (probedFormatsCount > 0) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF00E5FF),
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Text(
-                                text = "$probedFormatsCount streams detected",
-                                color = Color(0xFF00E5FF),
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                    } else if (currentPlaybackHeight > 0) {
+                        Text(
+                            text = "Playing: ${currentPlaybackHeight}p",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
 
@@ -2230,7 +2348,7 @@ class WatchActivity : ComponentActivity() {
 
                 // Footer note
                 Text(
-                    text = "Downloads will be saved to Movies or Music folder for offline viewing.",
+                    text = "Downloads will be saved to Movies or Music folder with 16 Aria2c streams.",
                     color = Color.White.copy(alpha = 0.35f),
                     fontSize = 11.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -2254,9 +2372,10 @@ class WatchActivity : ComponentActivity() {
                 .clip(RoundedCornerShape(CornerRadius.card))
                 .background(Color(0xFF131726))
                 .border(
-                    width = 0.75.dp,
+                    width = if (option.isPlayingNow) 1.25.dp else 0.75.dp,
                     brush = Brush.linearGradient(
-                        listOf(
+                        if (option.isPlayingNow) listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                        else listOf(
                             Color.White.copy(alpha = 0.12f),
                             accentColor.copy(alpha = 0.15f),
                             Color.White.copy(alpha = 0.04f)
@@ -2303,12 +2422,46 @@ class WatchActivity : ComponentActivity() {
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = option.title,
-                        color = Color.White,
-                        fontSize = 14.5.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = option.title,
+                            color = Color.White,
+                            fontSize = 14.5.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        if (option.isPlayingNow) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFF00E5FF).copy(alpha = 0.20f))
+                                    .padding(horizontal = 5.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "PLAYING NOW",
+                                    color = Color(0xFF00E5FF),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else if (option.isSyncedFromWebsite) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .padding(horizontal = 5.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "WEBSITE",
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
                     Text(
                         text = option.subtitle,
                         color = Color.White.copy(alpha = 0.55f),
@@ -2358,6 +2511,96 @@ class WatchActivity : ComponentActivity() {
     }
 
     companion object {
+        fun parseHlsMasterPlaylist(masterUrl: String, content: String): List<DownloadQualityOption> {
+            val lines = content.lines()
+            val options = mutableListOf<DownloadQualityOption>()
+            var currentBandwidth = 0L
+            var currentResolution = ""
+            var currentWidth = 0
+            var currentHeight = 0
+            val uriBase = try { URI(masterUrl) } catch (e: Exception) { null }
+
+            for (line in lines) {
+                val trimmed = line.trim()
+                if (trimmed.startsWith("#EXT-X-STREAM-INF:")) {
+                    val attrs = trimmed.removePrefix("#EXT-X-STREAM-INF:")
+                    val bwMatch = Regex("BANDWIDTH=(\\d+)").find(attrs)
+                    currentBandwidth = bwMatch?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
+
+                    val resMatch = Regex("RESOLUTION=(\\d+)x(\\d+)").find(attrs)
+                    if (resMatch != null) {
+                        currentWidth = resMatch.groupValues[1].toIntOrNull() ?: 0
+                        currentHeight = resMatch.groupValues[2].toIntOrNull() ?: 0
+                        currentResolution = "${currentHeight}p"
+                    } else {
+                        currentWidth = 0
+                        currentHeight = 0
+                        currentResolution = ""
+                    }
+                } else if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
+                    val absoluteVariantUrl = if (uriBase != null) {
+                        try {
+                            uriBase.resolve(trimmed).toString()
+                        } catch (e: Exception) {
+                            trimmed
+                        }
+                    } else {
+                        trimmed
+                    }
+
+                    val badge = if (currentResolution.isNotEmpty()) currentResolution else {
+                        when {
+                            currentBandwidth >= 3500000 -> "1080p"
+                            currentBandwidth >= 1800000 -> "720p"
+                            currentBandwidth >= 900000 -> "480p"
+                            currentBandwidth > 0 -> "360p"
+                            else -> "HD"
+                        }
+                    }
+
+                    val title = when (badge) {
+                        "2160p" -> "4K Ultra HD"
+                        "1440p" -> "2K Quad HD"
+                        "1080p" -> "1080p Full HD"
+                        "720p" -> "720p HD"
+                        "480p" -> "480p SD"
+                        "360p" -> "360p Data Saver"
+                        else -> "$badge Stream"
+                    }
+
+                    val bwFormatted = if (currentBandwidth > 0) {
+                        val mbps = currentBandwidth / 1_000_000.0
+                        String.format(java.util.Locale.US, "%.1f Mbps", mbps)
+                    } else null
+
+                    val subtitle = if (bwFormatted != null) "Bitrate: $bwFormatted • Synced from website"
+                                   else "Synced from website playback"
+
+                    options.add(
+                        DownloadQualityOption(
+                            id = "synced_${badge}_${options.size}",
+                            title = title,
+                            subtitle = subtitle,
+                            badge = badge,
+                            formatId = absoluteVariantUrl,
+                            isAudio = false,
+                            fileSizeFormatted = bwFormatted,
+                            isSyncedFromWebsite = true
+                        )
+                    )
+
+                    currentBandwidth = 0L
+                    currentResolution = ""
+                    currentWidth = 0
+                    currentHeight = 0
+                }
+            }
+
+            return options.sortedByDescending { opt ->
+                opt.badge.removeSuffix("p").toIntOrNull() ?: 0
+            }
+        }
+
         fun formatTime(ms: Long): String {
             if (ms <= 0L) return "00:00"
             val totalSeconds = ms / 1000
@@ -2393,5 +2636,7 @@ data class DownloadQualityOption(
     val badge: String,
     val formatId: String,
     val isAudio: Boolean = false,
-    val fileSizeFormatted: String? = null
+    val fileSizeFormatted: String? = null,
+    val isSyncedFromWebsite: Boolean = false,
+    val isPlayingNow: Boolean = false
 )

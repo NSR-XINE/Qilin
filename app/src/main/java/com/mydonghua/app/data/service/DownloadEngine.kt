@@ -183,15 +183,19 @@ object DownloadEngine {
         val cleanTitle = title.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
         val taskId = UUID.randomUUID().toString()
 
+        val isDirectUrlFormat = formatId?.startsWith("http://") == true || formatId?.startsWith("https://") == true
+        val effectiveUrl = if (isDirectUrlFormat) formatId!! else url
+        val effectiveFormatId = if (isDirectUrlFormat) null else formatId
+
         val task = DownloadTask(
             id = taskId,
             title = cleanTitle,
-            url = url,
+            url = effectiveUrl,
             status = DownloadStatus.DOWNLOADING,
             progress = 0f,
             numThreads = 16,
-            isHls = url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true),
-            formatId = formatId,
+            isHls = effectiveUrl.contains(".m3u8", ignoreCase = true) || effectiveUrl.contains("/hls/", ignoreCase = true),
+            formatId = effectiveFormatId,
             referer = referer,
             isAudioOnly = isAudioOnly
         )
@@ -210,12 +214,12 @@ object DownloadEngine {
 
         val serviceIntent = Intent(app, DownloadService::class.java).apply {
             action = "START_DOWNLOAD"
-            putExtra("url", url)
+            putExtra("url", effectiveUrl)
             putExtra("downloadId", taskId)
             putExtra("title", cleanTitle)
             putExtra("path", saveDir.absolutePath)
-            if (!formatId.isNullOrEmpty()) {
-                putExtra("formatId", formatId)
+            if (!effectiveFormatId.isNullOrEmpty()) {
+                putExtra("formatId", effectiveFormatId)
             }
             if (!referer.isNullOrEmpty()) {
                 putExtra("referer", referer)
