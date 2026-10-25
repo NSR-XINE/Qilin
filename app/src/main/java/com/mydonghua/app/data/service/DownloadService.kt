@@ -109,8 +109,9 @@ class DownloadService : Service() {
                     ?: (getExternalFilesDir(Environment.DIRECTORY_MOVIES)?.absolutePath ?: cacheDir.absolutePath)
                 val expectedSize = intent.getStringExtra("expectedSize") ?: ""
                 val referer = intent.getStringExtra("referer")
+                val isAudioOnly = intent.getBooleanExtra("isAudioOnly", false) || (formatId?.contains("audio", ignoreCase = true) == true)
 
-                startDownload(downloadId, url, formatId, title, path, expectedSize, referer)
+                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly)
             }
             "CANCEL_DOWNLOAD" -> {
                 val downloadId = intent.getStringExtra("downloadId")
@@ -132,7 +133,8 @@ class DownloadService : Service() {
         title: String,
         path: String,
         expectedSize: String,
-        referer: String? = null
+        referer: String? = null,
+        isAudioOnly: Boolean = false
     ) {
         try {
             if (wakeLock?.isHeld == false) {
@@ -196,6 +198,14 @@ class DownloadService : Service() {
                     if (!formatId.isNullOrEmpty()) {
                         addOption("-f", formatId)
                     }
+                    if (isAudioOnly) {
+                        addOption("-x")
+                        if (formatId?.contains("mp3", ignoreCase = true) == true) {
+                            addOption("--audio-format", "mp3")
+                        } else {
+                            addOption("--audio-format", "m4a")
+                        }
+                    }
                     addOption("-o", "$path/$sanitizedTitle.%(ext)s")
                     addOption("--no-check-certificates")
                     addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
@@ -211,11 +221,11 @@ class DownloadService : Service() {
                         }
                     } catch (ignored: Exception) {}
 
-                    if (isHls) {
+                    if (isHls && !isAudioOnly) {
                         addOption("--downloader", "m3u8:native")
                         addOption("--concurrent-fragments", "16")
                         addOption("--hls-use-mpegts")
-                    } else {
+                    } else if (!isHls && !isAudioOnly) {
                         addOption("--external-downloader", "libaria2c.so")
                         addOption("--external-downloader-args", "aria2c:-c -j 16 -x 16 -s 16 -k 1M --file-allocation=none")
                     }
@@ -278,6 +288,14 @@ class DownloadService : Service() {
                     Log.w(TAG, "Aria2c download failed (code ${response.exitCode}). Retrying with native downloader...")
                     val fallbackRequest = YoutubeDLRequest(url).apply {
                         if (!formatId.isNullOrEmpty()) addOption("-f", formatId)
+                        if (isAudioOnly) {
+                            addOption("-x")
+                            if (formatId?.contains("mp3", ignoreCase = true) == true) {
+                                addOption("--audio-format", "mp3")
+                            } else {
+                                addOption("--audio-format", "m4a")
+                            }
+                        }
                         addOption("-o", "$path/$sanitizedTitle.%(ext)s")
                         addOption("--no-check-certificates")
                         addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
@@ -333,6 +351,14 @@ class DownloadService : Service() {
                     Log.w(TAG, "Multi-fragment HLS download failed (code ${response.exitCode}). Retrying with default HLS...")
                     val fallbackHlsRequest = YoutubeDLRequest(url).apply {
                         if (!formatId.isNullOrEmpty()) addOption("-f", formatId)
+                        if (isAudioOnly) {
+                            addOption("-x")
+                            if (formatId?.contains("mp3", ignoreCase = true) == true) {
+                                addOption("--audio-format", "mp3")
+                            } else {
+                                addOption("--audio-format", "m4a")
+                            }
+                        }
                         addOption("-o", "$path/$sanitizedTitle.%(ext)s")
                         addOption("--no-check-certificates")
                         addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")

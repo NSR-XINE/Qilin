@@ -60,7 +60,9 @@ fun DownloadsScreen(
                 val list = dir.listFiles { _, name ->
                     name.endsWith(".mp4", ignoreCase = true) ||
                     name.endsWith(".mkv", ignoreCase = true) ||
-                    name.endsWith(".ts", ignoreCase = true)
+                    name.endsWith(".ts", ignoreCase = true) ||
+                    name.endsWith(".mp3", ignoreCase = true) ||
+                    name.endsWith(".m4a", ignoreCase = true)
                 }
                 if (list != null) {
                     files.addAll(list)

@@ -23,7 +23,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.OptIn
+import kotlin.OptIn
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -35,12 +35,24 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import com.yausername.youtubedl_android.YoutubeDL
+import com.yausername.youtubedl_android.YoutubeDLRequest
+import com.yausername.youtubedl_android.mapper.VideoFormat
+import com.yausername.youtubedl_android.mapper.VideoInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,13 +120,21 @@ class WatchActivity : ComponentActivity() {
             val isInPip by remember { isInPipModeState }
             var useWebPlayer by remember { mutableStateOf(!isDirectVideo) }
 
+            var showQualitySheet by remember { mutableStateOf(false) }
+            var downloadTargetUrl by remember { mutableStateOf(watchUrl) }
+            var downloadTargetReferer by remember { mutableStateOf<String?>(null) }
+
             if (!useWebPlayer) {
                 DirectVideoPlayerScreen(
                     watchUrl = watchUrl,
                     showTitle = showTitle,
                     isInPip = isInPip,
                     onBack = { finish() },
-                    onDownload = { downloadVideo(context, watchUrl, showTitle) },
+                    onDownload = {
+                        downloadTargetUrl = watchUrl
+                        downloadTargetReferer = null
+                        showQualitySheet = true
+                    },
                     onEnterPip = { enterPipMode() },
                     onSwitchToWeb = { useWebPlayer = true }
                 )
@@ -123,13 +143,37 @@ class WatchActivity : ComponentActivity() {
                     watchUrl = watchUrl,
                     showTitle = showTitle,
                     onBack = { finish() },
-                    onDownload = { streamUrl, referer -> downloadVideo(context, streamUrl, showTitle, referer) },
+                    onDownload = { streamUrl, referer ->
+                        downloadTargetUrl = streamUrl
+                        downloadTargetReferer = referer
+                        showQualitySheet = true
+                    },
                     onOpenExternal = {
                         try {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(watchUrl)))
                         } catch (e: Exception) {
                             Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
                         }
+                    }
+                )
+            }
+
+            if (showQualitySheet) {
+                QualitySelectorBottomSheet(
+                    streamUrl = downloadTargetUrl,
+                    title = showTitle,
+                    referer = downloadTargetReferer,
+                    onDismiss = { showQualitySheet = false },
+                    onOptionSelected = { option ->
+                        showQualitySheet = false
+                        downloadVideo(
+                            context = context,
+                            videoUrl = downloadTargetUrl,
+                            title = showTitle,
+                            formatId = option.formatId,
+                            referer = downloadTargetReferer,
+                            isAudioOnly = option.isAudio
+                        )
                     }
                 )
             }
@@ -172,7 +216,6 @@ class WatchActivity : ComponentActivity() {
         super.onBackPressed()
     }
 
-    @OptIn(UnstableApi::class)
     @Composable
     private fun DirectVideoPlayerScreen(
         watchUrl: String,
@@ -1300,7 +1343,7 @@ class WatchActivity : ComponentActivity() {
                             onClick = {
                                 val currentStream = detectedVideoUrl
                                 if (!currentStream.isNullOrBlank()) {
-                                    onDownload(currentStream, detectedReferer)
+                                    onDownload(currentStream, detectedReferer ?: watchUrl)
                                 } else {
                                     isScanningStream = true
                                     webViewRef?.evaluateJavascript(
@@ -1329,11 +1372,8 @@ class WatchActivity : ComponentActivity() {
                                             detectedVideoUrl = cleanResult
                                             onDownload(cleanResult, detectedReferer ?: watchUrl)
                                         } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Please tap Play on the video player first to capture the download stream!",
-                                                Toast.LENGTH_LONG
-                                            ).show()
+                                            // Fallback to webpage URL so user ALWAYS has quality selection available
+                                            onDownload(watchUrl, detectedReferer ?: watchUrl)
                                         }
                                     }
                                 }
@@ -1690,33 +1730,629 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
-    private fun downloadVideo(context: Context, videoUrl: String, title: String, referer: String? = null) {
+    private fun downloadVideo(
+        context: Context,
+        videoUrl: String,
+        title: String,
+        formatId: String? = null,
+        referer: String? = null,
+        isAudioOnly: Boolean = false
+    ) {
         try {
-            com.mydonghua.app.data.service.DownloadEngine.startDownload(context, videoUrl, title, referer)
-            Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_LONG).show()
+            com.mydonghua.app.data.service.DownloadEngine.startDownload(
+                context = context,
+                url = videoUrl,
+                title = title,
+                formatId = formatId,
+                referer = referer,
+                isAudioOnly = isAudioOnly
+            )
+            val msg = if (isAudioOnly) "Starting audio extraction: $title" else "Starting download: $title"
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             try {
                 val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 val uri = Uri.parse(videoUrl)
+                val ext = if (isAudioOnly) ".m4a" else ".mp4"
                 val request = DownloadManager.Request(uri).apply {
                     setTitle(title)
                     setDescription("Downloading episode for offline viewing...")
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                     setDestinationInExternalPublicDir(
-                        Environment.DIRECTORY_MOVIES,
-                        "MyDonghua/${title.replace(Regex("[^a-zA-Z0-9_]"), "_")}.mp4"
+                        if (isAudioOnly) Environment.DIRECTORY_MUSIC else Environment.DIRECTORY_MOVIES,
+                        "MyDonghua/${title.replace(Regex("[^a-zA-Z0-9_]"), "_")}$ext"
                     )
                     if (!referer.isNullOrEmpty()) {
                         addRequestHeader("Referer", referer)
                     }
                 }
                 downloadManager.enqueue(request)
-                Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_SHORT).show()
             } catch (ex: Exception) {
                 Toast.makeText(context, "Opening download link...", Toast.LENGTH_SHORT).show()
                 try {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
                 } catch (ignored: Exception) {}
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun QualitySelectorBottomSheet(
+        streamUrl: String,
+        title: String,
+        referer: String?,
+        onDismiss: () -> Unit,
+        onOptionSelected: (DownloadQualityOption) -> Unit
+    ) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        var selectedTab by remember { mutableIntStateOf(0) } // 0: Video, 1: Audio
+
+        val defaultVideoOptions = remember {
+            listOf(
+                DownloadQualityOption(
+                    id = "video_1080p",
+                    title = "1080p Full HD",
+                    subtitle = "Crystal clear high definition",
+                    badge = "1080p",
+                    formatId = "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
+                ),
+                DownloadQualityOption(
+                    id = "video_720p",
+                    title = "720p HD",
+                    subtitle = "Smooth playback, recommended for mobile",
+                    badge = "720p",
+                    formatId = "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
+                ),
+                DownloadQualityOption(
+                    id = "video_480p",
+                    title = "480p SD",
+                    subtitle = "Standard quality, faster download",
+                    badge = "480p",
+                    formatId = "bestvideo[height<=480]+bestaudio/best[height<=480]/best"
+                ),
+                DownloadQualityOption(
+                    id = "video_360p",
+                    title = "360p Data Saver",
+                    subtitle = "Smallest file size, saves mobile data",
+                    badge = "360p",
+                    formatId = "bestvideo[height<=360]+bestaudio/best[height<=360]/best"
+                ),
+                DownloadQualityOption(
+                    id = "video_best",
+                    title = "Best Available (Source)",
+                    subtitle = "Highest quality original direct stream",
+                    badge = "AUTO",
+                    formatId = "best"
+                )
+            )
+        }
+
+        val defaultAudioOptions = remember {
+            listOf(
+                DownloadQualityOption(
+                    id = "audio_m4a",
+                    title = "Best Audio (M4A)",
+                    subtitle = "Native AAC stream, pristine sound",
+                    badge = "M4A",
+                    formatId = "bestaudio[ext=m4a]/bestaudio",
+                    isAudio = true
+                ),
+                DownloadQualityOption(
+                    id = "audio_mp3",
+                    title = "MP3 Universal (320 kbps)",
+                    subtitle = "Maximum compatibility, high bitrate audio",
+                    badge = "MP3",
+                    formatId = "bestaudio",
+                    isAudio = true
+                ),
+                DownloadQualityOption(
+                    id = "audio_aac",
+                    title = "AAC Compact Audio",
+                    subtitle = "Lightweight audio track, minimal storage",
+                    badge = "AAC",
+                    formatId = "bestaudio",
+                    isAudio = true
+                )
+            )
+        }
+
+        var videoOptions by remember { mutableStateOf(defaultVideoOptions) }
+        var audioOptions by remember { mutableStateOf(defaultAudioOptions) }
+        var isProbingFormats by remember { mutableStateOf(true) }
+        var probedFormatsCount by remember { mutableIntStateOf(0) }
+
+        // Dynamic metadata probing in background
+        LaunchedEffect(streamUrl) {
+            if (streamUrl.isNotBlank()) {
+                withContext(Dispatchers.IO) {
+                    try {
+                        isProbingFormats = true
+                        val req = YoutubeDLRequest(streamUrl).apply {
+                            addOption("--no-playlist")
+                            addOption("--no-check-certificates")
+                            addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                            if (!referer.isNullOrEmpty()) {
+                                addOption("--referer", referer)
+                            }
+                        }
+                        val info = YoutubeDL.getInstance().getInfo(req)
+                        val rawFormats = info.formats ?: emptyList()
+                        probedFormatsCount = rawFormats.size
+
+                        if (rawFormats.isNotEmpty()) {
+                            val sizeMap = mutableMapOf<Int, Long>()
+                            for (f in rawFormats) {
+                                val h = f.height
+                                val s = if (f.fileSize > 0) f.fileSize else f.fileSizeApproximate
+                                if (h > 0 && s > 0) {
+                                    if (!sizeMap.containsKey(h) || (sizeMap[h] ?: 0) < s) {
+                                        sizeMap[h] = s
+                                    }
+                                }
+                            }
+
+                            val updatedVideo = defaultVideoOptions.map { opt ->
+                                val targetH = when (opt.badge) {
+                                    "1080p" -> 1080
+                                    "720p" -> 720
+                                    "480p" -> 480
+                                    "360p" -> 360
+                                    else -> null
+                                }
+                                val sz = targetH?.let { sizeMap[it] } ?: if (opt.badge == "AUTO") {
+                                    if (info.fileSize > 0) info.fileSize else info.fileSizeApproximate
+                                } else null
+
+                                if (sz != null && sz > 0) {
+                                    opt.copy(fileSizeFormatted = formatBytes(sz))
+                                } else {
+                                    opt
+                                }
+                            }
+
+                            val higherHeights = sizeMap.keys.filter { it > 1080 }.sortedDescending()
+                            val extraOptions = higherHeights.map { h ->
+                                DownloadQualityOption(
+                                    id = "video_${h}p",
+                                    title = "${h}p Ultra HD",
+                                    subtitle = "Master resolution source stream",
+                                    badge = "${h}p",
+                                    formatId = "bestvideo[height<=$h]+bestaudio/best[height<=$h]/best",
+                                    fileSizeFormatted = sizeMap[h]?.let { formatBytes(it) }
+                                )
+                            }
+
+                            val audioSize = rawFormats.firstOrNull { it.vcodec == "none" && (it.fileSize > 0 || it.fileSizeApproximate > 0) }?.let {
+                                if (it.fileSize > 0) it.fileSize else it.fileSizeApproximate
+                            }
+                            val updatedAudio = if (audioSize != null && audioSize > 0) {
+                                defaultAudioOptions.map { it.copy(fileSizeFormatted = formatBytes(audioSize)) }
+                            } else {
+                                defaultAudioOptions
+                            }
+
+                            videoOptions = extraOptions + updatedVideo
+                            audioOptions = updatedAudio
+                        }
+                    } catch (ignored: Exception) {
+                        // Gracefully fallback: presets remain completely functional!
+                    } finally {
+                        isProbingFormats = false
+                    }
+                }
+            } else {
+                isProbingFormats = false
+            }
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = Color(0xFF0F121C),
+            scrimColor = Color.Black.copy(alpha = 0.65f),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 12.dp, bottom = 6.dp)
+                        .width(44.dp)
+                        .height(4.5.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.25f))
+                )
+            },
+            shape = RoundedCornerShape(topStart = CornerRadius.sheet, topEnd = CornerRadius.sheet)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .navigationBarsPadding()
+                    .padding(bottom = 16.dp)
+            ) {
+                // Header: Title, Donghua Name, Close Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Color(0xFF00E5FF).copy(alpha = 0.25f), Color(0xFF0072FF).copy(alpha = 0.15f))
+                                    )
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFF00E5FF).copy(alpha = 0.4f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.FileDownload,
+                                contentDescription = null,
+                                tint = Color(0xFF00E5FF),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Download Episode",
+                                color = Color.White,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = title,
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontSize = 12.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = "Close",
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // Stream Info & Multi-stream badge
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .border(
+                            width = 0.5.dp,
+                            color = Color.White.copy(alpha = 0.08f),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF00E5FF))
+                        )
+                        Text(
+                            text = "16-Stream Aria2c Acceleration",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    if (isProbingFormats) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(11.dp),
+                                color = Color(0xFF00E5FF),
+                                strokeWidth = 1.8.dp
+                            )
+                            Text(
+                                text = "Checking formats...",
+                                color = Color.White.copy(alpha = 0.5f),
+                                fontSize = 10.5.sp
+                            )
+                        }
+                    } else if (probedFormatsCount > 0) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF00E5FF),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "$probedFormatsCount streams detected",
+                                color = Color(0xFF00E5FF),
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Segmented Tab Row: Video Qualities vs Audio Formats
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(CornerRadius.chip))
+                        .background(Color(0xFF0A0C14))
+                        .border(
+                            width = 0.65.dp,
+                            color = Color.White.copy(alpha = 0.10f),
+                            shape = RoundedCornerShape(CornerRadius.chip)
+                        )
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // Tab 0: Video Qualities
+                    val isVideoTab = selectedTab == 0
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isVideoTab) Color(0xFF00E5FF).copy(alpha = 0.18f)
+                                else Color.Transparent
+                            )
+                            .border(
+                                width = if (isVideoTab) 1.dp else 0.dp,
+                                color = if (isVideoTab) Color(0xFF00E5FF).copy(alpha = 0.5f) else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .clickable { selectedTab = 0 }
+                            .padding(vertical = 9.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.VideoLibrary,
+                                contentDescription = null,
+                                tint = if (isVideoTab) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.5f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Video Qualities",
+                                color = if (isVideoTab) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.7f),
+                                fontSize = 13.sp,
+                                fontWeight = if (isVideoTab) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+
+                    // Tab 1: Audio Formats
+                    val isAudioTab = selectedTab == 1
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isAudioTab) Color(0xFFB388FF).copy(alpha = 0.18f)
+                                else Color.Transparent
+                            )
+                            .border(
+                                width = if (isAudioTab) 1.dp else 0.dp,
+                                color = if (isAudioTab) Color(0xFFB388FF).copy(alpha = 0.5f) else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .clickable { selectedTab = 1 }
+                            .padding(vertical = 9.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Headphones,
+                                contentDescription = null,
+                                tint = if (isAudioTab) Color(0xFFB388FF) else Color.White.copy(alpha = 0.5f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Audio Formats",
+                                color = if (isAudioTab) Color(0xFFB388FF) else Color.White.copy(alpha = 0.7f),
+                                fontSize = 13.sp,
+                                fontWeight = if (isAudioTab) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Options List
+                val currentOptions = if (selectedTab == 0) videoOptions else audioOptions
+                val scrollState = rememberScrollState()
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 380.dp)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    currentOptions.forEach { option ->
+                        QualityOptionCard(
+                            option = option,
+                            onClick = { onOptionSelected(option) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Footer note
+                Text(
+                    text = "Downloads will be saved to Movies or Music folder for offline viewing.",
+                    color = Color.White.copy(alpha = 0.35f),
+                    fontSize = 11.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun QualityOptionCard(
+        option: DownloadQualityOption,
+        onClick: () -> Unit
+    ) {
+        val isAudio = option.isAudio
+        val accentColor = if (isAudio) Color(0xFFB388FF) else Color(0xFF00E5FF)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(CornerRadius.card))
+                .background(Color(0xFF131726))
+                .border(
+                    width = 0.75.dp,
+                    brush = Brush.linearGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.12f),
+                            accentColor.copy(alpha = 0.15f),
+                            Color.White.copy(alpha = 0.04f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(CornerRadius.card)
+                )
+                .clickable(onClick = onClick)
+                .colorOSPressBounce(pressedScale = 0.96f)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                // Quality Badge Pill
+                Box(
+                    modifier = Modifier
+                        .widthIn(min = 54.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            Brush.linearGradient(
+                                if (isAudio) listOf(Color(0xFFB388FF).copy(alpha = 0.25f), Color(0xFF7C4DFF).copy(alpha = 0.15f))
+                                else listOf(Color(0xFF00E5FF).copy(alpha = 0.25f), Color(0xFF0072FF).copy(alpha = 0.15f))
+                            )
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accentColor.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = option.badge,
+                        color = accentColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = option.title,
+                        color = Color.White,
+                        fontSize = 14.5.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = option.subtitle,
+                        color = Color.White.copy(alpha = 0.55f),
+                        fontSize = 11.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (!option.fileSizeFormatted.isNullOrEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = option.fileSizeFormatted,
+                            color = accentColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ArrowDownward,
+                        contentDescription = "Download",
+                        tint = accentColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }
@@ -1734,5 +2370,28 @@ class WatchActivity : ComponentActivity() {
                 String.format("%02d:%02d", minutes, seconds)
             }
         }
+
+        fun formatBytes(bytes: Long): String {
+            if (bytes <= 0L) return ""
+            val kb = bytes / 1024.0
+            val mb = kb / 1024.0
+            val gb = mb / 1024.0
+            return when {
+                gb >= 1.0 -> String.format(java.util.Locale.US, "%.1f GB", gb)
+                mb >= 1.0 -> String.format(java.util.Locale.US, "%.1f MB", mb)
+                kb >= 1.0 -> String.format(java.util.Locale.US, "%.0f KB", kb)
+                else -> "$bytes B"
+            }
+        }
     }
 }
+
+data class DownloadQualityOption(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val badge: String,
+    val formatId: String,
+    val isAudio: Boolean = false,
+    val fileSizeFormatted: String? = null
+)

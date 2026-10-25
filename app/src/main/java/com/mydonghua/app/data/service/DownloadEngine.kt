@@ -47,7 +47,10 @@ data class DownloadTask(
     val filePath: String? = null,
     val errorMessage: String? = null,
     val numThreads: Int = 16,
-    val isHls: Boolean = false
+    val isHls: Boolean = false,
+    val formatId: String? = null,
+    val referer: String? = null,
+    val isAudioOnly: Boolean = false
 )
 
 /**
@@ -168,7 +171,14 @@ object DownloadEngine {
         isInitialized = true
     }
 
-    fun startDownload(context: Context, url: String, title: String, referer: String? = null) {
+    fun startDownload(
+        context: Context,
+        url: String,
+        title: String,
+        formatId: String? = null,
+        referer: String? = null,
+        isAudioOnly: Boolean = false
+    ) {
         val app = context.applicationContext
         val cleanTitle = title.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
         val taskId = UUID.randomUUID().toString()
@@ -180,7 +190,10 @@ object DownloadEngine {
             status = DownloadStatus.DOWNLOADING,
             progress = 0f,
             numThreads = 16,
-            isHls = url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true)
+            isHls = url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true),
+            formatId = formatId,
+            referer = referer,
+            isAudioOnly = isAudioOnly
         )
         activeTasks[taskId] = task
         _tasksState.value = activeTasks.values.toList()
@@ -201,9 +214,13 @@ object DownloadEngine {
             putExtra("downloadId", taskId)
             putExtra("title", cleanTitle)
             putExtra("path", saveDir.absolutePath)
+            if (!formatId.isNullOrEmpty()) {
+                putExtra("formatId", formatId)
+            }
             if (!referer.isNullOrEmpty()) {
                 putExtra("referer", referer)
             }
+            putExtra("isAudioOnly", isAudioOnly)
         }
 
         try {
@@ -212,7 +229,7 @@ object DownloadEngine {
             } else {
                 app.startService(serviceIntent)
             }
-            showToast(app, "Accelerating download with 16 Aria2c streams...")
+            showToast(app, if (isAudioOnly) "Extracting audio with high speed..." else "Accelerating download with 16 streams...")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start DownloadService", e)
             showToast(app, "Error starting download: ${e.message}")
@@ -245,7 +262,14 @@ object DownloadEngine {
 
     fun resumeDownload(context: Context, id: String) {
         val current = activeTasks[id] ?: return
-        startDownload(context, current.url, current.title)
+        startDownload(
+            context = context,
+            url = current.url,
+            title = current.title,
+            formatId = current.formatId,
+            referer = current.referer,
+            isAudioOnly = current.isAudioOnly
+        )
     }
 
     fun getPrimaryStorageDir(context: Context): File {
