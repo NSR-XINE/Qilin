@@ -108,8 +108,9 @@ class DownloadService : Service() {
                 val path = intent.getStringExtra("path")
                     ?: (getExternalFilesDir(Environment.DIRECTORY_MOVIES)?.absolutePath ?: cacheDir.absolutePath)
                 val expectedSize = intent.getStringExtra("expectedSize") ?: ""
+                val referer = intent.getStringExtra("referer")
 
-                startDownload(downloadId, url, formatId, title, path, expectedSize)
+                startDownload(downloadId, url, formatId, title, path, expectedSize, referer)
             }
             "CANCEL_DOWNLOAD" -> {
                 val downloadId = intent.getStringExtra("downloadId")
@@ -130,7 +131,8 @@ class DownloadService : Service() {
         formatId: String?,
         title: String,
         path: String,
-        expectedSize: String
+        expectedSize: String,
+        referer: String? = null
     ) {
         try {
             if (wakeLock?.isHeld == false) {
@@ -178,7 +180,17 @@ class DownloadService : Service() {
                 if (!destDir.exists()) destDir.mkdirs()
 
                 val sanitizedTitle = title.replace(Regex("[^a-zA-Z0-9._-]"), "_")
-                val isHls = url.contains(".m3u8", ignoreCase = true)
+                val isHls = url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true)
+
+                val finalReferer = if (!referer.isNullOrEmpty()) {
+                    referer
+                } else {
+                    try {
+                        val uri = android.net.Uri.parse(url)
+                        val host = uri.host
+                        if (!host.isNullOrEmpty()) "${uri.scheme}://$host/" else null
+                    } catch (ignored: Exception) { null }
+                }
 
                 val request = YoutubeDLRequest(url).apply {
                     if (!formatId.isNullOrEmpty()) {
@@ -188,13 +200,9 @@ class DownloadService : Service() {
                     addOption("--no-check-certificates")
                     addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
 
-                    try {
-                        val uri = android.net.Uri.parse(url)
-                        val host = uri.host
-                        if (!host.isNullOrEmpty()) {
-                            addOption("--referer", "${uri.scheme}://$host/")
-                        }
-                    } catch (ignored: Exception) {}
+                    if (!finalReferer.isNullOrEmpty()) {
+                        addOption("--referer", finalReferer)
+                    }
 
                     try {
                         val cookie = CookieManager.getInstance().getCookie(url)
@@ -208,7 +216,7 @@ class DownloadService : Service() {
                         addOption("--concurrent-fragments", "16")
                         addOption("--hls-use-mpegts")
                     } else {
-                        addOption("--external-downloader", "aria2c")
+                        addOption("--external-downloader", "libaria2c.so")
                         addOption("--external-downloader-args", "aria2c:-c -j 16 -x 16 -s 16 -k 1M --file-allocation=none")
                     }
                 }
@@ -273,9 +281,73 @@ class DownloadService : Service() {
                         addOption("-o", "$path/$sanitizedTitle.%(ext)s")
                         addOption("--no-check-certificates")
                         addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                        if (!finalReferer.isNullOrEmpty()) {
+                            addOption("--referer", finalReferer)
+                        }
+                        try {
+                            val cookie = CookieManager.getInstance().getCookie(url)
+                            if (!cookie.isNullOrEmpty()) {
+                                addOption("--add-header", "Cookie:$cookie")
+                            }
+                        } catch (ignored: Exception) {}
                     }
                     response = withContext(Dispatchers.IO) {
                         YoutubeDL.getInstance().execute(fallbackRequest, id) { progress, etaInSeconds, line ->
+                            lastLogLine = line
+                            if (line.contains("Destination:")) {
+                                finalFilePath = line.substringAfter("Destination:").trim().replace("\"", "")
+                            } else if (line.contains("Merging formats into")) {
+                                finalFilePath = line.substringAfter("into").trim().replace("\"", "")
+                            }
+
+                            var speed = speedRegex.find(line)?.value ?: "0 MB/s"
+                            speed = speed.replace("MiB", "MB").replace("KiB", "KB")
+
+                            val sizeMatch = sizeRegex.find(line)
+                            val downloadedSize = sizeMatch?.groupValues?.getOrNull(1)?.replace("iB", "B") ?: ""
+                            val totalSize = sizeMatch?.groupValues?.getOrNull(2)?.replace("iB", "B") ?: expectedSize
+
+                            val progressInt = progress.toInt().coerceIn(0, 100)
+                            val etaStr = if (etaInSeconds > 0) "${etaInSeconds}s" else "--:--"
+
+                            builder.setProgress(100, progressInt, false)
+                            builder.setContentText("$speed - $progressInt%")
+                            notificationManager.notify(notificationId, builder.build())
+
+                            val progressIntent = Intent("DOWNLOAD_PROGRESS").apply {
+                                putExtra("id", id)
+                                putExtra("progress", progressInt)
+                                putExtra("speed", speed)
+                                putExtra("downloadedSize", downloadedSize)
+                                putExtra("totalSize", totalSize)
+                                putExtra("eta", etaStr)
+                                setPackage(packageName)
+                            }
+                            sendBroadcast(progressIntent)
+                        }
+                    }
+                }
+
+                // If 16-fragment HLS failed, fallback to standard single-connection HLS
+                if (response.exitCode != 0 && isHls) {
+                    Log.w(TAG, "Multi-fragment HLS download failed (code ${response.exitCode}). Retrying with default HLS...")
+                    val fallbackHlsRequest = YoutubeDLRequest(url).apply {
+                        if (!formatId.isNullOrEmpty()) addOption("-f", formatId)
+                        addOption("-o", "$path/$sanitizedTitle.%(ext)s")
+                        addOption("--no-check-certificates")
+                        addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                        if (!finalReferer.isNullOrEmpty()) {
+                            addOption("--referer", finalReferer)
+                        }
+                        try {
+                            val cookie = CookieManager.getInstance().getCookie(url)
+                            if (!cookie.isNullOrEmpty()) {
+                                addOption("--add-header", "Cookie:$cookie")
+                            }
+                        } catch (ignored: Exception) {}
+                    }
+                    response = withContext(Dispatchers.IO) {
+                        YoutubeDL.getInstance().execute(fallbackHlsRequest, id) { progress, etaInSeconds, line ->
                             lastLogLine = line
                             if (line.contains("Destination:")) {
                                 finalFilePath = line.substringAfter("Destination:").trim().replace("\"", "")

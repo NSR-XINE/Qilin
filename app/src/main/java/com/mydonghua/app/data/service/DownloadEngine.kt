@@ -168,7 +168,7 @@ object DownloadEngine {
         isInitialized = true
     }
 
-    fun startDownload(context: Context, url: String, title: String) {
+    fun startDownload(context: Context, url: String, title: String, referer: String? = null) {
         val app = context.applicationContext
         val cleanTitle = title.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
         val taskId = UUID.randomUUID().toString()
@@ -180,7 +180,7 @@ object DownloadEngine {
             status = DownloadStatus.DOWNLOADING,
             progress = 0f,
             numThreads = 16,
-            isHls = url.contains(".m3u8", ignoreCase = true)
+            isHls = url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true)
         )
         activeTasks[taskId] = task
         _tasksState.value = activeTasks.values.toList()
@@ -201,6 +201,9 @@ object DownloadEngine {
             putExtra("downloadId", taskId)
             putExtra("title", cleanTitle)
             putExtra("path", saveDir.absolutePath)
+            if (!referer.isNullOrEmpty()) {
+                putExtra("referer", referer)
+            }
         }
 
         try {

@@ -12,6 +12,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
@@ -121,7 +123,7 @@ class WatchActivity : ComponentActivity() {
                     watchUrl = watchUrl,
                     showTitle = showTitle,
                     onBack = { finish() },
-                    onDownload = { streamUrl -> downloadVideo(context, streamUrl, showTitle) },
+                    onDownload = { streamUrl, referer -> downloadVideo(context, streamUrl, showTitle, referer) },
                     onOpenExternal = {
                         try {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(watchUrl)))
@@ -1073,19 +1075,71 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
+    class WebStreamBridge(private val onStreamFound: (String) -> Unit) {
+        @JavascriptInterface
+        fun onVideoSourceFound(src: String?) {
+            if (!src.isNullOrBlank() && !src.startsWith("blob:")) {
+                Handler(Looper.getMainLooper()).post {
+                    onStreamFound(src)
+                }
+            }
+        }
+    }
+
     @Composable
     private fun InAppWebPlayerScreen(
         watchUrl: String,
         showTitle: String,
         onBack: () -> Unit,
-        onDownload: (String) -> Unit,
+        onDownload: (String, String?) -> Unit,
         onOpenExternal: () -> Unit
     ) {
         val context = LocalContext.current
         var webViewRef by remember { mutableStateOf<WebView?>(null) }
         var webProgress by remember { mutableIntStateOf(0) }
         var detectedVideoUrl by remember { mutableStateOf<String?>(null) }
+        var detectedReferer by remember { mutableStateOf<String?>(null) }
+        var isScanningStream by remember { mutableStateOf(false) }
         val isAdBlockerActive by AdBlocker.enabledFlow(context).collectAsState(initial = AdBlocker.isEnabled(context))
+        val hasStream = !detectedVideoUrl.isNullOrBlank()
+
+        LaunchedEffect(detectedVideoUrl) {
+            if (!detectedVideoUrl.isNullOrBlank()) {
+                Toast.makeText(context, "Video stream captured! Download ready.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        fun isVideoUrl(url: String): Boolean {
+            val clean = url.lowercase()
+            if (clean.contains("analytics") ||
+                clean.contains("telemetry") ||
+                clean.contains("doubleclick") ||
+                clean.contains("googleads") ||
+                clean.contains("googlesyndication") ||
+                clean.contains("facebook") ||
+                clean.contains(".png") ||
+                clean.contains(".jpg") ||
+                clean.contains(".jpeg") ||
+                clean.contains(".webp") ||
+                clean.contains(".svg") ||
+                clean.contains(".css") ||
+                clean.contains(".js") ||
+                clean.contains(".woff") ||
+                clean.contains(".ttf") ||
+                clean.contains("favicon")
+            ) {
+                return false
+            }
+            return clean.contains(".m3u8") ||
+                    clean.contains(".mp4") ||
+                    clean.contains(".mkv") ||
+                    clean.contains("/hls/") ||
+                    clean.contains("/manifest") ||
+                    clean.contains("master.txt") ||
+                    clean.contains("/stream/") ||
+                    clean.contains("mime=video") ||
+                    clean.contains("mime=application%2Fvnd.apple.mpegurl")
+        }
 
         DisposableEffect(Unit) {
             onDispose {
@@ -1244,21 +1298,74 @@ class WatchActivity : ComponentActivity() {
 
                         IconButton(
                             onClick = {
-                                val stream = detectedVideoUrl ?: watchUrl
-                                onDownload(stream)
+                                val currentStream = detectedVideoUrl
+                                if (!currentStream.isNullOrBlank()) {
+                                    onDownload(currentStream, detectedReferer)
+                                } else {
+                                    isScanningStream = true
+                                    webViewRef?.evaluateJavascript(
+                                        """
+                                        (function() {
+                                            try {
+                                                var vids = document.querySelectorAll('video, audio');
+                                                for (var i = 0; i < vids.length; i++) {
+                                                    var v = vids[i];
+                                                    var s = v.currentSrc || v.src;
+                                                    if (s && s.indexOf('blob:') !== 0 && s.indexOf('http') === 0) return s;
+                                                    var sources = v.querySelectorAll('source');
+                                                    for (var j = 0; j < sources.length; j++) {
+                                                        var src = sources[j].src;
+                                                        if (src && src.indexOf('blob:') !== 0 && src.indexOf('http') === 0) return src;
+                                                    }
+                                                }
+                                            } catch(e) {}
+                                            return null;
+                                        })();
+                                        """.trimIndent()
+                                    ) { result ->
+                                        isScanningStream = false
+                                        val cleanResult = result?.trim('"', ' ', '\n', '\r')?.takeIf { it != "null" && it.isNotBlank() }
+                                        if (!cleanResult.isNullOrBlank()) {
+                                            detectedVideoUrl = cleanResult
+                                            onDownload(cleanResult, detectedReferer ?: watchUrl)
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Please tap Play on the video player first to capture the download stream!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                }
                             },
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF00E5FF).copy(alpha = 0.15f))
+                                .background(
+                                    if (hasStream) Color(0xFF00E5FF).copy(alpha = 0.22f)
+                                    else Color.White.copy(alpha = 0.08f)
+                                )
+                                .border(
+                                    width = if (hasStream) 1.dp else 0.5.dp,
+                                    color = if (hasStream) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.12f),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
                                 .colorOSPressBounce(pressedScale = 0.90f)
                         ) {
-                            Icon(
-                                imageVector = Icons.Rounded.FileDownload,
-                                contentDescription = "Download Episode",
-                                tint = Color(0xFF00E5FF),
-                                modifier = Modifier.size(18.dp)
-                            )
+                            if (isScanningStream) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = Color(0xFF00E5FF),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = if (hasStream) Icons.Rounded.DownloadDone else Icons.Rounded.FileDownload,
+                                    contentDescription = if (hasStream) "Stream Ready - Tap to Download" else "Download Episode",
+                                    tint = if (hasStream) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.60f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
 
                         IconButton(
@@ -1314,6 +1421,13 @@ class WatchActivity : ComponentActivity() {
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
+
+                        addJavascriptInterface(WebStreamBridge { stream ->
+                            if (detectedVideoUrl == null || stream.contains("master.m3u8", ignoreCase = true)) {
+                                detectedVideoUrl = stream
+                                if (detectedReferer == null) detectedReferer = watchUrl
+                            }
+                        }, "WebBridge")
 
                         val adBlockActive = AdBlocker.isEnabled(ctx)
                         settings.apply {
@@ -1379,6 +1493,29 @@ class WatchActivity : ComponentActivity() {
                                         }
                                         purgeOverlays();
                                         setInterval(purgeOverlays, 350);
+
+                                        function scanMedia() {
+                                            try {
+                                                var vids = document.querySelectorAll('video, audio');
+                                                for (var i = 0; i < vids.length; i++) {
+                                                    var v = vids[i];
+                                                    var s = v.currentSrc || v.src;
+                                                    if (s && s.indexOf('blob:') !== 0 && s.indexOf('http') === 0) {
+                                                        window.WebBridge && window.WebBridge.onVideoSourceFound(s);
+                                                    }
+                                                    var sources = v.querySelectorAll('source');
+                                                    for (var j = 0; j < sources.length; j++) {
+                                                        var src = sources[j].src;
+                                                        if (src && src.indexOf('blob:') !== 0 && src.indexOf('http') === 0) {
+                                                            window.WebBridge && window.WebBridge.onVideoSourceFound(src);
+                                                        }
+                                                    }
+                                                }
+                                            } catch(e) {}
+                                        }
+                                        scanMedia();
+                                        setInterval(scanMedia, 1500);
+
                                         try {
                                             var s = document.createElement('style');
                                             s.textContent = 'div[style*="z-index:2147483647"], div[style*="z-index: 2147483647"] { display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; } html, body { overflow: auto !important; }';
@@ -1417,12 +1554,26 @@ class WatchActivity : ComponentActivity() {
                                 request: WebResourceRequest?
                             ): WebResourceResponse? {
                                 val url = request?.url?.toString()
-                                if (AdBlocker.isAntiAdblockProbe(url)) {
-                                    return AdBlocker.createProbeResponse(url)
-                                }
-                                if (AdBlocker.isEnabled(context)) {
-                                    if (AdBlocker.isAdUrl(url)) {
-                                        return AdBlocker.createEmptyResponse()
+                                if (url != null) {
+                                    if (AdBlocker.isAntiAdblockProbe(url)) {
+                                        return AdBlocker.createProbeResponse(url)
+                                    }
+                                    if (AdBlocker.isEnabled(context)) {
+                                        if (AdBlocker.isAdUrl(url)) {
+                                            return AdBlocker.createEmptyResponse()
+                                        }
+                                    }
+                                    if (isVideoUrl(url)) {
+                                        val ref = request.requestHeaders?.get("Referer")
+                                            ?: request.requestHeaders?.get("referer")
+                                            ?: view?.url
+                                            ?: watchUrl
+                                        view?.post {
+                                            if (detectedVideoUrl == null || url.contains("master.m3u8", ignoreCase = true)) {
+                                                detectedVideoUrl = url
+                                                detectedReferer = ref
+                                            }
+                                        }
                                     }
                                 }
                                 return super.shouldInterceptRequest(view, request)
@@ -1430,13 +1581,10 @@ class WatchActivity : ComponentActivity() {
 
                             override fun onLoadResource(view: WebView?, url: String?) {
                                 super.onLoadResource(view, url)
-                                if (url != null) {
-                                    val clean = url.lowercase()
-                                    if ((clean.contains(".m3u8") || clean.contains(".mp4") || clean.contains(".mkv")) &&
-                                        !clean.contains("analytics") && !clean.contains("stats") &&
-                                        (!AdBlocker.isEnabled(context) || !AdBlocker.isAdUrl(clean))
-                                    ) {
+                                if (url != null && isVideoUrl(url)) {
+                                    if (detectedVideoUrl == null || url.contains("master.m3u8", ignoreCase = true)) {
                                         detectedVideoUrl = url
+                                        if (detectedReferer == null) detectedReferer = view?.url ?: watchUrl
                                     }
                                 }
                             }
@@ -1542,9 +1690,9 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
-    private fun downloadVideo(context: Context, videoUrl: String, title: String) {
+    private fun downloadVideo(context: Context, videoUrl: String, title: String, referer: String? = null) {
         try {
-            com.mydonghua.app.data.service.DownloadEngine.startDownload(context, videoUrl, title)
+            com.mydonghua.app.data.service.DownloadEngine.startDownload(context, videoUrl, title, referer)
             Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             try {
@@ -1558,6 +1706,9 @@ class WatchActivity : ComponentActivity() {
                         Environment.DIRECTORY_MOVIES,
                         "MyDonghua/${title.replace(Regex("[^a-zA-Z0-9_]"), "_")}.mp4"
                     )
+                    if (!referer.isNullOrEmpty()) {
+                        addRequestHeader("Referer", referer)
+                    }
                 }
                 downloadManager.enqueue(request)
                 Toast.makeText(context, "Started downloading: $title", Toast.LENGTH_LONG).show()
