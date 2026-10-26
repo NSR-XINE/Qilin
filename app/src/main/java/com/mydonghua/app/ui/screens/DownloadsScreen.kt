@@ -1,8 +1,10 @@
 package com.mydonghua.app.ui.screens
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import androidx.compose.animation.*
@@ -391,6 +393,21 @@ fun DownloadsScreen(
                                 putExtra("show_title", file.nameWithoutExtension)
                             }
                             context.startActivity(intent)
+                            (context as? Activity)?.let { act ->
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                    act.overrideActivityTransition(
+                                        Activity.OVERRIDE_TRANSITION_OPEN,
+                                        com.mydonghua.app.R.anim.oplus_open_slide_enter,
+                                        com.mydonghua.app.R.anim.oplus_open_slide_exit
+                                    )
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    act.overridePendingTransition(
+                                        com.mydonghua.app.R.anim.oplus_open_slide_enter,
+                                        com.mydonghua.app.R.anim.oplus_open_slide_exit
+                                    )
+                                }
+                            }
                         },
                         onDelete = {
                             fileToDelete = file

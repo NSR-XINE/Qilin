@@ -1,39 +1,55 @@
 package com.mydonghua.app.ui.common
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import com.mydonghua.app.ui.theme.ColorOSMotion
 
-@Composable
-fun Modifier.shimmerEffect(): Modifier {
-    val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-    )
-    val transition = rememberInfiniteTransition()
-    val translateAnim = transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 600f,
+/**
+ * Official ColorOS 17 Fluid Aurora Shimmer Effect.
+ * Executes purely in the Draw phase to eliminate layout and composition thrashing.
+ */
+fun Modifier.shimmerEffect(): Modifier = composed {
+    val baseColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    val highlightColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+
+    val transition = rememberInfiniteTransition(label = "colorOSShimmer")
+    val progress by transition.animateFloat(
+        initialValue = -0.5f,
+        targetValue = 1.5f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            animation = tween(durationMillis = 1500, easing = ColorOSMotion.FastOutSlowIn),
             repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerProgress"
+    )
+
+    this.drawWithContent {
+        drawRect(color = baseColor)
+        val width = size.width
+        val height = size.height
+        val startX = (progress - 0.4f) * width
+        val endX = (progress + 0.4f) * width
+
+        drawRect(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color.Transparent,
+                    highlightColor,
+                    Color.Transparent
+                ),
+                start = Offset(startX, 0f),
+                end = Offset(endX, height)
+            ),
+            blendMode = BlendMode.Plus
         )
-    )
-    val brush = Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset.Zero,
-        end = Offset(x = translateAnim.value, y = 0f)
-    )
-    return this.background(brush = brush)
+        drawContent()
+    }
 }

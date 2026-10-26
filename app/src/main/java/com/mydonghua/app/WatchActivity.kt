@@ -381,6 +381,20 @@ class WatchActivity : ComponentActivity() {
         super.onBackPressed()
     }
 
+    override fun finish() {
+        super.finish()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(
+                Activity.OVERRIDE_TRANSITION_CLOSE,
+                R.anim.oplus_close_slide_enter,
+                R.anim.oplus_close_slide_exit
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(R.anim.oplus_close_slide_enter, R.anim.oplus_close_slide_exit)
+        }
+    }
+
     @Composable
     private fun DirectVideoPlayerScreen(
         watchUrl: String,
@@ -667,8 +681,8 @@ class WatchActivity : ComponentActivity() {
             // Double Tap Seek Ripple Badge
             AnimatedVisibility(
                 visible = doubleTapSeekBadge != null && !isInPip,
-                enter = fadeIn(ColorOSMotion.FadeInFloat) + scaleIn(ColorOSMotion.ScaleInFloat, initialScale = 0.88f),
-                exit = fadeOut(ColorOSMotion.FadeOutFloat),
+                enter = fadeIn(ColorOSMotion.NavFadeInSpec) + scaleIn(ColorOSMotion.ScaleInFloat, initialScale = 0.88f),
+                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
                 modifier = Modifier.align(Alignment.Center)
             ) {
                 Box(
@@ -708,8 +722,8 @@ class WatchActivity : ComponentActivity() {
             // Brightness HUD Pill
             AnimatedVisibility(
                 visible = brightnessHud != null && !isInPip,
-                enter = fadeIn(ColorOSMotion.FadeInFloat),
-                exit = fadeOut(ColorOSMotion.FadeOutFloat),
+                enter = fadeIn(ColorOSMotion.NavFadeInSpec),
+                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 24.dp)
@@ -768,8 +782,8 @@ class WatchActivity : ComponentActivity() {
             // Volume HUD Pill
             AnimatedVisibility(
                 visible = volumeHud != null && !isInPip,
-                enter = fadeIn(ColorOSMotion.FadeInFloat),
-                exit = fadeOut(ColorOSMotion.FadeOutFloat),
+                enter = fadeIn(ColorOSMotion.NavFadeInSpec),
+                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = 24.dp)
@@ -828,8 +842,8 @@ class WatchActivity : ComponentActivity() {
             // Complete ColorOS 17 Liquid Glass Controls Overlay
             AnimatedVisibility(
                 visible = showControls && !isInPip,
-                enter = fadeIn(ColorOSMotion.FadeInFloat),
-                exit = fadeOut(ColorOSMotion.FadeOutFloat),
+                enter = fadeIn(ColorOSMotion.NavFadeInSpec),
+                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
                 modifier = Modifier.fillMaxSize()
             ) {
                 Box(

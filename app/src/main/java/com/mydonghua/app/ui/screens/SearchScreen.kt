@@ -76,6 +76,7 @@ import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.ColorOSMotion
+import com.mydonghua.app.ui.theme.ColorOSTransitions
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.focus.FocusRequester
@@ -1180,14 +1181,8 @@ private fun AnimatedDialog(
     ) {
         AnimatedVisibility(
             visible = animateTrigger,
-            enter = scaleIn(
-                initialScale = 0.92f,
-                animationSpec = ColorOSMotion.ScaleInFloat
-            ) + fadeIn(animationSpec = ColorOSMotion.FadeInFloat),
-            exit = scaleOut(
-                targetScale = 0.94f,
-                animationSpec = ColorOSMotion.ScaleOutFloat
-            ) + fadeOut(animationSpec = ColorOSMotion.FadeOutFloat)
+            enter = ColorOSTransitions.enterDialog,
+            exit = ColorOSTransitions.exitDialog
         ) {
             content(dismissWithAction)
         }

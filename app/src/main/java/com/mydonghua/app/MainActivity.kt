@@ -1,6 +1,7 @@
 package com.mydonghua.app
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -118,6 +119,27 @@ class MainActivity : ComponentActivity() {
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
             val appHazeState = remember { HazeState() }
+
+            val launchWatch: (String) -> Unit = remember(allShows) {
+                { url: String ->
+                    val targetShow = allShows.find { it.watchUrl == url }
+                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
+                        putExtra("watch_url", url)
+                        putExtra("show_title", targetShow?.title ?: "Donghua Episode")
+                    }
+                    startActivity(intent)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        overrideActivityTransition(
+                            Activity.OVERRIDE_TRANSITION_OPEN,
+                            R.anim.oplus_open_slide_enter,
+                            R.anim.oplus_open_slide_exit
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        overridePendingTransition(R.anim.oplus_open_slide_enter, R.anim.oplus_open_slide_exit)
+                    }
+                }
+            }
 
             androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
                 when {
@@ -241,16 +263,6 @@ class MainActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .layerBackdrop(navBackdrop)
                                 ) {
-                                    val launchWatch: (String) -> Unit = remember(allShows) {
-                                        { url: String ->
-                                            val targetShow = allShows.find { it.watchUrl == url }
-                                            val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                                putExtra("watch_url", url)
-                                                putExtra("show_title", targetShow?.title ?: "Donghua Episode")
-                                            }
-                                            startActivity(intent)
-                                        }
-                                    }
                             NavHost(
                                 navController = navController,
                                 startDestination = "home",
@@ -261,7 +273,11 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         EnterTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
+                                        val dir = tabTransitionDirection(from, to)
+                                        slideInHorizontally(
+                                            animationSpec = ColorOSMotion.NavSlideInSpec,
+                                            initialOffsetX = { if (dir >= 0) it / 4 else -it / 4 }
+                                        ) + fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else {
                                         slideInHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideInSpec,
@@ -277,7 +293,11 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         ExitTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
+                                        val dir = tabTransitionDirection(from, to)
+                                        slideOutHorizontally(
+                                            animationSpec = ColorOSMotion.NavSlideOutSpec,
+                                            targetOffsetX = { if (dir >= 0) -it / 4 else it / 4 }
+                                        ) + fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
                                     } else {
                                         slideOutHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideOutSpec,
@@ -414,14 +434,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
-                                onWatchClick = { url ->
-                                    val targetShow = showsViewModel.allShows.value.find { it.id == showIdArg }
-                                    val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                        putExtra("watch_url", url)
-                                        putExtra("show_title", targetShow?.title ?: "Donghua Episode")
-                                    }
-                                    startActivity(intent)
-                                },
+                                onWatchClick = launchWatch,
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
@@ -477,11 +490,11 @@ class MainActivity : ComponentActivity() {
                     enter = slideInVertically(
                         initialOffsetY = { it },
                         animationSpec = ColorOSMotion.SheetIntOffset
-                    ) + fadeIn(animationSpec = ColorOSMotion.FadeInFloat),
+                    ) + fadeIn(animationSpec = ColorOSMotion.NavFadeInSpec),
                     exit = slideOutVertically(
                         targetOffsetY = { it },
                         animationSpec = ColorOSMotion.SheetExitIntOffset
-                    ) + fadeOut(animationSpec = ColorOSMotion.FadeOutFloat),
+                    ) + fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec),
                 ) {
                     Surface(
                         modifier = Modifier
@@ -506,12 +519,7 @@ class MainActivity : ComponentActivity() {
                         SearchScreen(
                             viewModel = searchViewModel,
                             showsViewModel = showsViewModel,
-                            onWatchClick = { url ->
-                                val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
-                                    putExtra("watch_url", url)
-                                }
-                                startActivity(intent)
-                            },
+                            onWatchClick = launchWatch,
                             onShowClick = { showId ->
                                 isSearchOpen = false
                                 navController.navigate("show_detail/$showId")
@@ -536,22 +544,14 @@ class MainActivity : ComponentActivity() {
                 enter = slideInVertically(
                     initialOffsetY = { -it },
                     animationSpec = ColorOSMotion.SheetIntOffset
-                ) + scaleIn(
-                    initialScale = 0.92f,
-                    transformOrigin = TransformOrigin(0.5f, 0f),
-                    animationSpec = ColorOSMotion.FluidSpring
                 ) + fadeIn(
-                    animationSpec = ColorOSMotion.FadeInFloat
+                    animationSpec = ColorOSMotion.NavFadeInSpec
                 ),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
                     animationSpec = ColorOSMotion.SheetExitIntOffset
-                ) + scaleOut(
-                    targetScale = 0.95f,
-                    transformOrigin = TransformOrigin(0.5f, 0f),
-                    animationSpec = ColorOSMotion.FluidSpring
                 ) + fadeOut(
-                    animationSpec = ColorOSMotion.FadeOutFloat
+                    animationSpec = ColorOSMotion.NavFadeOutSpec
                 )
             ) {
                 val menuShape = RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp)
