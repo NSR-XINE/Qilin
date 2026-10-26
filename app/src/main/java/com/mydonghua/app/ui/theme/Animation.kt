@@ -152,6 +152,10 @@ object ColorOSMotion {
     val SheetIntOffset = spring<IntOffset>(dampingRatio = 0.80f, stiffness = 380f)
     val SheetExitIntOffset = spring<IntOffset>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 700f)
     val FluidIntOffset = spring<IntOffset>(dampingRatio = 0.80f, stiffness = 380f)
+
+    // IntSize Transitions (Expand / Shrink Vertically)
+    val ExpandSizeSpec = spring<androidx.compose.ui.unit.IntSize>(dampingRatio = 0.80f, stiffness = 380f)
+    val ShrinkSizeSpec = spring<androidx.compose.ui.unit.IntSize>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 700f)
 }
 
 /**

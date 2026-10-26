@@ -434,9 +434,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("settings") {
-                                SettingsScreen(
+                            SettingsScreen(
                                 viewModel = settingsViewModel,
-                                onNavigateBack = { navController.popBackStack() }
+                                onNavigateBack = { navController.popBackStack() },
+                                onSoftwareUpdateClick = { navController.navigate("software_update") }
                             )
                         }
                         composable("stats") {
@@ -471,6 +472,11 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("downloads") {
                             com.mydonghua.app.ui.screens.DownloadsScreen(
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("software_update") {
+                            ColorOSUpdateScreen(
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
@@ -718,6 +724,19 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "settings",
                                     isLight = isLightMode,
                                     onClick = { isDrawerOpen = false; navController.navigate("settings") }
+                                )
+                                HorizontalDivider(
+                                    color = if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f),
+                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                                )
+                                OxygenDrawerListItem(
+                                    title = "Software update",
+                                    subtitle = "ColorOS 17 • 3.53 GB",
+                                    iconRes = R.drawable.ic_settings,
+                                    iconGradient = listOf(Color(0xFF0082FB), Color(0xFF00E5FF)),
+                                    isSelected = currentRoute == "software_update",
+                                    isLight = isLightMode,
+                                    onClick = { isDrawerOpen = false; navController.navigate("software_update") }
                                 )
                             }
                         }

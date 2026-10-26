@@ -44,7 +44,9 @@ import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.Spacing
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +54,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit,
+    onSoftwareUpdateClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -163,6 +166,82 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             Spacer(modifier = Modifier.height(2.dp))
+
+            // ColorOS 17 Official System Update Card (Matches Stock Settings UI)
+            OxygenGlassGroup(isDark = isDark) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .colorOSPressBounce(pressedScale = 0.98f, onClick = onSoftwareUpdateClick)
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(Color(0xFF0082FB), Color(0xFF00E5FF))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "17",
+                            fontSize = 28.sp,
+                            fontFamily = JustSansFamily,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "ColorOS 17",
+                                fontSize = 17.5.sp,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFF0082FB))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "NEW",
+                                    fontSize = 10.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "CPH2745_17.0.0.102(C10P02) • 3.53 GB",
+                            fontSize = 12.sp,
+                            fontFamily = JustSansFamily,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Text(
+                        text = "›",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             // 1. THEME MODE SELECTION
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -792,6 +871,17 @@ fun SettingsScreen(
                                 )
                             }
                         }
+
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                        )
+
+                        OxygenSettingsActionItem(
+                            title = "Software update",
+                            subtitle = "ColorOS 17 • CPH2745_17.0.0.102(C10P02)",
+                            onClick = onSoftwareUpdateClick
+                        )
 
                         HorizontalDivider(
                             color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
