@@ -14,4 +14,8 @@ interface Backdrop {
         coordinates: LayoutCoordinates?,
         layerBlock: (GraphicsLayerScope.() -> Unit)? = null
     )
+
+    fun addInvalidationCallback(callback: () -> Unit) {}
+
+    fun removeInvalidationCallback(callback: () -> Unit) {}
 }

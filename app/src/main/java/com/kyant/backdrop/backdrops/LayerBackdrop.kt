@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.Density
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.InverseLayerScope
+import java.util.concurrent.CopyOnWriteArrayList
 
 private val DefaultDrawLayer: ContentDrawScope.() -> Unit = { drawContent() }
 
@@ -42,6 +43,25 @@ class LayerBackdrop internal constructor(
     internal var currentCoordinates: LayoutCoordinates? by mutableStateOf(null)
 
     private var inverseLayerScope: InverseLayerScope? = null
+
+    private val invalidationCallbacks = CopyOnWriteArrayList<() -> Unit>()
+
+    override fun addInvalidationCallback(callback: () -> Unit) {
+        if (!invalidationCallbacks.contains(callback)) {
+            invalidationCallbacks.add(callback)
+        }
+    }
+
+    override fun removeInvalidationCallback(callback: () -> Unit) {
+        invalidationCallbacks.remove(callback)
+    }
+
+    internal fun notifyInvalidated() {
+        val size = invalidationCallbacks.size
+        for (i in 0 until size) {
+            invalidationCallbacks[i].invoke()
+        }
+    }
 
     override fun DrawScope.drawBackdrop(
         density: Density,

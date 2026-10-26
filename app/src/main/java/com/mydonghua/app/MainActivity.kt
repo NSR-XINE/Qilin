@@ -71,6 +71,7 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
@@ -119,6 +120,7 @@ class MainActivity : ComponentActivity() {
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
+            val headerBackdrop = rememberCombinedBackdrop(contentBackdrop, navBackdrop)
             val appHazeState = remember { HazeState() }
 
             val launchWatch: (String) -> Unit = remember(allShows) {
@@ -205,7 +207,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         GlassHeader(
                                             title = headerTitle,
-                                            backdrop = contentBackdrop,
+                                            backdrop = headerBackdrop,
                                             isDark = settingsState.themeMode.lowercase() != "light",
                                             onDrawerOpen = { isDrawerOpen = true },
                                         )
@@ -216,7 +218,7 @@ class MainActivity : ComponentActivity() {
                                         LiquidGlassNavBar(
                                             currentRoute = currentRoute,
                                             isDark = settingsState.themeMode.lowercase() != "light",
-                                            backdrop = navBackdrop,
+                                            backdrop = headerBackdrop,
                                             isSearchOpen = isSearchOpen,
                                             onSearchClick = {
                                                 isSearchOpen = !isSearchOpen

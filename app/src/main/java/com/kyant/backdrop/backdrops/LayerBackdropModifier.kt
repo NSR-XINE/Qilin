@@ -56,6 +56,7 @@ private class LayerBackdropNode(
         backdrop.graphicsLayer.record {
             backdrop.drawLayer(contentDrawScope)
         }
+        backdrop.notifyInvalidated()
     }
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {

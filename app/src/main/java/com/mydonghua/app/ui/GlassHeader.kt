@@ -29,7 +29,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.effects.refraction
-import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
@@ -46,7 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 @Composable
 fun GlassHeader(
     title: String,
-    backdrop: LayerBackdrop,
+    backdrop: Backdrop,
     isDark: Boolean = true,
     onDrawerOpen: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
@@ -115,17 +115,17 @@ fun GlassHeader(
                     effects = {
                         vibrancy()
                         colorControls(
-                            brightness = 0.05f,
-                            contrast = 1f,
-                            saturation = 1.5f
+                            brightness = if (isDark) 0.05f else 0.02f,
+                            contrast = 1.05f,
+                            saturation = 1.6f
                         )
-                        blur((12f + 2f * headerPressProgress).dp.toPx())
+                        blur((22f + 2f * headerPressProgress).dp.toPx())
                         refraction(size.minDimension / 4f + 2f.dp.toPx() * headerPressProgress, size.minDimension / 2f, false)
                     },
-                    highlight = { Highlight.Default.copy(alpha = 0.35f) },
-                    shadow = { Shadow(radius = 4f.dp, alpha = 0.15f) },
+                    highlight = { Highlight.Default.copy(alpha = if (isDark) 0.35f else 0.50f) },
+                    shadow = { Shadow(radius = 4f.dp, alpha = if (isDark) 0.18f else 0.08f) },
                     onDrawSurface = {
-                        val baseColor = if (isDark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.45f)
+                        val baseColor = if (isDark) Color(0xFF0F141C).copy(alpha = 0.38f) else Color.White.copy(alpha = 0.48f)
                         val radius = size.height / 2f
                         drawRoundRect(
                             color = baseColor,
@@ -148,6 +148,11 @@ fun GlassHeader(
                         scaleX = capsuleScale
                         scaleY = capsuleScale
                     }
+                )
+                .border(
+                    width = 0.85.dp,
+                    brush = rememberLiquidGlassBorder(isLight = !isDark),
+                    shape = CircleShape
                 ),
             contentAlignment = Alignment.CenterStart
         ) {

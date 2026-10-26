@@ -152,7 +152,11 @@ private class DrawBackdropElement(
     }
 
     override fun update(node: DrawBackdropNode) {
-        node.backdrop = backdrop
+        if (node.backdrop != backdrop) {
+            node.backdrop.removeInvalidationCallback(node.invalidationCallback)
+            node.backdrop = backdrop
+            node.backdrop.addInvalidationCallback(node.invalidationCallback)
+        }
         node.shapeProvider = shapeProvider
         node.effects = effects
         node.layerBlock = layerBlock
@@ -391,11 +395,19 @@ private class DrawBackdropNode(
         }
     }
 
+    internal val invalidationCallback: () -> Unit = {
+        if (isAttached) {
+            invalidateDraw()
+        }
+    }
+
     override fun onAttach() {
+        backdrop.addInvalidationCallback(invalidationCallback)
         observeEffects()
     }
 
     override fun onDetach() {
+        backdrop.removeInvalidationCallback(invalidationCallback)
         val graphicsContext = requireGraphicsContext()
         backdropGraphicsLayer?.let { layer ->
             graphicsContext.releaseGraphicsLayer(layer)
@@ -407,5 +419,10 @@ private class DrawBackdropNode(
         }
         layoutCoordinates = null
         effectScope?.reset()
+    }
+
+    override fun onReset() {
+        backdrop.removeInvalidationCallback(invalidationCallback)
+        super.onReset()
     }
 }

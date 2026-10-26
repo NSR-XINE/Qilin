@@ -54,6 +54,16 @@ private class Combined2Backdrops(
         with(backdrop1) { drawBackdrop(density, coordinates, layerBlock) }
         with(backdrop2) { drawBackdrop(density, coordinates, layerBlock) }
     }
+
+    override fun addInvalidationCallback(callback: () -> Unit) {
+        backdrop1.addInvalidationCallback(callback)
+        backdrop2.addInvalidationCallback(callback)
+    }
+
+    override fun removeInvalidationCallback(callback: () -> Unit) {
+        backdrop1.removeInvalidationCallback(callback)
+        backdrop2.removeInvalidationCallback(callback)
+    }
 }
 
 @Immutable
@@ -77,6 +87,18 @@ private class Combined3Backdrops(
         with(backdrop2) { drawBackdrop(density, coordinates, layerBlock) }
         with(backdrop3) { drawBackdrop(density, coordinates, layerBlock) }
     }
+
+    override fun addInvalidationCallback(callback: () -> Unit) {
+        backdrop1.addInvalidationCallback(callback)
+        backdrop2.addInvalidationCallback(callback)
+        backdrop3.addInvalidationCallback(callback)
+    }
+
+    override fun removeInvalidationCallback(callback: () -> Unit) {
+        backdrop1.removeInvalidationCallback(callback)
+        backdrop2.removeInvalidationCallback(callback)
+        backdrop3.removeInvalidationCallback(callback)
+    }
 }
 
 @Immutable
@@ -94,5 +116,13 @@ private class CombinedBackdrops(
         backdrops.forEach {
             with(it) { drawBackdrop(density, coordinates, layerBlock) }
         }
+    }
+
+    override fun addInvalidationCallback(callback: () -> Unit) {
+        backdrops.forEach { it.addInvalidationCallback(callback) }
+    }
+
+    override fun removeInvalidationCallback(callback: () -> Unit) {
+        backdrops.forEach { it.removeInvalidationCallback(callback) }
     }
 }
