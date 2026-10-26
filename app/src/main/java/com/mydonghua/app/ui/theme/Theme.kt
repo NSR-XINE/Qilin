@@ -2,8 +2,10 @@ package com.mydonghua.app.ui.theme
 
 import android.os.Build
 import android.view.RoundedCorner
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -14,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -29,32 +32,40 @@ import com.mydonghua.app.R
 val JustSansFamily = FontFamily(
     Font(R.font.just_sans_regular, FontWeight.Normal),
     Font(R.font.just_sans_regular, FontWeight.Medium),
-    Font(R.font.just_sans_regular, FontWeight.SemiBold),
-    Font(R.font.just_sans_regular, FontWeight.Bold),
-    Font(R.font.just_sans_regular, FontWeight.ExtraBold)
+    Font(R.font.just_sans_exbold, FontWeight.SemiBold),
+    Font(R.font.just_sans_exbold, FontWeight.Bold),
+    Font(R.font.just_sans_exbold, FontWeight.ExtraBold)
 )
 
 val AppTypography = Typography(
-    displayLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 57.sp, lineHeight = 64.sp),
-    displayMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 45.sp, lineHeight = 52.sp),
-    displaySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 36.sp, lineHeight = 44.sp),
-    headlineLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 32.sp, lineHeight = 40.sp),
-    headlineMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, lineHeight = 36.sp),
-    headlineSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 32.sp),
-    titleLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 24.sp),
-    titleSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
-    bodyLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp),
-    bodySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
-    labelLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
-    labelMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
-    labelSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 11.sp, lineHeight = 16.sp)
+    displayLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 52.sp, lineHeight = 60.sp, letterSpacing = (-0.5).sp),
+    displayMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 42.sp, lineHeight = 48.sp, letterSpacing = (-0.4).sp),
+    displaySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.3).sp),
+    headlineLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.2).sp),
+    headlineMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.2).sp),
+    headlineSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.1).sp),
+    titleLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 26.sp, letterSpacing = 0.sp),
+    titleMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 22.sp, letterSpacing = 0.1.sp),
+    titleSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = 0.1.sp),
+    bodyLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp, letterSpacing = 0.15.sp),
+    bodyMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 19.sp, letterSpacing = 0.15.sp),
+    bodySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.2.sp),
+    labelLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, lineHeight = 18.sp, letterSpacing = 0.2.sp),
+    labelMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 11.5.sp, lineHeight = 16.sp, letterSpacing = 0.3.sp),
+    labelSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 10.5.sp, lineHeight = 14.sp, letterSpacing = 0.4.sp)
+)
+
+val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(CornerRadius.xs),    // 6.dp - Micro chips, badges
+    small = RoundedCornerShape(CornerRadius.sm),         // 10.dp - Buttons, small cards
+    medium = RoundedCornerShape(CornerRadius.md),        // 14.dp - Text fields, menus
+    large = RoundedCornerShape(CornerRadius.card),       // 22.dp - Surface cards, glass docks
+    extraLarge = RoundedCornerShape(CornerRadius.dialog) // 28.dp - Dialogs, bottom sheets
 )
 
 fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
-        "dynamic" -> if (isLight) Color(0xFF6750A4) else Color(0xFFD0BCFF)
+        "dynamic" -> if (isLight) Color(0xFF009AA6) else Color(0xFF00F2FE)
         "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFFBB86FC)
         "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF2A5F)
         "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF4CAF50)
@@ -80,7 +91,7 @@ fun getAccentColor(accentKey: String, isLight: Boolean): Color {
 
 fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
-        "dynamic" -> if (isLight) Color(0xFF625B71) else Color(0xFFCCC2DC)
+        "dynamic" -> if (isLight) Color(0xFF0077B6) else Color(0xFF00B4D8)
         "purple" -> if (isLight) Color(0xFF5A189A) else Color(0xFF9D4EDD)
         "rose" -> if (isLight) Color(0xFFA0001C) else Color(0xFFD90429)
         "green" -> if (isLight) Color(0xFF1B4332) else Color(0xFF3FB950)
@@ -106,7 +117,7 @@ fun getSecondaryColor(accentKey: String, isLight: Boolean): Color {
 
 fun getTertiaryColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
-        "dynamic" -> if (isLight) Color(0xFF7D5260) else Color(0xFFEFB8C8)
+        "dynamic" -> if (isLight) Color(0xFF03045E) else Color(0xFF0077B6)
         "purple" -> if (isLight) Color(0xFF3C096C) else Color(0xFF7B2CBF)
         "rose" -> if (isLight) Color(0xFF6A040F) else Color(0xFFA0001C)
         "green" -> if (isLight) Color(0xFF081C15) else Color(0xFF2EA043)
@@ -141,70 +152,100 @@ fun buildM3ColorSchemeWithAccents(
 
     val baseBg = when {
         isAmoled -> AmoledBg
-        isLight -> Color(0xFFFAF8F9)
+        isLight -> LightBg
         else -> DarkBg
     }
 
     val baseSurface = when {
         isAmoled -> AmoledSurface
-        isLight -> Color(0xFFFFFFFF)
+        isLight -> LightSurface
         else -> DarkSurface
     }
 
-    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.06f else 0.04f).compositeOver(baseBg)
-    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.08f else 0.05f).compositeOver(baseSurface)
-    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.14f else 0.08f).compositeOver(if (isLight) Color(0xFFF2EFF2) else DarkSurfaceVariant)
+    val baseSurfaceVariant = when {
+        isAmoled -> AmoledSurfaceVariant
+        isLight -> LightSurfaceVariant
+        else -> DarkSurfaceVariant
+    }
+
+    val onPrimaryColor = if (accentColor.luminance() > 0.65f) Color(0xFF0F172A) else Color.White
+    val onSecondaryColor = if (secondaryAccent.luminance() > 0.65f) Color(0xFF0F172A) else Color.White
+    val onTertiaryColor = if (tertiaryAccent.luminance() > 0.65f) Color(0xFF0F172A) else Color.White
+
+    val backgroundTinted = if (isAmoled) AmoledBg else accentColor.copy(alpha = if (isLight) 0.03f else 0.02f).compositeOver(baseBg)
+    val surfaceTinted = if (isAmoled) AmoledSurface else accentColor.copy(alpha = if (isLight) 0.04f else 0.03f).compositeOver(baseSurface)
+    val surfaceVariantTinted = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = if (isLight) 0.06f else 0.05f).compositeOver(baseSurfaceVariant)
 
     return if (isLight) {
         lightColorScheme(
             primary = accentColor,
-            onPrimary = Color.White,
-            primaryContainer = accentColor.copy(alpha = 0.22f),
+            onPrimary = onPrimaryColor,
+            primaryContainer = accentColor.copy(alpha = 0.12f),
             onPrimaryContainer = accentColor,
             secondary = secondaryAccent,
-            onSecondary = Color.White,
-            secondaryContainer = secondaryAccent.copy(alpha = 0.18f),
+            onSecondary = onSecondaryColor,
+            secondaryContainer = secondaryAccent.copy(alpha = 0.12f),
             onSecondaryContainer = secondaryAccent,
             tertiary = tertiaryAccent,
-            onTertiary = Color.White,
+            onTertiary = onTertiaryColor,
+            tertiaryContainer = tertiaryAccent.copy(alpha = 0.12f),
+            onTertiaryContainer = tertiaryAccent,
             background = backgroundTinted,
             surface = surfaceTinted,
             surfaceVariant = surfaceVariantTinted,
-            surfaceContainer = accentColor.copy(alpha = 0.06f).compositeOver(Color.White),
-            surfaceContainerHigh = accentColor.copy(alpha = 0.10f).compositeOver(Color.White),
-            surfaceContainerHighest = accentColor.copy(alpha = 0.14f).compositeOver(Color.White),
-            surfaceTint = accentColor,
+            surfaceDim = Color(0xFFE2E8F0),
+            surfaceBright = Color(0xFFFFFFFF),
+            surfaceContainerLowest = Color(0xFFFFFFFF),
+            surfaceContainerLow = Color(0xFFF8FAFC),
+            surfaceContainer = Color(0xFFF1F5F9),
+            surfaceContainerHigh = Color(0xFFE2E8F0),
+            surfaceContainerHighest = Color(0xFFCBD5E1),
+            surfaceTint = Color.Transparent,
             outline = LightOutline,
-            outlineVariant = LightOutline.copy(alpha = 0.5f),
+            outlineVariant = LightOutlineVariant,
             onBackground = TextPrimaryLight,
             onSurface = TextPrimaryLight,
             onSurfaceVariant = TextSecondaryLight,
+            error = Color(0xFFE53935),
+            onError = Color.White,
+            errorContainer = Color(0xFFFFEBEE),
+            onErrorContainer = Color(0xFFB71C1C),
             scrim = Color.Black
         )
     } else {
         darkColorScheme(
             primary = accentColor,
-            onPrimary = Color.Black,
-            primaryContainer = accentColor.copy(alpha = 0.25f),
-            onPrimaryContainer = accentColor,
+            onPrimary = onPrimaryColor,
+            primaryContainer = accentColor.copy(alpha = 0.20f),
+            onPrimaryContainer = if (accentColor.luminance() > 0.40f) accentColor else Color.White,
             secondary = secondaryAccent,
-            onSecondary = Color.Black,
-            secondaryContainer = secondaryAccent.copy(alpha = 0.20f),
-            onSecondaryContainer = secondaryAccent,
+            onSecondary = onSecondaryColor,
+            secondaryContainer = secondaryAccent.copy(alpha = 0.18f),
+            onSecondaryContainer = if (secondaryAccent.luminance() > 0.40f) secondaryAccent else Color.White,
             tertiary = tertiaryAccent,
-            onTertiary = Color.White,
+            onTertiary = onTertiaryColor,
+            tertiaryContainer = tertiaryAccent.copy(alpha = 0.18f),
+            onTertiaryContainer = Color.White,
             background = backgroundTinted,
             surface = surfaceTinted,
             surfaceVariant = surfaceVariantTinted,
-            surfaceContainer = if (isAmoled) AmoledSurface else accentColor.copy(alpha = 0.06f).compositeOver(DarkSurface),
-            surfaceContainerHigh = if (isAmoled) AmoledSurfaceVariant else accentColor.copy(alpha = 0.10f).compositeOver(DarkSurface),
-            surfaceContainerHighest = if (isAmoled) AmoledSurfaceTint else accentColor.copy(alpha = 0.14f).compositeOver(DarkSurface),
-            surfaceTint = accentColor,
+            surfaceDim = if (isAmoled) AmoledBg else DarkBg,
+            surfaceBright = if (isAmoled) AmoledSurfaceVariant else Color(0xFF232B42),
+            surfaceContainerLowest = if (isAmoled) AmoledBg else Color(0xFF07090E),
+            surfaceContainerLow = if (isAmoled) AmoledSurface else Color(0xFF0F131D),
+            surfaceContainer = if (isAmoled) AmoledSurfaceVariant else Color(0xFF151A28),
+            surfaceContainerHigh = if (isAmoled) AmoledSurfaceTint else Color(0xFF1C2337),
+            surfaceContainerHighest = if (isAmoled) Color(0xFF222838) else Color(0xFF232B42),
+            surfaceTint = Color.Transparent,
             outline = if (isAmoled) AmoledOutline else DarkOutline,
-            outlineVariant = (if (isAmoled) AmoledOutline else DarkOutline).copy(alpha = 0.5f),
+            outlineVariant = if (isAmoled) AmoledOutlineVariant else DarkOutlineVariant,
             onBackground = TextPrimaryDark,
             onSurface = TextPrimaryDark,
             onSurfaceVariant = TextSecondaryDark,
+            error = Color(0xFFFF5252),
+            onError = Color.White,
+            errorContainer = Color(0xFFFF5252).copy(alpha = 0.20f),
+            onErrorContainer = Color(0xFFFF8A80),
             scrim = Color.Black
         )
     }
@@ -281,7 +322,8 @@ fun MyDonghuaTheme(
 
     MaterialTheme(
         colorScheme = finalScheme,
-        typography = AppTypography
+        typography = AppTypography,
+        shapes = AppShapes
     ) {
         androidx.compose.runtime.CompositionLocalProvider(
             LocalDisplayCornerRadius provides displayCornerRadius,
