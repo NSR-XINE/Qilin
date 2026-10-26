@@ -54,6 +54,7 @@ import com.mydonghua.app.ui.theme.colorOSAuroraShimmer
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -138,7 +139,6 @@ fun HeroBanner(
     onBannerClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val hazeState = LocalHazeState.current
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
@@ -159,247 +159,199 @@ fun HeroBanner(
         }
     }
 
-    // ColorOS 17 Signature Squircle & Specular Rim Highlight Border (Matches Reference Screenshots)
-    val bannerBorderBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color.White.copy(alpha = if (isLight) 0.35f else 0.22f),
-            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
-        )
-    )
-
-    val bannerShape = RoundedCornerShape(32.dp)
-
-    val textShadow = remember {
-        Shadow(
-            color = Color.Black.copy(alpha = 0.85f),
-            offset = Offset(0f, 2f),
-            blurRadius = 6f
-        )
-    }
-
+    val bannerShape = RoundedCornerShape(28.dp)
+    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
+    val posterShape = RoundedCornerShape(20.dp)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(290.dp)
             .clip(bannerShape)
+            .hazeChild(state = hazeState, shape = bannerShape)
+            .background(
+                if (isLight) Color.White.copy(alpha = 0.70f)
+                else Color(0xFF161A28).copy(alpha = 0.52f)
+            )
             .border(
-                width = 1.dp,
+                width = 0.85.dp,
                 brush = bannerBorderBrush,
                 shape = bannerShape
             )
             .colorOSPressBounce(pressedScale = 0.985f, onClick = { onBannerClick() })
+            .padding(14.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(bannerShape)
-                .colorOSAuroraShimmer(enabled = true, shimmerColor = Color.White.copy(alpha = 0.08f))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Hero Poster
-            DonghuaPoster(
-                posterUrl = show.poster,
-                title = show.title,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(bannerShape),
-                contentScale = ContentScale.Crop,
-                showAcronym = false,
-                immediate = true
-            )
-
-            // Cinematic Multi-Stop Atmospheric Vignette
+            // LEFT SIDE: PICTURE (Donghua Poster)
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0.0f to Color.Black.copy(alpha = 0.60f),
-                            0.22f to Color.Transparent,
-                            0.45f to Color.Black.copy(alpha = 0.30f),
-                            0.70f to Color.Black.copy(alpha = 0.78f),
-                            1.0f to Color.Black.copy(alpha = 0.96f)
-                        )
+                    .width(128.dp)
+                    .height(184.dp)
+                    .clip(posterShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                    .border(
+                        width = 0.75.dp,
+                        color = Color.White.copy(alpha = 0.18f),
+                        shape = posterShape
                     )
-            )
-
-            // Left soft gradient for title contrast
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.horizontalGradient(
-                            0.0f to Color.Black.copy(alpha = 0.40f),
-                            0.60f to Color.Transparent
-                        )
-                    )
-            )
-
-            // Top Row: Status Pill (Left) and Episode / Genre Badge (Right)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp)
-                    .align(Alignment.TopStart),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Top-Left: "AIRING NOW" or "NEXT UP" Capsule
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(percent = 50))
-                        .then(
-                            if (remainingTime.airingNow) {
-                                Modifier.background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color(0xFF00E676).copy(alpha = 0.88f),
-                                            Color(0xFF00B0FF).copy(alpha = 0.88f)
-                                        )
-                                    )
-                                )
-                            } else {
-                                Modifier
-                                    .background(Color.Black.copy(alpha = 0.58f))
-                                    .border(
-                                        width = 0.75.dp,
-                                        color = primaryAccent.copy(alpha = 0.45f),
-                                        shape = RoundedCornerShape(percent = 50)
-                                    )
-                            }
-                        )
-                        .padding(horizontal = 10.dp, vertical = 4.5.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(if (remainingTime.airingNow) Color.White else primaryAccent)
-                        )
-                        Text(
-                            text = when {
-                                remainingTime.airingNow -> "AIRING NOW"
-                                hasSchedule -> "NEXT UP • ${show.releaseDay?.take(3)?.uppercase()} ${show.releaseTime}"
-                                else -> "FEATURED SHOW"
-                            },
-                            fontSize = 9.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-                }
+                DonghuaPoster(
+                    posterUrl = show.poster,
+                    title = show.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    showAcronym = false,
+                    immediate = true
+                )
 
-                // Top-Right: Episode / Genre Pill
-                val topRightTag = when {
-                    show.totalEp > 0 -> "EP ${show.currentEp + 1}/${show.totalEp}"
-                    !show.genres.isNullOrBlank() -> show.genres.split(",").firstOrNull()?.trim() ?: "EP ${show.currentEp + 1}"
-                    else -> "EP ${show.currentEp + 1}"
-                }
+                // Atmospheric bottom shadow overlay on poster
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(percent = 50))
-                        .background(Color.Black.copy(alpha = 0.52f))
-                        .border(
-                            width = 0.75.dp,
-                            color = Color.White.copy(alpha = 0.20f),
-                            shape = RoundedCornerShape(percent = 50)
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0.6f to Color.Transparent,
+                                1.0f to Color.Black.copy(alpha = 0.65f)
+                            )
                         )
-                        .padding(horizontal = 9.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center
+                )
+
+                // Episode badge pill overlaid at bottom of poster
+                val epText = if (show.totalEp > 0) "EP ${show.currentEp + 1}/${show.totalEp}" else "EP ${show.currentEp + 1}"
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 8.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .border(0.6.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(percent = 50))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = topRightTag,
-                        fontSize = 9.5.sp,
+                        text = epText,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.92f),
-                        letterSpacing = 0.4.sp
+                        fontFamily = JustSansFamily,
+                        color = Color.White
                     )
                 }
             }
 
-            // Bottom Content
+            // RIGHT SIDE: DETAILS
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .weight(1f)
+                    .height(184.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Main English / Romaji Title
-                Text(
-                    text = show.title,
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(shadow = textShadow),
-                    letterSpacing = (-0.3).sp
-                )
+                // Top: Status / Airing Capsule Tag
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(
+                                    if (remainingTime.airingNow) Color(0xFF00E676).copy(alpha = 0.16f)
+                                    else primaryAccent.copy(alpha = 0.14f)
+                                )
+                                .border(
+                                    width = 0.75.dp,
+                                    color = if (remainingTime.airingNow) Color(0xFF00E676).copy(alpha = 0.40f)
+                                    else primaryAccent.copy(alpha = 0.35f),
+                                    shape = RoundedCornerShape(percent = 50)
+                                )
+                                .padding(horizontal = 9.dp, vertical = 3.5.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(if (remainingTime.airingNow) Color(0xFF00E676) else primaryAccent)
+                                )
+                                Text(
+                                    text = when {
+                                        remainingTime.airingNow -> "AIRING NOW"
+                                        hasSchedule -> "${show.releaseDay?.take(3)?.uppercase()} • ${show.releaseTime ?: ""}"
+                                        else -> "FEATURED"
+                                    },
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = JustSansFamily,
+                                    color = if (remainingTime.airingNow) Color(0xFF00E676) else primaryAccent,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                        }
+                    }
 
-                Spacer(modifier = Modifier.height(2.dp))
+                    // Main Title
+                    Text(
+                        text = show.title,
+                        fontSize = 16.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = JustSansFamily,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 21.sp
+                    )
 
-                // Subtitle Row (Chinese Title & Genres)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    // Subtitle / Chinese Title / Genre
                     if (!show.titleZh.isNullOrBlank()) {
                         Text(
                             text = show.titleZh,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JustSansFamily,
+                            fontWeight = FontWeight.Medium,
                             color = primaryAccent,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    } else if (!show.genres.isNullOrBlank()) {
+                        Text(
+                            text = show.genres.split(",").take(2).joinToString(" • ") { it.trim() },
+                            fontSize = 11.5.sp,
+                            fontFamily = JustSansFamily,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                    val detailInfo = if (remainingTime.airingNow) {
-                        if (!show.titleZh.isNullOrBlank()) " • New episode live" else "New episode available now"
-                    } else if (hasSchedule) {
-                        if (!show.titleZh.isNullOrBlank()) " • Ep ${show.currentEp + 1} (${show.releaseDay})"
-                        else "Episode ${show.currentEp + 1} • ${show.releaseDay} ${show.releaseTime}"
-                    } else {
-                        if (!show.titleZh.isNullOrBlank()) " • Episode ${show.currentEp}"
-                        else "Episode ${show.currentEp} • Ongoing"
-                    }
-                    Text(
-                        text = detailInfo,
-                        fontSize = 11.5.sp,
-                        color = Color.White.copy(alpha = 0.80f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
+                // Bottom: Action or Countdown Deck
                 if (remainingTime.airingNow) {
-                    // Signature ColorOS 17 50% Capsule Liquid Action Pill (Matches Picture 1 & 2)
+                    // Watch Ep Now Button (50% capsule in ColorOS 17 Electric Blue)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .height(42.dp)
                             .clip(RoundedCornerShape(percent = 50))
                             .background(primaryAccent)
-                            .colorOSPressBounce(pressedScale = 0.96f, onClick = { onWatchClick() }),
+                            .colorOSPressBounce(pressedScale = 0.95f, onClick = { onWatchClick() }),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(30.dp)
+                                    .size(24.dp)
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.22f)),
                                 contentAlignment = Alignment.Center
@@ -407,65 +359,82 @@ fun HeroBanner(
                                 Icon(
                                     imageVector = Icons.Rounded.PlayArrow,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(15.dp),
                                     tint = Color.White
                                 )
                             }
                             Text(
-                                text = "Watch Episode ${show.currentEp + 1} Now",
-                                fontSize = 15.sp,
+                                text = "Watch Ep ${show.currentEp + 1}",
+                                fontSize = 13.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
                     }
-                } else if (hasSchedule) {
-                    // Liquid Glass Countdown Deck
+                } else if (hasSchedule && !remainingTime.elapsed) {
+                    // Sleek Compact Liquid Countdown Deck
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(42.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (isLight) Color.Black.copy(alpha = 0.05f)
+                                else Color.Black.copy(alpha = 0.25f)
+                            )
+                            .border(
+                                width = 0.75.dp,
+                                color = rememberLiquidGlassChipBorder(isLight),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        BannerTimeBox(value = remainingTime.days, label = "DAYS", modifier = Modifier.weight(1f))
-                        BannerTimeBox(value = remainingTime.hours, label = "HOURS", modifier = Modifier.weight(1f))
-                        BannerTimeBox(value = remainingTime.minutes, label = "MINS", modifier = Modifier.weight(1f))
-                        BannerTimeBox(value = remainingTime.seconds, label = "SECS", modifier = Modifier.weight(1f))
+                        CompactTimerPill(value = remainingTime.days, unit = "d")
+                        Text(":", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryAccent.copy(alpha = 0.6f))
+                        CompactTimerPill(value = remainingTime.hours, unit = "h")
+                        Text(":", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryAccent.copy(alpha = 0.6f))
+                        CompactTimerPill(value = remainingTime.minutes, unit = "m")
+                        Text(":", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryAccent.copy(alpha = 0.6f))
+                        CompactTimerPill(value = remainingTime.seconds, unit = "s")
                     }
                 } else {
-                    // Signature ColorOS 17 Frosted Capsule Pill
+                    // Frosted Details Pill
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .height(42.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color.White.copy(alpha = 0.12f))
+                            .background(
+                                if (isLight) Color.Black.copy(alpha = 0.06f)
+                                else Color.White.copy(alpha = 0.10f)
+                            )
                             .border(
-                                width = 1.dp,
-                                brush = Brush.verticalGradient(
-                                    listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.06f))
-                                ),
+                                width = 0.75.dp,
+                                color = rememberLiquidGlassChipBorder(isLight),
                                 shape = RoundedCornerShape(percent = 50)
                             )
-                            .colorOSPressBounce(pressedScale = 0.96f, onClick = { onBannerClick() }),
+                            .colorOSPressBounce(pressedScale = 0.95f, onClick = { onBannerClick() }),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = Color.White
-                            )
                             Text(
-                                text = "View Show Details & Episodes",
-                                fontSize = 15.sp,
+                                text = "Show Details",
+                                fontSize = 13.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = primaryAccent
                             )
                         }
                     }
@@ -476,69 +445,28 @@ fun HeroBanner(
 }
 
 @Composable
-private fun BannerTimeBox(
-    value: Long,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    val hazeState = LocalHazeState.current
+private fun CompactTimerPill(value: Long, unit: String) {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val shape = RoundedCornerShape(16.dp)
-
-    // Liquid Glass Gradient for Timer Pillar
-    val bgBrush = remember {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.12f),
-                Color.Black.copy(alpha = 0.38f)
-            )
-        )
-    }
-
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
 
-    Box(
-        modifier = modifier
-            .height(54.dp)
-            .clip(shape)
-            .hazeChild(state = hazeState, shape = shape)
-            .background(brush = bgBrush)
-            .border(
-                width = 0.85.dp,
-                brush = Brush.verticalGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.25f),
-                        primaryAccent.copy(alpha = 0.20f)
-                    )
-                ),
-                shape = shape
-            )
-            .padding(vertical = 4.dp),
-        contentAlignment = Alignment.Center
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = String.format("%02d", value),
-                fontSize = 18.sp,
-                fontFamily = JustSansFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                lineHeight = 21.sp
-            )
-            Text(
-                text = label,
-                fontSize = 8.5.sp,
-                fontFamily = JustSansFamily,
-                fontWeight = FontWeight.Bold,
-                color = primaryAccent,
-                letterSpacing = 1.1.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+        Text(
+            text = String.format(Locale.getDefault(), "%02d", value),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = JustSansFamily,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = unit,
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = JustSansFamily,
+            color = primaryAccent
+        )
     }
 }
 
@@ -1006,26 +934,78 @@ fun RecentlyUpdatedCard(
 private fun HeroBannerSkeleton() {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
-    val bannerShape = RoundedCornerShape(32.dp)
+    val bannerShape = RoundedCornerShape(28.dp)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(290.dp)
             .clip(bannerShape)
+            .background(
+                if (isLight) Color.White.copy(alpha = 0.70f)
+                else Color(0xFF161A28).copy(alpha = 0.52f)
+            )
             .border(
                 width = 0.85.dp,
                 brush = bannerBorderBrush,
                 shape = bannerShape
             )
+            .padding(14.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(bannerShape)
-                .shimmerEffect()
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left Poster Skeleton
+            Box(
+                modifier = Modifier
+                    .width(128.dp)
+                    .height(184.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .shimmerEffect()
+            )
+
+            // Right Details Skeleton
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(184.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(20.dp)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .height(18.dp)
+                            .clip(RoundedCornerShape(CornerRadius.xs))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(CornerRadius.xs))
+                            .shimmerEffect()
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .shimmerEffect()
+                )
+            }
+        }
     }
 }
 
