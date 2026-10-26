@@ -82,6 +82,7 @@ import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
+import com.mydonghua.app.ui.LocalHeaderBackdrop
 import com.mydonghua.app.ui.LocalLayerBackdrop
 import com.mydonghua.app.ui.MenuGlassPanel
 import com.mydonghua.app.ui.Spacing
@@ -117,7 +118,7 @@ class MainActivity : ComponentActivity() {
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
-            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped")
+            val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped", "favorites")
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
             val headerBackdrop = rememberCombinedBackdrop(contentBackdrop, navBackdrop)
@@ -184,7 +185,8 @@ class MainActivity : ComponentActivity() {
                         }
                         CompositionLocalProvider(
                             LocalHazeState provides appHazeState,
-                            LocalLayerBackdrop provides contentBackdrop
+                            LocalLayerBackdrop provides contentBackdrop,
+                            LocalHeaderBackdrop provides headerBackdrop
                         ) {
                             Box(
                                 modifier = Modifier
@@ -203,6 +205,7 @@ class MainActivity : ComponentActivity() {
                                             "airing" -> "Airing Schedule"
                                             "complete" -> "Completed"
                                             "stopped" -> "Stopped"
+                                            "favorites" -> "Favorites"
                                             else -> ""
                                         }
                                         GlassHeader(

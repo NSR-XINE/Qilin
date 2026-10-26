@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
@@ -96,76 +97,17 @@ fun SettingsScreen(
         storageGranted = granted
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            // ColorOS 17 Liquid Glass Top Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val backInteraction = remember { MutableInteractionSource() }
-                val isBackPressed by backInteraction.collectIsPressedAsState()
-                val backScale by animateFloatAsState(
-                    targetValue = if (isBackPressed) 0.88f else 1f,
-                    animationSpec = ColorOSMotion.TouchBounceSpring,
-                    label = "backScale"
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .graphicsLayer {
-                            scaleX = backScale
-                            scaleY = backScale
-                        }
-                        .clip(CircleShape)
-                        .background(
-                            if (isDark) Color.White.copy(alpha = 0.10f)
-                            else Color.Black.copy(alpha = 0.06f)
-                        )
-                        .border(
-                            width = 0.75.dp,
-                            color = if (isDark) Color.White.copy(alpha = 0.20f)
-                            else Color.Black.copy(alpha = 0.10f),
-                            shape = CircleShape
-                        )
-                        .clickable(
-                            interactionSource = backInteraction,
-                            indication = null,
-                            onClick = onNavigateBack
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Text(
-                    text = "Settings",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
+    Box(
         modifier = modifier
-    ) { paddingValues ->
+            .fillMaxSize()
+            .background(Color.Transparent)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .padding(top = 88.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             Spacer(modifier = Modifier.height(2.dp))
@@ -876,6 +818,11 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+
+        GlassHeader(
+            title = "Settings",
+            onBackClick = onNavigateBack
+        )
     }
 }
 

@@ -21,6 +21,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.MaterialTheme
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.mydonghua.app.ui.LocalHeaderBackdrop
+import com.mydonghua.app.ui.LocalLayerBackdrop
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -50,11 +55,13 @@ import androidx.compose.ui.text.style.TextOverflow
 @Composable
 fun GlassHeader(
     title: String,
-    backdrop: Backdrop,
-    isDark: Boolean = true,
+    backdrop: Backdrop = LocalHeaderBackdrop.current ?: LocalLayerBackdrop.current ?: rememberLayerBackdrop(),
+    isDark: Boolean = MaterialTheme.colorScheme.background.luminance() <= 0.5f,
+    subtitle: String? = null,
     onDrawerOpen: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
     onEditClick: (() -> Unit)? = null,
+    actions: (@Composable RowScope.() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val menuInteraction = remember { MutableInteractionSource() }
@@ -229,19 +236,34 @@ fun GlassHeader(
                     }
                 }
 
-                Text(
-                    text = title,
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = contentColor
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = Spacing.md)
-                )
+                ) {
+                    Text(
+                        text = title,
+                        style = TextStyle(
+                            fontSize = if (subtitle != null) 16.sp else 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (subtitle != null) {
+                        Text(
+                            text = subtitle,
+                            style = TextStyle(
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF0082FB)
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
 
                 if (onEditClick != null) {
                     Box(
@@ -304,6 +326,10 @@ fun GlassHeader(
                             modifier = Modifier.size(IconSize.md)
                         )
                     }
+                }
+
+                if (actions != null) {
+                    actions()
                 }
             }
         }

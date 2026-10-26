@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
@@ -72,39 +73,22 @@ fun CalendarScreen(
         list
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("$monthName $yearName", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.colorOSPressBounce(pressedScale = 0.90f)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(IconSize.md)
-                        )
-                    }
-                }
-            )
-        },
+    Box(
         modifier = modifier
-    ) { paddingValues ->
+            .fillMaxSize()
+            .background(Color.Transparent)
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = Spacing.lg)
         ) {
             if (isLoading) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(scrollState),
+                        .verticalScroll(scrollState)
+                        .padding(top = 88.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     Spacer(modifier = Modifier.height(Spacing.xs))
@@ -153,13 +137,15 @@ fun CalendarScreen(
                 EmptyState(
                     title = "No shows scheduled for release this week",
                     subtitle = "Add shows that are currently airing with release days set",
-                    painter = painterResource(id = R.drawable.ic_calendar)
+                    painter = painterResource(id = R.drawable.ic_calendar),
+                    modifier = Modifier.padding(top = 88.dp)
                 )
             } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(scrollState),
+                        .verticalScroll(scrollState)
+                        .padding(top = 88.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.lg)
                 ) {
                     Spacer(modifier = Modifier.height(Spacing.xs))
@@ -225,10 +211,14 @@ fun CalendarScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(100.dp))
                 }
             }
         }
+
+        GlassHeader(
+            title = "$monthName $yearName",
+            onBackClick = onNavigateBack
+        )
     }
 }
 

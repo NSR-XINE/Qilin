@@ -79,6 +79,19 @@ import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.ColorOSTransitions
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.vibrancy
+import com.mydonghua.app.ui.LocalHeaderBackdrop
+import com.mydonghua.app.ui.LocalLayerBackdrop
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.rounded.Close
@@ -215,167 +228,21 @@ fun SearchScreen(
         }
     }
 
+    val isDark = MaterialTheme.colorScheme.background.luminance() <= 0.5f
+    val isLight = !isDark
+    val searchPillBg = if (isLight) Color.White.copy(alpha = 0.70f) else Color(0xFF1E222D).copy(alpha = 0.65f)
+    val searchPillShape = RoundedCornerShape(CornerRadius.surface)
+    val headerBackdrop = LocalHeaderBackdrop.current ?: LocalLayerBackdrop.current ?: rememberLayerBackdrop()
+
     Box(modifier = modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .imePadding()
-    ) {
-        // 1. Search Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = true)
-                        scope.launch {
-                            focusAndOpenKeyboard()
-                        }
-                    }
-                }
-                .padding(horizontal = Spacing.lg)
-                .padding(top = Spacing.xs)
-                .height(56.dp)
-                .clip(RoundedCornerShape(CornerRadius.banner))
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(CornerRadius.banner)
-                )
-                .border(
-                    width = 0.85.dp,
-                    brush = rememberLiquidGlassBorder(MaterialTheme.colorScheme.background.luminance() > 0.5f),
-                    shape = RoundedCornerShape(CornerRadius.banner)
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Leading icon (search when idle / back when active)
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .colorOSPressBounce(pressedScale = 0.88f)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        if (isSearchActive) {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                        } else {
-                            onNavigateBack()
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isSearchActive) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Search,
-                    contentDescription = if (isSearchActive) "Back" else "Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(IconSize.xl)
-                )
-            }
-
-            // Text input field
-            BasicTextField(
-                value = query,
-                onValueChange = { viewModel.searchQuery.value = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        isSearchActive = focusState.isFocused
-                    },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                singleLine = true,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        viewModel.selectQuery(query)
-                        keyboardController?.hide()
-                    }
-                ),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (query.isEmpty()) {
-                            Text(
-                                text = "Search shows...",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-
-            // Trailing icon: voice search placeholder when idle, clear when there's text
-            if (query.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .colorOSPressBounce(pressedScale = 0.88f)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { viewModel.clearQuery() }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Clear",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(IconSize.lg)
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .colorOSPressBounce(pressedScale = 0.88f)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { startVoiceSearch() }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Mic,
-                        contentDescription = "Voice search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(IconSize.xl)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(Spacing.xs))
-
-        // 2. Redesigned Suggestions / Results List
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        // 1. Scrollable Suggestions / Results List
+        Box(modifier = Modifier.fillMaxSize().imePadding()) {
             if (query.isEmpty() && !hasActiveFilters) {
                 val suggestionsList = suggestions
                 if (suggestionsList.isNotEmpty()) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
-                        contentPadding = PaddingValues(bottom = 80.dp),
+                        contentPadding = PaddingValues(top = 80.dp, bottom = 80.dp),
                         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         val recents = suggestionsList.filterIsInstance<SearchSuggestion.Recent>()
@@ -458,7 +325,8 @@ fun SearchScreen(
                         subtitle = "We couldn't reach the search service. Check your connection and try again.",
                         icon = Icons.Rounded.WifiOff,
                         actionLabel = "Retry",
-                        onAction = { viewModel.retryOnlineSearch() }
+                        onAction = { viewModel.retryOnlineSearch() },
+                        modifier = Modifier.padding(top = 88.dp)
                     )
                 } else if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
                     EmptyState(
@@ -466,13 +334,14 @@ fun SearchScreen(
                         subtitle = "Try searching for another title or browse all shows",
                         icon = Icons.Default.Search,
                         actionLabel = "Browse All",
-                        onAction = onNavigateBack
+                        onAction = onNavigateBack,
+                        modifier = Modifier.padding(top = 88.dp)
                     )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
                         state = resultsListState,
-                        contentPadding = PaddingValues(bottom = 80.dp)
+                        contentPadding = PaddingValues(top = 80.dp, bottom = 80.dp)
                     ) {
                         item {
                             FilterChipsRow(
@@ -592,7 +461,195 @@ fun SearchScreen(
                 }
             }
         }
-    }
+
+        // 2. Floating Frosted Glass Header with Search Bar Pill
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+        ) {
+            // Frosted Canopy (from pill top up to status bar)
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer {
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    }
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black,
+                                    Color.Black.copy(alpha = 0.85f),
+                                    Color.Black.copy(alpha = 0.40f),
+                                    Color.Transparent
+                                )
+                            ),
+                            blendMode = BlendMode.DstIn
+                        )
+                    }
+                    .drawBackdrop(
+                        backdrop = headerBackdrop,
+                        shape = { RectangleShape },
+                        effects = {
+                            blur(24.dp.toPx())
+                            vibrancy()
+                            colorControls(saturation = 1.35f)
+                        },
+                        highlight = null,
+                        shadow = null,
+                    )
+                    .background(
+                        if (isDark) Color(0xFF0F121C).copy(alpha = 0.55f)
+                        else Color.White.copy(alpha = 0.60f)
+                    )
+            )
+
+            // Borderless Search Bar Pill
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(start = Spacing.md, end = Spacing.md, top = 8.dp, bottom = 6.dp)
+                    .height(56.dp)
+                    .clip(searchPillShape)
+                    .drawBackdrop(
+                        backdrop = headerBackdrop,
+                        shape = { searchPillShape },
+                        effects = {
+                            blur(24.dp.toPx())
+                            vibrancy()
+                            colorControls(saturation = 1.35f)
+                        },
+                        highlight = null,
+                        shadow = null,
+                    )
+                    .background(searchPillBg)
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = true)
+                            scope.launch {
+                                focusAndOpenKeyboard()
+                            }
+                        }
+                    }
+                    .padding(horizontal = Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Leading icon (search when idle / back when active)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.88f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            if (isSearchActive) {
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                            } else {
+                                onNavigateBack()
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isSearchActive) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Search,
+                        contentDescription = if (isSearchActive) "Back" else "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(IconSize.md)
+                    )
+                }
+
+                // Text input field
+                BasicTextField(
+                    value = query,
+                    onValueChange = { viewModel.searchQuery.value = it },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 6.dp)
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusState ->
+                            isSearchActive = focusState.isFocused
+                        },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    singleLine = true,
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            viewModel.selectQuery(query)
+                            keyboardController?.hide()
+                        }
+                    ),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (query.isEmpty()) {
+                                Text(
+                                    text = "Search shows...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+
+                // Trailing icon: voice search placeholder when idle, clear when there's text
+                if (query.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .colorOSPressBounce(pressedScale = 0.88f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { viewModel.clearQuery() }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Clear",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(IconSize.md)
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .colorOSPressBounce(pressedScale = 0.88f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { startVoiceSearch() }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Mic,
+                            contentDescription = "Voice search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(IconSize.md)
+                        )
+                    }
+                }
+            }
+        }
 
     SnackbarHost(
         hostState = snackbarHostState,

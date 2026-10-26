@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.RoundedRectRefractionShaderString
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -54,6 +55,7 @@ import dev.chrisbanes.haze.hazeChild
 
 val LocalHazeState = compositionLocalOf { HazeState() }
 val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
+val LocalHeaderBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 val Spacing = com.mydonghua.app.ui.theme.Spacing
 

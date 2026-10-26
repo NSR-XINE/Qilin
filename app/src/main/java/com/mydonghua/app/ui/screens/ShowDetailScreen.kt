@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -100,97 +101,17 @@ fun ShowDetailScreen(
     val glassBorder = rememberLiquidGlassBorder(isLight)
     val chipBorder = rememberLiquidGlassChipBorder(isLight)
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Floating Liquid Glass Top Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(start = Spacing.md, end = Spacing.md, top = 8.dp, bottom = 6.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(CornerRadius.surface))
-                    .background(
-                        if (MaterialTheme.colorScheme.background.luminance() > 0.5f)
-                            Color.White.copy(alpha = 0.85f)
-                        else Color(0xFF0F121C).copy(alpha = 0.88f)
-                    )
-                    .border(
-                        width = 0.65.dp,
-                        brush = glassBorder,
-                        shape = RoundedCornerShape(CornerRadius.surface)
-                    )
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                            .colorOSPressBounce(pressedScale = 0.90f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = show.title,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        val statusText = when (show.status) {
-                            "ongoing" -> "AIRING"
-                            "completed" -> "COMPLETED"
-                            else -> "HIATUS"
-                        }
-                        Text(
-                            text = "$statusText • EP ${show.currentEp}${if (show.totalEp > 0) "/${show.totalEp}" else ""}",
-                            fontSize = 11.sp,
-                            color = Color(0xFF0082FB),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = { onEditClick(show) },
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(11.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                        .colorOSPressBounce(pressedScale = 0.90f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Edit,
-                        contentDescription = "Edit Show",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(19.dp)
-                    )
-                }
-            }
+        val statusText = when (show.status) {
+            "ongoing" -> "AIRING"
+            "completed" -> "COMPLETED"
+            else -> "HIATUS"
         }
+        val detailSubtitle = "$statusText • EP ${show.currentEp}${if (show.totalEp > 0) "/${show.totalEp}" else ""}"
 
         // Scrollable Body Content
         Column(
@@ -198,7 +119,7 @@ fun ShowDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.md)
-                .padding(bottom = 96.dp),
+                .padding(top = 88.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Hero Backdrop Banner
@@ -745,6 +666,13 @@ fun ShowDetailScreen(
                 }
             }
         }
+
+        GlassHeader(
+            title = show.title,
+            subtitle = detailSubtitle,
+            onBackClick = onNavigateBack,
+            onEditClick = { onEditClick(show) }
+        )
     }
 }
 

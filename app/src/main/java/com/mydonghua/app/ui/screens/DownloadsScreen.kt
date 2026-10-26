@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.clipRect
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
+import com.mydonghua.app.ui.GlassHeader
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
@@ -145,99 +146,14 @@ fun DownloadsScreen(
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // ColorOS 17 Floating Liquid Glass Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(start = Spacing.md, end = Spacing.md, top = 8.dp, bottom = 6.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(CornerRadius.surface))
-                    .background(
-                        if (isLight) Color.White.copy(alpha = 0.70f)
-                        else Color(0xFF161A26).copy(alpha = 0.58f)
-                    )
-                    .border(
-                        width = 0.85.dp,
-                        brush = glassBorder,
-                        shape = RoundedCornerShape(CornerRadius.surface)
-                    )
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.08f))
-                            .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
-                            .colorOSPressBounce(pressedScale = 0.90f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Column {
-                        Text(
-                            text = "Offline Downloads",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = JustSansFamily,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "${offlineFiles.size} saved • ${activeTasks.size} active",
-                            fontSize = 11.5.sp,
-                            color = Color(0xFF0082FB),
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = JustSansFamily
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = { refreshOfflineFiles() },
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
-                        .colorOSPressBounce(pressedScale = 0.90f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Refresh,
-                        contentDescription = "Refresh Downloads",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.sm),
+            contentPadding = PaddingValues(start = Spacing.md, end = Spacing.md, top = 88.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             // Storage Overview Card
@@ -407,6 +323,29 @@ fun DownloadsScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+
+        GlassHeader(
+            title = "Offline Downloads",
+            subtitle = "${offlineFiles.size} saved • ${activeTasks.size} active",
+            onBackClick = onNavigateBack,
+            actions = {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.1f))
+                        .clickable { refreshOfflineFiles() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = "Refresh Downloads",
+                        tint = if (isLight) Color(0xFF1E1E1E) else Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        )
     }
 }
 

@@ -32,6 +32,7 @@ import com.mydonghua.app.R
 import com.mydonghua.app.AlarmScheduler
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ColorOSPillButton
@@ -98,38 +99,17 @@ fun AddEditShowScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (editingShow != null) "Edit Show" else "Add New Show",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.colorOSPressBounce(pressedScale = 0.90f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
-        },
+    Box(
         modifier = modifier
-    ) { paddingValues ->
+            .fillMaxSize()
+            .background(Color.Transparent)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.lg),
+                .padding(horizontal = Spacing.lg)
+                .padding(top = 88.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             Spacer(modifier = Modifier.height(Spacing.sm))
@@ -560,6 +540,11 @@ fun AddEditShowScreen(
 
             Spacer(modifier = Modifier.height(Spacing.xxxl))
         }
+
+        GlassHeader(
+            title = if (editingShow != null) "Edit Show" else "Add New Show",
+            onBackClick = onNavigateBack
+        )
     }
 }
 

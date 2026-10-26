@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
@@ -81,72 +82,13 @@ fun ColorOSUpdateScreen(
         ColorOSAtmosphereBackground(modifier = Modifier.fillMaxSize())
 
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(top = 88.dp, bottom = 100.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 2. Top App Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .colorOSPressBounce(pressedScale = 0.90f, onClick = onNavigateBack),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = "Software update",
-                    fontSize = 20.sp,
-                    fontFamily = JustSansFamily,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .colorOSPressBounce(pressedScale = 0.90f) { },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.MoreVert,
-                        contentDescription = "More",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-
-            // Scrollable Content
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(bottom = 100.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // 3. Iconic ColorOS 17 Hero Branding
+            // 3. Iconic ColorOS 17 Hero Branding
                     Spacer(modifier = Modifier.height(18.dp))
 
                     Text(
@@ -378,8 +320,11 @@ fun ColorOSUpdateScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-            }
-        }
+
+        GlassHeader(
+            title = "Software update",
+            onBackClick = onNavigateBack
+        )
     }
 }
 

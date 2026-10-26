@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.GlassSection
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.text.font.FontWeight
@@ -57,34 +58,17 @@ fun StatsScreen(
         }.sortedBy { daysList.indexOf(it.releaseDay) }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("Detailed Statistics", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.colorOSPressBounce(pressedScale = 0.90f)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(IconSize.md)
-                        )
-                    }
-                }
-            )
-        },
+    Box(
         modifier = modifier
-    ) { paddingValues ->
+            .fillMaxSize()
+            .background(Color.Transparent)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = Spacing.lg)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .padding(top = 88.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             Spacer(modifier = Modifier.height(Spacing.xs))
@@ -275,6 +259,11 @@ fun StatsScreen(
                     Spacer(modifier = Modifier.height(Spacing.xxxl))
             }
         }
+
+        GlassHeader(
+            title = "Detailed Statistics",
+            onBackClick = onNavigateBack
+        )
     }
 }
 
