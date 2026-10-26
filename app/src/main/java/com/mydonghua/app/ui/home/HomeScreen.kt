@@ -189,8 +189,7 @@ fun HeroBanner(
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(275.dp)
-            .colorOSPressBounce(pressedScale = 0.985f)
-            .clickable { onBannerClick() }
+            .colorOSPressBounce(pressedScale = 0.985f, onClick = { onBannerClick() })
     ) {
         Box(
             modifier = Modifier
@@ -402,8 +401,7 @@ fun HeroBanner(
                                 color = Color.White.copy(alpha = 0.35f),
                                 shape = RoundedCornerShape(13.dp)
                             )
-                            .clickable { onWatchClick() }
-                            .colorOSPressBounce(pressedScale = 0.95f)
+                            .colorOSPressBounce(pressedScale = 0.95f, onClick = { onWatchClick() })
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -451,8 +449,7 @@ fun HeroBanner(
                                 color = Color.White.copy(alpha = 0.20f),
                                 shape = RoundedCornerShape(13.dp)
                             )
-                            .clickable { onBannerClick() }
-                            .colorOSPressBounce(pressedScale = 0.96f)
+                            .colorOSPressBounce(pressedScale = 0.96f, onClick = { onBannerClick() })
                             .padding(horizontal = 14.dp),
                         contentAlignment = Alignment.Center
                     ) {

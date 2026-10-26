@@ -323,7 +323,7 @@ fun GlassSection(
             )
         }
         onClick != null -> {
-            liquidGlassModifier.clip(shape).colorOSPressBounce(pressedScale = 0.98f).clickable(onClick = onClick)
+            liquidGlassModifier.clip(shape).colorOSPressBounce(pressedScale = 0.98f, onClick = onClick)
         }
         else -> liquidGlassModifier
     }

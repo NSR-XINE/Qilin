@@ -261,38 +261,14 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         EnterTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeIn(animationSpec = ColorOSMotion.FadeInFloat)
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else {
-                                        val dir = tabTransitionDirection(from, to)
-                                        when {
-                                            dir > 0 -> slideInHorizontally(
-                                                animationSpec = ColorOSMotion.FluidIntOffset,
-                                                initialOffsetX = { it }
-                                            ) + scaleIn(
-                                                initialScale = 0.94f,
-                                                animationSpec = ColorOSMotion.FluidSpring
-                                            ) + fadeIn(
-                                                animationSpec = ColorOSMotion.FadeInFloat
-                                            )
-                                            dir < 0 -> slideInHorizontally(
-                                                animationSpec = ColorOSMotion.FluidIntOffset,
-                                                initialOffsetX = { -it }
-                                            ) + scaleIn(
-                                                initialScale = 0.94f,
-                                                animationSpec = ColorOSMotion.FluidSpring
-                                            ) + fadeIn(
-                                                animationSpec = ColorOSMotion.FadeInFloat
-                                            )
-                                            else -> slideInHorizontally(
-                                                animationSpec = ColorOSMotion.FluidIntOffset,
-                                                initialOffsetX = { it }
-                                            ) + scaleIn(
-                                                initialScale = 0.95f,
-                                                animationSpec = ColorOSMotion.FluidSpring
-                                            ) + fadeIn(
-                                                animationSpec = ColorOSMotion.FadeInFloat
-                                            )
-                                        }
+                                        slideInHorizontally(
+                                            animationSpec = ColorOSMotion.NavSlideInSpec,
+                                            initialOffsetX = { it }
+                                        ) + fadeIn(
+                                            animationSpec = ColorOSMotion.NavFadeInSpec
+                                        )
                                     }
                                 },
                                 exitTransition = {
@@ -301,38 +277,15 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         ExitTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeOut(animationSpec = ColorOSMotion.FadeOutFloat)
+                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
                                     } else {
-                                        val dir = tabTransitionDirection(from, to)
-                                        when {
-                                            dir > 0 -> slideOutHorizontally(
-                                                animationSpec = ColorOSMotion.FluidIntOffset,
-                                                targetOffsetX = { -it }
-                                            ) + scaleOut(
-                                                targetScale = 0.96f,
-                                                animationSpec = ColorOSMotion.FluidSpring
-                                            ) + fadeOut(
-                                                animationSpec = ColorOSMotion.FadeOutFloat
-                                            )
-                                            dir < 0 -> slideOutHorizontally(
-                                                animationSpec = ColorOSMotion.FluidIntOffset,
-                                                targetOffsetX = { it }
-                                            ) + scaleOut(
-                                                targetScale = 0.96f,
-                                                animationSpec = ColorOSMotion.FluidSpring
-                                            ) + fadeOut(
-                                                animationSpec = ColorOSMotion.FadeOutFloat
-                                            )
-                                            else -> slideOutHorizontally(
-                                                animationSpec = ColorOSMotion.SheetExitIntOffset,
-                                                targetOffsetX = { -it / 4 }
-                                            ) + scaleOut(
-                                                targetScale = 0.96f,
-                                                animationSpec = ColorOSMotion.FluidSpring
-                                            ) + fadeOut(
-                                                animationSpec = ColorOSMotion.FadeOutFloat
-                                            )
-                                        }
+                                        slideOutHorizontally(
+                                            animationSpec = ColorOSMotion.NavSlideOutSpec,
+                                            targetOffsetX = { -it / 4 }
+                                        ) + fadeOut(
+                                            animationSpec = ColorOSMotion.NavFadeOutSpec,
+                                            targetAlpha = 0.5f
+                                        )
                                     }
                                 },
                                 popEnterTransition = {
@@ -341,16 +294,13 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         EnterTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeIn(animationSpec = ColorOSMotion.FadeInFloat)
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else {
                                         slideInHorizontally(
-                                            animationSpec = ColorOSMotion.FluidIntOffset,
+                                            animationSpec = ColorOSMotion.NavSlideInSpec,
                                             initialOffsetX = { -it / 4 }
-                                        ) + scaleIn(
-                                            initialScale = 0.96f,
-                                            animationSpec = ColorOSMotion.FluidSpring
                                         ) + fadeIn(
-                                            animationSpec = ColorOSMotion.FadeInFloat
+                                            animationSpec = ColorOSMotion.NavFadeInSpec
                                         )
                                     }
                                 },
@@ -360,16 +310,13 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         ExitTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeOut(animationSpec = ColorOSMotion.FadeOutFloat)
+                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
                                     } else {
                                         slideOutHorizontally(
-                                            animationSpec = ColorOSMotion.SheetExitIntOffset,
+                                            animationSpec = ColorOSMotion.NavSlideOutSpec,
                                             targetOffsetX = { it }
-                                        ) + scaleOut(
-                                            targetScale = 0.96f,
-                                            animationSpec = ColorOSMotion.FluidSpring
                                         ) + fadeOut(
-                                            animationSpec = ColorOSMotion.FadeOutFloat
+                                            animationSpec = ColorOSMotion.NavFadeOutSpec
                                         )
                                     }
                                 }

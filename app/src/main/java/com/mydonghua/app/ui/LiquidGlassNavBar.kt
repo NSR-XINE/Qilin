@@ -511,7 +511,7 @@ class DampedDragAnimation(
     val onDragFinished: DampedDragAnimation.(targetIndex: Int) -> Unit,
     val onTap: DampedDragAnimation.(slot: Int) -> Unit,
 ) {
-    private val snapAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
+    private val snapAnimationSpec = ColorOSMotion.NavPillSpring
     private val pressProgressAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
     private val scaleXAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
     private val scaleYAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring

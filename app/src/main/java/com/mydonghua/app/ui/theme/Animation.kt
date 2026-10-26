@@ -5,12 +5,13 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -20,10 +21,15 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * ColorOS 17 Official Unified Aurora & Tidal Engine 2.0 Motion System.
@@ -95,12 +101,39 @@ object ColorOSMotion {
     val SlowEffectSpring = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 800f)
 
     // High-level Springs for Components
-    val TouchBounceSpring = ExpressiveFastSpatialSpring
+    val TouchBounceSpring = spring<Float>(dampingRatio = 0.72f, stiffness = 420f)
     val FluidSpring = ExpressiveDefaultSpatialSpring
     val SnappySpring = StandardFastSpatialSpring
     val TactileSpring = spring<Float>(dampingRatio = 0.70f, stiffness = 600f)
     val BouncySpring = spring<Float>(dampingRatio = 0.58f, stiffness = 400f)
     val PopSpring = spring<Float>(dampingRatio = 0.55f, stiffness = 500f)
+    val NavPillSpring = spring<Float>(dampingRatio = 0.78f, stiffness = 220f)
+
+    // Official Stock ColorOS 17 Navigation & Tab Transition Specs
+    val NavSlideInSpec = tween<IntOffset>(
+        durationMillis = DurationMove, // 300ms
+        easing = EmphasizedDecelerate
+    )
+    val NavSlideOutSpec = tween<IntOffset>(
+        durationMillis = 250,
+        easing = EmphasizedAccelerate
+    )
+    val NavFadeInSpec = tween<Float>(
+        durationMillis = DurationFast, // 200ms
+        easing = FastOutSlowIn
+    )
+    val NavFadeOutSpec = tween<Float>(
+        durationMillis = DurationFast, // 200ms
+        easing = FastOutSlowIn
+    )
+    val TabFadeInSpec = tween<Float>(
+        durationMillis = 180,
+        easing = LinearOutSlowIn
+    )
+    val TabFadeOutSpec = tween<Float>(
+        durationMillis = 120,
+        easing = FastOutSlowIn
+    )
 
     // Float Transitions
     val FluidFloat = ExpressiveDefaultSpatialSpring
@@ -124,88 +157,148 @@ object ColorOSMotion {
 /**
  * ColorOS 17 Stock Screen & Component Transition Specifications for Jetpack Compose AnimatedContent.
  * Modeled after oplus_open_slide_enter, oplus_open_slide_exit, oplus_dialog_enter, and oplus_dialog_exit.
+ * Uses pure translation + alpha (no full-screen scaling) to eliminate jank, frame drops, and raster invalidation.
  */
 object ColorOSTransitions {
     // Forward Navigation (Open Slide Enter / Exit)
     val enterForward = slideInHorizontally(
-        animationSpec = ColorOSMotion.SheetIntOffset,
+        animationSpec = ColorOSMotion.NavSlideInSpec,
         initialOffsetX = { it }
-    ) + fadeIn(animationSpec = ColorOSMotion.DefaultEffectSpring)
+    ) + fadeIn(animationSpec = ColorOSMotion.NavFadeInSpec)
 
     val exitForward = slideOutHorizontally(
-        animationSpec = ColorOSMotion.SheetExitIntOffset,
+        animationSpec = ColorOSMotion.NavSlideOutSpec,
         targetOffsetX = { -it / 4 }
-    ) + fadeOut(animationSpec = ColorOSMotion.FastEffectSpring)
+    ) + fadeOut(
+        animationSpec = ColorOSMotion.NavFadeOutSpec,
+        targetAlpha = 0.5f
+    )
 
     // Backward Navigation (Close Slide Enter / Exit)
     val enterBackward = slideInHorizontally(
-        animationSpec = ColorOSMotion.SheetIntOffset,
+        animationSpec = ColorOSMotion.NavSlideInSpec,
         initialOffsetX = { -it / 4 }
-    ) + fadeIn(animationSpec = ColorOSMotion.DefaultEffectSpring)
+    ) + fadeIn(animationSpec = ColorOSMotion.NavFadeInSpec)
 
     val exitBackward = slideOutHorizontally(
-        animationSpec = ColorOSMotion.SheetExitIntOffset,
+        animationSpec = ColorOSMotion.NavSlideOutSpec,
         targetOffsetX = { it }
-    ) + fadeOut(animationSpec = ColorOSMotion.FastEffectSpring)
+    ) + fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
+
+    // Tab Cross-Fade (Fluid & No Flash)
+    val tabEnter = fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
+    val tabExit = fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
 
     // Modal Dialog / Card Expand
     val enterDialog = scaleIn(
         animationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring,
         initialScale = 0.88f
-    ) + fadeIn(animationSpec = ColorOSMotion.DefaultEffectSpring)
+    ) + fadeIn(animationSpec = ColorOSMotion.NavFadeInSpec)
 
     val exitDialog = scaleOut(
         animationSpec = ColorOSMotion.StandardFastSpatialSpring,
         targetScale = 0.92f
-    ) + fadeOut(animationSpec = ColorOSMotion.FastEffectSpring)
+    ) + fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
 
     // Bottom Sheet (Slide Up / Down)
     val enterBottomSheet = slideInVertically(
         animationSpec = ColorOSMotion.SheetIntOffset,
         initialOffsetY = { it }
-    ) + fadeIn(animationSpec = ColorOSMotion.DefaultEffectSpring)
+    ) + fadeIn(animationSpec = ColorOSMotion.NavFadeInSpec)
 
     val exitBottomSheet = slideOutVertically(
         animationSpec = ColorOSMotion.SheetExitIntOffset,
         targetOffsetY = { it }
-    ) + fadeOut(animationSpec = ColorOSMotion.FastEffectSpring)
+    ) + fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
 }
 
 /**
  * ColorOS 17 Interactive Tactile Press Modifier.
  * Provides the signature ColorOS press squish and elastic rebound on any composable:
- * - Down: Instant responsive snap (stiffness 1400f)
- * - Up: Organic elastic spring rebound (stiffness 800f, damping 0.60f)
+ * - Fluid spring dynamics (damping 0.72f, stiffness 420f) for organic rebound without velocity discontinuities
+ * - Touch-slop and tap-timeout aware: zero triggers during list scrolling or fling gestures
+ * - Seamless integration with Compose InteractionSource and onClick callbacks
  */
 fun Modifier.colorOSPressBounce(
     pressedScale: Float = 0.95f,
     enabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
     onClick: (() -> Unit)? = null
 ): Modifier = composed {
-    var isPressed by remember { mutableStateOf(false) }
+    if (!enabled) return@composed this
+
+    val localInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val coroutineScope = rememberCoroutineScope()
+    var manualPressed by remember { mutableStateOf(false) }
+
+    val interactionPressed by localInteractionSource.collectIsPressedAsState()
+    val isPressed = if (onClick != null || interactionSource != null) {
+        interactionPressed
+    } else {
+        manualPressed
+    }
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) pressedScale else 1.0f,
-        animationSpec = if (isPressed) ColorOSMotion.StandardFastSpatialSpring else ColorOSMotion.ExpressiveFastSpatialSpring,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "colorOSScale"
     )
 
-    val pointerMod = if (enabled) {
-        Modifier.pointerInput(enabled) {
+    val pointerMod = if (onClick == null && interactionSource == null) {
+        val viewConfiguration = LocalViewConfiguration.current
+        Modifier.pointerInput(Unit) {
+            val touchSlop = viewConfiguration.touchSlop
+            val tapTimeout = 40L
             awaitEachGesture {
-                awaitFirstDown(requireUnconsumed = false)
-                isPressed = true
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val downPos = down.position
+                var pointerDown = true
+                var slopExceeded = false
+
+                val timerJob = coroutineScope.launch {
+                    delay(tapTimeout)
+                    if (pointerDown && !slopExceeded) {
+                        manualPressed = true
+                    }
+                }
+
                 try {
-                    waitForUpOrCancellation()
+                    while (pointerDown) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        val change = event.changes.firstOrNull { it.id == down.id }
+                        if (change == null || change.isConsumed) {
+                            slopExceeded = true
+                            break
+                        }
+                        if (change.changedToUpIgnoreConsumed()) {
+                            pointerDown = false
+                            if (!slopExceeded) {
+                                coroutineScope.launch {
+                                    manualPressed = true
+                                    delay(60L)
+                                    manualPressed = false
+                                }
+                            }
+                            break
+                        }
+                        if ((change.position - downPos).getDistance() > touchSlop) {
+                            slopExceeded = true
+                            break
+                        }
+                    }
                 } finally {
-                    isPressed = false
+                    timerJob.cancel()
+                    if (manualPressed) {
+                        manualPressed = false
+                    }
                 }
             }
         }
     } else Modifier
 
-    val clickableMod = if (onClick != null && enabled) {
+    val clickableMod = if (onClick != null) {
         Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = localInteractionSource,
             indication = null,
             onClick = onClick
         )
