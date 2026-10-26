@@ -162,12 +162,11 @@ fun DownloadsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(CornerRadius.surface))
                     .background(
-                        if (MaterialTheme.colorScheme.surface.hashCode() == Color.White.hashCode())
-                            Color.White.copy(alpha = 0.82f)
-                        else Color(0xFF0F121C).copy(alpha = 0.85f)
+                        if (isLight) Color.White.copy(alpha = 0.70f)
+                        else Color(0xFF161A26).copy(alpha = 0.58f)
                     )
                     .border(
-                        width = 0.65.dp,
+                        width = 0.85.dp,
                         brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
@@ -184,8 +183,9 @@ fun DownloadsScreen(
                         onClick = onNavigateBack,
                         modifier = Modifier
                             .size(38.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
                             .colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(
@@ -201,6 +201,7 @@ fun DownloadsScreen(
                             text = "Offline Downloads",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = JustSansFamily,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -208,8 +209,9 @@ fun DownloadsScreen(
                         Text(
                             text = "${offlineFiles.size} saved • ${activeTasks.size} active",
                             fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                            color = Color(0xFF0082FB),
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JustSansFamily
                         )
                     }
                 }
@@ -218,8 +220,9 @@ fun DownloadsScreen(
                     onClick = { refreshOfflineFiles() },
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(11.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f))
+                        .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
                         .colorOSPressBounce(pressedScale = 0.90f)
                 ) {
                     Icon(
@@ -260,13 +263,13 @@ fun DownloadsScreen(
                                 .width(3.5.dp)
                                 .height(14.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF00E5FF))
+                                .background(Color(0xFF0082FB))
                         )
                         Text(
                             text = "ACTIVE DOWNLOADS (${activeTasks.size})",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00E5FF),
+                            color = Color(0xFF0082FB),
                             letterSpacing = 0.5.sp
                         )
                     }
@@ -298,13 +301,13 @@ fun DownloadsScreen(
                                 .width(3.5.dp)
                                 .height(14.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
+                                .background(Color(0xFF0082FB))
                         )
                         Text(
                             text = "SAVED VIDEOS (${offlineFiles.size})",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = Color(0xFF0082FB),
                             letterSpacing = 0.5.sp
                         )
                     }
@@ -432,21 +435,19 @@ private fun StorageOverviewCard(
         (downloadsBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
     } else 0f
 
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(CornerRadius.card))
             .background(
-                Brush.verticalGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
-                    )
-                )
+                if (isLight) Color.White.copy(alpha = 0.65f)
+                else Color(0xFF1E2638).copy(alpha = 0.48f)
             )
             .border(
-                width = 1.dp,
-                brush = rememberLiquidGlassBorder(),
+                width = 0.85.dp,
+                brush = rememberLiquidGlassBorder(isLight),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
             .padding(Spacing.md)
@@ -463,16 +464,16 @@ private fun StorageOverviewCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF00E5FF).copy(alpha = 0.15f)),
+                            .background(Color(0xFF0082FB).copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Folder,
                             contentDescription = null,
-                            tint = Color(0xFF00E5FF),
-                            modifier = Modifier.size(18.dp)
+                            tint = Color(0xFF0082FB),
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                     Column {
@@ -480,6 +481,7 @@ private fun StorageOverviewCard(
                             text = "Storage Used by Donghua",
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = JustSansFamily,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
@@ -494,7 +496,8 @@ private fun StorageOverviewCard(
                     text = downloadsStr,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF00E5FF)
+                    fontFamily = JustSansFamily,
+                    color = Color(0xFF0082FB)
                 )
             }
 
@@ -520,11 +523,7 @@ private fun StorageOverviewCard(
                         .fillMaxWidth(downloadsFraction.coerceAtLeast(0.02f))
                         .fillMaxHeight()
                         .clip(CircleShape)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                            )
-                        )
+                        .background(Color(0xFF0082FB))
                 )
             }
 
@@ -554,15 +553,19 @@ private fun ActiveDownloadCard(
 ) {
     val speedMb = String.format("%.1f MB/s", task.speedBps.toFloat() / (1024 * 1024))
     val progressInt = task.progress.toInt()
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(CornerRadius.card))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f))
+            .background(
+                if (isLight) Color.White.copy(alpha = 0.65f)
+                else Color(0xFF1E2638).copy(alpha = 0.48f)
+            )
             .border(
-                width = 1.dp,
-                brush = rememberLiquidGlassBorder(),
+                width = 0.85.dp,
+                brush = rememberLiquidGlassBorder(isLight),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
             .padding(Spacing.md)
@@ -594,7 +597,8 @@ private fun ActiveDownloadCard(
                             text = badgeText,
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00E5FF)
+                            fontFamily = JustSansFamily,
+                            color = Color(0xFF0082FB)
                         )
                         if (task.status == DownloadStatus.PAUSED) {
                             Text(
@@ -609,39 +613,41 @@ private fun ActiveDownloadCard(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val context = LocalContext.current
                     if (task.status == DownloadStatus.DOWNLOADING) {
                         IconButton(
                             onClick = { DownloadEngine.pauseDownload(context, task.id) },
                             modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.08f))
+                                .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
                                 .colorOSPressBounce(pressedScale = 0.90f)
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Pause,
                                 contentDescription = "Pause",
                                 tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         }
                     } else if (task.status == DownloadStatus.PAUSED) {
                         IconButton(
                             onClick = { DownloadEngine.resumeDownload(context, task.id) },
                             modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF00E5FF).copy(alpha = 0.2f))
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF0082FB).copy(alpha = 0.16f))
+                                .border(0.75.dp, Color(0xFF0082FB).copy(alpha = 0.35f), CircleShape)
                                 .colorOSPressBounce(pressedScale = 0.90f)
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = "Resume",
-                                tint = Color(0xFF00E5FF),
-                                modifier = Modifier.size(16.dp)
+                                tint = Color(0xFF0082FB),
+                                modifier = Modifier.size(17.dp)
                             )
                         }
                     }
@@ -649,16 +655,17 @@ private fun ActiveDownloadCard(
                     IconButton(
                         onClick = onCancel,
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(36.dp)
+                            .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
+                            .border(0.75.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f), CircleShape)
                             .colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Close,
                             contentDescription = "Cancel Download",
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                     }
                 }
@@ -734,15 +741,19 @@ private fun OfflineFileCard(
     onDelete: () -> Unit
 ) {
     val sizeMb = String.format("%.1f MB", file.length().toFloat() / (1024 * 1024))
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(CornerRadius.card))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .background(
+                if (isLight) Color.White.copy(alpha = 0.65f)
+                else Color(0xFF1E2638).copy(alpha = 0.48f)
+            )
             .border(
-                width = 1.dp,
-                brush = rememberLiquidGlassBorder(),
+                width = 0.85.dp,
+                brush = rememberLiquidGlassBorder(isLight),
                 shape = RoundedCornerShape(CornerRadius.card)
             )
             .colorOSPressBounce(
@@ -759,26 +770,19 @@ private fun OfflineFileCard(
             Box(
                 modifier = Modifier
                     .size(46.dp)
-                    .clip(RoundedCornerShape(13.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                Color(0xFF00E5FF).copy(alpha = 0.20f),
-                                Color(0xFF0072FF).copy(alpha = 0.12f)
-                            )
-                        )
-                    )
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF0082FB).copy(alpha = 0.15f))
                     .border(
-                        width = 0.5.dp,
-                        color = rememberLiquidGlassChipBorder(),
-                        shape = RoundedCornerShape(13.dp)
+                        width = 0.75.dp,
+                        color = Color(0xFF0082FB).copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(14.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.PlayArrow,
                     contentDescription = "Play Episode",
-                    tint = Color(0xFF00E5FF),
+                    tint = Color(0xFF0082FB),
                     modifier = Modifier.size(26.dp)
                 )
             }
@@ -800,8 +804,9 @@ private fun OfflineFileCard(
                     Text(
                         text = sizeMb,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
+                        fontFamily = JustSansFamily,
+                        color = Color(0xFF0082FB),
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "•",
@@ -820,14 +825,15 @@ private fun OfflineFileCard(
                 onClick = onDelete,
                 modifier = Modifier
                     .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
+                    .border(0.75.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f), CircleShape)
                     .colorOSPressBounce(pressedScale = 0.90f)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.DeleteOutline,
                     contentDescription = "Delete File",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(18.dp)
                 )
             }

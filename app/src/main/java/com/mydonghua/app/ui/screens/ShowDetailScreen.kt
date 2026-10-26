@@ -69,7 +69,7 @@ fun ShowDetailScreen(
                 CircularProgressIndicator(
                     modifier = Modifier.size(38.dp),
                     strokeWidth = 3.5.dp,
-                    color = Color(0xFF00E5FF)
+                    color = Color(0xFF0082FB)
                 )
                 Text(
                     text = "Loading show details...",
@@ -168,7 +168,7 @@ fun ShowDetailScreen(
                         Text(
                             text = "$statusText • EP ${show.currentEp}${if (show.totalEp > 0) "/${show.totalEp}" else ""}",
                             fontSize = 11.sp,
-                            color = Color(0xFF00E5FF),
+                            color = Color(0xFF0082FB),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -275,7 +275,7 @@ fun ShowDetailScreen(
                     // Title & Badges
                     Column(modifier = Modifier.weight(1f)) {
                         val statusColor = when (show.status) {
-                            "ongoing" -> Color(0xFF00E5FF)
+                            "ongoing" -> Color(0xFF0082FB)
                             "completed" -> Color(0xFF4ADE80)
                             else -> Color(0xFFFFA726)
                         }
@@ -490,7 +490,7 @@ fun ShowDetailScreen(
                                 text = "WATCH PROGRESS",
                                 fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF00E5FF),
+                                color = Color(0xFF0082FB),
                                 letterSpacing = 0.5.sp
                             )
                             val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
@@ -502,20 +502,20 @@ fun ShowDetailScreen(
                             )
                         }
 
-                        // Tactile Stepper Buttons (+ / -)
+                        // Tactile Stepper Buttons (+ / -) in ColorOS 17 style
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
                                 onClick = { viewModel.decrementEpisode(show) },
                                 modifier = Modifier
                                     .size(38.dp)
-                                    .clip(RoundedCornerShape(11.dp))
+                                    .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                                     .border(
-                                        width = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                                        shape = RoundedCornerShape(11.dp)
+                                        width = 0.75.dp,
+                                        brush = rememberLiquidGlassBorder(),
+                                        shape = CircleShape
                                     )
-                                    .colorOSPressBounce(pressedScale = 0.90f)
+                                    .colorOSPressBounce(pressedScale = 0.88f)
                             ) {
                                 Text(
                                     text = "-",
@@ -529,13 +529,9 @@ fun ShowDetailScreen(
                                 onClick = { viewModel.incrementEpisode(show) },
                                 modifier = Modifier
                                     .size(38.dp)
-                                    .clip(RoundedCornerShape(11.dp))
-                                    .background(
-                                        Brush.linearGradient(
-                                            listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                                        )
-                                    )
-                                    .colorOSPressBounce(pressedScale = 0.90f)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF0082FB))
+                                    .colorOSPressBounce(pressedScale = 0.88f)
                             ) {
                                 Text(
                                     text = "+",
@@ -562,11 +558,7 @@ fun ShowDetailScreen(
                                     .fillMaxWidth(progressFraction)
                                     .fillMaxHeight()
                                     .clip(CircleShape)
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                                        )
-                                    )
+                                    .background(Color(0xFF0082FB))
                             )
                         }
 
@@ -597,9 +589,9 @@ fun ShowDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                        .background(Color(0xFF1E2638).copy(alpha = 0.45f))
                         .border(
-                            width = 0.65.dp,
+                            width = 0.85.dp,
                             brush = glassBorder,
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
@@ -616,7 +608,7 @@ fun ShowDetailScreen(
                                     text = "NEXT AIRING EPISODE",
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF00E5FF),
+                                    color = Color(0xFF0082FB),
                                     letterSpacing = 0.5.sp
                                 )
                                 Text(
@@ -673,7 +665,7 @@ fun ShowDetailScreen(
                         text = "GENRES",
                         fontSize = 10.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF00E5FF),
+                        color = Color(0xFF0082FB),
                         letterSpacing = 0.5.sp
                     )
 
@@ -684,14 +676,14 @@ fun ShowDetailScreen(
                         show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.forEach { genre ->
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(CornerRadius.sm))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(Color(0xFF1E2638).copy(alpha = 0.45f))
                                     .border(
-                                        width = 0.5.dp,
+                                        width = 0.75.dp,
                                         color = rememberLiquidGlassChipBorder(),
-                                        shape = RoundedCornerShape(CornerRadius.sm)
+                                        shape = RoundedCornerShape(percent = 50)
                                     )
-                                    .padding(horizontal = 10.dp, vertical = 5.dp)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     text = genre,
@@ -711,10 +703,10 @@ fun ShowDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                        .background(Color(0xFF1E2638).copy(alpha = 0.45f))
                         .border(
-                            width = 0.65.dp,
-                            color = rememberLiquidGlassChipBorder(),
+                            width = 0.85.dp,
+                            brush = rememberLiquidGlassBorder(),
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
                         .padding(Spacing.md)
@@ -724,7 +716,7 @@ fun ShowDetailScreen(
                             text = "SYNOPSIS",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00E5FF),
+                            color = Color(0xFF0082FB),
                             letterSpacing = 0.5.sp
                         )
 
@@ -741,7 +733,7 @@ fun ShowDetailScreen(
                         if (show.notes!!.length > 150) {
                             Text(
                                 text = if (isSynopsisExpanded) "Show Less" else "Read More",
-                                color = Color(0xFF00E5FF),
+                                color = Color(0xFF0082FB),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier
@@ -758,15 +750,15 @@ fun ShowDetailScreen(
 
 @Composable
 private fun DetailCountdownBox(value: Long, label: String) {
-    val shape = RoundedCornerShape(CornerRadius.md)
+    val shape = RoundedCornerShape(16.dp)
     Box(
         modifier = Modifier
             .width(56.dp)
-            .height(48.dp)
+            .height(50.dp)
             .clip(shape)
-            .background(Color.Black.copy(alpha = 0.25f))
+            .background(Color(0xFF1E2638).copy(alpha = 0.45f))
             .border(
-                width = 0.65.dp,
+                width = 0.75.dp,
                 brush = rememberLiquidGlassBorder(),
                 shape = shape
             ),
@@ -787,7 +779,7 @@ private fun DetailCountdownBox(value: Long, label: String) {
                 text = label.uppercase(),
                 fontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF00E5FF),
+                color = Color(0xFF0082FB),
                 textAlign = TextAlign.Center,
                 letterSpacing = 0.5.sp
             )
@@ -797,16 +789,17 @@ private fun DetailCountdownBox(value: Long, label: String) {
 
 @Composable
 private fun DetailGlassChip(label: String, value: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(18.dp)
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(CornerRadius.md))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .clip(shape)
+            .background(Color(0xFF1E2638).copy(alpha = 0.45f))
             .border(
-                width = 0.5.dp,
+                width = 0.75.dp,
                 color = rememberLiquidGlassChipBorder(),
-                shape = RoundedCornerShape(CornerRadius.md)
+                shape = shape
             )
-            .padding(horizontal = Spacing.md, vertical = 8.dp),
+            .padding(horizontal = Spacing.md, vertical = 9.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -814,7 +807,7 @@ private fun DetailGlassChip(label: String, value: String, modifier: Modifier = M
                 text = label.uppercase(),
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF00E5FF),
+                color = Color(0xFF0082FB),
                 letterSpacing = 0.5.sp
             )
             Spacer(modifier = Modifier.height(2.dp))

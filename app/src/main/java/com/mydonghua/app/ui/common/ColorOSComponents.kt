@@ -57,23 +57,23 @@ fun ColorOSCard(
     val cardBg = if (isLight) {
         Brush.verticalGradient(
             listOf(
-                Color.White.copy(alpha = 0.95f),
-                Color(0xFFF1F5F9).copy(alpha = 0.88f)
+                Color.White.copy(alpha = 0.70f),
+                Color(0xFFF0F4FA).copy(alpha = 0.60f)
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF161A2B).copy(alpha = 0.85f),
-                Color(0xFF0F121E).copy(alpha = 0.92f)
+                Color(0xFF1E2638).copy(alpha = 0.48f),
+                Color(0xFF121622).copy(alpha = 0.58f)
             )
         )
     }
 
     val specularBorder = Brush.verticalGradient(
         listOf(
-            Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
-            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.18f),
+            Color.White.copy(alpha = if (isLight) 0.12f else 0.04f)
         )
     )
 
@@ -309,23 +309,23 @@ fun ColorOSDialog(
     val dialogBg = if (isLight) {
         Brush.verticalGradient(
             listOf(
-                Color.White.copy(alpha = 0.98f),
-                Color(0xFFF1F5F9).copy(alpha = 0.94f)
+                Color.White.copy(alpha = 0.94f),
+                Color(0xFFF1F5F9).copy(alpha = 0.90f)
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF161A2B).copy(alpha = 0.95f),
-                Color(0xFF0F121E).copy(alpha = 0.98f)
+                Color(0xFF1E2638).copy(alpha = 0.88f),
+                Color(0xFF121622).copy(alpha = 0.94f)
             )
         )
     }
 
     val dialogBorder = Brush.verticalGradient(
         listOf(
-            Color.White.copy(alpha = if (isLight) 0.35f else 0.25f),
-            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
+            Color.White.copy(alpha = if (isLight) 0.12f else 0.04f)
         )
     )
 

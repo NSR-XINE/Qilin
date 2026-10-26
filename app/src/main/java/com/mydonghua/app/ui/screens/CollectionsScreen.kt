@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 
 @Composable
@@ -70,12 +72,11 @@ fun CollectionsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(CornerRadius.surface))
                     .background(
-                        if (MaterialTheme.colorScheme.background.luminance() > 0.5f)
-                            Color.White.copy(alpha = 0.85f)
-                        else Color(0xFF0F121C).copy(alpha = 0.88f)
+                        if (isLight) Color.White.copy(alpha = 0.70f)
+                        else Color(0xFF161A26).copy(alpha = 0.58f)
                     )
                     .border(
-                        width = 0.65.dp,
+                        width = 0.85.dp,
                         brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
@@ -92,8 +93,9 @@ fun CollectionsScreen(
                         onClick = onNavigateBack,
                         modifier = Modifier
                             .size(38.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
                             .colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(
@@ -109,6 +111,7 @@ fun CollectionsScreen(
                             text = "Collections",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = JustSansFamily,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -116,8 +119,9 @@ fun CollectionsScreen(
                         Text(
                             text = "${sortedCollections.size} folder groups",
                             fontSize = 11.5.sp,
-                            color = Color(0xFF00E5FF),
-                            fontWeight = FontWeight.Medium
+                            color = Color(0xFF0082FB),
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JustSansFamily
                         )
                     }
                 }
@@ -195,15 +199,18 @@ fun CollectionsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(CornerRadius.card))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                            .background(
+                                if (isLight) Color.White.copy(alpha = 0.65f)
+                                else Color(0xFF1E2638).copy(alpha = 0.48f)
+                            )
                             .border(
-                                width = 0.65.dp,
+                                width = 0.85.dp,
                                 brush = glassBorder,
                                 shape = RoundedCornerShape(CornerRadius.card)
                             )
                             .padding(Spacing.md)
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             // Folder Header Row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -212,20 +219,20 @@ fun CollectionsScreen(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(RoundedCornerShape(9.dp))
-                                            .background(Color(0xFF00E5FF).copy(alpha = 0.15f)),
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0xFF0082FB).copy(alpha = 0.15f)),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Folder,
                                             contentDescription = null,
-                                            tint = Color(0xFF00E5FF),
-                                            modifier = Modifier.size(17.dp)
+                                            tint = Color(0xFF0082FB),
+                                            modifier = Modifier.size(19.dp)
                                         )
                                     }
 
@@ -233,37 +240,47 @@ fun CollectionsScreen(
                                         text = collectionName,
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold,
+                                        fontFamily = JustSansFamily,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
 
                                 Box(
                                     modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                                        .padding(horizontal = 9.dp, vertical = 3.dp)
+                                        .clip(RoundedCornerShape(percent = 50))
+                                        .background(Color(0xFF0082FB).copy(alpha = 0.14f))
+                                        .border(
+                                            width = 0.75.dp,
+                                            color = Color(0xFF0082FB).copy(alpha = 0.35f),
+                                            shape = RoundedCornerShape(percent = 50)
+                                        )
+                                        .padding(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = "${showsList.size} shows",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        fontFamily = JustSansFamily,
+                                        color = Color(0xFF0082FB)
                                     )
                                 }
                             }
 
                             // Shows List in this Collection
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 showsList.forEach { show ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(CornerRadius.md))
-                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.40f))
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(
+                                                if (isLight) Color.White.copy(alpha = 0.50f)
+                                                else Color(0xFF151926).copy(alpha = 0.40f)
+                                            )
                                             .border(
-                                                width = 0.5.dp,
-                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
-                                                shape = RoundedCornerShape(CornerRadius.md)
+                                                width = 0.75.dp,
+                                                color = rememberLiquidGlassChipBorder(isLight),
+                                                shape = RoundedCornerShape(16.dp)
                                             )
                                             .colorOSPressBounce(
                                                 pressedScale = 0.98f,
@@ -276,7 +293,7 @@ fun CollectionsScreen(
                                         Box(
                                             modifier = Modifier
                                                 .size(width = 38.dp, height = 48.dp)
-                                                .clip(RoundedCornerShape(8.dp))
+                                                .clip(RoundedCornerShape(10.dp))
                                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                                             contentAlignment = Alignment.Center
                                         ) {
@@ -307,7 +324,7 @@ fun CollectionsScreen(
                                         }
 
                                         val statusColor = when (show.status) {
-                                            "ongoing" -> Color(0xFF00E5FF)
+                                            "ongoing" -> Color(0xFF0082FB)
                                             "completed" -> Color(0xFF4ADE80)
                                             else -> Color(0xFFFFA726)
                                         }

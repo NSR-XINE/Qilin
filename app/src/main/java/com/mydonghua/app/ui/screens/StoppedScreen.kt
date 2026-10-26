@@ -32,6 +32,7 @@ import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 
 @Composable
@@ -194,24 +195,30 @@ fun StoppedScreen(
                         // Frosted pill show counter badge (adaptive to light/dark mode)
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(CornerRadius.chip))
+                                .clip(RoundedCornerShape(percent = 50))
                                 .colorOSPressBounce(pressedScale = 0.94f)
                                 .background(
-                                    if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                    if (isLight) Color.Black.copy(alpha = 0.05f)
+                                    else Color.White.copy(alpha = 0.08f)
                                 )
                                 .border(
-                                    width = 0.5.dp,
-                                    color = rememberLiquidGlassChipBorder(isLight),
-                                    shape = RoundedCornerShape(CornerRadius.chip)
+                                    width = 0.75.dp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = if (isLight) 0.30f else 0.18f),
+                                            Color.White.copy(alpha = if (isLight) 0.10f else 0.04f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(percent = 50)
                                 )
-                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                                .padding(horizontal = 12.dp, vertical = 5.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = if (shows.size == 1) "1 show" else "${shows.size} shows",
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF9100)
                             )
                         }

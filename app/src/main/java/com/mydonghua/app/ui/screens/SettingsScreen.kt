@@ -185,7 +185,7 @@ fun SettingsScreen(
                             .clip(RoundedCornerShape(18.dp))
                             .background(
                                 Brush.linearGradient(
-                                    listOf(Color(0xFF0082FB), Color(0xFF00E5FF))
+                                    listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -606,7 +606,7 @@ fun SettingsScreen(
                             title = "Ad & Popup Blocker",
                             subtitle = "Block invasive stream ads, redirects, and popups",
                             iconVector = Icons.Rounded.Shield,
-                            iconGradient = listOf(Color(0xFF00B0FF), Color(0xFF00E5FF)),
+                            iconGradient = listOf(Color(0xFF0082FB), Color(0xFF52A9FF)),
                             checked = uiState.adBlockerEnabled,
                             onCheckedChange = { viewModel.setAdBlockerEnabled(it) }
                         )

@@ -483,29 +483,34 @@ private fun BannerTimeBox(
 ) {
     val hazeState = LocalHazeState.current
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val shape = RoundedCornerShape(13.dp)
+    val shape = RoundedCornerShape(16.dp)
 
     // Liquid Glass Gradient for Timer Pillar
     val bgBrush = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.15f),
-                Color.Black.copy(alpha = 0.45f)
+                Color.White.copy(alpha = 0.12f),
+                Color.Black.copy(alpha = 0.38f)
             )
         )
     }
 
-    val primaryAccent = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
+    val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
 
     Box(
         modifier = modifier
-            .height(52.dp)
+            .height(54.dp)
             .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(brush = bgBrush)
             .border(
-                width = 0.75.dp,
-                color = primaryAccent.copy(alpha = 0.35f),
+                width = 0.85.dp,
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.25f),
+                        primaryAccent.copy(alpha = 0.20f)
+                    )
+                ),
                 shape = shape
             )
             .padding(vertical = 4.dp),
@@ -517,16 +522,18 @@ private fun BannerTimeBox(
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 17.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center,
-                lineHeight = 20.sp
+                lineHeight = 21.sp
             )
             Text(
                 text = label,
-                fontSize = 8.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 8.5.sp,
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
                 color = primaryAccent,
                 letterSpacing = 1.1.sp,
                 textAlign = TextAlign.Center
@@ -575,23 +582,23 @@ fun ContinueWatchingRow(
     // ColorOS 17 Specular Highlight Gradient Border
     val cardBorder = Brush.verticalGradient(
         listOf(
-            Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
-            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.18f),
+            Color.White.copy(alpha = if (isLight) 0.10f else 0.04f)
         )
     )
 
     val cardBg = if (isLight) {
         Brush.verticalGradient(
             listOf(
-                Color.White.copy(alpha = 0.95f),
-                Color(0xFFF1F5F9).copy(alpha = 0.88f)
+                Color.White.copy(alpha = 0.70f),
+                Color(0xFFF0F4FA).copy(alpha = 0.60f)
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF161A2B).copy(alpha = 0.85f),
-                Color(0xFF0F121E).copy(alpha = 0.92f)
+                Color(0xFF1E2638).copy(alpha = 0.48f),
+                Color(0xFF121622).copy(alpha = 0.58f)
             )
         )
     }
@@ -609,7 +616,7 @@ fun ContinueWatchingRow(
                     .hazeChild(state = hazeState, shape = cardShape)
                     .background(cardBg)
                     .border(
-                        width = 1.dp,
+                        width = 0.85.dp,
                         brush = cardBorder,
                         shape = cardShape
                     )
@@ -636,21 +643,21 @@ fun ContinueWatchingRow(
                             fontSize = 8.sp
                         )
 
-                        // Subtle play icon badge overlay
+                        // Subtle play icon badge overlay (ColorOS Blue)
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .padding(4.dp)
-                                .size(20.dp)
+                                .size(22.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.55f)),
+                                .background(Color(0xFF0082FB)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.PlayArrow,
+                                imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                                tint = Color(0xFF00E5FF)
+                                modifier = Modifier.size(13.dp),
+                                tint = Color.White
                             )
                         }
                     }
@@ -749,21 +756,21 @@ fun RecentlyUpdatedCard(
     modifier: Modifier = Modifier
 ) {
     val cardShape = RoundedCornerShape(28.dp)
-    val posterShape = RoundedCornerShape(16.dp)
+    val posterShape = RoundedCornerShape(18.dp)
 
-    // Official ColorOS 17 Frosted Glass Squircle Card Background (Matches Reference Screenshots)
+    // Official ColorOS 17 Translucent Frosted Glass Squircle Card Background
     val cardBg = if (isLight) {
         Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.95f),
-                Color(0xFFF1F5F9).copy(alpha = 0.88f)
+                Color.White.copy(alpha = 0.70f),
+                Color(0xFFF0F4FA).copy(alpha = 0.60f)
             )
         )
     } else {
         Brush.verticalGradient(
             colors = listOf(
-                Color(0xFF161A2B).copy(alpha = 0.85f),
-                Color(0xFF0F121E).copy(alpha = 0.92f)
+                Color(0xFF1E2638).copy(alpha = 0.48f),
+                Color(0xFF121622).copy(alpha = 0.58f)
             )
         )
     }
@@ -771,8 +778,8 @@ fun RecentlyUpdatedCard(
     // ColorOS 17 Specular Highlight Gradient Border
     val borderBrush = Brush.verticalGradient(
         colors = listOf(
-            Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
-            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.18f),
+            Color.White.copy(alpha = if (isLight) 0.10f else 0.04f)
         )
     )
 
@@ -797,7 +804,7 @@ fun RecentlyUpdatedCard(
             .clip(cardShape)
             .hazeChild(state = hazeState, shape = cardShape)
             .background(cardBg)
-            .border(width = 1.dp, brush = borderBrush, shape = cardShape)
+            .border(width = 0.85.dp, brush = borderBrush, shape = cardShape)
             .colorOSPressBounce(
                 pressedScale = 0.96f,
                 onClick = onCardClick
@@ -828,28 +835,29 @@ fun RecentlyUpdatedCard(
                     showAcronym = true
                 )
 
-                // Aurora Glow "NEW" / "UPDATED" Badge
+                // ColorOS 17 Capsule Pill Badge
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .padding(5.dp)
+                        .clip(RoundedCornerShape(percent = 50))
                         .background(
                             Brush.horizontalGradient(
                                 colors = listOf(
-                                    Color(0xFF00E5FF),
-                                    Color(0xFF7F00FF)
+                                    Color(0xFF0082FB),
+                                    Color(0xFF1A90FF)
                                 )
                             )
                         )
-                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = "NEW",
                         fontSize = 8.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = JustSansFamily,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        letterSpacing = 0.6.sp
+                        letterSpacing = 0.5.sp
                     )
                 }
 
@@ -858,10 +866,11 @@ fun RecentlyUpdatedCard(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(5.dp)
-                        .size(26.dp)
+                        .size(28.dp)
                         .clip(CircleShape)
                         .background(primaryAccent)
-                        .colorOSPressBounce(pressedScale = 0.90f)
+                        .border(0.75.dp, Color.White.copy(alpha = 0.30f), CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.88f)
                         .clickable(enabled = onWatchClick != null) {
                             onWatchClick?.invoke()
                         },
@@ -870,7 +879,7 @@ fun RecentlyUpdatedCard(
                     Icon(
                         imageVector = Icons.Rounded.PlayArrow,
                         contentDescription = "Watch now",
-                        modifier = Modifier.size(15.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = Color.White
                     )
                 }
@@ -996,11 +1005,7 @@ fun RecentlyUpdatedCard(
 @Composable
 private fun HeroBannerSkeleton() {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val bannerBorderBrush = colorOSAuroraBorder(
-        isDark = !isLight,
-        primaryColor = Color(0xFF00E5FF),
-        accentGlow = if (isLight) 0.35f else 0.50f
-    )
+    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
     val bannerShape = RoundedCornerShape(32.dp)
 
     Box(
@@ -1010,7 +1015,7 @@ private fun HeroBannerSkeleton() {
             .height(290.dp)
             .clip(bannerShape)
             .border(
-                width = 1.dp,
+                width = 0.85.dp,
                 brush = bannerBorderBrush,
                 shape = bannerShape
             )

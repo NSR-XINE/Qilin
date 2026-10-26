@@ -726,7 +726,7 @@ class MainActivity : ComponentActivity() {
                                     title = "Software update",
                                     subtitle = "ColorOS 17 • 3.53 GB",
                                     iconRes = R.drawable.ic_settings,
-                                    iconGradient = listOf(Color(0xFF0082FB), Color(0xFF00E5FF)),
+                                    iconGradient = listOf(Color(0xFF0082FB), Color(0xFF52A9FF)),
                                     isSelected = currentRoute == "software_update",
                                     isLight = isLightMode,
                                     onClick = { isDrawerOpen = false; navController.navigate("software_update") }

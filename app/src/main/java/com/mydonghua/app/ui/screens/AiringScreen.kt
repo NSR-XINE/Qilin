@@ -32,6 +32,7 @@ import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 
 @Composable
@@ -99,15 +100,7 @@ fun AiringScreen(
                                     .width(4.dp)
                                     .height(18.dp)
                                     .clip(RoundedCornerShape(2.dp))
-                                    .background(
-                                        Brush.verticalGradient(
-                                            if (isLight) {
-                                                listOf(Color(0xFF009AA6), Color(0xFF0072FF))
-                                            } else {
-                                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                                            }
-                                        )
-                                    )
+                                    .background(Color(0xFF0082FB))
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
@@ -121,25 +114,31 @@ fun AiringScreen(
                         // Frosted pill show counter badge (adaptive to light/dark mode)
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(CornerRadius.chip))
+                                .clip(RoundedCornerShape(percent = 50))
                                 .colorOSPressBounce(pressedScale = 0.94f)
                                 .background(
-                                    if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                    if (isLight) Color.Black.copy(alpha = 0.05f)
+                                    else Color.White.copy(alpha = 0.08f)
                                 )
                                 .border(
-                                    width = 0.5.dp,
-                                    color = rememberLiquidGlassChipBorder(isLight),
-                                    shape = RoundedCornerShape(CornerRadius.chip)
+                                    width = 0.75.dp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = if (isLight) 0.30f else 0.18f),
+                                            Color.White.copy(alpha = if (isLight) 0.10f else 0.04f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(percent = 50)
                                 )
-                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                                .padding(horizontal = 12.dp, vertical = 5.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = if (shows.size == 1) "1 show" else "${shows.size} shows",
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
                             )
                         }
                     }

@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
+import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import java.text.SimpleDateFormat
 import java.util.*
@@ -74,12 +76,11 @@ fun HistoryScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(CornerRadius.surface))
                     .background(
-                        if (MaterialTheme.colorScheme.background.luminance() > 0.5f)
-                            Color.White.copy(alpha = 0.85f)
-                        else Color(0xFF0F121C).copy(alpha = 0.88f)
+                        if (isLight) Color.White.copy(alpha = 0.70f)
+                        else Color(0xFF161A26).copy(alpha = 0.58f)
                     )
                     .border(
-                        width = 0.65.dp,
+                        width = 0.85.dp,
                         brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.surface)
                     )
@@ -96,8 +97,9 @@ fun HistoryScreen(
                         onClick = onNavigateBack,
                         modifier = Modifier
                             .size(38.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .border(0.75.dp, rememberLiquidGlassChipBorder(isLight), CircleShape)
                             .colorOSPressBounce(pressedScale = 0.90f)
                     ) {
                         Icon(
@@ -113,6 +115,7 @@ fun HistoryScreen(
                             text = "Watch History",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = JustSansFamily,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -120,8 +123,9 @@ fun HistoryScreen(
                         Text(
                             text = "${historyList.size} logged episodes",
                             fontSize = 11.5.sp,
-                            color = Color(0xFF00E5FF),
-                            fontWeight = FontWeight.Medium
+                            color = Color(0xFF0082FB),
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JustSansFamily
                         )
                     }
                 }
@@ -204,13 +208,13 @@ fun HistoryScreen(
                                     .width(3.5.dp)
                                     .height(14.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF00E5FF))
+                                    .background(Color(0xFF0082FB))
                             )
                             Text(
                                 text = dateHeader.uppercase(),
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF00E5FF),
+                                color = Color(0xFF0082FB),
                                 letterSpacing = 0.5.sp
                             )
                         }
@@ -226,9 +230,12 @@ fun HistoryScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(CornerRadius.card))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                                .background(
+                                    if (isLight) Color.White.copy(alpha = 0.65f)
+                                    else Color(0xFF1E2638).copy(alpha = 0.48f)
+                                )
                                 .border(
-                                    width = 0.55.dp,
+                                    width = 0.85.dp,
                                     brush = glassBorder,
                                     shape = RoundedCornerShape(CornerRadius.card)
                                 )
@@ -246,7 +253,7 @@ fun HistoryScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(46.dp)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(RoundedCornerShape(14.dp))
                                         .background(MaterialTheme.colorScheme.surfaceVariant),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -277,7 +284,8 @@ fun HistoryScreen(
                                             text = "Episode ${item.episodeNum}",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
+                                            fontFamily = JustSansFamily,
+                                            color = Color(0xFF0082FB)
                                         )
                                         Text(
                                             text = "•",

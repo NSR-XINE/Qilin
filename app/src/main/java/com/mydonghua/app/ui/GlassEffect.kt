@@ -285,34 +285,20 @@ fun GlassSection(
     val isAmoled = backgroundColor == Color.Black || backgroundColor.luminance() < 0.01f
     val isDark = !isLight
 
-    val primaryTint = MaterialTheme.colorScheme.primary
     val surfaceTint = when {
-        isAmoled -> primaryTint.copy(alpha = 0.06f).compositeOver(Color.Black.copy(alpha = 0.55f))
-        isLight -> Color.White.copy(alpha = 0.35f)
-        else -> primaryTint.copy(alpha = 0.04f).compositeOver(Color.Black.copy(alpha = 0.18f))
-    }
-
-    val shadowColor = when {
-        isAmoled -> Color.Black.copy(alpha = 0.40f)
-        isLight -> Color.Black.copy(alpha = 0.10f)
-        else -> Color.Black.copy(alpha = 0.25f)
+        isAmoled -> Color(0xFF101420).copy(alpha = 0.60f)
+        isLight -> Color.White.copy(alpha = 0.65f)
+        else -> Color(0xFF1E2638).copy(alpha = 0.45f)
     }
 
     val specularGlassBorder = rememberLiquidGlassBorder(isLight, isAmoled)
 
     val baseModifier = modifier
         .fillMaxWidth()
-        .shadow(
-            elevation = 6.dp,
-            shape = shape,
-            clip = false,
-            ambientColor = shadowColor,
-            spotColor = shadowColor
-        )
+        .clip(shape)
 
     val liquidGlassModifier = if (backdrop != null) {
         baseModifier
-            .clip(shape)
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { shape },
@@ -330,9 +316,9 @@ fun GlassSection(
                     blur(if (isAmoled) 14f.dp.toPx() else 12f.dp.toPx())
                     refraction(size.minDimension / 4f, size.minDimension / 2f, false)
                 },
-                highlight = { Highlight.Default.copy(alpha = if (isLight) 0.70f else 0.55f) },
-                shadow = { Shadow(radius = 4f.dp, alpha = if (isLight) 0.15f else 0.30f) },
-                innerShadow = { InnerShadow(radius = 6f.dp, alpha = if (isLight) 0.15f else 0.25f) },
+                highlight = { Highlight.Default.copy(alpha = if (isLight) 0.50f else 0.35f) },
+                shadow = { Shadow(radius = 2f.dp, alpha = if (isLight) 0.05f else 0.15f) },
+                innerShadow = { InnerShadow(radius = 4f.dp, alpha = if (isLight) 0.08f else 0.15f) },
                 onDrawSurface = {
                     val radius = shape.topStart.toPx(size, density = this)
                     drawRoundRect(
@@ -343,7 +329,6 @@ fun GlassSection(
             )
     } else {
         baseModifier
-            .clip(shape)
             .hazeChild(state = hazeState, shape = shape)
             .background(
                 color = surfaceTint,
@@ -353,13 +338,13 @@ fun GlassSection(
 
     val interactiveModifier = when {
         onClick != null && onLongClick != null -> {
-            liquidGlassModifier.clip(shape).colorOSPressBounce(pressedScale = 0.98f).combinedClickable(
+            liquidGlassModifier.colorOSPressBounce(pressedScale = 0.98f).combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
         }
         onClick != null -> {
-            liquidGlassModifier.clip(shape).colorOSPressBounce(pressedScale = 0.98f, onClick = onClick)
+            liquidGlassModifier.colorOSPressBounce(pressedScale = 0.98f, onClick = onClick)
         }
         else -> liquidGlassModifier
     }
@@ -367,7 +352,7 @@ fun GlassSection(
     Box(
         modifier = interactiveModifier
             .border(
-                width = 1.dp,
+                width = 0.85.dp,
                 brush = specularGlassBorder,
                 shape = shape
             )

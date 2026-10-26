@@ -186,14 +186,14 @@ fun ColorOSUpdateScreen(
                     val cardShape = RoundedCornerShape(32.dp)
                     val cardBg = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF161A2B).copy(alpha = 0.84f),
-                            Color(0xFF0F121E).copy(alpha = 0.92f)
+                            Color(0xFF1E2638).copy(alpha = 0.52f),
+                            Color(0xFF121624).copy(alpha = 0.60f)
                         )
                     )
                     val cardBorder = Brush.verticalGradient(
                         colors = listOf(
                             Color.White.copy(alpha = 0.22f),
-                            Color.White.copy(alpha = 0.05f)
+                            Color.White.copy(alpha = 0.04f)
                         )
                     )
 
@@ -203,7 +203,7 @@ fun ColorOSUpdateScreen(
                             .padding(horizontal = 16.dp)
                             .clip(cardShape)
                             .background(cardBg)
-                            .border(BorderStroke(1.dp, cardBorder), shape = cardShape)
+                            .border(BorderStroke(0.85.dp, cardBorder), shape = cardShape)
                             .padding(horizontal = 22.dp, vertical = 22.dp)
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {

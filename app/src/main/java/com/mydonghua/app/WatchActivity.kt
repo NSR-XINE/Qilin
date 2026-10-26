@@ -612,7 +612,7 @@ class WatchActivity : ComponentActivity() {
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(52.dp),
-                        color = Color(0xFF00E5FF),
+                        color = Color(0xFF0082FB),
                         strokeWidth = 3.5.dp
                     )
                 }
@@ -694,7 +694,7 @@ class WatchActivity : ComponentActivity() {
                         .border(
                             width = 0.75.dp,
                             brush = Brush.linearGradient(
-                                listOf(Color(0xFF00E5FF).copy(alpha = 0.6f), Color(0xFF0072FF).copy(alpha = 0.3f))
+                                listOf(Color(0xFF0082FB).copy(alpha = 0.6f), Color(0xFF52A9FF).copy(alpha = 0.3f))
                             ),
                             shape = RoundedCornerShape(18.dp)
                         )
@@ -708,7 +708,7 @@ class WatchActivity : ComponentActivity() {
                         Icon(
                             imageVector = if (doubleTapSeekBadge?.startsWith("-") == true) Icons.Rounded.Replay10 else Icons.Rounded.Forward10,
                             contentDescription = null,
-                            tint = Color(0xFF00E5FF),
+                            tint = Color(0xFF0082FB),
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
@@ -747,7 +747,7 @@ class WatchActivity : ComponentActivity() {
                     Icon(
                         imageVector = Icons.Rounded.BrightnessMedium,
                         contentDescription = "Brightness",
-                        tint = Color(0xFF00E5FF),
+                        tint = Color(0xFF0082FB),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -766,7 +766,7 @@ class WatchActivity : ComponentActivity() {
                                 .clip(CircleShape)
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                        listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                                     )
                                 )
                         )
@@ -807,7 +807,7 @@ class WatchActivity : ComponentActivity() {
                     Icon(
                         imageVector = if (vVal > 0f) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff,
                         contentDescription = "Volume",
-                        tint = Color(0xFF00E5FF),
+                        tint = Color(0xFF0082FB),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -826,7 +826,7 @@ class WatchActivity : ComponentActivity() {
                                 .clip(CircleShape)
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                        listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                                     )
                                 )
                         )
@@ -931,11 +931,11 @@ class WatchActivity : ComponentActivity() {
                                         modifier = Modifier
                                             .size(6.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFF00E5FF))
+                                            .background(Color(0xFF0082FB))
                                     )
                                     Text(
                                         text = "DIRECT HD STREAM",
-                                        color = Color(0xFF00E5FF),
+                                        color = Color(0xFF0082FB),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -993,7 +993,7 @@ class WatchActivity : ComponentActivity() {
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(
                                         if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
-                                            Color(0xFF00E5FF).copy(alpha = 0.20f)
+                                            Color(0xFF0082FB).copy(alpha = 0.20f)
                                         else Color.White.copy(alpha = 0.08f)
                                     )
                                     .colorOSPressBounce(pressedScale = 0.92f)
@@ -1001,7 +1001,7 @@ class WatchActivity : ComponentActivity() {
                                 Icon(
                                     imageVector = Icons.Rounded.AspectRatio,
                                     contentDescription = "Aspect Ratio",
-                                    tint = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) Color(0xFF00E5FF) else Color.White,
+                                    tint = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) Color(0xFF0082FB) else Color.White,
                                     modifier = Modifier.size(19.dp)
                                 )
                             }
@@ -1029,13 +1029,13 @@ class WatchActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFF00E5FF).copy(alpha = 0.15f))
+                                    .background(Color(0xFF0082FB).copy(alpha = 0.15f))
                                     .colorOSPressBounce(pressedScale = 0.92f)
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.FileDownload,
                                     contentDescription = "Download Episode",
-                                    tint = Color(0xFF00E5FF),
+                                    tint = Color(0xFF0082FB),
                                     modifier = Modifier.size(19.dp)
                                 )
                             }
@@ -1100,8 +1100,8 @@ class WatchActivity : ComponentActivity() {
                                 .background(
                                     Brush.radialGradient(
                                         listOf(
-                                            Color(0xFF00E5FF).copy(alpha = 0.28f),
-                                            Color(0xFF0072FF).copy(alpha = 0.15f),
+                                            Color(0xFF0082FB).copy(alpha = 0.28f),
+                                            Color(0xFF52A9FF).copy(alpha = 0.15f),
                                             Color(0xFF0C0E16).copy(alpha = 0.85f)
                                         )
                                     )
@@ -1109,7 +1109,7 @@ class WatchActivity : ComponentActivity() {
                                 .border(
                                     width = 1.dp,
                                     brush = Brush.linearGradient(
-                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                        listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                                     ),
                                     shape = CircleShape
                                 )
@@ -1190,7 +1190,7 @@ class WatchActivity : ComponentActivity() {
                             ) {
                                 Text(
                                     text = formatTime(displayPos),
-                                    color = Color(0xFF00E5FF),
+                                    color = Color(0xFF0082FB),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1286,7 +1286,7 @@ class WatchActivity : ComponentActivity() {
                             },
                             colors = SliderDefaults.colors(
                                 thumbColor = Color.White,
-                                activeTrackColor = Color(0xFF00E5FF),
+                                activeTrackColor = Color(0xFF0082FB),
                                 inactiveTrackColor = Color.White.copy(alpha = 0.20f)
                             ),
                             modifier = Modifier
@@ -1461,7 +1461,7 @@ class WatchActivity : ComponentActivity() {
                             brush = Brush.linearGradient(
                                 listOf(
                                     Color.White.copy(alpha = 0.22f),
-                                    Color(0xFF00E5FF).copy(alpha = 0.20f),
+                                    Color(0xFF0082FB).copy(alpha = 0.20f),
                                     Color.White.copy(alpha = 0.05f)
                                 )
                             ),
@@ -1510,11 +1510,11 @@ class WatchActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .size(6.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF00E5FF))
+                                        .background(Color(0xFF0082FB))
                                 )
                                 Text(
                                     text = parsedHost.uppercase(),
-                                    color = Color(0xFF00E5FF),
+                                    color = Color(0xFF0082FB),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1546,12 +1546,12 @@ class WatchActivity : ComponentActivity() {
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (isAdBlockerActive) Color(0xFF00E5FF).copy(alpha = 0.20f)
+                                    if (isAdBlockerActive) Color(0xFF0082FB).copy(alpha = 0.20f)
                                     else Color.White.copy(alpha = 0.08f)
                                 )
                                 .border(
                                     width = 0.75.dp,
-                                    color = if (isAdBlockerActive) Color(0xFF00E5FF).copy(alpha = 0.65f) else Color.Transparent,
+                                    color = if (isAdBlockerActive) Color(0xFF0082FB).copy(alpha = 0.65f) else Color.Transparent,
                                     shape = RoundedCornerShape(10.dp)
                                 )
                                 .colorOSPressBounce(pressedScale = 0.90f)
@@ -1559,7 +1559,7 @@ class WatchActivity : ComponentActivity() {
                             Icon(
                                 imageVector = Icons.Rounded.Shield,
                                 contentDescription = if (isAdBlockerActive) "Ad Blocker Enabled" else "Ad Blocker Disabled",
-                                tint = if (isAdBlockerActive) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.40f),
+                                tint = if (isAdBlockerActive) Color(0xFF0082FB) else Color.White.copy(alpha = 0.40f),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -1623,12 +1623,12 @@ class WatchActivity : ComponentActivity() {
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (hasStream) Color(0xFF00E5FF).copy(alpha = 0.22f)
+                                    if (hasStream) Color(0xFF0082FB).copy(alpha = 0.22f)
                                     else Color.White.copy(alpha = 0.08f)
                                 )
                                 .border(
                                     width = if (hasStream) 1.dp else 0.5.dp,
-                                    color = if (hasStream) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.12f),
+                                    color = if (hasStream) Color(0xFF0082FB) else Color.White.copy(alpha = 0.12f),
                                     shape = RoundedCornerShape(10.dp)
                                 )
                                 .colorOSPressBounce(pressedScale = 0.90f)
@@ -1636,14 +1636,14 @@ class WatchActivity : ComponentActivity() {
                             if (isScanningStream) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
-                                    color = Color(0xFF00E5FF),
+                                    color = Color(0xFF0082FB),
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     imageVector = if (hasStream) Icons.Rounded.DownloadDone else Icons.Rounded.FileDownload,
                                     contentDescription = if (hasStream) "Stream Ready - Tap to Download" else "Download Episode",
-                                    tint = if (hasStream) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.60f),
+                                    tint = if (hasStream) Color(0xFF0082FB) else Color.White.copy(alpha = 0.60f),
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -1685,7 +1685,7 @@ class WatchActivity : ComponentActivity() {
                                 .clip(CircleShape)
                                 .background(
                                     Brush.horizontalGradient(
-                                        listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                                        listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                                     )
                                 )
                         )
@@ -2216,12 +2216,12 @@ class WatchActivity : ComponentActivity() {
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     Brush.linearGradient(
-                                        listOf(Color(0xFF00E5FF).copy(alpha = 0.25f), Color(0xFF0072FF).copy(alpha = 0.15f))
+                                        listOf(Color(0xFF0082FB).copy(alpha = 0.25f), Color(0xFF52A9FF).copy(alpha = 0.15f))
                                     )
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = Color(0xFF00E5FF).copy(alpha = 0.4f),
+                                    color = Color(0xFF0082FB).copy(alpha = 0.4f),
                                     shape = RoundedCornerShape(12.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -2229,7 +2229,7 @@ class WatchActivity : ComponentActivity() {
                             Icon(
                                 imageVector = Icons.Rounded.FileDownload,
                                 contentDescription = null,
-                                tint = Color(0xFF00E5FF),
+                                tint = Color(0xFF0082FB),
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -2274,14 +2274,14 @@ class WatchActivity : ComponentActivity() {
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (hasWebsiteSyncedStreams) Color(0xFF00E5FF).copy(alpha = 0.10f)
-                            else if (isWebsiteStreamCaptured) Color(0xFF00E5FF).copy(alpha = 0.06f)
+                            if (hasWebsiteSyncedStreams) Color(0xFF0082FB).copy(alpha = 0.10f)
+                            else if (isWebsiteStreamCaptured) Color(0xFF0082FB).copy(alpha = 0.06f)
                             else Color(0xFFFFB300).copy(alpha = 0.08f)
                         )
                         .border(
                             width = 0.65.dp,
-                            color = if (hasWebsiteSyncedStreams) Color(0xFF00E5FF).copy(alpha = 0.45f)
-                                    else if (isWebsiteStreamCaptured) Color(0xFF00E5FF).copy(alpha = 0.25f)
+                            color = if (hasWebsiteSyncedStreams) Color(0xFF0082FB).copy(alpha = 0.45f)
+                                    else if (isWebsiteStreamCaptured) Color(0xFF0082FB).copy(alpha = 0.25f)
                                     else Color(0xFFFFB300).copy(alpha = 0.35f),
                             shape = RoundedCornerShape(10.dp)
                         )
@@ -2298,7 +2298,7 @@ class WatchActivity : ComponentActivity() {
                                 .size(7.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (hasWebsiteSyncedStreams || isWebsiteStreamCaptured) Color(0xFF00E5FF)
+                                    if (hasWebsiteSyncedStreams || isWebsiteStreamCaptured) Color(0xFF0082FB)
                                     else Color(0xFFFFB300)
                                 )
                         )
@@ -2306,7 +2306,7 @@ class WatchActivity : ComponentActivity() {
                             text = if (hasWebsiteSyncedStreams) "SYNCED FROM WEBSITE PLAYBACK (${syncedWebsiteOptions.size} streams)"
                                    else if (isWebsiteStreamCaptured) "SYNCED FROM WEBSITE STREAM"
                                    else "WEBSITE STREAM NOT STARTED",
-                            color = if (hasWebsiteSyncedStreams || isWebsiteStreamCaptured) Color(0xFF00E5FF)
+                            color = if (hasWebsiteSyncedStreams || isWebsiteStreamCaptured) Color(0xFF0082FB)
                                     else Color(0xFFFFB300),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -2320,7 +2320,7 @@ class WatchActivity : ComponentActivity() {
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(11.dp),
-                                color = Color(0xFF00E5FF),
+                                color = Color(0xFF0082FB),
                                 strokeWidth = 1.8.dp
                             )
                             Text(
@@ -2332,7 +2332,7 @@ class WatchActivity : ComponentActivity() {
                     } else if (currentPlaybackHeight > 0) {
                         Text(
                             text = "Playing: ${currentPlaybackHeight}p",
-                            color = Color(0xFF00E5FF),
+                            color = Color(0xFF0082FB),
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -2362,12 +2362,12 @@ class WatchActivity : ComponentActivity() {
                             .weight(1f)
                             .clip(RoundedCornerShape(10.dp))
                             .background(
-                                if (isVideoTab) Color(0xFF00E5FF).copy(alpha = 0.18f)
+                                if (isVideoTab) Color(0xFF0082FB).copy(alpha = 0.18f)
                                 else Color.Transparent
                             )
                             .border(
                                 width = if (isVideoTab) 1.dp else 0.dp,
-                                color = if (isVideoTab) Color(0xFF00E5FF).copy(alpha = 0.5f) else Color.Transparent,
+                                color = if (isVideoTab) Color(0xFF0082FB).copy(alpha = 0.5f) else Color.Transparent,
                                 shape = RoundedCornerShape(10.dp)
                             )
                             .clickable { selectedTab = 0 }
@@ -2381,12 +2381,12 @@ class WatchActivity : ComponentActivity() {
                             Icon(
                                 imageVector = Icons.Rounded.VideoLibrary,
                                 contentDescription = null,
-                                tint = if (isVideoTab) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.5f),
+                                tint = if (isVideoTab) Color(0xFF0082FB) else Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = "Video Qualities",
-                                color = if (isVideoTab) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.7f),
+                                color = if (isVideoTab) Color(0xFF0082FB) else Color.White.copy(alpha = 0.7f),
                                 fontSize = 13.sp,
                                 fontWeight = if (isVideoTab) FontWeight.Bold else FontWeight.Medium
                             )
@@ -2473,7 +2473,7 @@ class WatchActivity : ComponentActivity() {
         onClick: () -> Unit
     ) {
         val isAudio = option.isAudio
-        val accentColor = if (isAudio) Color(0xFFB388FF) else Color(0xFF00E5FF)
+        val accentColor = if (isAudio) Color(0xFFB388FF) else Color(0xFF0082FB)
 
         Row(
             modifier = Modifier
@@ -2483,7 +2483,7 @@ class WatchActivity : ComponentActivity() {
                 .border(
                     width = if (option.isPlayingNow) 1.25.dp else 0.75.dp,
                     brush = Brush.linearGradient(
-                        if (option.isPlayingNow) listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                        if (option.isPlayingNow) listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                         else listOf(
                             Color.White.copy(alpha = 0.12f),
                             accentColor.copy(alpha = 0.15f),
@@ -2511,7 +2511,7 @@ class WatchActivity : ComponentActivity() {
                         .background(
                             Brush.linearGradient(
                                 if (isAudio) listOf(Color(0xFFB388FF).copy(alpha = 0.25f), Color(0xFF7C4DFF).copy(alpha = 0.15f))
-                                else listOf(Color(0xFF00E5FF).copy(alpha = 0.25f), Color(0xFF0072FF).copy(alpha = 0.15f))
+                                else listOf(Color(0xFF0082FB).copy(alpha = 0.25f), Color(0xFF52A9FF).copy(alpha = 0.15f))
                             )
                         )
                         .border(
@@ -2545,12 +2545,12 @@ class WatchActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0xFF00E5FF).copy(alpha = 0.20f))
+                                    .background(Color(0xFF0082FB).copy(alpha = 0.20f))
                                     .padding(horizontal = 5.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = "PLAYING NOW",
-                                    color = Color(0xFF00E5FF),
+                                    color = Color(0xFF0082FB),
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 )
