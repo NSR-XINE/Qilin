@@ -183,21 +183,37 @@ fun HeroBanner(
             .colorOSPressBounce(pressedScale = 0.985f, onClick = { onBannerClick() })
             .padding(14.dp)
     ) {
+        // Ambient Aquamorphic Aurora Glow behind the poster
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .align(Alignment.CenterStart)
+                .offset(x = (-20).dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(primaryAccent.copy(alpha = if (isLight) 0.15f else 0.22f), Color.Transparent),
+                        radius = 260f
+                    )
+                )
+        )
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // LEFT SIDE: PICTURE (Donghua Poster)
+            // LEFT SIDE: PICTURE (Donghua Poster Tile)
             Box(
                 modifier = Modifier
-                    .width(128.dp)
-                    .height(184.dp)
+                    .width(122.dp)
+                    .height(180.dp)
                     .clip(posterShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                     .border(
                         width = 0.75.dp,
-                        color = Color.White.copy(alpha = 0.18f),
+                        brush = Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.28f), Color.White.copy(alpha = 0.06f))
+                        ),
                         shape = posterShape
                     )
             ) {
@@ -210,35 +226,55 @@ fun HeroBanner(
                     immediate = true
                 )
 
-                // Atmospheric bottom shadow overlay on poster
+                // Atmospheric bottom vignette on poster
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                0.6f to Color.Transparent,
-                                1.0f to Color.Black.copy(alpha = 0.65f)
+                                0.5f to Color.Transparent,
+                                1.0f to Color.Black.copy(alpha = 0.72f)
                             )
                         )
                 )
 
-                // Episode badge pill overlaid at bottom of poster
+                // Top-Left Episode Capsule Pill on Poster
                 val epText = if (show.totalEp > 0) "EP ${show.currentEp + 1}/${show.totalEp}" else "EP ${show.currentEp + 1}"
                 Box(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 8.dp)
+                        .align(Alignment.TopStart)
+                        .padding(7.dp)
                         .clip(RoundedCornerShape(percent = 50))
-                        .background(Color.Black.copy(alpha = 0.65f))
-                        .border(0.6.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(percent = 50))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                        .background(Color.Black.copy(alpha = 0.60f))
+                        .border(0.6.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(percent = 50))
+                        .padding(horizontal = 7.dp, vertical = 2.5.dp)
                 ) {
                     Text(
                         text = epText,
-                        fontSize = 10.sp,
+                        fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = JustSansFamily,
                         color = Color.White
+                    )
+                }
+
+                // Bottom-Right Glowing Quick-Play Button on Poster
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(7.dp)
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(primaryAccent)
+                        .border(1.dp, Color.White.copy(alpha = 0.35f), CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.88f, onClick = onWatchClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.PlayArrow,
+                        contentDescription = "Quick Watch",
+                        modifier = Modifier.size(19.dp),
+                        tint = Color.White
                     )
                 }
             }
@@ -247,16 +283,17 @@ fun HeroBanner(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(184.dp),
+                    .height(180.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top: Status / Airing Capsule Tag
+                // Top Section: Status pill & meta pill row
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Left Status Pill
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(percent = 50))
@@ -286,7 +323,7 @@ fun HeroBanner(
                                     text = when {
                                         remainingTime.airingNow -> "AIRING NOW"
                                         hasSchedule -> "${show.releaseDay?.take(3)?.uppercase()} • ${show.releaseTime ?: ""}"
-                                        else -> "FEATURED"
+                                        else -> "NEXT UP"
                                     },
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
@@ -295,6 +332,28 @@ fun HeroBanner(
                                     letterSpacing = 0.5.sp
                                 )
                             }
+                        }
+
+                        // Right Meta Pill (Year or Status)
+                        val rightTag = when {
+                            show.releaseYear > 0 -> "${show.releaseYear}"
+                            !show.status.isNullOrBlank() -> show.status.replaceFirstChar { it.uppercase() }
+                            else -> "HD"
+                        }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(Color.White.copy(alpha = if (isLight) 0.12f else 0.08f))
+                                .border(0.6.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(percent = 50))
+                                .padding(horizontal = 7.dp, vertical = 2.5.dp)
+                        ) {
+                            Text(
+                                text = rightTag,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = JustSansFamily,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
@@ -310,26 +369,45 @@ fun HeroBanner(
                         lineHeight = 21.sp
                     )
 
-                    // Subtitle / Chinese Title / Genre
-                    if (!show.titleZh.isNullOrBlank()) {
-                        Text(
-                            text = show.titleZh,
-                            fontSize = 12.sp,
-                            fontFamily = JustSansFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = primaryAccent,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    } else if (!show.genres.isNullOrBlank()) {
-                        Text(
-                            text = show.genres.split(",").take(2).joinToString(" • ") { it.trim() },
-                            fontSize = 11.5.sp,
-                            fontFamily = JustSansFamily,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                    // Subtitle / Chinese Title & Mini Genre Pills
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (!show.titleZh.isNullOrBlank()) {
+                            Text(
+                                text = show.titleZh,
+                                fontSize = 11.5.sp,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = primaryAccent,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        val genresList = show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.take(2) ?: emptyList()
+                        if (genresList.isNotEmpty()) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                genresList.forEach { genre ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(percent = 50))
+                                            .background(
+                                                if (isLight) Color.Black.copy(alpha = 0.05f)
+                                                else Color.White.copy(alpha = 0.07f)
+                                            )
+                                            .border(0.6.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(percent = 50))
+                                            .padding(horizontal = 7.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = genre,
+                                            fontSize = 9.5.sp,
+                                            fontFamily = JustSansFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -339,7 +417,7 @@ fun HeroBanner(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .height(40.dp)
                             .clip(RoundedCornerShape(percent = 50))
                             .background(primaryAccent)
                             .colorOSPressBounce(pressedScale = 0.95f, onClick = { onWatchClick() }),
@@ -351,7 +429,7 @@ fun HeroBanner(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(22.dp)
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.22f)),
                                 contentAlignment = Alignment.Center
@@ -359,13 +437,13 @@ fun HeroBanner(
                                 Icon(
                                     imageVector = Icons.Rounded.PlayArrow,
                                     contentDescription = null,
-                                    modifier = Modifier.size(15.dp),
+                                    modifier = Modifier.size(14.dp),
                                     tint = Color.White
                                 )
                             }
                             Text(
-                                text = "Watch Ep ${show.currentEp + 1}",
-                                fontSize = 13.sp,
+                                text = "Watch Ep ${show.currentEp + 1} Now",
+                                fontSize = 12.5.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -373,39 +451,23 @@ fun HeroBanner(
                         }
                     }
                 } else if (hasSchedule && !remainingTime.elapsed) {
-                    // Sleek Compact Liquid Countdown Deck
+                    // Sleek 4-Block Micro-Tile Countdown Deck
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                if (isLight) Color.Black.copy(alpha = 0.05f)
-                                else Color.Black.copy(alpha = 0.25f)
-                            )
-                            .border(
-                                width = 0.75.dp,
-                                color = rememberLiquidGlassChipBorder(isLight),
-                                shape = RoundedCornerShape(14.dp)
-                            )
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CompactTimerPill(value = remainingTime.days, unit = "d")
-                        Text(":", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryAccent.copy(alpha = 0.6f))
-                        CompactTimerPill(value = remainingTime.hours, unit = "h")
-                        Text(":", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryAccent.copy(alpha = 0.6f))
-                        CompactTimerPill(value = remainingTime.minutes, unit = "m")
-                        Text(":", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryAccent.copy(alpha = 0.6f))
-                        CompactTimerPill(value = remainingTime.seconds, unit = "s")
+                        CompactTimerPill(value = remainingTime.days, label = "DAYS", modifier = Modifier.weight(1f))
+                        CompactTimerPill(value = remainingTime.hours, label = "HRS", modifier = Modifier.weight(1f))
+                        CompactTimerPill(value = remainingTime.minutes, label = "MIN", modifier = Modifier.weight(1f))
+                        CompactTimerPill(value = remainingTime.seconds, label = "SEC", modifier = Modifier.weight(1f))
                     }
                 } else {
                     // Frosted Details Pill
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .height(40.dp)
                             .clip(RoundedCornerShape(percent = 50))
                             .background(
                                 if (isLight) Color.Black.copy(alpha = 0.06f)
@@ -424,8 +486,8 @@ fun HeroBanner(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Show Details",
-                                fontSize = 13.sp,
+                                text = "View Details & Episodes",
+                                fontSize = 12.5.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -433,7 +495,7 @@ fun HeroBanner(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                                 contentDescription = null,
-                                modifier = Modifier.size(14.dp),
+                                modifier = Modifier.size(13.dp),
                                 tint = primaryAccent
                             )
                         }
@@ -445,28 +507,52 @@ fun HeroBanner(
 }
 
 @Composable
-private fun CompactTimerPill(value: Long, unit: String) {
+private fun CompactTimerPill(
+    value: Long,
+    label: String,
+    modifier: Modifier = Modifier
+) {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
+    val shape = RoundedCornerShape(10.dp)
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    Box(
+        modifier = modifier
+            .height(38.dp)
+            .clip(shape)
+            .background(
+                if (isLight) Color.Black.copy(alpha = 0.05f)
+                else Color(0xFF141926).copy(alpha = 0.65f)
+            )
+            .border(
+                width = 0.75.dp,
+                color = rememberLiquidGlassChipBorder(isLight),
+                shape = shape
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = String.format(Locale.getDefault(), "%02d", value),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = JustSansFamily,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = unit,
-            fontSize = 10.5.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = JustSansFamily,
-            color = primaryAccent
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = String.format(Locale.getDefault(), "%02d", value),
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = JustSansFamily,
+                color = Color.White,
+                lineHeight = 15.sp
+            )
+            Text(
+                text = label,
+                fontSize = 7.5.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = JustSansFamily,
+                color = primaryAccent,
+                letterSpacing = 0.5.sp,
+                lineHeight = 9.sp
+            )
+        }
     }
 }
 
@@ -960,8 +1046,8 @@ private fun HeroBannerSkeleton() {
             // Left Poster Skeleton
             Box(
                 modifier = Modifier
-                    .width(128.dp)
-                    .height(184.dp)
+                    .width(122.dp)
+                    .height(180.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .shimmerEffect()
             )
@@ -970,7 +1056,7 @@ private fun HeroBannerSkeleton() {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(184.dp),
+                    .height(180.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
