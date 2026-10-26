@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
@@ -33,6 +34,7 @@ import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.ColorOSPillButton
 import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
@@ -487,11 +489,12 @@ fun AddEditShowScreen(
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            Button(
+            ColorOSPillButton(
+                text = if (editingShow != null) "Update Donghua" else "Save Show",
                 onClick = {
                     if (title.isBlank()) {
                         Toast.makeText(context, "English title is required", Toast.LENGTH_SHORT).show()
-                        return@Button
+                        return@ColorOSPillButton
                     }
 
                     val newAlarmCode = UUID.randomUUID().toString().hashCode() and 0x7FFFFFFF
@@ -542,24 +545,18 @@ fun AddEditShowScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
-                    .colorOSPressBounce(pressedScale = 0.96f)
-                    .clip(RoundedCornerShape(CornerRadius.card))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
-                            )
-                        )
-                    ),
-                shape = RoundedCornerShape(CornerRadius.card),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(IconSize.md), tint = Color.White)
-                Spacer(Modifier.width(Spacing.sm))
-                Text("Save Show", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
-            }
+                    .height(52.dp),
+                containerColor = Color(0xFF0082FB),
+                contentColor = Color.White,
+                icon = {
+                    Icon(
+                        imageVector = if (editingShow != null) Icons.Rounded.Check else Icons.Rounded.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.md),
+                        tint = Color.White
+                    )
+                }
+            )
 
             Spacer(modifier = Modifier.height(Spacing.xxxl))
         }

@@ -4,12 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -115,37 +112,29 @@ fun EmptyState(
 
             if (actionLabel != null && onAction != null) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
-                Button(
+                ColorOSPillButton(
+                    text = actionLabel,
                     onClick = onAction,
-                    shape = RoundedCornerShape(CornerRadius.pill),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier
-                        .height(ButtonHeight.md)
-                        .colorOSPressBounce(pressedScale = 0.94f)
-                ) {
-                    if (actionIcon != null) {
-                        Icon(
-                            imageVector = actionIcon,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.sm)
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.sm))
-                    }
-                    Text(text = actionLabel, fontWeight = FontWeight.SemiBold)
-                }
+                    height = 46.dp,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    icon = if (actionIcon != null) {
+                        {
+                            Icon(
+                                imageVector = actionIcon,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.sm)
+                            )
+                        }
+                    } else null
+                )
             }
 
             if (secondaryActionLabel != null && onSecondaryAction != null) {
-                TextButton(onClick = onSecondaryAction) {
-                    Text(
-                        text = secondaryActionLabel,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                    )
-                }
+                ColorOSTextButton(
+                    text = secondaryActionLabel,
+                    onClick = onSecondaryAction
+                )
             }
         }
     }

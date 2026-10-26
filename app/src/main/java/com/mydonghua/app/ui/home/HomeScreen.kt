@@ -180,17 +180,17 @@ fun HeroBanner(
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
 
-    Card(
-        shape = bannerShape,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            brush = bannerBorderBrush
-        ),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .height(290.dp)
+            .clip(bannerShape)
+            .border(
+                width = 1.dp,
+                brush = bannerBorderBrush,
+                shape = bannerShape
+            )
             .colorOSPressBounce(pressedScale = 0.985f, onClick = { onBannerClick() })
     ) {
         Box(
@@ -1001,19 +1001,19 @@ private fun HeroBannerSkeleton() {
         primaryColor = Color(0xFF00E5FF),
         accentGlow = if (isLight) 0.35f else 0.50f
     )
-    val bannerShape = RoundedCornerShape(26.dp)
+    val bannerShape = RoundedCornerShape(32.dp)
 
-    Card(
-        shape = bannerShape,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            brush = bannerBorderBrush
-        ),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(275.dp)
+            .height(290.dp)
+            .clip(bannerShape)
+            .border(
+                width = 1.dp,
+                brush = bannerBorderBrush,
+                shape = bannerShape
+            )
     ) {
         Box(
             modifier = Modifier

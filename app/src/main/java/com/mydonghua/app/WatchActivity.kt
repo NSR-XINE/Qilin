@@ -87,6 +87,8 @@ import com.mydonghua.app.data.service.AdBlocker
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.colorOSPressBounce
+import com.mydonghua.app.ui.common.ColorOSPillButton
+import com.mydonghua.app.ui.common.ColorOSOutlinedButton
 import kotlinx.coroutines.delay
 
 class WatchActivity : ComponentActivity() {
@@ -660,19 +662,19 @@ class WatchActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            OutlinedButton(
+                            ColorOSOutlinedButton(
+                                text = "Go Back",
                                 onClick = onBack,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Go Back", color = Color.White)
-                            }
-                            Button(
+                                modifier = Modifier.weight(1f),
+                                height = 44.dp
+                            )
+                            ColorOSPillButton(
+                                text = "Web Player",
                                 onClick = onSwitchToWeb,
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
-                            ) {
-                                Text("Web Player", color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
+                                height = 44.dp,
+                                containerColor = Color(0xFF0082FB)
+                            )
                         }
                     }
                 }

@@ -86,6 +86,7 @@ import com.mydonghua.app.ui.MenuGlassPanel
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
+import com.mydonghua.app.ui.common.ColorOSDialog
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
@@ -151,27 +152,18 @@ class MainActivity : ComponentActivity() {
 
             MyDonghuaTheme(themeMode = settingsState.themeMode, accentColor = settingsState.accentColor) {
                 if (showExitDialog) {
-                    AlertDialog(
+                    ColorOSDialog(
                         onDismissRequest = { showExitDialog = false },
-                        title = { Text("Exit App") },
-                        text = { Text("Are you sure you want to exit?") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showExitDialog = false
-                                    finish()
-                                }
-                            ) {
-                                Text("Yes")
-                            }
+                        title = "Exit App",
+                        message = "Are you sure you want to exit?",
+                        confirmText = "Exit",
+                        dismissText = "Cancel",
+                        confirmButtonColor = Color(0xFF0082FB),
+                        onConfirm = {
+                            showExitDialog = false
+                            finish()
                         },
-                        dismissButton = {
-                            TextButton(
-                                onClick = { showExitDialog = false }
-                            ) {
-                                Text("No")
-                            }
-                        }
+                        onDismiss = { showExitDialog = false }
                     )
                 }
                 Surface(
@@ -494,9 +486,10 @@ class MainActivity : ComponentActivity() {
                         animationSpec = ColorOSMotion.SheetExitIntOffset
                     ) + fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec),
                 ) {
-                    Surface(
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -511,8 +504,7 @@ class MainActivity : ComponentActivity() {
                                         ): Offset = available
                                     }
                                 }
-                            ),
-                        color = MaterialTheme.colorScheme.background
+                            )
                     ) {
                         SearchScreen(
                             viewModel = searchViewModel,
@@ -687,10 +679,11 @@ class MainActivity : ComponentActivity() {
                         val listCardBg = if (isLightMode) Color.White.copy(alpha = 0.70f)
                         else Color.White.copy(alpha = 0.05f)
 
-                        Surface(
-                            shape = listCardShape,
-                            color = listCardBg,
-                            modifier = Modifier.fillMaxWidth()
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(listCardShape)
+                                .background(listCardBg, listCardShape)
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 OxygenDrawerListItem(
@@ -856,17 +849,20 @@ private fun OxygenDrawerTile(
         if (isLight) Color.White.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.05f)
     }
 
-    Surface(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        shape = shape,
-        color = cardBg,
+    Box(
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
             .height(if (subtitle != null) 108.dp else 92.dp)
+            .clip(shape)
+            .background(cardBg, shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
         Column(
             modifier = Modifier
@@ -963,16 +959,21 @@ private fun OxygenDrawerListItem(
         0f
     }
 
-    Surface(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = bgAlpha),
+    val itemShape = RoundedCornerShape(14.dp)
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer {
                 scaleX = itemScale
                 scaleY = itemScale
             }
+            .clip(itemShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = bgAlpha), itemShape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
         Row(
             modifier = Modifier

@@ -43,6 +43,9 @@ import com.mydonghua.app.R
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
+import com.mydonghua.app.ui.common.ColorOSSwitch
+import com.mydonghua.app.ui.common.ColorOSPillButton
+import com.mydonghua.app.ui.common.ColorOSOutlinedButton
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.Spacing
@@ -296,17 +299,17 @@ fun SettingsScreen(
                             )
                         }
 
-                        Surface(
-                            shape = RoundedCornerShape(18.dp),
-                            border = androidx.compose.foundation.BorderStroke(if (isSelected) 1.75.dp else 0.8.dp, specularBorder),
-                            color = cardBg,
+                        val themeShape = RoundedCornerShape(18.dp)
+                        Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .graphicsLayer {
                                     scaleX = cardScale
                                     scaleY = cardScale
                                 }
-                                .clip(RoundedCornerShape(18.dp))
+                                .clip(themeShape)
+                                .background(cardBg, themeShape)
+                                .border(if (isSelected) 1.75.dp else 0.8.dp, specularBorder, themeShape)
                                 .clickable(
                                     interactionSource = interactionSource,
                                     indication = null,
@@ -431,20 +434,18 @@ fun SettingsScreen(
                         if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
                     }
 
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = if (isDynamicSelected) 1.75.dp else 0.8.dp,
-                            color = if (isDynamicSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f))
-                        ),
-                        color = dynamicCardBg,
+                    val dynamicShape = RoundedCornerShape(18.dp)
+                    val dynamicBorderColor = if (isDynamicSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f))
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .graphicsLayer {
                                 scaleX = dynamicScale
                                 scaleY = dynamicScale
                             }
-                            .clip(RoundedCornerShape(18.dp))
+                            .clip(dynamicShape)
+                            .background(dynamicCardBg, dynamicShape)
+                            .border(if (isDynamicSelected) 1.75.dp else 0.8.dp, dynamicBorderColor, dynamicShape)
                             .clickable(
                                 interactionSource = dynamicInteraction,
                                 indication = null,
@@ -692,14 +693,18 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         if (!storageGranted) {
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = if (isDark) 0.20f else 0.35f),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    0.75.dp,
-                                    MaterialTheme.colorScheme.error.copy(alpha = 0.40f)
-                                ),
-                                modifier = Modifier.fillMaxWidth()
+                            val errorBg = MaterialTheme.colorScheme.errorContainer.copy(alpha = if (isDark) 0.20f else 0.35f)
+                            val errorShape = RoundedCornerShape(14.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(errorShape)
+                                    .background(errorBg, errorShape)
+                                    .border(
+                                        0.75.dp,
+                                        MaterialTheme.colorScheme.error.copy(alpha = 0.40f),
+                                        errorShape
+                                    )
                             ) {
                                 Column(
                                     modifier = Modifier.padding(14.dp),
@@ -716,18 +721,15 @@ fun SettingsScreen(
                                         fontSize = 11.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Button(
+                                    ColorOSPillButton(
+                                        text = "Grant Permission",
                                         onClick = {
                                             storagePermissionLauncher.launch(currentStoragePermission())
                                         },
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        ),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        Text("Grant Permission", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                    }
+                                        height = 42.dp,
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
                                 }
                             }
                         }
@@ -752,8 +754,8 @@ fun SettingsScreen(
                                 label = "importScale"
                             )
 
-                            val buttonShape = RoundedCornerShape(14.dp)
-                            Button(
+                            ColorOSPillButton(
+                                text = "Export Backup",
                                 onClick = {
                                     coroutineScope.launch {
                                         val file = viewModel.exportBackup(context)
@@ -770,57 +772,25 @@ fun SettingsScreen(
                                         }
                                     }
                                 },
-                                interactionSource = exportInteraction,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(46.dp)
-                                    .graphicsLayer {
-                                        scaleX = exportScale
-                                        scaleY = exportScale
-                                    },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                ),
-                                shape = buttonShape
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
+                                modifier = Modifier.weight(1f),
+                                height = 46.dp,
+                                icon = {
                                     Icon(Icons.Rounded.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Text("Export Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
-                            }
+                            )
 
-                            OutlinedButton(
+                            ColorOSOutlinedButton(
+                                text = "Import Backup",
                                 onClick = {
                                     filePickerLauncher.launch(arrayOf("application/json", "*/*"))
                                 },
-                                interactionSource = importInteraction,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(46.dp)
-                                    .graphicsLayer {
-                                        scaleX = importScale
-                                        scaleY = importScale
-                                    },
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                ),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    width = 1.dp,
-                                    color = if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.15f)
-                                ),
-                                shape = buttonShape
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
+                                modifier = Modifier.weight(1f),
+                                height = 46.dp,
+                                contentColor = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface,
+                                icon = {
                                     Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Text("Import Backup", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
-                            }
+                            )
                         }
                     }
                 }
@@ -957,11 +927,12 @@ private fun OxygenGlassGroup(
     val isLight = !isDark
     val glassBorder = rememberLiquidGlassBorder(isLight)
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = shape,
-        color = cardBg,
-        border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(cardBg, shape)
+            .border(width = 1.dp, brush = glassBorder, shape = shape)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -1058,16 +1029,11 @@ private fun OxygenTogglePreferenceItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // ColorOS 17 Liquid Switch
-        Switch(
+        // Official ColorOS 17 Fluid Toggle Switch
+        ColorOSSwitch(
             checked = checked,
             onCheckedChange = null,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = Color.White.copy(alpha = 0.70f),
-                uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-            )
+            activeColor = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -1270,19 +1236,26 @@ private fun OxygenProviderItem(
         )
     }
 
-    Surface(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        shape = RoundedCornerShape(18.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.40f)
-        else (if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f)),
-        border = androidx.compose.foundation.BorderStroke(if (isSelected) 1.5.dp else 0.8.dp, specularBorder),
+    val fontShape = RoundedCornerShape(18.dp)
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
+            .clip(fontShape)
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.40f)
+                else (if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f)),
+                fontShape
+            )
+            .border(if (isSelected) 1.5.dp else 0.8.dp, specularBorder, fontShape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
         Row(
             modifier = Modifier

@@ -207,16 +207,17 @@ fun CalendarScreen(
                                             maxLines = 1
                                         )
                                         Spacer(modifier = Modifier.width(Spacing.sm))
-                                        Surface(
-                                            shape = RoundedCornerShape(CornerRadius.xs),
-                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(CornerRadius.pill))
+                                                .background(Color(0xFF0082FB).copy(alpha = 0.15f))
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
                                             Text(
                                                 text = show.releaseTime ?: "10:00",
                                                 fontSize = 11.5.sp,
                                                 fontWeight = FontWeight.SemiBold,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                color = Color(0xFF0082FB)
                                             )
                                         }
                                     }

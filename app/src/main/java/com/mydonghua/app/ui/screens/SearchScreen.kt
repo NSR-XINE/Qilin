@@ -86,6 +86,11 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.TrendingUp
 import androidx.compose.material.icons.rounded.WifiOff
+import com.mydonghua.app.ui.common.ColorOSDialog
+import com.mydonghua.app.ui.common.ColorOSPillButton
+import com.mydonghua.app.ui.common.ColorOSOutlinedButton
+import com.mydonghua.app.ui.common.ColorOSTextButton
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.HighlightedText
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
@@ -540,9 +545,10 @@ fun SearchScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    TextButton(onClick = { viewModel.retryOnlineSearch() }) {
-                                        Text("Retry")
-                                    }
+                                    ColorOSTextButton(
+                                        text = "Retry",
+                                        onClick = { viewModel.retryOnlineSearch() }
+                                    )
                                 }
                             }
                         }
@@ -599,31 +605,23 @@ fun SearchScreen(
     }
 
     if (showToAdd != null) {
-        AlertDialog(
+        ColorOSDialog(
             onDismissRequest = { showToAdd = null },
-            title = { Text("Add to Library") },
-            text = { Text("Would you like to add \"${showToAdd?.title}\" to your library?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val s = showToAdd!!
-                        val newShow = s.copy(
-                            id = java.util.UUID.randomUUID().toString(),
-                            dateAdded = System.currentTimeMillis()
-                        )
-                        showsViewModel.insertOrUpdateShow(newShow)
-                        showToAdd = null
-                        onShowClick(newShow.id)
-                    }
-                ) {
-                    Text("Add")
-                }
+            title = "Add to Library",
+            message = "Would you like to add \"${showToAdd?.title}\" to your library?",
+            confirmText = "Add",
+            dismissText = "Cancel",
+            onConfirm = {
+                val s = showToAdd!!
+                val newShow = s.copy(
+                    id = java.util.UUID.randomUUID().toString(),
+                    dateAdded = System.currentTimeMillis()
+                )
+                showsViewModel.insertOrUpdateShow(newShow)
+                showToAdd = null
+                onShowClick(newShow.id)
             },
-            dismissButton = {
-                TextButton(onClick = { showToAdd = null }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { showToAdd = null }
         )
     }
 
@@ -866,31 +864,63 @@ private fun FilterChipButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val bg = if (isSelected) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.surfaceVariant
-    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimary
-    else MaterialTheme.colorScheme.onSurfaceVariant
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val bg = if (isSelected) {
+        Brush.horizontalGradient(
+            listOf(
+                Color(0xFF0082FB),
+                Color(0xFF1990FF)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(
+                if (isLight) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.10f),
+                if (isLight) Color(0xFFF1F5F9).copy(alpha = 0.80f) else Color.White.copy(alpha = 0.05f)
+            )
+        )
+    }
+    val borderBrush = if (isSelected) {
+        Brush.verticalGradient(
+            listOf(
+                Color(0xFF60B5FF).copy(alpha = 0.60f),
+                Color(0xFF0082FB).copy(alpha = 0.20f)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(
+                Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
+                Color.White.copy(alpha = if (isLight) 0.12f else 0.04f)
+            )
+        )
+    }
+    val textColor = if (isSelected) Color.White else (if (isLight) Color(0xFF1E293B) else Color(0xFFE2E8F0))
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(CornerRadius.xl))
-            .background(bg)
-            .clickable { onClick() }
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+            .clip(RoundedCornerShape(CornerRadius.pill))
+            .background(bg, RoundedCornerShape(CornerRadius.pill))
+            .border(width = 0.85.dp, brush = borderBrush, shape = RoundedCornerShape(CornerRadius.pill))
+            .colorOSPressBounce(pressedScale = 0.94f, onClick = onClick)
+            .padding(horizontal = Spacing.md, vertical = 7.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+        ) {
             Text(
                 text = label,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.5.sp,
+                fontFamily = JustSansFamily,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 color = textColor
             )
             Text(
                 text = if (isSelected) "\u2715" else "+",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = textColor.copy(alpha = if (isSelected) 0.9f else 0.6f)
             )
         }
     }
@@ -904,71 +934,87 @@ private fun GenreFilterDialog(
     onApply: (String?) -> Unit
 ) {
     var localSelected by remember { mutableStateOf(selected) }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
-            Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Filter by Genre", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(Modifier.height(Spacing.md))
+        Column {
+            Text(
+                text = "Filter by Genre",
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isLight) Color(0xFF0F172A) else Color.White
+            )
+            Spacer(Modifier.height(Spacing.md))
 
-                if (genres.isEmpty()) {
-                    Text(
-                        "No genres found",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .heightIn(max = 300.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-                    ) {
-                        genres.forEach { genre ->
-                            val isGenreSelected = localSelected == genre
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(CornerRadius.md))
-                                    .background(
-                                        if (isGenreSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                        else Color.Transparent
-                                    )
-                                    .clickable {
-                                        localSelected = if (isGenreSelected) null else genre
-                                    }
-                                    .padding(horizontal = Spacing.md, vertical = Spacing.md),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = genre,
-                                    fontWeight = if (isGenreSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    color = if (isGenreSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface
+            if (genres.isEmpty()) {
+                Text(
+                    "No genres found",
+                    fontFamily = JustSansFamily,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+            } else {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    genres.forEach { genre ->
+                        val isGenreSelected = localSelected == genre
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(CornerRadius.pill))
+                                .background(
+                                    if (isGenreSelected) Color(0xFF0082FB).copy(alpha = 0.15f)
+                                    else Color.Transparent
                                 )
-                                if (isGenreSelected) {
-                                    Text(
-                                        "\u2713",
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 16.sp
-                                    )
+                                .clickable {
+                                    localSelected = if (isGenreSelected) null else genre
                                 }
+                                .padding(horizontal = Spacing.md, vertical = Spacing.md),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = genre,
+                                fontFamily = JustSansFamily,
+                                fontWeight = if (isGenreSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isGenreSelected) Color(0xFF0082FB)
+                                else (if (isLight) Color(0xFF0F172A) else Color.White)
+                            )
+                            if (isGenreSelected) {
+                                Text(
+                                    "\u2713",
+                                    color = Color(0xFF0082FB),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
                             }
                         }
                     }
                 }
+            }
 
-                Spacer(Modifier.height(Spacing.lg))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
-                    Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { dismissWithAction { onApply(localSelected) } }) { Text("Apply") }
-                }
+            Spacer(Modifier.height(Spacing.lg))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColorOSOutlinedButton(
+                    text = "Cancel",
+                    onClick = { dismissWithAction(onDismiss) },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
+                )
+                ColorOSPillButton(
+                    text = "Apply",
+                    onClick = { dismissWithAction { onApply(localSelected) } },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
+                )
             }
         }
     }
@@ -981,28 +1027,48 @@ private fun StudioFilterDialog(
     onApply: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(initial) }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
-            Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Filter by Studio", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(Modifier.height(Spacing.md))
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("Studio name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+        Column {
+            Text(
+                text = "Filter by Studio",
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isLight) Color(0xFF0F172A) else Color.White
+            )
+            Spacer(Modifier.height(Spacing.md))
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Studio name", fontFamily = JustSansFamily) },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF0082FB),
+                    focusedLabelColor = Color(0xFF0082FB)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(Spacing.lg))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColorOSOutlinedButton(
+                    text = "Cancel",
+                    onClick = { dismissWithAction(onDismiss) },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
                 )
-                Spacer(Modifier.height(Spacing.lg))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
-                    Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { dismissWithAction { onApply(text) } }) { Text("Apply") }
-                }
+                ColorOSPillButton(
+                    text = "Apply",
+                    onClick = { dismissWithAction { onApply(text) } },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
+                )
             }
         }
     }
@@ -1015,28 +1081,48 @@ private fun YearFilterDialog(
     onApply: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(initial) }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
-            Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Filter by Year", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(Modifier.height(Spacing.md))
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.filter { c -> c.isDigit() }.take(4) },
-                    label = { Text("Release year (e.g. 2024)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+        Column {
+            Text(
+                text = "Filter by Year",
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isLight) Color(0xFF0F172A) else Color.White
+            )
+            Spacer(Modifier.height(Spacing.md))
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it.filter { c -> c.isDigit() }.take(4) },
+                label = { Text("Release year (e.g. 2024)", fontFamily = JustSansFamily) },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF0082FB),
+                    focusedLabelColor = Color(0xFF0082FB)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(Spacing.lg))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColorOSOutlinedButton(
+                    text = "Cancel",
+                    onClick = { dismissWithAction(onDismiss) },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
                 )
-                Spacer(Modifier.height(Spacing.lg))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
-                    Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { dismissWithAction { onApply(text) } }) { Text("Apply") }
-                }
+                ColorOSPillButton(
+                    text = "Apply",
+                    onClick = { dismissWithAction { onApply(text) } },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
+                )
             }
         }
     }
@@ -1049,44 +1135,64 @@ private fun RatingFilterDialog(
     onApply: (Float) -> Unit
 ) {
     var sliderValue by remember { mutableStateOf(initial) }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
-            Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Minimum Rating", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(Modifier.height(Spacing.lg))
-                Text(
-                    text = if (sliderValue > 0) "\u2265 ${sliderValue.toInt()}" else "No minimum",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+        Column {
+            Text(
+                text = "Minimum Rating",
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isLight) Color(0xFF0F172A) else Color.White
+            )
+            Spacer(Modifier.height(Spacing.lg))
+            Text(
+                text = if (sliderValue > 0) "\u2265 ${sliderValue.toInt()}" else "No minimum",
+                fontSize = 24.sp,
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0082FB),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(Spacing.md))
+            Slider(
+                value = sliderValue,
+                onValueChange = { sliderValue = it },
+                valueRange = 0f..100f,
+                steps = 19,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFF0082FB),
+                    activeTrackColor = Color(0xFF0082FB)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("0", fontSize = 12.sp, fontFamily = JustSansFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                Text("100", fontSize = 12.sp, fontFamily = JustSansFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+            }
+            Spacer(Modifier.height(Spacing.lg))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColorOSOutlinedButton(
+                    text = "Cancel",
+                    onClick = { dismissWithAction(onDismiss) },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
                 )
-                Spacer(Modifier.height(Spacing.md))
-                Slider(
-                    value = sliderValue,
-                    onValueChange = { sliderValue = it },
-                    valueRange = 0f..100f,
-                    steps = 19,
-                    modifier = Modifier.fillMaxWidth()
+                ColorOSPillButton(
+                    text = "Apply",
+                    onClick = { dismissWithAction { onApply(sliderValue) } },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("0", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                    Text("100", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                }
-                Spacer(Modifier.height(Spacing.lg))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
-                    Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { dismissWithAction { onApply(sliderValue) } }) { Text("Apply") }
-                }
             }
         }
     }
@@ -1099,6 +1205,7 @@ private fun SortFilterDialog(
     onApply: (String) -> Unit
 ) {
     var selected by remember { mutableStateOf(initial) }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val options = listOf(
         "alphabetical" to "Alphabetical",
         "countdown" to "Countdown (next airing)",
@@ -1107,50 +1214,65 @@ private fun SortFilterDialog(
     )
 
     AnimatedDialog(onDismissRequest = onDismiss) { dismissWithAction ->
-        Surface(shape = RoundedCornerShape(CornerRadius.dialog), tonalElevation = 6.dp) {
-            Column(modifier = Modifier.padding(Spacing.lg)) {
-                Text("Sort Order", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(Modifier.height(Spacing.md))
-                options.forEach { (value, label) ->
-                    val isSelected = selected == value
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(CornerRadius.md))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                else Color.Transparent
-                            )
-                            .clickable { selected = value }
-                            .padding(horizontal = Spacing.md, vertical = Spacing.md),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = label,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface
+        Column {
+            Text(
+                text = "Sort Order",
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = if (isLight) Color(0xFF0F172A) else Color.White
+            )
+            Spacer(Modifier.height(Spacing.md))
+            options.forEach { (value, label) ->
+                val isSelected = selected == value
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(CornerRadius.pill))
+                        .background(
+                            if (isSelected) Color(0xFF0082FB).copy(alpha = 0.15f)
+                            else Color.Transparent
                         )
-                        if (isSelected) {
-                            Text(
-                                "\u2713",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
-                        }
+                        .clickable { selected = value }
+                        .padding(horizontal = Spacing.md, vertical = Spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = label,
+                        fontFamily = JustSansFamily,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color(0xFF0082FB)
+                        else (if (isLight) Color(0xFF0F172A) else Color.White)
+                    )
+                    if (isSelected) {
+                        Text(
+                            "\u2713",
+                            color = Color(0xFF0082FB),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
                     }
                 }
-                Spacer(Modifier.height(Spacing.lg))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { dismissWithAction(onDismiss) }) { Text("Cancel") }
-                    Spacer(Modifier.width(Spacing.sm))
-                    Button(onClick = { dismissWithAction { onApply(selected) } }) { Text("Apply") }
-                }
+            }
+            Spacer(Modifier.height(Spacing.lg))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColorOSOutlinedButton(
+                    text = "Cancel",
+                    onClick = { dismissWithAction(onDismiss) },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
+                )
+                ColorOSPillButton(
+                    text = "Apply",
+                    onClick = { dismissWithAction { onApply(selected) } },
+                    modifier = Modifier.weight(1f),
+                    height = 46.dp
+                )
             }
         }
     }
@@ -1184,7 +1306,40 @@ private fun AnimatedDialog(
             enter = ColorOSTransitions.enterDialog,
             exit = ColorOSTransitions.exitDialog
         ) {
-            content(dismissWithAction)
+            val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+            val dialogShape = RoundedCornerShape(30.dp)
+            val dialogBg = if (isLight) {
+                Brush.verticalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.98f),
+                        Color(0xFFF1F5F9).copy(alpha = 0.94f)
+                    )
+                )
+            } else {
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF161A2B).copy(alpha = 0.96f),
+                        Color(0xFF0F121E).copy(alpha = 0.98f)
+                    )
+                )
+            }
+            val dialogBorder = Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = if (isLight) 0.35f else 0.25f),
+                    Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+                )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.90f)
+                    .clip(dialogShape)
+                    .background(brush = dialogBg, shape = dialogShape)
+                    .border(width = 1.dp, brush = dialogBorder, shape = dialogShape)
+                    .padding(24.dp)
+            ) {
+                content(dismissWithAction)
+            }
         }
     }
 }

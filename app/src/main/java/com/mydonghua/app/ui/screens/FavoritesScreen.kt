@@ -92,12 +92,12 @@ fun FavoritesScreen(
                     }
                 }
                 items(5) {
-                    Card(
+                    val cardShape = RoundedCornerShape(CornerRadius.card)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-                        shape = RoundedCornerShape(CornerRadius.card),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+                            .clip(cardShape)
                     ) {
                         Column {
                             Box(

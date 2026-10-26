@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -83,19 +81,13 @@ fun ErrorState(
 
             if (retryLabel != null && onRetry != null) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
-                Button(
+                ColorOSPillButton(
+                    text = retryLabel,
                     onClick = onRetry,
-                    shape = RoundedCornerShape(CornerRadius.pill),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier
-                        .height(ButtonHeight.md)
-                        .colorOSPressBounce(pressedScale = 0.94f)
-                ) {
-                    Text(text = retryLabel, fontWeight = FontWeight.SemiBold)
-                }
+                    height = 46.dp,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }

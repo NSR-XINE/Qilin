@@ -130,37 +130,18 @@ fun ShowCard(
     }
 
     if (showDeleteDialog) {
-        AlertDialog(
+        ColorOSDialog(
             onDismissRequest = { showDeleteDialog = false },
-            shape = RoundedCornerShape(CornerRadius.dialog),
-            title = {
-                Text(
-                    text = "Delete Show",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            title = "Delete Show",
+            message = "Are you sure you want to delete \"${show.title}\"? This cannot be undone.",
+            confirmText = "Delete",
+            dismissText = "Cancel",
+            confirmButtonColor = MaterialTheme.colorScheme.error,
+            onConfirm = {
+                showDeleteDialog = false
+                onDeleteClick(show)
             },
-            text = {
-                Text(
-                    text = "Are you sure you want to delete \"${show.title}\"? This cannot be undone.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        onDeleteClick(show)
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
-                }
-            }
+            onDismiss = { showDeleteDialog = false }
         )
     }
 
@@ -173,7 +154,7 @@ fun ShowCard(
         label = "showCardScale"
     )
 
-    Card(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
@@ -181,6 +162,7 @@ fun ShowCard(
                 scaleX = cardScale
                 scaleY = cardScale
             }
+            .clip(cardShape)
             .hazeChild(state = hazeState, shape = cardShape)
             .background(
                 brush = cardBgBrush,
@@ -195,9 +177,7 @@ fun ShowCard(
                 interactionSource = cardInteractionSource,
                 indication = null,
                 onClick = { onCardClick(show) }
-            ),
-        shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            )
     ) {
         Column {
             // Hero Poster Header (16:9 Aspect Ratio)

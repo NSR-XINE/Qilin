@@ -41,6 +41,7 @@ import com.mydonghua.app.WatchActivity
 import com.mydonghua.app.data.service.DownloadEngine
 import com.mydonghua.app.data.service.DownloadStatus
 import com.mydonghua.app.data.service.DownloadTask
+import com.mydonghua.app.ui.common.ColorOSDialog
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.Spacing
@@ -118,46 +119,26 @@ fun DownloadsScreen(
         }
     }
 
-    // Delete Confirmation Dialog
+    // Delete Confirmation Dialog (ColorOS 17 Dialog)
     fileToDelete?.let { file ->
-        AlertDialog(
+        ColorOSDialog(
             onDismissRequest = { fileToDelete = null },
-            title = {
-                Text(
-                    text = "Delete Download?",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
-                )
+            title = "Delete Download?",
+            message = "Are you sure you want to delete '${file.nameWithoutExtension}'? This file will be permanently removed.",
+            confirmText = "Delete",
+            dismissText = "Cancel",
+            confirmButtonColor = MaterialTheme.colorScheme.error,
+            onConfirm = {
+                val tmp = File(file.parentFile, "${file.name}.tmp")
+                if (tmp.exists()) tmp.delete()
+                file.delete()
+                try {
+                    android.media.MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null, null)
+                } catch (ignored: Exception) {}
+                fileToDelete = null
+                refreshOfflineFiles()
             },
-            text = {
-                Text(
-                    text = "Are you sure you want to delete '${file.nameWithoutExtension}'? This file will be permanently removed.",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val tmp = File(file.parentFile, "${file.name}.tmp")
-                        if (tmp.exists()) tmp.delete()
-                        file.delete()
-                        try {
-                            android.media.MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null, null)
-                        } catch (ignored: Exception) {}
-                        fileToDelete = null
-                        refreshOfflineFiles()
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { fileToDelete = null }) {
-                    Text("Cancel")
-                }
-            },
-            shape = RoundedCornerShape(CornerRadius.card)
+            onDismiss = { fileToDelete = null }
         )
     }
 
