@@ -273,11 +273,7 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         EnterTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        val dir = tabTransitionDirection(from, to)
-                                        slideInHorizontally(
-                                            animationSpec = ColorOSMotion.NavSlideInSpec,
-                                            initialOffsetX = { if (dir >= 0) it / 4 else -it / 4 }
-                                        ) + fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else {
                                         slideInHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideInSpec,
@@ -293,11 +289,7 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         ExitTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        val dir = tabTransitionDirection(from, to)
-                                        slideOutHorizontally(
-                                            animationSpec = ColorOSMotion.NavSlideOutSpec,
-                                            targetOffsetX = { if (dir >= 0) -it / 4 else it / 4 }
-                                        ) + fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
+                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
                                     } else {
                                         slideOutHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideOutSpec,
@@ -792,12 +784,6 @@ class MainActivity : ComponentActivity() {
         private const val NOTIFICATION_PERMISSION_CODE = 1002
         private const val STORAGE_PERMISSION_CODE = 1003
         private val TAB_ROUTES = listOf("home", "airing", "complete", "stopped", "favorites")
-
-        private fun tabTransitionDirection(from: String?, to: String?): Int {
-            val fromIndex = TAB_ROUTES.indexOf(from)
-            val toIndex = TAB_ROUTES.indexOf(to)
-            return if (fromIndex != -1 && toIndex != -1) toIndex.compareTo(fromIndex) else 0
-        }
     }
 }
 
