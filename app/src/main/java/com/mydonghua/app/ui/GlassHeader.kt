@@ -110,6 +110,8 @@ fun GlassHeader(
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { RectangleShape },
+                    highlight = null,
+                    shadow = null,
                     effects = {
                         vibrancy()
                         colorControls(
@@ -165,6 +167,8 @@ fun GlassHeader(
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { CircleShape },
+                    highlight = null,
+                    shadow = null,
                     effects = {
                         vibrancy()
                         colorControls(
@@ -173,10 +177,7 @@ fun GlassHeader(
                             saturation = 1.6f
                         )
                         blur((22f + 2f * headerPressProgress).dp.toPx())
-                        refraction(size.minDimension / 4f + 2f.dp.toPx() * headerPressProgress, size.minDimension / 2f, false)
                     },
-                    highlight = null,
-                    shadow = { Shadow(radius = 4f.dp, alpha = if (isDark) 0.18f else 0.08f) },
                     onDrawSurface = {
                         val baseColor = if (isDark) Color(0xFF0F141C).copy(alpha = 0.38f) else Color.White.copy(alpha = 0.48f)
                         val radius = size.height / 2f
