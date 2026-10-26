@@ -69,7 +69,13 @@ class LayerBackdrop internal constructor(
         layerBlock: (GraphicsLayerScope.() -> Unit)?
     ) {
         val currentCoordinates = currentCoordinates ?: return
-        val offset = currentCoordinates.localPositionOf(coordinates ?: return)
+        val targetCoords = coordinates ?: return
+        if (!currentCoordinates.isAttached || !targetCoords.isAttached) return
+        val offset = try {
+            currentCoordinates.localPositionOf(targetCoords)
+        } catch (_: Exception) {
+            return
+        }
         val layerBlock = layerBlock
         if (layerBlock != null) {
             withTransform({

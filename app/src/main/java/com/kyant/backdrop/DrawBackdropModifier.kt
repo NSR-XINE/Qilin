@@ -39,6 +39,7 @@ import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.InnerShadowElement
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.backdrop.shadow.ShadowElement
+import kotlinx.coroutines.launch
 
 private val DefaultHighlight = { Highlight.Default }
 private val DefaultShadow = { Shadow.Default }
@@ -397,7 +398,15 @@ private class DrawBackdropNode(
 
     internal val invalidationCallback: () -> Unit = {
         if (isAttached) {
-            invalidateDraw()
+            try {
+                coroutineScope.launch {
+                    if (isAttached) {
+                        invalidateDraw()
+                    }
+                }
+            } catch (_: Exception) {
+                invalidateDraw()
+            }
         }
     }
 

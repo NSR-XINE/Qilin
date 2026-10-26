@@ -186,7 +186,7 @@ class MainActivity : ComponentActivity() {
                         CompositionLocalProvider(
                             LocalHazeState provides appHazeState,
                             LocalLayerBackdrop provides contentBackdrop,
-                            LocalHeaderBackdrop provides headerBackdrop
+                            LocalHeaderBackdrop provides contentBackdrop
                         ) {
                             Box(
                                 modifier = Modifier
