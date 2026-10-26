@@ -2,17 +2,17 @@ package com.mydonghua.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ColorOS 17 / Midnight Obsidian Dark Palette
-val DarkBg = Color(0xFF0B0D14)
-val DarkSurface = Color(0xFF121622)
-val DarkSurfaceVariant = Color(0xFF181E2E)
+// ColorOS 17 / Midnight Obsidian Dark Palette (Matches Stock ColorOS 17 System Screenshots)
+val DarkBg = Color(0xFF080A14)
+val DarkSurface = Color(0xFF161A2B)
+val DarkSurfaceVariant = Color(0xFF1A1F33)
 val DarkSurfaceTint = Color(0xFF222B42)
-val DarkOutline = Color(0xFF263047)
-val DarkOutlineVariant = Color(0xFF1C2436)
-val AccentCyan = Color(0xFF00F2FE)
-val TextPrimaryDark = Color(0xFFF8FAFC)
-val TextSecondaryDark = Color(0xFF94A3B8)
-val TextTertiaryDark = Color(0xFF64748B)
+val DarkOutline = Color(0xFF2A344D)
+val DarkOutlineVariant = Color(0xFF1E2638)
+val AccentCyan = Color(0xFF0082FB) // Official ColorOS 17 Electric Blue
+val TextPrimaryDark = Color(0xFFFFFFFF)
+val TextSecondaryDark = Color(0xFFA0A6B5)
+val TextTertiaryDark = Color(0xFF6E7687)
 
 // ColorOS 17 / Porcelain Clean Light Palette
 val LightBg = Color(0xFFF6F8FC)

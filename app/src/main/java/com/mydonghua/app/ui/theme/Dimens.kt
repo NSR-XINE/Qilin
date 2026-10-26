@@ -23,13 +23,13 @@ object CornerRadius {
     val pill = 32.dp
     val full = RoundedCornerShape(percent = 50)
 
-    // ColorOS 17 Aquamorphic Design Tokens
-    val chip = md       // 14.dp
-    val surface = 20.dp // 20.dp - Floating capsule and header docks
-    val card = 22.dp    // 22.dp - Signature continuous curvature squircle
-    val banner = 26.dp  // 26.dp
-    val sheet = 30.dp   // 30.dp
-    val dialog = 28.dp  // 28.dp
+    // ColorOS 17 Aquamorphic Design Tokens (Matches Reference Screenshots)
+    val chip = 14.dp
+    val surface = 24.dp // Floating capsule and header docks
+    val card = 28.dp    // Signature continuous curvature squircle from ColorOS 17
+    val banner = 32.dp  // Large hero squircle
+    val sheet = 32.dp
+    val dialog = 32.dp
 }
 
 object IconSize {

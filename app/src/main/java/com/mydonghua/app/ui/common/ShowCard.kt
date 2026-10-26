@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -92,10 +93,21 @@ fun ShowCard(
     val cardBorderBrush = rememberLiquidGlassBorder(isLight)
     val chipBorderColor = rememberLiquidGlassChipBorder(isLight)
 
-    val cardBgColor = if (isLight) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.90f)
+    // Official ColorOS 17 Frosted Glass Squircle Card Background (Matches Reference Screenshots)
+    val cardBgBrush = if (isLight) {
+        Brush.verticalGradient(
+            listOf(
+                Color.White.copy(alpha = 0.95f),
+                Color(0xFFF1F5F9).copy(alpha = 0.88f)
+            )
+        )
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+        Brush.verticalGradient(
+            listOf(
+                Color(0xFF161A2B).copy(alpha = 0.85f),
+                Color(0xFF0F121E).copy(alpha = 0.92f)
+            )
+        )
     }
 
     // Multi-stop liquid gradient overlay for cinematic poster readability
@@ -171,7 +183,7 @@ fun ShowCard(
             }
             .hazeChild(state = hazeState, shape = cardShape)
             .background(
-                color = cardBgColor,
+                brush = cardBgBrush,
                 shape = cardShape
             )
             .border(
@@ -478,34 +490,33 @@ fun ShowCard(
                     val chipBgColor = if (isLight) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
 
-                    // Left Hero Action: Watch pill if URL exists, or Details pill if no direct stream URL
+                    // Left Hero Action: Signature ColorOS 17 50% Capsule Watch Pill
                     if (!show.watchUrl.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
-                                .height(34.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(chipBgColor)
-                                .border(0.5.dp, chipBorderColor, RoundedCornerShape(10.dp))
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB))
                                 .clickable { onWatchClick(show.watchUrl ?: "") }
                                 .colorOSPressBounce(pressedScale = 0.92f)
-                                .padding(horizontal = 12.dp),
+                                .padding(horizontal = 14.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.PlayCircle,
+                                    imageVector = Icons.Rounded.PlayArrow,
                                     contentDescription = "Watch",
-                                    modifier = Modifier.size(15.dp),
-                                    tint = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF)
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.White
                                 )
                                 Text(
                                     text = "Watch",
                                     fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (isLight) Color(0xFF009AA6) else Color.White
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
                                 )
                             }
                         }

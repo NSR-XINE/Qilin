@@ -65,12 +65,12 @@ val AppShapes = Shapes(
 
 fun getAccentColor(accentKey: String, isLight: Boolean): Color {
     return when (accentKey.lowercase()) {
-        "dynamic" -> if (isLight) Color(0xFF009AA6) else Color(0xFF00F2FE)
+        "dynamic" -> if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
         "purple" -> if (isLight) Color(0xFF7B2CBF) else Color(0xFFBB86FC)
         "rose" -> if (isLight) Color(0xFFD90429) else Color(0xFFFF2A5F)
         "green" -> if (isLight) Color(0xFF2EA043) else Color(0xFF4CAF50)
         "orange" -> if (isLight) Color(0xFFD97706) else Color(0xFFFF9800)
-        "blue" -> if (isLight) Color(0xFF2563EB) else Color(0xFF448AFF)
+        "blue" -> if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
         "teal" -> if (isLight) Color(0xFF0D9488) else Color(0xFF1DE9B6)
         "pink" -> if (isLight) Color(0xFFBE185D) else Color(0xFFFF69B4)
         "red" -> if (isLight) Color(0xFFE53935) else Color(0xFFFF5252)
@@ -85,7 +85,7 @@ fun getAccentColor(accentKey: String, isLight: Boolean): Color {
         "coral" -> if (isLight) Color(0xFFFF6B6B) else Color(0xFFFF8A80)
         "slate" -> if (isLight) Color(0xFF475569) else Color(0xFFCBD5E1)
         "cocoa" -> if (isLight) Color(0xFF795548) else Color(0xFFD7CCC8)
-        else -> if (isLight) Color(0xFF009AA6) else Color(0xFF00F2FE)
+        else -> if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     }
 }
 

@@ -25,7 +25,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.clipRect
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.graphics.Color
@@ -40,6 +42,7 @@ import com.mydonghua.app.data.service.DownloadEngine
 import com.mydonghua.app.data.service.DownloadStatus
 import com.mydonghua.app.data.service.DownloadTask
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.Spacing
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import java.io.File
@@ -680,42 +683,63 @@ private fun ActiveDownloadCard(
                 }
             }
 
-            // ColorOS 17 Fluid Progress Bar
+            // Signature ColorOS 17 Dual-Tone Liquid Progress Pill (Matches Picture 2)
+            val progressFraction = (task.progress / 100f).coerceIn(0f, 1f)
+            val displayText = "Downloading... $progressInt% • $speedMb"
+            val pillShape = CircleShape
+            val primaryBlue = Color(0xFF0082FB)
+            val remainingWhite = Color(0xFFE2F0FE)
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                    .height(44.dp)
+                    .clip(pillShape)
+                    .background(remainingWhite),
+                contentAlignment = Alignment.Center
             ) {
+                // Background Layer Text (Blue text on frosted sky-white background)
+                Text(
+                    text = displayText,
+                    fontSize = 13.5.sp,
+                    fontFamily = JustSansFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primaryBlue
+                )
+
+                // Filled Section with clipped white text overlay
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(task.progress / 100f)
-                        .fillMaxHeight()
-                        .clip(CircleShape)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
+                        .fillMaxSize()
+                        .drawWithContent {
+                            val clipWidth = size.width * progressFraction
+                            drawRect(
+                                color = primaryBlue,
+                                size = androidx.compose.ui.geometry.Size(clipWidth, size.height)
                             )
-                        )
-                )
+                            clipRect(right = clipWidth) {
+                                this@drawWithContent.drawContent()
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = displayText,
+                        fontSize = 13.5.sp,
+                        fontFamily = JustSansFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (task.etaSeconds > 0) {
                 Text(
-                    text = "$progressInt% • $speedMb",
-                    fontSize = 12.sp,
-                    color = Color(0xFF00E5FF),
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = if (task.etaSeconds > 0) "${task.etaSeconds}s remaining" else "Calculating speed...",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "${task.etaSeconds}s remaining",
+                    fontSize = 11.5.sp,
+                    fontFamily = JustSansFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
         }

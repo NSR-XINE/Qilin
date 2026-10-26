@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -99,98 +101,117 @@ fun GlassBackground(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(color = backgroundColor)
+            .background(color = if (isDark) Color(0xFF080A14) else backgroundColor)
             .hazeChild(state = hazeState)
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val widthPx = constraints.maxWidth.toFloat()
             val heightPx = constraints.maxHeight.toFloat()
-            val baseRadius = (widthPx * 1.5f).coerceAtLeast(1400f)
 
-            // Linear background mesh sweep
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                primaryColor.copy(alpha = linearAlpha),
-                                secondaryColor.copy(alpha = linearAlpha * 0.7f),
-                                tertiaryColor.copy(alpha = linearAlpha)
-                            ),
-                            start = Offset(widthPx * orb1X, 0f),
-                            end = Offset(widthPx * orb2X, heightPx)
-                        )
-                    )
-            )
+            if (isDark) {
+                // Official ColorOS 17 Atmospheric Dusk Aurora Horizon Canvas (Matches Reference Screenshots)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .drawWithContent {
+                            drawContent()
 
-            // Orb 1: Vibrant Primary Core
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primaryColor.copy(alpha = orb1Alpha),
-                                primaryContainer.copy(alpha = orb1Alpha * 0.4f),
-                                Color.Transparent
-                            ),
-                            center = Offset(widthPx * orb1X, heightPx * orb1Y),
-                            radius = baseRadius * orb1Scale
-                        )
-                    )
-            )
+                            // Top Twilight Indigo Core
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFF141C38).copy(alpha = 0.70f),
+                                        Color(0xFF080A14).copy(alpha = 0.95f)
+                                    ),
+                                    center = Offset(widthPx * 0.5f, heightPx * 0.12f),
+                                    radius = widthPx * 0.90f
+                                )
+                            )
 
-            // Orb 2: Deep Tertiary Swell
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                tertiaryColor.copy(alpha = orb2Alpha),
-                                surfaceTint.copy(alpha = orb2Alpha * 0.4f),
-                                Color.Transparent
-                            ),
-                            center = Offset(widthPx * orb2X, heightPx * orb2Y),
-                            radius = baseRadius * orb2Scale
-                        )
-                    )
-            )
+                            // Right Edge Warm Sunset Amber Aurora Glow (Matches Stock ColorOS 17 Reference)
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFFE65100).copy(alpha = 0.55f),
+                                        Color(0xFFFF7043).copy(alpha = 0.35f),
+                                        Color(0xFF8E24AA).copy(alpha = 0.22f),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(widthPx * 1.06f, heightPx * 0.54f),
+                                    radius = widthPx * 1.02f
+                                ),
+                                blendMode = BlendMode.Plus
+                            )
 
-            // Orb 3: Secondary Floating Flare
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                secondaryColor.copy(alpha = orb3Alpha),
-                                primaryColor.copy(alpha = orb3Alpha * 0.4f),
-                                Color.Transparent
-                            ),
-                            center = Offset(widthPx * orb3X, heightPx * orb3Y),
-                            radius = baseRadius * 1.25f
-                        )
-                    )
-            )
+                            // Bottom-Left Deep Cobalt Flare
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFF0082FB).copy(alpha = 0.26f),
+                                        Color(0xFF0277BD).copy(alpha = 0.12f),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(0f, heightPx * 0.76f),
+                                    radius = widthPx * 0.85f
+                                ),
+                                blendMode = BlendMode.Plus
+                            )
+                        }
+                )
+            } else {
+                val baseRadius = (widthPx * 1.5f).coerceAtLeast(1400f)
 
-            // Orb 4: Center Plasma Swell
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primaryColor.copy(alpha = orb4Alpha),
-                                tertiaryColor.copy(alpha = orb4Alpha * 0.4f),
-                                Color.Transparent
-                            ),
-                            center = Offset(widthPx * orb4X, heightPx * orb4Y),
-                            radius = baseRadius * orb4Scale
+                // Linear background mesh sweep
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    primaryColor.copy(alpha = linearAlpha),
+                                    secondaryColor.copy(alpha = linearAlpha * 0.7f),
+                                    tertiaryColor.copy(alpha = linearAlpha)
+                                ),
+                                start = Offset(widthPx * orb1X, 0f),
+                                end = Offset(widthPx * orb2X, heightPx)
+                            )
                         )
-                    )
-            )
+                )
+
+                // Orb 1: Vibrant Primary Core
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    primaryColor.copy(alpha = orb1Alpha),
+                                    primaryContainer.copy(alpha = orb1Alpha * 0.4f),
+                                    Color.Transparent
+                                ),
+                                center = Offset(widthPx * orb1X, heightPx * orb1Y),
+                                radius = baseRadius * orb1Scale
+                            )
+                        )
+                )
+
+                // Orb 2: Deep Tertiary Swell
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    tertiaryColor.copy(alpha = orb2Alpha),
+                                    surfaceTint.copy(alpha = orb2Alpha * 0.4f),
+                                    Color.Transparent
+                                ),
+                                center = Offset(widthPx * orb2X, heightPx * orb2Y),
+                                radius = baseRadius * orb2Scale
+                            )
+                        )
+                )
+            }
         }
         content()
     }
@@ -214,8 +235,23 @@ fun rememberLiquidGlassBorder(
     isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f,
     isAmoled: Boolean = MaterialTheme.colorScheme.background == Color.Black || MaterialTheme.colorScheme.background.luminance() < 0.01f
 ): Brush {
-    val borderColor = rememberLiquidGlassBorderColor(isLight, isAmoled)
-    return remember(borderColor) { SolidColor(borderColor) }
+    return remember(isLight, isAmoled) {
+        if (isLight) {
+            Brush.verticalGradient(
+                listOf(
+                    Color.Black.copy(alpha = 0.12f),
+                    Color.Black.copy(alpha = 0.04f)
+                )
+            )
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = if (isAmoled) 0.24f else 0.20f),
+                    Color.White.copy(alpha = 0.04f)
+                )
+            )
+        }
+    }
 }
 
 @Composable

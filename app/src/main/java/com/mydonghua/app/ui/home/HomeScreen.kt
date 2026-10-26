@@ -48,6 +48,7 @@ import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.screens.HomeViewModel
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSAuroraBorder
 import com.mydonghua.app.ui.theme.colorOSAuroraShimmer
 import com.mydonghua.app.ui.theme.colorOSPressBounce
@@ -158,14 +159,15 @@ fun HeroBanner(
         }
     }
 
-    // ColorOS 17 Aurora Rim Gradient Border
-    val bannerBorderBrush = colorOSAuroraBorder(
-        isDark = !isLight,
-        primaryColor = Color(0xFF00E5FF),
-        accentGlow = if (isLight) 0.35f else 0.50f
+    // ColorOS 17 Signature Squircle & Specular Rim Highlight Border (Matches Reference Screenshots)
+    val bannerBorderBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.22f),
+            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+        )
     )
 
-    val bannerShape = RoundedCornerShape(26.dp)
+    val bannerShape = RoundedCornerShape(32.dp)
 
     val textShadow = remember {
         Shadow(
@@ -175,7 +177,7 @@ fun HeroBanner(
         )
     }
 
-    val primaryAccent = if (isLight) Color(0xFF008D99) else Color(0xFF00E5FF)
+    val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
 
     Card(
@@ -188,7 +190,7 @@ fun HeroBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
-            .height(275.dp)
+            .height(290.dp)
             .colorOSPressBounce(pressedScale = 0.985f, onClick = { onBannerClick() })
     ) {
         Box(
@@ -381,46 +383,40 @@ fun HeroBanner(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 if (remainingTime.airingNow) {
-                    // Vibrant Aurora CTA Button
+                    // Signature ColorOS 17 50% Capsule Liquid Action Pill (Matches Picture 1 & 2)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
-                            .clip(RoundedCornerShape(13.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color(0xFF00E5FF),
-                                        Color(0xFF0072FF),
-                                        Color(0xFF7F00FF)
-                                    )
-                                )
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.35f),
-                                shape = RoundedCornerShape(13.dp)
-                            )
-                            .colorOSPressBounce(pressedScale = 0.95f, onClick = { onWatchClick() })
-                            .padding(horizontal = 16.dp),
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(primaryAccent)
+                            .colorOSPressBounce(pressedScale = 0.96f, onClick = { onWatchClick() }),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Rounded.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = Color.White
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.22f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.PlayArrow,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
+                            }
                             Text(
                                 text = "Watch Episode ${show.currentEp + 1} Now",
-                                fontSize = 13.5.sp,
+                                fontSize = 15.sp,
+                                fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                letterSpacing = 0.3.sp
+                                color = Color.White
                             )
                         }
                     }
@@ -437,35 +433,37 @@ fun HeroBanner(
                         BannerTimeBox(value = remainingTime.seconds, label = "SECS", modifier = Modifier.weight(1f))
                     }
                 } else {
-                    // Clean Glass Details Pill
+                    // Signature ColorOS 17 Frosted Capsule Pill
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
-                            .clip(RoundedCornerShape(13.dp))
-                            .background(Color.White.copy(alpha = 0.10f))
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(Color.White.copy(alpha = 0.12f))
                             .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.20f),
-                                shape = RoundedCornerShape(13.dp)
+                                brush = Brush.verticalGradient(
+                                    listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.06f))
+                                ),
+                                shape = RoundedCornerShape(percent = 50)
                             )
-                            .colorOSPressBounce(pressedScale = 0.96f, onClick = { onBannerClick() })
-                            .padding(horizontal = 14.dp),
+                            .colorOSPressBounce(pressedScale = 0.96f, onClick = { onBannerClick() }),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Info,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = primaryAccent
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White
                             )
                             Text(
                                 text = "View Show Details & Episodes",
-                                fontSize = 12.5.sp,
+                                fontSize = 15.sp,
+                                fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
                             )
@@ -539,6 +537,9 @@ private fun BannerTimeBox(
 
 @Composable
 fun SectionHeader(title: String) {
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val accent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xxl, bottom = Spacing.md)
@@ -547,22 +548,15 @@ fun SectionHeader(title: String) {
             modifier = Modifier
                 .width(4.dp)
                 .height(18.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF00E5FF),
-                            Color(0xFF0072FF)
-                        )
-                    )
-                )
+                .clip(CircleShape)
+                .background(accent)
         )
         Spacer(modifier = Modifier.width(10.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            fontSize = 19.sp,
+            fontFamily = JustSansFamily,
             fontWeight = FontWeight.Bold,
-            letterSpacing = (-0.2).sp,
             color = MaterialTheme.colorScheme.onBackground
         )
     }
@@ -576,15 +570,30 @@ fun ContinueWatchingRow(
 ) {
     val hazeState = LocalHazeState.current
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val cardShape = RoundedCornerShape(CornerRadius.card)
+    val cardShape = RoundedCornerShape(26.dp)
 
-    // Unified liquid glass border across all boxes
-    val cardBorder = rememberLiquidGlassBorder(isLight)
+    // ColorOS 17 Specular Highlight Gradient Border
+    val cardBorder = Brush.verticalGradient(
+        listOf(
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
+            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+        )
+    )
 
     val cardBg = if (isLight) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+        Brush.verticalGradient(
+            listOf(
+                Color.White.copy(alpha = 0.95f),
+                Color(0xFFF1F5F9).copy(alpha = 0.88f)
+            )
+        )
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+        Brush.verticalGradient(
+            listOf(
+                Color(0xFF161A2B).copy(alpha = 0.85f),
+                Color(0xFF0F121E).copy(alpha = 0.92f)
+            )
+        )
     }
 
     LazyRow(
@@ -666,8 +675,9 @@ fun ContinueWatchingRow(
                         val totalStr = if (show.totalEp > 0) "/${show.totalEp}" else ""
                         Text(
                             text = "Ep ${show.currentEp}$totalStr",
-                            fontSize = 11.5.sp,
-                            color = if (isLight) Color(0xFF009AA6) else Color(0xFF00E5FF),
+                            fontSize = 12.sp,
+                            fontFamily = JustSansFamily,
+                            color = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 2.dp)
                         )
@@ -678,24 +688,16 @@ fun ContinueWatchingRow(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(4.5.dp)
+                                    .height(5.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = if (isLight) 0.10f else 0.08f))
+                                    .background(if (isLight) Color.Black.copy(alpha = 0.08f) else Color(0xFFE2F0FE).copy(alpha = 0.20f))
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth(fraction)
                                         .fillMaxHeight()
                                         .clip(CircleShape)
-                                        .background(
-                                            Brush.horizontalGradient(
-                                                if (isLight) {
-                                                    listOf(Color(0xFF009AA6), Color(0xFF0072FF))
-                                                } else {
-                                                    listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                                                }
-                                            )
-                                        )
+                                        .background(if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB))
                                 )
                             }
                         }
@@ -746,35 +748,32 @@ fun RecentlyUpdatedCard(
     onWatchClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val cardShape = RoundedCornerShape(20.dp)
-    val posterShape = RoundedCornerShape(13.dp)
+    val cardShape = RoundedCornerShape(28.dp)
+    val posterShape = RoundedCornerShape(16.dp)
 
-    // ColorOS 17 Liquid Glass & Aurora Gradient Background
+    // Official ColorOS 17 Frosted Glass Squircle Card Background (Matches Reference Screenshots)
     val cardBg = if (isLight) {
-        Brush.linearGradient(
+        Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.94f),
+                Color.White.copy(alpha = 0.95f),
                 Color(0xFFF1F5F9).copy(alpha = 0.88f)
-            ),
-            start = Offset(0f, 0f),
-            end = Offset(300f, 400f)
+            )
         )
     } else {
-        Brush.linearGradient(
+        Brush.verticalGradient(
             colors = listOf(
-                Color(0xFF171B2B).copy(alpha = 0.82f),
+                Color(0xFF161A2B).copy(alpha = 0.85f),
                 Color(0xFF0F121E).copy(alpha = 0.92f)
-            ),
-            start = Offset(0f, 0f),
-            end = Offset(300f, 400f)
+            )
         )
     }
 
-    // ColorOS 17 Aurora Rim Gradient Border
-    val borderBrush = colorOSAuroraBorder(
-        isDark = !isLight,
-        primaryColor = Color(0xFF00E5FF),
-        accentGlow = if (isLight) 0.35f else 0.45f
+    // ColorOS 17 Specular Highlight Gradient Border
+    val borderBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color.White.copy(alpha = if (isLight) 0.35f else 0.20f),
+            Color.White.copy(alpha = if (isLight) 0.10f else 0.05f)
+        )
     )
 
     val relativeTime = remember(show.lastUpdated) {
@@ -790,7 +789,7 @@ fun RecentlyUpdatedCard(
         }
     }
 
-    val primaryAccent = if (isLight) Color(0xFF008D99) else Color(0xFF00E5FF)
+    val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
 
     Box(
         modifier = modifier
@@ -854,14 +853,15 @@ fun RecentlyUpdatedCard(
                     )
                 }
 
-                // Quick Play Circle Overlay
+                // Quick Play Circle Overlay (ColorOS 17 Blue)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(4.dp)
-                        .size(22.dp)
+                        .padding(5.dp)
+                        .size(26.dp)
                         .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.65f))
+                        .background(primaryAccent)
+                        .colorOSPressBounce(pressedScale = 0.90f)
                         .clickable(enabled = onWatchClick != null) {
                             onWatchClick?.invoke()
                         },
@@ -870,8 +870,8 @@ fun RecentlyUpdatedCard(
                     Icon(
                         imageVector = Icons.Rounded.PlayArrow,
                         contentDescription = "Watch now",
-                        modifier = Modifier.size(13.dp),
-                        tint = primaryAccent
+                        modifier = Modifier.size(15.dp),
+                        tint = Color.White
                     )
                 }
             }
@@ -891,33 +891,21 @@ fun RecentlyUpdatedCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Episode Capsule Pill
+                    // Signature ColorOS 17 Episode Capsule Pill
                     val epText = if (show.totalEp > 0) "EP ${show.currentEp}/${show.totalEp}" else "EP ${show.currentEp}"
-                    Row(
+                    Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(primaryAccent.copy(alpha = if (isLight) 0.12f else 0.16f))
-                            .border(
-                                width = 0.75.dp,
-                                color = primaryAccent.copy(alpha = if (isLight) 0.35f else 0.40f),
-                                shape = RoundedCornerShape(percent = 50)
-                            )
-                            .padding(horizontal = 7.dp, vertical = 2.5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            .background(primaryAccent)
+                            .padding(horizontal = 8.dp, vertical = 2.5.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(5.dp)
-                                .clip(CircleShape)
-                                .background(primaryAccent)
-                        )
                         Text(
                             text = epText,
                             fontSize = 10.5.sp,
+                            fontFamily = JustSansFamily,
                             fontWeight = FontWeight.Bold,
-                            color = primaryAccent,
-                            letterSpacing = 0.2.sp
+                            color = Color.White
                         )
                     }
 

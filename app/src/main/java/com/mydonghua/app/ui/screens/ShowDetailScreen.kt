@@ -345,17 +345,13 @@ fun ShowDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Main "Watch Online" Hero Button
+                // Main "Watch Online" Hero Button (ColorOS 17 50% Capsule Action Pill)
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(54.dp)
-                        .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFF00E5FF), Color(0xFF0072FF))
-                            )
-                        )
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(Color(0xFF0082FB))
                         .colorOSPressBounce(
                             pressedScale = 0.96f,
                             onClick = {
@@ -367,7 +363,7 @@ fun ShowDetailScreen(
                                 onWatchClick(targetUrl)
                             }
                         )
-                        .padding(horizontal = 14.dp),
+                        .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Row(
@@ -376,16 +372,16 @@ fun ShowDetailScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.25f)),
+                                .background(Color.White.copy(alpha = 0.22f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = "Play",
                                 tint = Color.White,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
 
@@ -393,7 +389,8 @@ fun ShowDetailScreen(
                             Text(
                                 text = "WATCH NOW",
                                 color = Color.White,
-                                fontSize = 13.sp,
+                                fontSize = 13.5.sp,
+                                fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp
                             )
@@ -401,6 +398,7 @@ fun ShowDetailScreen(
                                 text = providerLabel,
                                 color = Color.White.copy(alpha = 0.85f),
                                 fontSize = 11.sp,
+                                fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -410,21 +408,20 @@ fun ShowDetailScreen(
                 val isFavorite = show.isFavorite == 1
                 val hasNotification = show.alarmRequestCode != null
 
-                // Favorite Toggle Button
+                // Favorite Toggle Button (Frosted Circle)
                 IconButton(
                     onClick = { viewModel.toggleFavorite(show) },
                     modifier = Modifier
-                        .size(54.dp)
-                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .size(52.dp)
+                        .clip(CircleShape)
                         .background(
                             if (isFavorite) Color(0xFFFF4081).copy(alpha = 0.18f)
                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
                         )
                         .border(
-                            width = 0.65.dp,
-                            color = if (isFavorite) Color(0xFFFF4081).copy(alpha = 0.45f)
-                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
-                            shape = RoundedCornerShape(CornerRadius.card)
+                            width = 1.dp,
+                            brush = glassBorder,
+                            shape = CircleShape
                         )
                         .colorOSPressBounce(pressedScale = 0.90f)
                 ) {
@@ -432,11 +429,11 @@ fun ShowDetailScreen(
                         imageVector = if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                         contentDescription = "Toggle Favorite",
                         tint = if (isFavorite) Color(0xFFFF4081) else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
-                // Notification Bell Button
+                // Notification Bell Button (Frosted Circle)
                 IconButton(
                     onClick = {
                         viewModel.toggleNotification(context, show)
@@ -447,24 +444,24 @@ fun ShowDetailScreen(
                         ).show()
                     },
                     modifier = Modifier
-                        .size(54.dp)
-                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .size(52.dp)
+                        .clip(CircleShape)
                         .background(
-                            if (hasNotification) Color(0xFF00E5FF).copy(alpha = 0.18f)
+                            if (hasNotification) Color(0xFF0082FB).copy(alpha = 0.18f)
                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
                         )
                         .border(
-                            width = 0.5.dp,
-                            color = chipBorder,
-                            shape = RoundedCornerShape(CornerRadius.card)
+                            width = 1.dp,
+                            brush = glassBorder,
+                            shape = CircleShape
                         )
                         .colorOSPressBounce(pressedScale = 0.90f)
                 ) {
                     Icon(
                         imageVector = if (hasNotification) Icons.Rounded.NotificationsActive else Icons.Rounded.NotificationsNone,
                         contentDescription = "Toggle Notifications",
-                        tint = if (hasNotification) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(24.dp)
+                        tint = if (hasNotification) Color(0xFF0082FB) else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
