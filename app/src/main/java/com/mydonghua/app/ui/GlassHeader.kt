@@ -14,9 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -79,16 +83,65 @@ fun GlassHeader(
 
     val capsuleScale = lerp(1f, 0.985f, headerPressProgress)
 
+    val canopySurfaceColor = if (isDark) Color(0xFF070A10).copy(alpha = 0.42f) else Color.White.copy(alpha = 0.52f)
+
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp),
-        contentAlignment = Alignment.Center
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.TopCenter
     ) {
+        // Surrounding frosted canopy from pill to top of screen
         Box(
             modifier = Modifier
-                .widthIn(max = 420.dp)
+                .matchParentSize()
+                .graphicsLayer {
+                    compositingStrategy = CompositingStrategy.Offscreen
+                }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            0.0f to Color.Black,
+                            0.76f to Color.Black,
+                            1.0f to Color.Transparent
+                        ),
+                        blendMode = BlendMode.DstIn
+                    )
+                }
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RectangleShape },
+                    effects = {
+                        vibrancy()
+                        colorControls(
+                            brightness = if (isDark) 0.03f else 0.01f,
+                            contrast = 1.02f,
+                            saturation = 1.45f
+                        )
+                        blur(24.dp.toPx())
+                    },
+                    onDrawSurface = {
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                0.0f to canopySurfaceColor,
+                                0.76f to canopySurfaceColor.copy(alpha = canopySurfaceColor.alpha * 0.90f),
+                                1.0f to Color.Transparent
+                            )
+                        )
+                    }
+                )
+        )
+
+        // Floating Liquid Glass Pill
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 420.dp)
                 .fillMaxWidth()
                 .height(56.dp)
                 .pointerInput(Unit) {
@@ -259,4 +312,5 @@ fun GlassHeader(
             }
         }
     }
+}
 }
