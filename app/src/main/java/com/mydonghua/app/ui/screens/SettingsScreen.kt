@@ -75,6 +75,9 @@ fun SettingsScreen(
     val aniListUser by viewModel.aniListUser.collectAsState()
     val aniListAutoSync by viewModel.aniListAutoSync.collectAsState()
     val isImportingAniList by viewModel.isImportingAniList.collectAsState()
+    val isPushingToAniList by viewModel.isPushingToAniList.collectAsState()
+    val isTwoWaySyncing by viewModel.isTwoWaySyncing.collectAsState()
+    val lastSyncedTime by viewModel.lastSyncedTime.collectAsState()
 
     var showAniListConnectDialog by remember { mutableStateOf(false) }
     var showAniListWebView by remember { mutableStateOf(false) }
@@ -712,7 +715,7 @@ fun SettingsScreen(
                                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
-                                                text = "Active",
+                                                text = "Connected",
                                                 color = Color(0xFF00C853),
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 10.sp
@@ -722,11 +725,74 @@ fun SettingsScreen(
 
                                     Spacer(modifier = Modifier.height(2.dp))
 
+                                    val syncStatusText = if (lastSyncedTime > 0) {
+                                        val diff = System.currentTimeMillis() - lastSyncedTime
+                                        val mins = diff / (60 * 1000)
+                                        val timeStr = when {
+                                            mins < 1 -> "Just now"
+                                            mins < 60 -> "${mins}m ago"
+                                            mins < 1440 -> "${mins / 60}h ago"
+                                            else -> "${mins / 1440}d ago"
+                                        }
+                                        "Last synced: $timeStr"
+                                    } else {
+                                        "Auto-sync active"
+                                    }
+
                                     Text(
-                                        text = "${user.episodesWatched} eps watched • ${user.animeCount} anime",
+                                        text = syncStatusText,
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                }
+                            }
+
+                            // User stats 4-box grid
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val statBoxBg = if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
+                                val statBoxBorder = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+
+                                listOf(
+                                    Triple("Shows", "${user.animeCount}", "📺"),
+                                    Triple("Watched", "${user.episodesWatched}", "🍿"),
+                                    Triple("Time", user.daysWatched, "⏳"),
+                                    Triple("Mean", if (user.meanScore > 0) "${user.meanScore.toInt()}%" else "--", "⭐")
+                                ).forEach { (label, value, icon) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(statBoxBg)
+                                            .border(1.dp, statBoxBorder, RoundedCornerShape(12.dp))
+                                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Text(
+                                                text = icon,
+                                                fontSize = 13.sp
+                                            )
+                                            Text(
+                                                text = value,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = label,
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
@@ -765,49 +831,108 @@ fun SettingsScreen(
                                 color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
                             )
 
-                            // Action buttons
-                            Row(
+                            // Action buttons: 2-Way Sync (prominent), Push & Import, Profile & Disconnect
+                            Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                // 2-Way Sync All button
                                 ColorOSPillButton(
-                                    text = if (isImportingAniList) "Importing..." else "Import Library",
+                                    text = if (isTwoWaySyncing) "Syncing with AniList..." else "2-Way Sync All",
                                     onClick = {
-                                        if (!isImportingAniList) {
-                                            viewModel.importLibraryFromAniList { imported, updated, err ->
+                                        if (!isTwoWaySyncing && !isImportingAniList && !isPushingToAniList) {
+                                            viewModel.twoWaySyncAll { pushed, pulled, imported, err ->
                                                 if (err != null) {
-                                                    Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                                    Toast.makeText(context, "Sync failed: $err", Toast.LENGTH_LONG).show()
                                                 } else {
-                                                    Toast.makeText(context, "Imported $imported new shows, updated $updated from AniList!", Toast.LENGTH_LONG).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Sync complete! Pushed $pushed, Pulled $pulled, Imported $imported shows",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
                                                 }
                                             }
                                         }
                                     },
-                                    modifier = Modifier.weight(1.3f),
-                                    height = 42.dp,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    height = 44.dp,
                                     containerColor = Color(0xFF0082FB),
                                     contentColor = Color.White
                                 )
 
-                                ColorOSOutlinedButton(
-                                    text = "Profile",
-                                    onClick = {
-                                        val url = "https://anilist.co/user/${user.name}"
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                        context.startActivity(intent)
-                                    },
-                                    modifier = Modifier.weight(0.9f),
-                                    height = 42.dp,
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    ColorOSOutlinedButton(
+                                        text = if (isImportingAniList) "Importing..." else "Import from Cloud",
+                                        onClick = {
+                                            if (!isImportingAniList && !isTwoWaySyncing) {
+                                                viewModel.importLibraryFromAniList { imported, updated, err ->
+                                                    if (err != null) {
+                                                        Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                                    } else {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Imported $imported new shows, updated $updated from AniList!",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        height = 40.dp,
+                                        contentColor = MaterialTheme.colorScheme.onSurface
+                                    )
 
-                                ColorOSOutlinedButton(
-                                    text = "Disconnect",
-                                    onClick = { showDisconnectConfirmDialog = true },
-                                    modifier = Modifier.weight(1.1f),
-                                    height = 42.dp,
-                                    contentColor = MaterialTheme.colorScheme.error
-                                )
+                                    ColorOSOutlinedButton(
+                                        text = if (isPushingToAniList) "Pushing..." else "Push to Cloud",
+                                        onClick = {
+                                            if (!isPushingToAniList && !isTwoWaySyncing) {
+                                                viewModel.pushLocalLibraryToAniList { synced, failed, err ->
+                                                    if (err != null) {
+                                                        Toast.makeText(context, "Push failed: $err", Toast.LENGTH_LONG).show()
+                                                    } else {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Pushed progress for $synced shows to AniList ($failed failed)",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        height = 40.dp,
+                                        contentColor = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    ColorOSOutlinedButton(
+                                        text = "View Profile",
+                                        onClick = {
+                                            val url = "https://anilist.co/user/${user.name}"
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        height = 38.dp,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    ColorOSOutlinedButton(
+                                        text = "Disconnect",
+                                        onClick = { showDisconnectConfirmDialog = true },
+                                        modifier = Modifier.weight(1f),
+                                        height = 38.dp,
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
                     }

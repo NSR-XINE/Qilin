@@ -57,6 +57,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
+import com.mydonghua.app.data.service.AniListMedia
+import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.common.ShowCard
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -111,6 +113,9 @@ fun SearchScreen(
     val isSearchingOnline by viewModel.isSearchingOnline.collectAsState()
     val searchError by viewModel.searchError.collectAsState()
     val autoOpenKeyboard by viewModel.autoOpenKeyboard.collectAsState()
+    val trendingDonghua by viewModel.trendingDonghua.collectAsState()
+    val isTrendingLoading by viewModel.isTrendingLoading.collectAsState()
+    val allShowsList by showsViewModel.allShows.collectAsState()
     var showToAdd by remember { mutableStateOf<Show?>(null) }
     val activeFilters by viewModel.activeFilters.collectAsState()
     val distinctGenres by viewModel.distinctGenres.collectAsState()
@@ -231,15 +236,119 @@ fun SearchScreen(
         ) {
             if (query.isEmpty() && !hasActiveFilters) {
                 val suggestionsList = suggestions
-                if (suggestionsList.isNotEmpty()) {
+                val recents = suggestionsList.filterIsInstance<SearchSuggestion.Recent>()
+                val populars = suggestionsList.filterIsInstance<SearchSuggestion.Popular>()
+
+                if (trendingDonghua.isNotEmpty() || isTrendingLoading || recents.isNotEmpty() || populars.isNotEmpty()) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
                         contentPadding = PaddingValues(top = headerTopPadding, bottom = 80.dp),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        val recents = suggestionsList.filterIsInstance<SearchSuggestion.Recent>()
-                        val populars = suggestionsList.filterIsInstance<SearchSuggestion.Popular>()
+                        // 1. Trending on AniList discovery row
+                        if (isTrendingLoading) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = Spacing.md),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp,
+                                        color = Color(0xFF02A9FF)
+                                    )
+                                }
+                            }
+                        } else if (trendingDonghua.isNotEmpty()) {
+                            item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = Spacing.sm)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text(
+                                                text = "🔥",
+                                                fontSize = 15.sp
+                                            )
+                                            Text(
+                                                text = "Trending on AniList",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                        Text(
+                                            text = "Top Donghua",
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF02A9FF)
+                                        )
+                                    }
 
+                                    Spacer(modifier = Modifier.height(Spacing.xs))
+
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = Spacing.lg),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items(trendingDonghua, key = { it.id }) { media ->
+                                            TrendingDonghuaCard(
+                                                media = media,
+                                                allShows = allShowsList,
+                                                onClick = {
+                                                    val existing = allShowsList.find { s ->
+                                                        s.aniListId == media.id ||
+                                                        s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                                                        (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                                                        (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+                                                    }
+                                                    if (existing != null) {
+                                                        onShowClick(existing.id)
+                                                    } else {
+                                                        showToAdd = Show(
+                                                            id = "anilist_${media.id}",
+                                                            title = media.preferredTitle,
+                                                            titleZh = media.titleNative,
+                                                            status = when (media.status?.lowercase()) {
+                                                                "completed" -> "completed"
+                                                                "releasing" -> "ongoing"
+                                                                else -> "ongoing"
+                                                            },
+                                                            releaseDay = "Sunday",
+                                                            releaseTime = "10:00",
+                                                            currentEp = 0,
+                                                            totalEp = media.episodes,
+                                                            poster = media.coverImage,
+                                                            notes = media.description,
+                                                            genres = media.genres?.joinToString(", "),
+                                                            studio = media.studio,
+                                                            releaseYear = media.releaseYear ?: 0,
+                                                            rating = media.averageScore ?: 0,
+                                                            aniListId = media.id
+                                                        )
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2. Recent Searches
                         if (recents.isNotEmpty()) {
                             item {
                                 Row(
@@ -269,6 +378,7 @@ fun SearchScreen(
                             }
                         }
 
+                        // 3. Popular Searches
                         if (populars.isNotEmpty()) {
                             item {
                                 Box(modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.md, bottom = Spacing.xs)) {
@@ -1398,6 +1508,111 @@ private fun SearchSectionTitle(title: String, color: Color = MaterialTheme.color
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = color
+        )
+    }
+}
+
+@Composable
+private fun TrendingDonghuaCard(
+    media: AniListMedia,
+    allShows: List<Show>,
+    onClick: () -> Unit
+) {
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val isAlreadyInLibrary = remember(media.id, allShows) {
+        allShows.any { s ->
+            s.aniListId == media.id ||
+            s.title.equals(media.preferredTitle, ignoreCase = true)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .width(112.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(112.dp)
+                .height(160.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .border(
+                    0.75.dp,
+                    if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f),
+                    RoundedCornerShape(14.dp)
+                )
+        ) {
+            DonghuaPoster(
+                posterUrl = media.coverImage,
+                title = media.preferredTitle,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Rating Badge
+            if (media.averageScore != null && media.averageScore > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color.Black.copy(alpha = 0.75f))
+                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "★ ${media.averageScore}%",
+                        color = Color(0xFFFFB300),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 9.sp
+                    )
+                }
+            }
+
+            if (isAlreadyInLibrary) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .background(Color(0xFF00C853).copy(alpha = 0.85f))
+                        .padding(vertical = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "In Library",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 9.5.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = media.preferredTitle,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            lineHeight = 15.sp
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = buildString {
+                if (media.episodes > 0) append("${media.episodes} eps")
+                if (media.releaseYear != null && media.releaseYear > 0) {
+                    if (isNotEmpty()) append(" • ")
+                    append(media.releaseYear)
+                }
+            }.ifEmpty { media.status?.replaceFirstChar { it.uppercase() } ?: "Donghua" },
+            fontSize = 10.5.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

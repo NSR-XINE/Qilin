@@ -391,12 +391,174 @@ class SettingsViewModel @Inject constructor(
                     }
                 }
 
+                _lastSyncedTime.value = System.currentTimeMillis()
                 onComplete(importedCount, updatedCount, null)
             } catch (e: Exception) {
                 Log.e("SettingsViewModel", "Import from AniList failed", e)
-                onComplete(0, 0, e.localizedMessage ?: "Unknown import error")
+                onComplete(0, 0, e.localizedMessage ?: "Import failed")
             } finally {
                 _isImportingAniList.value = false
+            }
+        }
+    }
+
+    private val _isPushingToAniList = MutableStateFlow(false)
+    val isPushingToAniList: StateFlow<Boolean> = _isPushingToAniList.asStateFlow()
+
+    private val _isTwoWaySyncing = MutableStateFlow(false)
+    val isTwoWaySyncing: StateFlow<Boolean> = _isTwoWaySyncing.asStateFlow()
+
+    private val _lastSyncedTime = MutableStateFlow(0L)
+    val lastSyncedTime: StateFlow<Long> = _lastSyncedTime.asStateFlow()
+
+    fun pushLocalLibraryToAniList(onComplete: (syncedCount: Int, failedCount: Int, error: String?) -> Unit) {
+        val token = AniListService.getToken() ?: run {
+            onComplete(0, 0, "AniList not connected")
+            return
+        }
+        viewModelScope.launch {
+            _isPushingToAniList.value = true
+            try {
+                val localShows = showRepository.getAllShowsList()
+                var synced = 0
+                var failed = 0
+
+                for (show in localShows) {
+                    var targetId = show.aniListId
+                    if (targetId == null) {
+                        targetId = AniListService.findBestMatchId(show.title, show.titleZh)
+                        if (targetId != null) {
+                            showRepository.insertOrUpdateShow(show.copy(aniListId = targetId))
+                        }
+                    }
+
+                    if (targetId != null) {
+                        val res = AniListService.updateProgress(token, targetId, show.currentEp, show.totalEp)
+                        if (res.isSuccess) synced++ else failed++
+                    }
+                }
+                _lastSyncedTime.value = System.currentTimeMillis()
+                onComplete(synced, failed, null)
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Push to AniList failed", e)
+                onComplete(0, 0, e.localizedMessage ?: "Push error")
+            } finally {
+                _isPushingToAniList.value = false
+            }
+        }
+    }
+
+    fun twoWaySyncAll(onComplete: (pushed: Int, pulled: Int, imported: Int, error: String?) -> Unit) {
+        val user = AniListService.userFlow.value ?: run {
+            onComplete(0, 0, 0, "AniList not connected")
+            return
+        }
+        val token = AniListService.getToken() ?: run {
+            onComplete(0, 0, 0, "No access token found")
+            return
+        }
+
+        viewModelScope.launch {
+            _isTwoWaySyncing.value = true
+            try {
+                val res = AniListService.fetchUserAnimeCollection(token, user.id)
+                if (res.isFailure) {
+                    onComplete(0, 0, 0, res.exceptionOrNull()?.message ?: "Failed to fetch cloud collection")
+                    return@launch
+                }
+
+                val entries = res.getOrThrow()
+                val currentShows = showRepository.getAllShowsList()
+                val showByAniListId = currentShows.filter { it.aniListId != null }.associateBy { it.aniListId!! }.toMutableMap()
+                val showByTitle = currentShows.associateBy { it.title.lowercase().trim() }.toMutableMap()
+
+                var pushedCount = 0
+                var pulledCount = 0
+                var importedCount = 0
+
+                // 1. Process cloud entries against local
+                for (entry in entries) {
+                    val existing = showByAniListId[entry.mediaId]
+                        ?: showByTitle[entry.media.preferredTitle.lowercase().trim()]
+                        ?: (entry.media.titleRomaji?.let { showByTitle[it.lowercase().trim()] })
+                        ?: (entry.media.titleEnglish?.let { showByTitle[it.lowercase().trim()] })
+                        ?: (entry.media.titleNative?.let { showByTitle[it.lowercase().trim()] })
+
+                    if (existing != null) {
+                        if (existing.currentEp > entry.progress) {
+                            // Local has newer episode -> Push to AniList
+                            val pushRes = AniListService.updateProgress(token, entry.mediaId, existing.currentEp, existing.totalEp)
+                            if (pushRes.isSuccess) pushedCount++
+                        } else if (entry.progress > existing.currentEp) {
+                            // AniList has newer episode -> Pull to Local
+                            val updated = existing.copy(
+                                aniListId = entry.mediaId,
+                                currentEp = entry.progress,
+                                lastUpdated = System.currentTimeMillis()
+                            )
+                            showRepository.insertOrUpdateShow(updated)
+                            watchHistoryRepository.addWatchHistory(existing.id, entry.progress)
+                            pulledCount++
+                        } else if (existing.aniListId == null) {
+                            showRepository.insertOrUpdateShow(existing.copy(aniListId = entry.mediaId))
+                        }
+                    } else {
+                        // Show exists in cloud but not locally -> Import
+                        val newId = UUID.randomUUID().toString()
+                        val newShow = Show(
+                            id = newId,
+                            title = entry.media.preferredTitle,
+                            titleZh = entry.media.titleNative,
+                            status = when (entry.status) {
+                                "COMPLETED" -> "completed"
+                                "DROPPED", "PAUSED" -> "stopped"
+                                else -> "ongoing"
+                            },
+                            releaseDay = "Sunday",
+                            releaseTime = "10:00",
+                            currentEp = entry.progress,
+                            totalEp = entry.media.episodes,
+                            poster = entry.media.coverImage,
+                            notes = entry.media.description,
+                            genres = entry.media.genres?.joinToString(", "),
+                            studio = entry.media.studio,
+                            releaseYear = entry.media.releaseYear ?: 0,
+                            rating = entry.score.toInt(),
+                            dateAdded = System.currentTimeMillis(),
+                            lastUpdated = System.currentTimeMillis(),
+                            aniListId = entry.mediaId
+                        )
+                        showRepository.insertOrUpdateShow(newShow)
+                        if (entry.progress > 0) {
+                            watchHistoryRepository.addWatchHistory(newId, entry.progress)
+                        }
+                        importedCount++
+                    }
+                }
+
+                // 2. Check remaining local shows not yet in cloud collection
+                val cloudMediaIds = entries.map { it.mediaId }.toSet()
+                for (localShow in currentShows) {
+                    if (localShow.aniListId != null && !cloudMediaIds.contains(localShow.aniListId)) {
+                        // Push to AniList
+                        val pushRes = AniListService.updateProgress(token, localShow.aniListId, localShow.currentEp, localShow.totalEp)
+                        if (pushRes.isSuccess) pushedCount++
+                    }
+                }
+
+                // Refresh viewer statistics
+                val viewerRes = AniListService.validateTokenAndFetchViewer(token)
+                if (viewerRes.isSuccess) {
+                    AniListService.saveSession(token, viewerRes.getOrThrow())
+                }
+
+                _lastSyncedTime.value = System.currentTimeMillis()
+                onComplete(pushedCount, pulledCount, importedCount, null)
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "2-Way sync failed", e)
+                onComplete(0, 0, 0, e.localizedMessage ?: "Sync error")
+            } finally {
+                _isTwoWaySyncing.value = false
             }
         }
     }

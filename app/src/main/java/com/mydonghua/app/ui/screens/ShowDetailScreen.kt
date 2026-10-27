@@ -74,9 +74,24 @@ fun ShowDetailScreen(
 
     var showAniListMenu by remember { mutableStateOf(false) }
     var showLinkAniListDialog by remember { mutableStateOf(false) }
+    var showScoreRateDialog by remember { mutableStateOf(false) }
+    var userScoreInput by remember { mutableStateOf("") }
     var linkSearchQuery by remember { mutableStateOf("") }
     var isSearchingAniList by remember { mutableStateOf(false) }
     var aniListSearchResults by remember { mutableStateOf<List<AniListMedia>>(emptyList()) }
+    var aniListDetail by remember { mutableStateOf<com.mydonghua.app.data.service.AniListMediaDetail?>(null) }
+
+    LaunchedEffect(show?.aniListId) {
+        val targetId = show?.aniListId
+        if (targetId != null) {
+            val res = AniListService.fetchMediaDetails(targetId)
+            if (res.isSuccess) {
+                aniListDetail = res.getOrNull()
+            }
+        } else {
+            aniListDetail = null
+        }
+    }
 
     if (show == null) {
         val isLoading by viewModel.isLoading.collectAsState()
@@ -250,32 +265,57 @@ fun ShowDetailScreen(
                             else -> Color(0xFFFFA726)
                         }
 
-                        // Status Chip
+                        // Status & AniList Score Row
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(statusColor.copy(alpha = 0.20f))
-                                .border(0.6.dp, statusColor.copy(alpha = 0.40f), CircleShape)
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Box(
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
                                 modifier = Modifier
-                                    .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(statusColor)
-                            )
-                            Text(
-                                text = when (show.status) {
-                                    "ongoing" -> "Airing"
-                                    "completed" -> "Completed"
-                                    else -> "Hiatus"
-                                },
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = statusColor
-                            )
+                                    .background(statusColor.copy(alpha = 0.20f))
+                                    .border(0.6.dp, statusColor.copy(alpha = 0.40f), CircleShape)
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(statusColor)
+                                )
+                                Text(
+                                    text = when (show.status) {
+                                        "ongoing" -> "Airing"
+                                        "completed" -> "Completed"
+                                        else -> "Hiatus"
+                                    },
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = statusColor
+                                )
+                            }
+
+                            if (aniListDetail?.averageScore != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF02A9FF).copy(alpha = 0.22f))
+                                        .border(0.6.dp, Color(0xFF02A9FF).copy(alpha = 0.50f), CircleShape)
+                                        .clickable { showAniListMenu = true }
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "★ ${aniListDetail?.averageScore}% AL",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF02A9FF)
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -810,6 +850,17 @@ fun ShowDetailScreen(
                         )
 
                         ColorOSOutlinedButton(
+                            text = if (aniListDetail?.userScore != null && aniListDetail!!.userScore!! > 0.0) "Your Score: ${aniListDetail!!.userScore} ★ (Change)" else "Rate Show on AniList",
+                            onClick = {
+                                userScoreInput = aniListDetail?.userScore?.toInt()?.toString() ?: ""
+                                showScoreRateDialog = true
+                                showAniListMenu = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 42.dp
+                        )
+
+                        ColorOSOutlinedButton(
                             text = "Open on AniList",
                             onClick = {
                                 val url = "https://anilist.co/anime/${show.aniListId}"
@@ -847,6 +898,54 @@ fun ShowDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             height = 42.dp,
                             contentColor = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            )
+        }
+
+        if (showScoreRateDialog) {
+            ColorOSDialog(
+                onDismissRequest = { showScoreRateDialog = false },
+                title = "Rate on AniList",
+                confirmText = "Submit Score",
+                dismissText = "Cancel",
+                confirmButtonColor = Color(0xFF02A9FF),
+                onConfirm = {
+                    val score = userScoreInput.toDoubleOrNull()
+                    val token = AniListService.getToken()
+                    if (token.isNullOrBlank()) {
+                        Toast.makeText(context, "AniList not connected", Toast.LENGTH_SHORT).show()
+                    } else if (score != null && show.aniListId != null) {
+                        coroutineScope.launch {
+                            val res = AniListService.updateMediaScoreAndStatus(token, show.aniListId!!, score, null)
+                            if (res.isSuccess) {
+                                Toast.makeText(context, "Score submitted to AniList: $score ★", Toast.LENGTH_SHORT).show()
+                                val ref = AniListService.fetchMediaDetails(show.aniListId!!)
+                                if (ref.isSuccess) aniListDetail = ref.getOrNull()
+                            } else {
+                                Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                            }
+                            showScoreRateDialog = false
+                        }
+                    }
+                },
+                customContent = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "Enter your score for ${show.title} (1 to 10 or 100):",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        OutlinedTextField(
+                            value = userScoreInput,
+                            onValueChange = { userScoreInput = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                            label = { Text("Score") },
+                            placeholder = { Text("e.g. 9 or 85") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }

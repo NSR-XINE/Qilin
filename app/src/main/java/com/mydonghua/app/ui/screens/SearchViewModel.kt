@@ -1,7 +1,10 @@
 package com.mydonghua.app.ui.screens
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mydonghua.app.data.service.AniListMedia
+import com.mydonghua.app.data.service.AniListService
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
@@ -39,6 +42,12 @@ class SearchViewModel @Inject constructor(
 
     val searchQuery = MutableStateFlow("")
     val activeFilters = MutableStateFlow(SearchFilters())
+
+    private val _trendingDonghua = MutableStateFlow<List<AniListMedia>>(emptyList())
+    val trendingDonghua: StateFlow<List<AniListMedia>> = _trendingDonghua.asStateFlow()
+
+    private val _isTrendingLoading = MutableStateFlow(false)
+    val isTrendingLoading: StateFlow<Boolean> = _isTrendingLoading.asStateFlow()
     val autoOpenKeyboard: StateFlow<Boolean> = settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -209,6 +218,22 @@ class SearchViewModel @Inject constructor(
             }
             .onEach { _onlineResults.value = it }
             .launchIn(viewModelScope)
+
+        loadTrendingDonghua()
+    }
+
+    fun loadTrendingDonghua() {
+        viewModelScope.launch {
+            _isTrendingLoading.value = true
+            try {
+                val list = AniListService.fetchTrendingDonghua(page = 1, perPage = 15)
+                _trendingDonghua.value = list
+            } catch (e: Exception) {
+                Log.e("SearchViewModel", "Failed to fetch trending donghua", e)
+            } finally {
+                _isTrendingLoading.value = false
+            }
+        }
     }
 
     fun retryOnlineSearch() {

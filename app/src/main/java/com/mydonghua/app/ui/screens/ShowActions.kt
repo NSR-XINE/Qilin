@@ -50,6 +50,10 @@ object ShowActions {
             lastUpdated = System.currentTimeMillis()
         )
         showRepository.insertOrUpdateShow(updated)
+
+        if (show.aniListId != null) {
+            AniListService.toggleFavorite(show.aniListId)
+        }
     }
 
     suspend fun toggleNotification(

@@ -22,8 +22,16 @@ data class AniListUser(
     val name: String,
     val avatarUrl: String?,
     val episodesWatched: Int,
-    val animeCount: Int
-)
+    val animeCount: Int,
+    val minutesWatched: Int = 0,
+    val meanScore: Double = 0.0
+) {
+    val daysWatched: String
+        get() {
+            val days = minutesWatched.toDouble() / 1440.0
+            return String.format(java.util.Locale.US, "%.1fd", days)
+        }
+}
 
 data class AniListMedia(
     val id: Int,
@@ -31,6 +39,9 @@ data class AniListMedia(
     val titleEnglish: String?,
     val titleNative: String?,
     val coverImage: String?,
+    val bannerImage: String? = null,
+    val averageScore: Int? = null,
+    val popularity: Int? = null,
     val description: String?,
     val episodes: Int,
     val status: String?,
@@ -44,6 +55,23 @@ data class AniListMedia(
             ?: titleNative?.takeIf { it.isNotBlank() }
             ?: "Unknown Title"
 }
+
+data class AniListMediaDetail(
+    val id: Int,
+    val averageScore: Int?,
+    val meanScore: Int?,
+    val popularity: Int?,
+    val favourites: Int?,
+    val bannerImage: String?,
+    val coverImage: String?,
+    val description: String?,
+    val format: String?,
+    val status: String?,
+    val episodes: Int?,
+    val userScore: Double?,
+    val userProgress: Int?,
+    val userStatus: String?
+)
 
 data class AniListEntry(
     val id: Int,
@@ -63,6 +91,8 @@ object AniListService {
     private const val KEY_AVATAR = "anilist_avatar"
     private const val KEY_EPISODES_WATCHED = "anilist_episodes_watched"
     private const val KEY_ANIME_COUNT = "anilist_anime_count"
+    private const val KEY_MINUTES_WATCHED = "anilist_minutes_watched"
+    private const val KEY_MEAN_SCORE = "anilist_mean_score"
     private const val KEY_AUTO_SYNC = "anilist_auto_sync"
 
     private const val GRAPHQL_ENDPOINT = "https://graphql.anilist.co/"
@@ -98,6 +128,8 @@ object AniListService {
         val avatar = sp.getString(KEY_AVATAR, null)
         val episodesWatched = sp.getInt(KEY_EPISODES_WATCHED, 0)
         val animeCount = sp.getInt(KEY_ANIME_COUNT, 0)
+        val minutesWatched = sp.getInt(KEY_MINUTES_WATCHED, 0)
+        val meanScore = sp.getFloat(KEY_MEAN_SCORE, 0f).toDouble()
         val autoSync = sp.getBoolean(KEY_AUTO_SYNC, true)
 
         _autoSyncFlow.value = autoSync
@@ -108,7 +140,9 @@ object AniListService {
                 name = username,
                 avatarUrl = avatar,
                 episodesWatched = episodesWatched,
-                animeCount = animeCount
+                animeCount = animeCount,
+                minutesWatched = minutesWatched,
+                meanScore = meanScore
             )
         }
     }
@@ -143,6 +177,8 @@ object AniListService {
             ?.putString(KEY_AVATAR, user.avatarUrl)
             ?.putInt(KEY_EPISODES_WATCHED, user.episodesWatched)
             ?.putInt(KEY_ANIME_COUNT, user.animeCount)
+            ?.putInt(KEY_MINUTES_WATCHED, user.minutesWatched)
+            ?.putFloat(KEY_MEAN_SCORE, user.meanScore.toFloat())
             ?.apply()
         _userFlow.value = user
     }
@@ -155,6 +191,8 @@ object AniListService {
             ?.remove(KEY_AVATAR)
             ?.remove(KEY_EPISODES_WATCHED)
             ?.remove(KEY_ANIME_COUNT)
+            ?.remove(KEY_MINUTES_WATCHED)
+            ?.remove(KEY_MEAN_SCORE)
             ?.apply()
         _userFlow.value = null
     }
@@ -184,6 +222,8 @@ object AniListService {
                       anime {
                         count
                         episodesWatched
+                        minutesWatched
+                        meanScore
                       }
                     }
                   }
@@ -222,13 +262,17 @@ object AniListService {
                 val animeStats = stats?.optJSONObject("anime")
                 val count = animeStats?.optInt("count", 0) ?: 0
                 val epsWatched = animeStats?.optInt("episodesWatched", 0) ?: 0
+                val minutesWatched = animeStats?.optInt("minutesWatched", 0) ?: 0
+                val meanScore = animeStats?.optDouble("meanScore", 0.0) ?: 0.0
 
                 val user = AniListUser(
                     id = id,
                     name = name,
                     avatarUrl = avatarUrl,
                     episodesWatched = epsWatched,
-                    animeCount = count
+                    animeCount = count,
+                    minutesWatched = minutesWatched,
+                    meanScore = meanScore
                 )
 
                 Result.success(user)
@@ -625,6 +669,330 @@ object AniListService {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in syncEpisodeProgress", e)
+        }
+    }
+
+    suspend fun fetchMediaDetails(mediaId: Int): Result<AniListMediaDetail> = withContext(Dispatchers.IO) {
+        try {
+            val query = """
+                query (${'$'}id: Int) {
+                  Media(id: ${'$'}id, type: ANIME) {
+                    id
+                    averageScore
+                    meanScore
+                    popularity
+                    favourites
+                    format
+                    status
+                    episodes
+                    bannerImage
+                    coverImage {
+                      extraLarge
+                      large
+                    }
+                    description(asHtml: false)
+                    mediaListEntry {
+                      id
+                      status
+                      score
+                      progress
+                    }
+                  }
+                }
+            """.trimIndent()
+
+            val variables = JSONObject().apply {
+                put("id", mediaId)
+            }
+            val requestBodyJson = JSONObject().apply {
+                put("query", query)
+                put("variables", variables)
+            }
+
+            val builder = Request.Builder()
+                .url(GRAPHQL_ENDPOINT)
+                .post(requestBodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+
+            val token = getToken()
+            if (!token.isNullOrBlank()) {
+                builder.addHeader("Authorization", "Bearer ${token.trim()}")
+            }
+
+            client.newCall(builder.build()).execute().use { response ->
+                val bodyStr = response.body?.string() ?: return@withContext Result.failure(Exception("Empty media response"))
+                val json = JSONObject(bodyStr)
+                if (json.has("errors")) {
+                    val errorsArr = json.getJSONArray("errors")
+                    val msg = if (errorsArr.length() > 0) errorsArr.getJSONObject(0).optString("message", "Error") else "Media query error"
+                    return@withContext Result.failure(Exception(msg))
+                }
+
+                val data = json.optJSONObject("data") ?: return@withContext Result.failure(Exception("No data returned"))
+                val media = data.optJSONObject("Media") ?: return@withContext Result.failure(Exception("Media not found"))
+
+                val avgScore = media.optInt("averageScore", 0).takeIf { it > 0 }
+                val meanScore = media.optInt("meanScore", 0).takeIf { it > 0 }
+                val popularity = media.optInt("popularity", 0).takeIf { it > 0 }
+                val favourites = media.optInt("favourites", 0).takeIf { it > 0 }
+                val banner = media.optString("bannerImage").takeIf { it.isNotEmpty() && it != "null" }
+                val coverObj = media.optJSONObject("coverImage")
+                val cover = coverObj?.optString("extraLarge")?.takeIf { it.isNotEmpty() && it != "null" }
+                    ?: coverObj?.optString("large")
+                val desc = media.optString("description", "")
+                    .replace(Regex("<[^>]*>"), "")
+                    .trim()
+                    .takeIf { it.isNotEmpty() }
+                val format = media.optString("format").takeIf { it.isNotEmpty() && it != "null" }
+                val status = media.optString("status").takeIf { it.isNotEmpty() && it != "null" }
+                val eps = media.optInt("episodes", 0).takeIf { it > 0 }
+
+                val entryObj = media.optJSONObject("mediaListEntry")
+                val userStatus = entryObj?.optString("status")?.takeIf { it.isNotEmpty() && it != "null" }
+                val userScore = entryObj?.optDouble("score", 0.0)?.takeIf { it > 0.0 }
+                val userProgress = entryObj?.optInt("progress", 0)
+
+                Result.success(
+                    AniListMediaDetail(
+                        id = mediaId,
+                        averageScore = avgScore,
+                        meanScore = meanScore,
+                        popularity = popularity,
+                        favourites = favourites,
+                        bannerImage = banner,
+                        coverImage = cover,
+                        description = desc,
+                        format = format,
+                        status = status,
+                        episodes = eps,
+                        userScore = userScore,
+                        userProgress = userProgress,
+                        userStatus = userStatus
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchMediaDetails error", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateMediaScoreAndStatus(
+        token: String,
+        mediaId: Int,
+        score: Double?,
+        status: String?
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val mutation = """
+                mutation (${'$'}mediaId: Int, ${'$'}score: Float, ${'$'}status: MediaListStatus) {
+                  SaveMediaListEntry(mediaId: ${'$'}mediaId, score: ${'$'}score, status: ${'$'}status) {
+                    id
+                    score
+                    status
+                  }
+                }
+            """.trimIndent()
+
+            val variables = JSONObject().apply {
+                put("mediaId", mediaId)
+                if (score != null) put("score", score)
+                if (!status.isNullOrBlank()) put("status", status)
+            }
+            val requestBodyJson = JSONObject().apply {
+                put("query", mutation)
+                put("variables", variables)
+            }
+
+            val request = Request.Builder()
+                .url(GRAPHQL_ENDPOINT)
+                .addHeader("Authorization", "Bearer ${token.trim()}")
+                .post(requestBodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val bodyStr = response.body?.string() ?: return@withContext Result.failure(Exception("Empty response"))
+                val json = JSONObject(bodyStr)
+                if (json.has("errors")) {
+                    val errorsArr = json.getJSONArray("errors")
+                    val msg = if (errorsArr.length() > 0) errorsArr.getJSONObject(0).optString("message", "Error") else "Mutation error"
+                    return@withContext Result.failure(Exception(msg))
+                }
+                Result.success(true)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "updateMediaScoreAndStatus error", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun toggleFavorite(animeId: Int): Result<Boolean> = withContext(Dispatchers.IO) {
+        val token = getToken() ?: return@withContext Result.failure(Exception("Not logged in"))
+        try {
+            val mutation = """
+                mutation (${'$'}animeId: Int) {
+                  ToggleFavourite(animeId: ${'$'}animeId) {
+                    anime {
+                      nodes {
+                        id
+                      }
+                    }
+                  }
+                }
+            """.trimIndent()
+
+            val variables = JSONObject().apply {
+                put("animeId", animeId)
+            }
+            val requestBodyJson = JSONObject().apply {
+                put("query", mutation)
+                put("variables", variables)
+            }
+
+            val request = Request.Builder()
+                .url(GRAPHQL_ENDPOINT)
+                .addHeader("Authorization", "Bearer ${token.trim()}")
+                .post(requestBodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val bodyStr = response.body?.string() ?: return@withContext Result.failure(Exception("Empty response"))
+                val json = JSONObject(bodyStr)
+                if (json.has("errors")) {
+                    val errorsArr = json.getJSONArray("errors")
+                    val msg = if (errorsArr.length() > 0) errorsArr.getJSONObject(0).optString("message", "Error") else "Favorite error"
+                    return@withContext Result.failure(Exception(msg))
+                }
+                Result.success(true)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "toggleFavorite error", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchTrendingDonghua(page: Int = 1, perPage: Int = 12): List<AniListMedia> = withContext(Dispatchers.IO) {
+        try {
+            val query = """
+                query (${'$'}page: Int, ${'$'}perPage: Int) {
+                  Page(page: ${'$'}page, perPage: ${'$'}perPage) {
+                    media(type: ANIME, countryOfOrigin: "CN", sort: [TRENDING_DESC, POPULARITY_DESC]) {
+                      id
+                      title {
+                        romaji
+                        english
+                        native
+                      }
+                      coverImage {
+                        extraLarge
+                        large
+                      }
+                      bannerImage
+                      averageScore
+                      popularity
+                      description(asHtml: false)
+                      episodes
+                      status
+                      genres
+                      studios(isMain: true) {
+                        nodes {
+                          name
+                        }
+                      }
+                      startDate {
+                        year
+                      }
+                    }
+                  }
+                }
+            """.trimIndent()
+
+            val variables = JSONObject().apply {
+                put("page", page)
+                put("perPage", perPage)
+            }
+            val requestBodyJson = JSONObject().apply {
+                put("query", query)
+                put("variables", variables)
+            }
+
+            val request = Request.Builder()
+                .url(GRAPHQL_ENDPOINT)
+                .post(requestBodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@withContext emptyList()
+                val bodyStr = response.body?.string() ?: return@withContext emptyList()
+                val json = JSONObject(bodyStr)
+                val data = json.optJSONObject("data") ?: return@withContext emptyList()
+                val pageObj = data.optJSONObject("Page") ?: return@withContext emptyList()
+                val mediaArr = pageObj.optJSONArray("media") ?: return@withContext emptyList()
+
+                val results = mutableListOf<AniListMedia>()
+                for (i in 0 until mediaArr.length()) {
+                    val media = mediaArr.getJSONObject(i)
+                    val id = media.getInt("id")
+                    val titleObj = media.optJSONObject("title")
+                    val romaji = titleObj?.optString("romaji")?.takeIf { it.isNotEmpty() && it != "null" }
+                    val english = titleObj?.optString("english")?.takeIf { it.isNotEmpty() && it != "null" }
+                    val native = titleObj?.optString("native")?.takeIf { it.isNotEmpty() && it != "null" }
+
+                    val coverObj = media.optJSONObject("coverImage")
+                    val cover = coverObj?.optString("extraLarge")?.takeIf { it.isNotEmpty() && it != "null" }
+                        ?: coverObj?.optString("large")
+                    val banner = media.optString("bannerImage").takeIf { it.isNotEmpty() && it != "null" }
+                    val avgScore = media.optInt("averageScore", 0).takeIf { it > 0 }
+                    val pop = media.optInt("popularity", 0).takeIf { it > 0 }
+
+                    val desc = media.optString("description", "")
+                        .replace(Regex("<[^>]*>"), "")
+                        .trim()
+                        .takeIf { it.isNotEmpty() }
+
+                    val episodes = media.optInt("episodes", 0)
+                    val status = media.optString("status", "").lowercase()
+
+                    val genresArr = media.optJSONArray("genres")
+                    val genres = mutableListOf<String>()
+                    if (genresArr != null) {
+                        for (g in 0 until genresArr.length()) {
+                            genres.add(genresArr.getString(g))
+                        }
+                    }
+
+                    val studiosObj = media.optJSONObject("studios")
+                    val studioNodes = studiosObj?.optJSONArray("nodes")
+                    val studio = if (studioNodes != null && studioNodes.length() > 0) {
+                        studioNodes.getJSONObject(0).optString("name")
+                    } else null
+
+                    val startDate = media.optJSONObject("startDate")
+                    val releaseYear = startDate?.optInt("year", 0)?.takeIf { it > 0 }
+
+                    results.add(
+                        AniListMedia(
+                            id = id,
+                            titleRomaji = romaji,
+                            titleEnglish = english,
+                            titleNative = native,
+                            coverImage = cover,
+                            bannerImage = banner,
+                            averageScore = avgScore,
+                            popularity = pop,
+                            description = desc,
+                            episodes = episodes,
+                            status = status,
+                            genres = genres.takeIf { it.isNotEmpty() },
+                            studio = studio?.takeIf { it.isNotEmpty() && it != "null" },
+                            releaseYear = releaseYear
+                        )
+                    )
+                }
+                results
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchTrendingDonghua error", e)
+            emptyList()
         }
     }
 }

@@ -2,6 +2,7 @@ package com.mydonghua.app.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,17 +22,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.AlarmScheduler
+import com.mydonghua.app.data.service.AniListMedia
+import com.mydonghua.app.data.service.AniListService
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
+import com.mydonghua.app.ui.common.ColorOSDialog
 import com.mydonghua.app.ui.common.ColorOSPillButton
+import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
@@ -72,6 +78,10 @@ fun AddEditShowScreen(
     var collectionId by remember { mutableStateOf("") }
     var aniListId by remember { mutableStateOf("") }
     var isAutoFilling by remember { mutableStateOf(false) }
+    var showAniListSearchDialog by remember { mutableStateOf(false) }
+    var aniListSearchQuery by remember { mutableStateOf("") }
+    var isSearchingAniList by remember { mutableStateOf(false) }
+    var aniListSearchResults by remember { mutableStateOf<List<AniListMedia>>(emptyList()) }
 
     LaunchedEffect(editingShow) {
         editingShow?.let { show ->
@@ -122,7 +132,7 @@ fun AddEditShowScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom,
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         OutlinedTextField(
@@ -136,48 +146,29 @@ fun AddEditShowScreen(
 
                         FilledTonalButton(
                             onClick = {
-                                if (title.isBlank()) {
-                                    Toast.makeText(context, "Enter title first", Toast.LENGTH_SHORT).show()
-                                    return@FilledTonalButton
-                                }
-                                isAutoFilling = true
-                                coroutineScope.launch {
-                                    var result = PosterFetchService.fetchFromAniList(title)
-                                    if (result == null) {
-                                        result = PosterFetchService.fetchFromJikan(title)
+                                aniListSearchQuery = title.trim()
+                                showAniListSearchDialog = true
+                                if (aniListSearchQuery.isNotBlank()) {
+                                    isSearchingAniList = true
+                                    coroutineScope.launch {
+                                        aniListSearchResults = AniListService.searchAnime(aniListSearchQuery, limit = 12)
+                                        isSearchingAniList = false
                                     }
-                                    if (result != null) {
-                                        titleZh = result.titleZh ?: titleZh
-                                        notes = result.synopsis ?: notes
-                                        poster = result.poster ?: poster
-                                        if (result.totalEp > 0) totalEp = result.totalEp.toString()
-                                        status = result.status ?: status
-                                        if (result.aniListId != null) aniListId = result.aniListId.toString()
-                                        Toast.makeText(context, "Details auto-filled!", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "No matching show found", Toast.LENGTH_SHORT).show()
-                                    }
-                                    isAutoFilling = false
                                 }
                             },
-                            enabled = !isAutoFilling,
                             shape = RoundedCornerShape(CornerRadius.md),
                             modifier = Modifier
                                 .height(56.dp)
                                 .colorOSPressBounce(pressedScale = 0.92f),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = Color(0xFF02A9FF),
+                                contentColor = Color.White
+                            ),
                             contentPadding = PaddingValues(horizontal = 14.dp)
                         ) {
-                            if (isAutoFilling) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            } else {
-                                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Auto-Fill", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            }
+                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("AniList", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -552,6 +543,165 @@ fun AddEditShowScreen(
             )
 
             Spacer(modifier = Modifier.height(Spacing.xxxl))
+        }
+
+        if (showAniListSearchDialog) {
+            ColorOSDialog(
+                onDismissRequest = { showAniListSearchDialog = false },
+                title = "Search AniList Media",
+                confirmText = "Close",
+                dismissText = null,
+                onConfirm = { showAniListSearchDialog = false },
+                customContent = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 420.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = aniListSearchQuery,
+                                onValueChange = { aniListSearchQuery = it },
+                                placeholder = { Text("Search donghua title...") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            ColorOSPillButton(
+                                text = "Search",
+                                onClick = {
+                                    if (aniListSearchQuery.isNotBlank()) {
+                                        isSearchingAniList = true
+                                        coroutineScope.launch {
+                                            aniListSearchResults = AniListService.searchAnime(aniListSearchQuery, limit = 12)
+                                            isSearchingAniList = false
+                                        }
+                                    }
+                                },
+                                height = 50.dp,
+                                containerColor = Color(0xFF02A9FF)
+                            )
+                        }
+
+                        if (isSearchingAniList) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(28.dp), color = Color(0xFF02A9FF))
+                            }
+                        } else if (aniListSearchResults.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (aniListSearchQuery.isBlank()) "Type a title and tap Search" else "No matching anime found",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                aniListSearchResults.forEach { media ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                                            .clickable {
+                                                title = media.preferredTitle
+                                                if (!media.titleNative.isNullOrBlank()) titleZh = media.titleNative
+                                                if (!media.coverImage.isNullOrBlank()) poster = media.coverImage
+                                                if (!media.description.isNullOrBlank()) notes = media.description
+                                                if (media.episodes > 0) totalEp = media.episodes.toString()
+                                                if (!media.status.isNullOrBlank()) {
+                                                    status = when (media.status.lowercase()) {
+                                                        "completed" -> "completed"
+                                                        "releasing" -> "ongoing"
+                                                        else -> "ongoing"
+                                                    }
+                                                }
+                                                if (!media.genres.isNullOrEmpty()) genres = media.genres.joinToString(", ")
+                                                if (!media.studio.isNullOrBlank()) studio = media.studio
+                                                if (media.releaseYear != null && media.releaseYear > 0) releaseYear = media.releaseYear.toString()
+                                                aniListId = media.id.toString()
+
+                                                showAniListSearchDialog = false
+                                                Toast.makeText(context, "Filled from ${media.preferredTitle}!", Toast.LENGTH_SHORT).show()
+                                            }
+                                            .padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        DonghuaPoster(
+                                            posterUrl = media.coverImage,
+                                            title = media.preferredTitle,
+                                            modifier = Modifier
+                                                .size(width = 46.dp, height = 64.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                        )
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = media.preferredTitle,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 13.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+
+                                            if (!media.titleNative.isNullOrBlank()) {
+                                                Text(
+                                                    text = media.titleNative,
+                                                    fontSize = 11.5.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.height(2.dp))
+
+                                            Text(
+                                                text = buildString {
+                                                    if (media.episodes > 0) append("${media.episodes} eps")
+                                                    if (media.releaseYear != null && media.releaseYear > 0) {
+                                                        if (isNotEmpty()) append(" • ")
+                                                        append(media.releaseYear)
+                                                    }
+                                                    if (!media.status.isNullOrBlank()) {
+                                                        if (isNotEmpty()) append(" • ")
+                                                        append(media.status.replaceFirstChar { it.uppercase() })
+                                                    }
+                                                },
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            )
         }
 
         GlassHeader(
