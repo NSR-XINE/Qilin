@@ -136,445 +136,12 @@ fun SettingsScreen(
         ) {
             Spacer(modifier = Modifier.height(2.dp))
 
-            // 1. THEME MODE SELECTION
+            // 1. ACCOUNT & CLOUD SYNC (ANILIST HERO)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "Appearance")
-                OxygenGlassGroup(isDark = isDark) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                    val themesList = listOf(
-                        Triple("light", "Light", Icons.Rounded.WbSunny to Pair(Color(0xFFF6F7F9), Color(0xFFFFFFFF))),
-                        Triple("dark", "Dark", Icons.Rounded.NightsStay to Pair(Color(0xFF0F141F), Color(0xFF1B2433))),
-                        Triple("amoled", "AMOLED", Icons.Rounded.Contrast to Pair(Color(0xFF000000), Color(0xFF0C0F17)))
-                    )
-                    themesList.forEach { (modeKey, modeTitle, modeData) ->
-                        val (modeIcon, colors) = modeData
-                        val (bgPreview, cardPreview) = colors
-                        val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
-
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isPressed by interactionSource.collectIsPressedAsState()
-                        val cardScale by animateFloatAsState(
-                            targetValue = if (isPressed) 0.94f else 1f,
-                            animationSpec = ColorOSMotion.TouchBounceSpring,
-                            label = "themeScale"
-                        )
-
-                        val cardBg = if (isSelected) {
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
-                        } else {
-                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
-                        }
-
-                        // ColorOS 17 Prismatic Aurora Specular Border
-                        val specularBorder = if (isSelected) {
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    Color(0xFF26C6DA),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
-                                )
-                            )
-                        } else {
-                            Brush.verticalGradient(
-                                listOf(
-                                    if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.08f),
-                                    if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.02f)
-                                )
-                            )
-                        }
-
-                        val themeShape = RoundedCornerShape(18.dp)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .graphicsLayer {
-                                    scaleX = cardScale
-                                    scaleY = cardScale
-                                }
-                                .clip(themeShape)
-                                .background(cardBg, themeShape)
-                                .border(if (isSelected) 1.75.dp else 0.8.dp, specularBorder, themeShape)
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null,
-                                    onClick = { viewModel.setThemeMode(modeKey) }
-                                )
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(10.dp)
-                            ) {
-                                // Live Mockup Box
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(58.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(bgPreview)
-                                        .border(
-                                            0.5.dp,
-                                            if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f),
-                                            RoundedCornerShape(12.dp)
-                                        )
-                                        .padding(6.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(7.dp)
-                                                .clip(RoundedCornerShape(3.dp))
-                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.80f))
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(16.dp)
-                                                .clip(RoundedCornerShape(3.dp))
-                                                .background(cardPreview)
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth(0.60f)
-                                                .height(7.dp)
-                                                .clip(RoundedCornerShape(2.dp))
-                                                .background(cardPreview.copy(alpha = 0.70f))
-                                        )
-                                    }
-
-                                    if (isSelected) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(20.dp)
-                                                .align(Alignment.Center)
-                                                .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.primary)
-                                                .border(1.5.dp, Color.White, CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Check,
-                                                contentDescription = "Selected",
-                                                tint = MaterialTheme.colorScheme.onPrimary,
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = modeIcon,
-                                        contentDescription = modeTitle,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = modeTitle,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            }
-
-            // 2. ACCENT COLOR PALETTE
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "Accent Color")
-                OxygenGlassGroup(isDark = isDark) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    // Material You Dynamic Card
-                    val isDynamicSelected = uiState.accentColor.equals("dynamic", ignoreCase = true)
-                    val dynamicInteraction = remember { MutableInteractionSource() }
-                    val isDynamicPressed by dynamicInteraction.collectIsPressedAsState()
-                    val dynamicScale by animateFloatAsState(
-                        targetValue = if (isDynamicPressed) 0.965f else 1f,
-                        animationSpec = ColorOSMotion.TouchBounceSpring,
-                        label = "dynamicScale"
-                    )
-
-                    val dynamicCardBg = if (isDynamicSelected) {
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
-                    } else {
-                        if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
-                    }
-
-                    val dynamicShape = RoundedCornerShape(18.dp)
-                    val dynamicBorderColor = if (isDynamicSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer {
-                                scaleX = dynamicScale
-                                scaleY = dynamicScale
-                            }
-                            .clip(dynamicShape)
-                            .background(dynamicCardBg, dynamicShape)
-                            .border(if (isDynamicSelected) 1.75.dp else 0.8.dp, dynamicBorderColor, dynamicShape)
-                            .clickable(
-                                interactionSource = dynamicInteraction,
-                                indication = null,
-                                onClick = { viewModel.setAccentColor("dynamic") }
-                            )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        Brush.sweepGradient(
-                                            listOf(
-                                                Color(0xFFFF3366),
-                                                Color(0xFFFF9933),
-                                                Color(0xFF33CC66),
-                                                Color(0xFF3399FF),
-                                                Color(0xFF9933FF),
-                                                Color(0xFFFF3366)
-                                            )
-                                        )
-                                    )
-                                    .border(1.dp, Color.White.copy(alpha = 0.40f), RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.AutoAwesome,
-                                    contentDescription = "Dynamic Material You",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(14.dp))
-
-                            Text(
-                                text = "Material You Dynamic",
-                                fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            if (isDynamicSelected) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(22.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Check,
-                                        contentDescription = "Selected",
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Liquid Gemstone Droplets
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val accentPresets = listOf(
-                            Triple("default", "Cyan", Pair(Color(0xFF00F2FE), Color(0xFF00B4D8))),
-                            Triple("purple", "Purple", Pair(Color(0xFF9D4EDD), Color(0xFF7B2CBF))),
-                            Triple("rose", "Rose", Pair(Color(0xFFFF2A5F), Color(0xFFD90429))),
-                            Triple("green", "Green", Pair(Color(0xFF3FB950), Color(0xFF2EA043))),
-                            Triple("orange", "Orange", Pair(Color(0xFFF0883E), Color(0xFFD97706))),
-                            Triple("blue", "Blue", Pair(Color(0xFF58A6FF), Color(0xFF2563EB))),
-                            Triple("teal", "Teal", Pair(Color(0xFF2DD4BF), Color(0xFF0D9488))),
-                            Triple("pink", "Pink", Pair(Color(0xFFF472B6), Color(0xFFBE185D))),
-                            Triple("red", "Red", Pair(Color(0xFFFF5252), Color(0xFFC62828))),
-                            Triple("amber", "Amber", Pair(Color(0xFFFFCA28), Color(0xFFFF8F00))),
-                            Triple("lime", "Lime", Pair(Color(0xFFBEF264), Color(0xFF84CC16))),
-                            Triple("emerald", "Emerald", Pair(Color(0xFF34D399), Color(0xFF059669))),
-                            Triple("indigo", "Indigo", Pair(Color(0xFF818CF8), Color(0xFF4F46E5))),
-                            Triple("violet", "Violet", Pair(Color(0xFFA78BFA), Color(0xFF7C3AED))),
-                            Triple("gold", "Gold", Pair(Color(0xFFFDE047), Color(0xFFEAB308))),
-                            Triple("sky", "Sky", Pair(Color(0xFF7DD3FC), Color(0xFF0284C7))),
-                            Triple("fuchsia", "Fuchsia", Pair(Color(0xFFF0ABFC), Color(0xFFC026D3))),
-                            Triple("coral", "Coral", Pair(Color(0xFFFF8A80), Color(0xFFF45454))),
-                            Triple("slate", "Slate", Pair(Color(0xFFCBD5E1), Color(0xFF64748B))),
-                            Triple("cocoa", "Cocoa", Pair(Color(0xFFD7CCC8), Color(0xFFA1887F)))
-                        )
-                        accentPresets.forEach { (accentKey, accentName, colorPair) ->
-                            val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
-                            OxygenDropletItem(
-                                accentName = accentName,
-                                colorPair = colorPair,
-                                isSelected = isSelected,
-                                isDark = isDark,
-                                onClick = { viewModel.setAccentColor(accentKey) }
-                            )
-                        }
-                    }
-                }
-            }
-            }
-
-            // 3. DASHBOARD DISPLAY PREFERENCES
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "Home Dashboard")
-                OxygenGlassGroup(isDark = isDark) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        OxygenTogglePreferenceItem(
-                            title = "Hero Countdown Banner",
-                            iconRes = R.drawable.ic_clock,
-                            iconGradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
-                            checked = uiState.showBanner,
-                            onCheckedChange = { viewModel.setShowBanner(it) }
-                        )
-                        HorizontalDivider(
-                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                        )
-                        OxygenTogglePreferenceItem(
-                            title = "Continue Watching Row",
-                            iconRes = R.drawable.ic_play,
-                            iconGradient = listOf(Color(0xFFFF7043), Color(0xFFFF8A65)),
-                            checked = uiState.showContinue,
-                            onCheckedChange = { viewModel.setShowContinue(it) }
-                        )
-                        HorizontalDivider(
-                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                        )
-                        OxygenTogglePreferenceItem(
-                            title = "Recently Updated Row",
-                            iconRes = R.drawable.ic_tv,
-                            iconGradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
-                            checked = uiState.showRecent,
-                            onCheckedChange = { viewModel.setShowRecent(it) }
-                        )
-                    }
-                }
-            }
-
-            // 4. SEARCH & STREAMING OPTIONS
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "Search & Streaming")
-                OxygenGlassGroup(isDark = isDark) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        OxygenTogglePreferenceItem(
-                            title = "Ad & Popup Blocker",
-                            subtitle = "Block invasive stream ads, redirects, and popups",
-                            iconVector = Icons.Rounded.Shield,
-                            iconGradient = listOf(Color(0xFF0082FB), Color(0xFF52A9FF)),
-                            checked = uiState.adBlockerEnabled,
-                            onCheckedChange = { viewModel.setAdBlockerEnabled(it) }
-                        )
-
-                        HorizontalDivider(
-                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                        )
-
-                        OxygenTogglePreferenceItem(
-                            title = "Auto-open Keyboard",
-                            iconVector = Icons.Rounded.Search,
-                            iconGradient = listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)),
-                            checked = uiState.autoOpenKeyboard,
-                            onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
-                        )
-
-                        HorizontalDivider(
-                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
-                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                        )
-
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Text(
-                                text = "Default Streaming Provider",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-
-                            val providers = listOf(
-                                Triple("donghuastream", "DonghuaStream", "donghuastream.org"),
-                                Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in"),
-                                Triple("direct", "Custom Saved URL", "Direct show URL")
-                            )
-
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                providers.forEach { (key, title, domain) ->
-                                    val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
-                                    val providerIcon: ImageVector = when (key) {
-                                        "donghuastream" -> Icons.Rounded.Tv
-                                        "luciferdonghua" -> Icons.Rounded.AutoAwesome
-                                        else -> Icons.Rounded.Link
-                                    }
-                                    val providerGradient = when (key) {
-                                        "donghuastream" -> listOf(Color(0xFF0288D1), Color(0xFF26C6DA))
-                                        "luciferdonghua" -> listOf(Color(0xFFF57C00), Color(0xFFFFB74D))
-                                        else -> listOf(Color(0xFF43A047), Color(0xFF66BB6A))
-                                    }
-
-                                    OxygenProviderItem(
-                                        key = key,
-                                        title = title,
-                                        domain = domain,
-                                        icon = providerIcon,
-                                        gradient = providerGradient,
-                                        isSelected = isSelected,
-                                        isDark = isDark,
-                                        onClick = { viewModel.setDefaultStreamProvider(key) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 5. ANILIST TRACKING & SYNC
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "AniList Tracking")
+                OxygenSectionHeader(
+                    title = "Account & Cloud Sync",
+                    subtitle = "AniList tracking & watch progression"
+                )
                 OxygenGlassGroup(isDark = isDark) {
                     Column(
                         modifier = Modifier
@@ -591,14 +158,14 @@ fun SettingsScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(46.dp)
+                                        .size(48.dp)
                                         .clip(RoundedCornerShape(14.dp))
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(Color(0xFF02A9FF), Color(0xFF0066CC))
                                             )
                                         )
-                                        .border(0.5.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                                        .border(0.75.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -611,13 +178,13 @@ fun SettingsScreen(
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "AniList Cloud Sync",
+                                        text = "AniList Cloud Account",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "2-Way Watch Tracking & Library Import",
+                                        text = "Not Connected",
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -625,24 +192,39 @@ fun SettingsScreen(
                             }
 
                             Text(
-                                text = "Connect your AniList account to automatically sync episode progression across devices and import your entire donghua library in seconds.",
+                                text = "Connect your AniList account to auto-track watched episodes, 2-way sync your watch progression, and import your library across all devices.",
                                 fontSize = 12.5.sp,
                                 lineHeight = 18.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
-                            ColorOSPillButton(
-                                text = "Connect AniList Account",
-                                onClick = {
-                                    aniListConnectError = null
-                                    tokenInput = ""
-                                    showAniListConnectDialog = true
-                                },
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                height = 46.dp,
-                                containerColor = Color(0xFF02A9FF),
-                                contentColor = Color.White
-                            )
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                ColorOSPillButton(
+                                    text = "Log In with AniList",
+                                    onClick = {
+                                        showAniListWebView = true
+                                    },
+                                    modifier = Modifier.weight(1.3f),
+                                    height = 44.dp,
+                                    containerColor = Color(0xFF02A9FF),
+                                    contentColor = Color.White
+                                )
+
+                                ColorOSOutlinedButton(
+                                    text = "Manual Token",
+                                    onClick = {
+                                        aniListConnectError = null
+                                        tokenInput = ""
+                                        showAniListConnectDialog = true
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    height = 44.dp,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         } else {
                             // Connected State
                             val user = aniListUser!!
@@ -939,9 +521,458 @@ fun SettingsScreen(
                 }
             }
 
-            // 6. DATA BACKUPS & STORAGE
+            // 2. PERSONALIZATION (THEME & ACCENT)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "Backup & Restore")
+                OxygenSectionHeader(
+                    title = "Personalization",
+                    subtitle = "Theme mode and accent color styling"
+                )
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                    val themesList = listOf(
+                        Triple("light", "Light", Icons.Rounded.WbSunny to Pair(Color(0xFFF6F7F9), Color(0xFFFFFFFF))),
+                        Triple("dark", "Dark", Icons.Rounded.NightsStay to Pair(Color(0xFF0F141F), Color(0xFF1B2433))),
+                        Triple("amoled", "AMOLED", Icons.Rounded.Contrast to Pair(Color(0xFF000000), Color(0xFF0C0F17)))
+                    )
+                    themesList.forEach { (modeKey, modeTitle, modeData) ->
+                        val (modeIcon, colors) = modeData
+                        val (bgPreview, cardPreview) = colors
+                        val isSelected = uiState.themeMode.equals(modeKey, ignoreCase = true)
+
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val cardScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.94f else 1f,
+                            animationSpec = ColorOSMotion.TouchBounceSpring,
+                            label = "themeScale"
+                        )
+
+                        val cardBg = if (isSelected) {
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
+                        } else {
+                            if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
+                        }
+
+                        // ColorOS 17 Prismatic Aurora Specular Border
+                        val specularBorder = if (isSelected) {
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    Color(0xFF26C6DA),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
+                                )
+                            )
+                        } else {
+                            Brush.verticalGradient(
+                                listOf(
+                                    if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.08f),
+                                    if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.02f)
+                                )
+                            )
+                        }
+
+                        val themeShape = RoundedCornerShape(18.dp)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .graphicsLayer {
+                                    scaleX = cardScale
+                                    scaleY = cardScale
+                                }
+                                .clip(themeShape)
+                                .background(cardBg, themeShape)
+                                .border(if (isSelected) 1.75.dp else 0.8.dp, specularBorder, themeShape)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                    onClick = { viewModel.setThemeMode(modeKey) }
+                                )
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                            ) {
+                                // Live Mockup Box
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(58.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(bgPreview)
+                                        .border(
+                                            0.5.dp,
+                                            if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f),
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                        .padding(6.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(7.dp)
+                                                .clip(RoundedCornerShape(3.dp))
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.80f))
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(16.dp)
+                                                .clip(RoundedCornerShape(3.dp))
+                                                .background(cardPreview)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.60f)
+                                                .height(7.dp)
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(cardPreview.copy(alpha = 0.70f))
+                                        )
+                                    }
+
+                                    if (isSelected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .align(Alignment.Center)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary)
+                                                .border(1.5.dp, Color.White, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Check,
+                                                contentDescription = "Selected",
+                                                tint = MaterialTheme.colorScheme.onPrimary,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = modeIcon,
+                                        contentDescription = modeTitle,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = modeTitle,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(
+                    color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                )
+
+                // Material You Dynamic Card
+                    val isDynamicSelected = uiState.accentColor.equals("dynamic", ignoreCase = true)
+                    val dynamicInteraction = remember { MutableInteractionSource() }
+                    val isDynamicPressed by dynamicInteraction.collectIsPressedAsState()
+                    val dynamicScale by animateFloatAsState(
+                        targetValue = if (isDynamicPressed) 0.965f else 1f,
+                        animationSpec = ColorOSMotion.TouchBounceSpring,
+                        label = "dynamicScale"
+                    )
+
+                    val dynamicCardBg = if (isDynamicSelected) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.45f)
+                    } else {
+                        if (isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.03f)
+                    }
+
+                    val dynamicShape = RoundedCornerShape(18.dp)
+                    val dynamicBorderColor = if (isDynamicSelected) MaterialTheme.colorScheme.primary else (if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer {
+                                scaleX = dynamicScale
+                                scaleY = dynamicScale
+                            }
+                            .clip(dynamicShape)
+                            .background(dynamicCardBg, dynamicShape)
+                            .border(if (isDynamicSelected) 1.75.dp else 0.8.dp, dynamicBorderColor, dynamicShape)
+                            .clickable(
+                                interactionSource = dynamicInteraction,
+                                indication = null,
+                                onClick = { viewModel.setAccentColor("dynamic") }
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        Brush.sweepGradient(
+                                            listOf(
+                                                Color(0xFFFF3366),
+                                                Color(0xFFFF9933),
+                                                Color(0xFF33CC66),
+                                                Color(0xFF3399FF),
+                                                Color(0xFF9933FF),
+                                                Color(0xFFFF3366)
+                                            )
+                                        )
+                                    )
+                                    .border(1.dp, Color.White.copy(alpha = 0.40f), RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.AutoAwesome,
+                                    contentDescription = "Dynamic Material You",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Text(
+                                text = "Material You Dynamic",
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            if (isDynamicSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Liquid Gemstone Droplets
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val accentPresets = listOf(
+                            Triple("default", "Cyan", Pair(Color(0xFF00F2FE), Color(0xFF00B4D8))),
+                            Triple("purple", "Purple", Pair(Color(0xFF9D4EDD), Color(0xFF7B2CBF))),
+                            Triple("rose", "Rose", Pair(Color(0xFFFF2A5F), Color(0xFFD90429))),
+                            Triple("green", "Green", Pair(Color(0xFF3FB950), Color(0xFF2EA043))),
+                            Triple("orange", "Orange", Pair(Color(0xFFF0883E), Color(0xFFD97706))),
+                            Triple("blue", "Blue", Pair(Color(0xFF58A6FF), Color(0xFF2563EB))),
+                            Triple("teal", "Teal", Pair(Color(0xFF2DD4BF), Color(0xFF0D9488))),
+                            Triple("pink", "Pink", Pair(Color(0xFFF472B6), Color(0xFFBE185D))),
+                            Triple("red", "Red", Pair(Color(0xFFFF5252), Color(0xFFC62828))),
+                            Triple("amber", "Amber", Pair(Color(0xFFFFCA28), Color(0xFFFF8F00))),
+                            Triple("lime", "Lime", Pair(Color(0xFFBEF264), Color(0xFF84CC16))),
+                            Triple("emerald", "Emerald", Pair(Color(0xFF34D399), Color(0xFF059669))),
+                            Triple("indigo", "Indigo", Pair(Color(0xFF818CF8), Color(0xFF4F46E5))),
+                            Triple("violet", "Violet", Pair(Color(0xFFA78BFA), Color(0xFF7C3AED))),
+                            Triple("gold", "Gold", Pair(Color(0xFFFDE047), Color(0xFFEAB308))),
+                            Triple("sky", "Sky", Pair(Color(0xFF7DD3FC), Color(0xFF0284C7))),
+                            Triple("fuchsia", "Fuchsia", Pair(Color(0xFFF0ABFC), Color(0xFFC026D3))),
+                            Triple("coral", "Coral", Pair(Color(0xFFFF8A80), Color(0xFFF45454))),
+                            Triple("slate", "Slate", Pair(Color(0xFFCBD5E1), Color(0xFF64748B))),
+                            Triple("cocoa", "Cocoa", Pair(Color(0xFFD7CCC8), Color(0xFFA1887F)))
+                        )
+                        accentPresets.forEach { (accentKey, accentName, colorPair) ->
+                            val isSelected = uiState.accentColor.equals(accentKey, ignoreCase = true)
+                            OxygenDropletItem(
+                                accentName = accentName,
+                                colorPair = colorPair,
+                                isSelected = isSelected,
+                                isDark = isDark,
+                                onClick = { viewModel.setAccentColor(accentKey) }
+                            )
+                        }
+                    }
+                }
+            }
+            }
+
+            // 3. HOME DASHBOARD
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(
+                    title = "Home Dashboard",
+                    subtitle = "Feeds and carousel banners on home screen"
+                )
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OxygenTogglePreferenceItem(
+                            title = "Hero Countdown Banner",
+                            subtitle = "Live release countdown timer on home screen",
+                            iconRes = R.drawable.ic_clock,
+                            iconGradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
+                            checked = uiState.showBanner,
+                            onCheckedChange = { viewModel.setShowBanner(it) }
+                        )
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+                        OxygenTogglePreferenceItem(
+                            title = "Continue Watching Row",
+                            subtitle = "Quick horizontal resume carousel of your in-progress series",
+                            iconRes = R.drawable.ic_play,
+                            iconGradient = listOf(Color(0xFFFF7043), Color(0xFFFF8A65)),
+                            checked = uiState.showContinue,
+                            onCheckedChange = { viewModel.setShowContinue(it) }
+                        )
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+                        OxygenTogglePreferenceItem(
+                            title = "Recently Updated Row",
+                            subtitle = "Latest releases and status updates feed",
+                            iconRes = R.drawable.ic_tv,
+                            iconGradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
+                            checked = uiState.showRecent,
+                            onCheckedChange = { viewModel.setShowRecent(it) }
+                        )
+                    }
+                }
+            }
+
+            // 4. STREAMING & SEARCH
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(
+                    title = "Streaming & Search",
+                    subtitle = "Player sources, ad blocker, and search behavior"
+                )
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OxygenTogglePreferenceItem(
+                            title = "Ad & Popup Blocker",
+                            subtitle = "Block invasive stream ads, redirects, and popups",
+                            iconVector = Icons.Rounded.Shield,
+                            iconGradient = listOf(Color(0xFF0082FB), Color(0xFF52A9FF)),
+                            checked = uiState.adBlockerEnabled,
+                            onCheckedChange = { viewModel.setAdBlockerEnabled(it) }
+                        )
+
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+
+                        OxygenTogglePreferenceItem(
+                            title = "Auto-open Keyboard",
+                            subtitle = "Automatically focus search field when opening Search screen",
+                            iconVector = Icons.Rounded.Search,
+                            iconGradient = listOf(Color(0xFF7B1FA2), Color(0xFFAB47BC)),
+                            checked = uiState.autoOpenKeyboard,
+                            onCheckedChange = { viewModel.setAutoOpenKeyboard(it) }
+                        )
+
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "Default Streaming Provider",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            val providers = listOf(
+                                Triple("donghuastream", "DonghuaStream", "donghuastream.org"),
+                                Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in"),
+                                Triple("direct", "Custom Saved URL", "Direct show URL")
+                            )
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                providers.forEach { (key, title, domain) ->
+                                    val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
+                                    val providerIcon: ImageVector = when (key) {
+                                        "donghuastream" -> Icons.Rounded.Tv
+                                        "luciferdonghua" -> Icons.Rounded.AutoAwesome
+                                        else -> Icons.Rounded.Link
+                                    }
+                                    val providerGradient = when (key) {
+                                        "donghuastream" -> listOf(Color(0xFF0288D1), Color(0xFF26C6DA))
+                                        "luciferdonghua" -> listOf(Color(0xFFF57C00), Color(0xFFFFB74D))
+                                        else -> listOf(Color(0xFF43A047), Color(0xFF66BB6A))
+                                    }
+
+                                    OxygenProviderItem(
+                                        key = key,
+                                        title = title,
+                                        domain = domain,
+                                        icon = providerIcon,
+                                        gradient = providerGradient,
+                                        isSelected = isSelected,
+                                        isDark = isDark,
+                                        onClick = { viewModel.setDefaultStreamProvider(key) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 5. DATA BACKUPS & STORAGE
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(
+                    title = "Data & Storage",
+                    subtitle = "Offline backups and export tools"
+                )
                 OxygenGlassGroup(isDark = isDark) {
                     Column(
                         modifier = Modifier
@@ -1055,7 +1086,10 @@ fun SettingsScreen(
 
             // 6. ABOUT MY DONGHUA
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OxygenSectionHeader(title = "About")
+                OxygenSectionHeader(
+                    title = "About",
+                    subtitle = "App info and source repository"
+                )
                 OxygenGlassGroup(isDark = isDark) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
@@ -1354,28 +1388,41 @@ fun SettingsScreen(
 @Composable
 private fun OxygenSectionHeader(
     title: String,
+    subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(width = 3.5.dp, height = 13.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-        )
-        Text(
-            text = title,
-            fontSize = 12.5.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            letterSpacing = 0.6.sp
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 3.5.dp, height = 13.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+            Text(
+                text = title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 0.5.sp
+            )
+        }
+        if (!subtitle.isNullOrBlank()) {
+            Text(
+                text = subtitle,
+                fontSize = 11.5.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                modifier = Modifier.padding(start = 12.dp)
+            )
+        }
     }
 }
 

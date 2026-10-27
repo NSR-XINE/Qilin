@@ -49,6 +49,12 @@ import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
 
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.border
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
+import com.mydonghua.app.data.service.AniListService
 
 @Composable
 fun GlassHeader(
@@ -56,12 +62,16 @@ fun GlassHeader(
     backdrop: Backdrop = LocalHeaderBackdrop.current ?: LocalLayerBackdrop.current ?: rememberLayerBackdrop(),
     isDark: Boolean = MaterialTheme.colorScheme.background.luminance() <= 0.5f,
     subtitle: String? = null,
+    avatarUrl: String? = null,
     onDrawerOpen: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
     onEditClick: (() -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val aniListUser by AniListService.userFlow.collectAsState()
+    val effectiveAvatarUrl = avatarUrl ?: aniListUser?.avatarUrl
+
     val contentColor = if (isDark) Color.White else Color(0xFF1E1E1E)
     val menuBtnBg = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.06f)
 
@@ -271,20 +281,55 @@ fun GlassHeader(
                 }
 
                 if (onDrawerOpen != null) {
+                    val hasAvatar = !effectiveAvatarUrl.isNullOrBlank()
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(menuBtnBg)
+                            .then(
+                                if (hasAvatar) {
+                                    Modifier.border(
+                                        1.5.dp,
+                                        Color(0xFF02A9FF).copy(alpha = 0.85f),
+                                        CircleShape
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            )
                             .colorOSPressBounce(pressedScale = 0.90f, onClick = onDrawerOpen),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_menu),
-                            contentDescription = "Menu",
-                            tint = contentColor,
-                            modifier = Modifier.size(IconSize.md)
-                        )
+                        if (hasAvatar) {
+                            SubcomposeAsyncImage(
+                                model = effectiveAvatarUrl,
+                                contentDescription = "AniList Profile",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            ) {
+                                val state = painter.state
+                                if (state is AsyncImagePainter.State.Success) {
+                                    SubcomposeAsyncImageContent()
+                                } else {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_menu),
+                                        contentDescription = "Menu",
+                                        tint = contentColor,
+                                        modifier = Modifier.size(IconSize.md)
+                                    )
+                                }
+                            }
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_menu),
+                                contentDescription = "Menu",
+                                tint = contentColor,
+                                modifier = Modifier.size(IconSize.md)
+                            )
+                        }
                     }
                 }
 
