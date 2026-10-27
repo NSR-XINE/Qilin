@@ -18,6 +18,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
@@ -50,7 +51,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -73,6 +79,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.home.HomeScreen
 import com.mydonghua.app.ui.screens.*
 import com.mydonghua.app.ui.common.ColorOSDialog
+import com.mydonghua.app.ui.common.AppLoadingScreen
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -94,12 +101,34 @@ class MainActivity : ComponentActivity() {
             val state by homeViewModel.uiState.collectAsState()
             val settingsState by settingsViewModel.uiState.collectAsState()
             val allShows by showsViewModel.allShows.collectAsState()
+            val showsLoading by showsViewModel.isLoading.collectAsState()
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
             var showExitDialog by remember { mutableStateOf(false) }
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
+            var isAppLoading by remember { mutableStateOf(true) }
+
+            LaunchedEffect(Unit) {
+                val startTime = System.currentTimeMillis()
+                val readyFlow = combine(
+                    homeViewModel.uiState,
+                    showsViewModel.isLoading
+                ) { home, sLoading ->
+                    !home.isLoading && !sLoading
+                }
+                withTimeoutOrNull(2500L) {
+                    readyFlow.filter { it }.first()
+                }
+                val elapsed = System.currentTimeMillis() - startTime
+                val minDisplayTime = 800L
+                if (elapsed < minDisplayTime) {
+                    delay(minDisplayTime - elapsed)
+                }
+                isAppLoading = false
+            }
+
             val showGlobalHeader = currentRoute in listOf("home", "airing", "complete", "stopped", "favorites")
             val navBackdrop = rememberLayerBackdrop()
             val contentBackdrop = rememberLayerBackdrop()
@@ -127,7 +156,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            androidx.activity.compose.BackHandler(enabled = !isSearchOpen) {
+            androidx.activity.compose.BackHandler(enabled = !isSearchOpen && !isAppLoading) {
                 when {
                     isDrawerOpen -> isDrawerOpen = false
                     currentRoute != "home" -> navController.popBackStack("home", inclusive = false)
@@ -722,6 +751,25 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
+
+            AnimatedVisibility(
+                visible = isAppLoading,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(9999f),
+                enter = EnterTransition.None,
+                exit = fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = ColorOSMotion.EmphasizedAccelerate
+                    )
+                )
+            ) {
+                AppLoadingScreen(
+                    isDark = settingsState.themeMode.lowercase() != "light",
+                    isAmoled = settingsState.themeMode.lowercase() == "amoled"
+                )
             }
         }
     }
