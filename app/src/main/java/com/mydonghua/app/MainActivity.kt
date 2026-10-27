@@ -432,7 +432,6 @@ class MainActivity : ComponentActivity() {
                                 ShowDetailScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
-                                topPadding = innerPadding.calculateTopPadding(),
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
                                 onWatchClick = launchWatch,
                                 onEditClick = { show ->

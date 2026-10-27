@@ -142,7 +142,7 @@ fun ShowDetailScreen(
         }
         val detailSubtitle = "$statusText • EP ${show.currentEp}${if (show.totalEp > 0) "/${show.totalEp}" else ""}"
         val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        val headerTopPadding = if (topPadding > 0.dp) topPadding + Spacing.sm else statusBarTop + 84.dp
+        val headerTopPadding = statusBarTop + 84.dp
 
         // Scrollable Body Content
         Column(
@@ -714,7 +714,7 @@ fun ShowDetailScreen(
 private fun DetailCountdownBox(value: Long, label: String, isLight: Boolean = false) {
     val shape = RoundedCornerShape(16.dp)
     val boxBg = if (isLight) Color(0xFFE8EEF5).copy(alpha = 0.90f) else Color(0xFF1E2638).copy(alpha = 0.45f)
-    val numColor = if (isLight) Color(0xFF141824) else Color.White
+    val numColor = if (isLight) Color.Black else Color.White
     Box(
         modifier = Modifier
             .width(56.dp)

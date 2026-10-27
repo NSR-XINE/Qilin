@@ -544,7 +544,7 @@ private fun CompactTimerPill(
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = JustSansFamily,
-                color = Color.White,
+                color = if (isLight) Color.Black else Color.White,
                 lineHeight = 15.sp
             )
             Text(
