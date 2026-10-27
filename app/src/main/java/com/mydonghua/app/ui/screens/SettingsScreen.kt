@@ -239,8 +239,7 @@ fun SettingsScreen(
                                         contentDescription = "Avatar",
                                         modifier = Modifier
                                             .size(50.dp)
-                                            .clip(CircleShape)
-                                            .border(1.5.dp, Color(0xFF02A9FF).copy(alpha = 0.8f), CircleShape),
+                                            .clip(CircleShape),
                                         contentScale = ContentScale.Crop
                                     ) {
                                         val state = painter.state

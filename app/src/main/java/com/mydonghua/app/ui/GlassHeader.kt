@@ -287,17 +287,6 @@ fun GlassHeader(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(menuBtnBg)
-                            .then(
-                                if (hasAvatar) {
-                                    Modifier.border(
-                                        1.5.dp,
-                                        Color(0xFF02A9FF).copy(alpha = 0.85f),
-                                        CircleShape
-                                    )
-                                } else {
-                                    Modifier
-                                }
-                            )
                             .colorOSPressBounce(pressedScale = 0.90f, onClick = onDrawerOpen),
                         contentAlignment = Alignment.Center
                     ) {

@@ -675,8 +675,7 @@ class MainActivity : ComponentActivity() {
                                             contentDescription = "Avatar",
                                             modifier = Modifier
                                                 .size(44.dp)
-                                                .clip(CircleShape)
-                                                .border(1.5.dp, Color(0xFF02A9FF), CircleShape),
+                                                .clip(CircleShape),
                                             contentScale = ContentScale.Crop
                                         ) {
                                             if (painter.state is AsyncImagePainter.State.Success) {
