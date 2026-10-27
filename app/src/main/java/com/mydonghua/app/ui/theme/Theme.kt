@@ -29,30 +29,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
 
-val JustSansFamily = FontFamily(
-    Font(R.font.just_sans_regular, FontWeight.Normal),
-    Font(R.font.just_sans_regular, FontWeight.Medium),
-    Font(R.font.just_sans_exbold, FontWeight.SemiBold),
-    Font(R.font.just_sans_exbold, FontWeight.Bold),
-    Font(R.font.just_sans_exbold, FontWeight.ExtraBold)
+val OnePlusSansFamily = FontFamily(
+    Font(R.font.oneplus_sans_regular, FontWeight.Normal),
+    Font(R.font.oneplus_sans_medium, FontWeight.Medium),
+    Font(R.font.oneplus_sans_semibold, FontWeight.SemiBold),
+    Font(R.font.oneplus_sans_bold, FontWeight.Bold),
+    Font(R.font.oneplus_sans_exbold, FontWeight.ExtraBold)
 )
 
+// Primary typography family for ColorOS / OxygenOS experience
+val JustSansFamily = OnePlusSansFamily
+
 val AppTypography = Typography(
-    displayLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 52.sp, lineHeight = 60.sp, letterSpacing = (-0.5).sp),
-    displayMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 42.sp, lineHeight = 48.sp, letterSpacing = (-0.4).sp),
-    displaySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.3).sp),
-    headlineLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.2).sp),
-    headlineMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.2).sp),
-    headlineSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.1).sp),
-    titleLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 26.sp, letterSpacing = 0.sp),
-    titleMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 22.sp, letterSpacing = 0.1.sp),
-    titleSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    bodyLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp, letterSpacing = 0.15.sp),
-    bodyMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 19.sp, letterSpacing = 0.15.sp),
-    bodySmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.2.sp),
-    labelLarge = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, lineHeight = 18.sp, letterSpacing = 0.2.sp),
-    labelMedium = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 11.5.sp, lineHeight = 16.sp, letterSpacing = 0.3.sp),
-    labelSmall = TextStyle(fontFamily = JustSansFamily, fontWeight = FontWeight.Medium, fontSize = 10.5.sp, lineHeight = 14.sp, letterSpacing = 0.4.sp)
+    displayLarge = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Bold, fontSize = 52.sp, lineHeight = 60.sp, letterSpacing = (-0.5).sp),
+    displayMedium = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Bold, fontSize = 42.sp, lineHeight = 48.sp, letterSpacing = (-0.4).sp),
+    displaySmall = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.3).sp),
+    headlineLarge = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.2).sp),
+    headlineMedium = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.2).sp),
+    headlineSmall = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.1).sp),
+    titleLarge = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 26.sp, letterSpacing = 0.sp),
+    titleMedium = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 22.sp, letterSpacing = 0.1.sp),
+    titleSmall = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = 0.1.sp),
+    bodyLarge = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp, letterSpacing = 0.15.sp),
+    bodyMedium = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 19.sp, letterSpacing = 0.15.sp),
+    bodySmall = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.2.sp),
+    labelLarge = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp, lineHeight = 18.sp, letterSpacing = 0.2.sp),
+    labelMedium = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Medium, fontSize = 11.5.sp, lineHeight = 16.sp, letterSpacing = 0.3.sp),
+    labelSmall = TextStyle(fontFamily = OnePlusSansFamily, fontWeight = FontWeight.Medium, fontSize = 10.5.sp, lineHeight = 14.sp, letterSpacing = 0.4.sp)
 )
 
 val AppShapes = Shapes(
