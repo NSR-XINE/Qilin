@@ -92,7 +92,7 @@ fun AppLoadingScreen(
     var stepIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(1400)
+            delay(800)
             stepIndex = (stepIndex + 1) % loadingSteps.size
         }
     }

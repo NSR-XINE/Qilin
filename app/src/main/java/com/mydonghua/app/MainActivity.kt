@@ -118,11 +118,11 @@ class MainActivity : ComponentActivity() {
                 ) { home, sLoading ->
                     !home.isLoading && !sLoading
                 }
-                withTimeoutOrNull(2500L) {
+                withTimeoutOrNull(4500L) {
                     readyFlow.filter { it }.first()
                 }
                 val elapsed = System.currentTimeMillis() - startTime
-                val minDisplayTime = 800L
+                val minDisplayTime = 2600L
                 if (elapsed < minDisplayTime) {
                     delay(minDisplayTime - elapsed)
                 }
@@ -760,7 +760,7 @@ class MainActivity : ComponentActivity() {
                 enter = EnterTransition.None,
                 exit = fadeOut(
                     animationSpec = tween(
-                        durationMillis = 400,
+                        durationMillis = 600,
                         easing = ColorOSMotion.EmphasizedAccelerate
                     )
                 )
