@@ -524,6 +524,11 @@ fun AddEditShowScreen(
                     }
 
                     viewModel.insertOrUpdateShow(show)
+                    if (show.aniListId != null && show.currentEp > 0) {
+                        coroutineScope.launch {
+                            AniListService.syncEpisodeProgress(show, show.currentEp)
+                        }
+                    }
                     Toast.makeText(context, "Saved successfully!", Toast.LENGTH_SHORT).show()
                     onNavigateBack()
                 },

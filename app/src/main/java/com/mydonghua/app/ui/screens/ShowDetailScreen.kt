@@ -920,6 +920,7 @@ fun ShowDetailScreen(
                         coroutineScope.launch {
                             val res = AniListService.updateMediaScoreAndStatus(token, show.aniListId!!, score, null)
                             if (res.isSuccess) {
+                                viewModel.insertOrUpdateShow(show.copy(rating = score.toInt()))
                                 Toast.makeText(context, "Score submitted to AniList: $score ★", Toast.LENGTH_SHORT).show()
                                 val ref = AniListService.fetchMediaDetails(show.aniListId!!)
                                 if (ref.isSuccess) aniListDetail = ref.getOrNull()

@@ -200,41 +200,72 @@ fun ShowCard(
                         .background(brush = posterOverlayBrush)
                 )
 
-                // Top-Left: Status Capsule with Glowing Dot (50% Capsule Pill)
-                Box(
+                // Top-Left: Status Capsule with Glowing Dot + Optional AniList Indicator
+                Row(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(12.dp)
-                        .clip(RoundedCornerShape(percent = 50))
-                        .background(Color.Black.copy(alpha = 0.45f))
-                        .border(
-                            width = 0.75.dp,
-                            brush = Brush.verticalGradient(
-                                listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.06f))
-                            ),
-                            shape = RoundedCornerShape(percent = 50)
-                        )
-                        .padding(horizontal = 10.dp, vertical = 4.5.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(Color.Black.copy(alpha = 0.45f))
+                            .border(
+                                width = 0.75.dp,
+                                brush = Brush.verticalGradient(
+                                    listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.06f))
+                                ),
+                                shape = RoundedCornerShape(percent = 50)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 4.5.dp),
+                        contentAlignment = Alignment.Center
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(statusDotColor)
+                            )
+                            Text(
+                                text = statusText,
+                                fontSize = 10.sp,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                letterSpacing = 0.6.sp
+                            )
+                        }
+                    }
+
+                    if (show.aniListId != null) {
                         Box(
                             modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(statusDotColor)
-                        )
-                        Text(
-                            text = statusText,
-                            fontSize = 10.sp,
-                            fontFamily = JustSansFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            letterSpacing = 0.6.sp
-                        )
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(Color(0xFF02A9FF).copy(alpha = 0.85f))
+                                .border(
+                                    width = 0.75.dp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(Color.White.copy(alpha = 0.35f), Color.White.copy(alpha = 0.10f))
+                                    ),
+                                    shape = RoundedCornerShape(percent = 50)
+                                )
+                                .padding(horizontal = 7.dp, vertical = 4.5.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "AL",
+                                fontSize = 9.5.sp,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
