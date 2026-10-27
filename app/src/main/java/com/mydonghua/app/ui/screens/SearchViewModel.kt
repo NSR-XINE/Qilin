@@ -145,7 +145,7 @@ class SearchViewModel @Inject constructor(
             val addedTitles = mutableSetOf<String>()
             val localTitles = allShows.value.map { it.title.lowercase().trim() }
 
-            fun addResult(title: String, titleZh: String?, status: String?, totalEp: Int, poster: String?, synopsis: String?, source: String) {
+            fun addResult(title: String, titleZh: String?, status: String?, totalEp: Int, poster: String?, synopsis: String?, source: String, aniListId: Int? = null) {
                 val key = title.lowercase().trim()
                 if (localTitles.contains(key) || addedTitles.contains(key)) return
                 if (titleZh != null && localTitles.contains(titleZh.lowercase().trim())) return
@@ -162,7 +162,8 @@ class SearchViewModel @Inject constructor(
                         notes = synopsis,
                         genres = null,
                         studio = null,
-                        releaseYear = 0
+                        releaseYear = 0,
+                        aniListId = aniListId
                     )
                 )
             }
@@ -171,7 +172,7 @@ class SearchViewModel @Inject constructor(
                 addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "kitsu")
             }
             aniListResults.forEach { r ->
-                addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "anilist")
+                addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "anilist", r.id)
             }
             malResults.forEach { r ->
                 addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "mal")

@@ -13,4 +13,13 @@ object SettingsKeys {
     const val SEARCH_FREQUENCY = "search_frequency"
     const val PREFS_MIGRATED = "prefs_migrated"
     const val STORAGE_PERMISSION_PROMPTED = "storage_permission_prompted"
+
+    // AniList Integration
+    const val ANILIST_TOKEN = "anilist_token"
+    const val ANILIST_USER_ID = "anilist_user_id"
+    const val ANILIST_USERNAME = "anilist_username"
+    const val ANILIST_AVATAR = "anilist_avatar"
+    const val ANILIST_EPISODES_WATCHED = "anilist_episodes_watched"
+    const val ANILIST_ANIME_COUNT = "anilist_anime_count"
+    const val ANILIST_AUTO_SYNC = "anilist_auto_sync"
 }

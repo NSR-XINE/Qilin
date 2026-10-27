@@ -1,5 +1,6 @@
 package com.mydonghua.app.ui.screens
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -37,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.R
@@ -45,6 +48,7 @@ import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.common.ColorOSSwitch
 import com.mydonghua.app.ui.common.ColorOSPillButton
 import com.mydonghua.app.ui.common.ColorOSOutlinedButton
+import com.mydonghua.app.ui.common.ColorOSDialog
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
@@ -61,6 +65,16 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
+    val aniListUser by viewModel.aniListUser.collectAsState()
+    val aniListAutoSync by viewModel.aniListAutoSync.collectAsState()
+    val isImportingAniList by viewModel.isImportingAniList.collectAsState()
+
+    var showAniListConnectDialog by remember { mutableStateOf(false) }
+    var showDisconnectConfirmDialog by remember { mutableStateOf(false) }
+    var tokenInput by remember { mutableStateOf("") }
+    var isConnectingAniList by remember { mutableStateOf(false) }
+    var aniListConnectError by remember { mutableStateOf<String?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -548,7 +562,252 @@ fun SettingsScreen(
                 }
             }
 
-            // 5. DATA BACKUPS & STORAGE
+            // 5. ANILIST TRACKING & SYNC
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "AniList Tracking")
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        if (aniListUser == null) {
+                            // Disconnected State
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(46.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(Color(0xFF02A9FF), Color(0xFF0066CC))
+                                            )
+                                        )
+                                        .border(0.5.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "AL",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 18.sp
+                                    )
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "AniList Cloud Sync",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "2-Way Watch Tracking & Library Import",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "Connect your AniList account to automatically sync episode progression across devices and import your entire donghua library in seconds.",
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            ColorOSPillButton(
+                                text = "Connect AniList Account",
+                                onClick = {
+                                    aniListConnectError = null
+                                    tokenInput = ""
+                                    showAniListConnectDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                height = 46.dp,
+                                containerColor = Color(0xFF02A9FF),
+                                contentColor = Color.White
+                            )
+                        } else {
+                            // Connected State
+                            val user = aniListUser!!
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (!user.avatarUrl.isNullOrEmpty()) {
+                                    SubcomposeAsyncImage(
+                                        model = user.avatarUrl,
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(CircleShape)
+                                            .border(1.5.dp, Color(0xFF02A9FF).copy(alpha = 0.8f), CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    ) {
+                                        val state = painter.state
+                                        if (state is coil.compose.AsyncImagePainter.State.Success) {
+                                            SubcomposeAsyncImageContent()
+                                        } else {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(Color(0xFF02A9FF).copy(alpha = 0.2f)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Person,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF02A9FF)
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF02A9FF))
+                                            .border(1.5.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = user.name.take(1).uppercase(),
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    }
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = user.name,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(Color(0xFF00C853).copy(alpha = 0.15f))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "Active",
+                                                color = Color(0xFF00C853),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(2.dp))
+
+                                    Text(
+                                        text = "${user.episodesWatched} eps watched • ${user.animeCount} anime",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            HorizontalDivider(
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                            )
+
+                            // Auto sync switch
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { viewModel.setAniListAutoSync(!aniListAutoSync) },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Auto-sync Episodes",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Update AniList watch progress whenever you mark an episode",
+                                        fontSize = 11.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                ColorOSSwitch(
+                                    checked = aniListAutoSync,
+                                    onCheckedChange = { viewModel.setAniListAutoSync(it) }
+                                )
+                            }
+
+                            HorizontalDivider(
+                                color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
+                            )
+
+                            // Action buttons
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                ColorOSPillButton(
+                                    text = if (isImportingAniList) "Importing..." else "Import Library",
+                                    onClick = {
+                                        if (!isImportingAniList) {
+                                            viewModel.importLibraryFromAniList { imported, updated, err ->
+                                                if (err != null) {
+                                                    Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                                } else {
+                                                    Toast.makeText(context, "Imported $imported new shows, updated $updated from AniList!", Toast.LENGTH_LONG).show()
+                                                }
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1.3f),
+                                    height = 42.dp,
+                                    containerColor = Color(0xFF0082FB),
+                                    contentColor = Color.White
+                                )
+
+                                ColorOSOutlinedButton(
+                                    text = "Profile",
+                                    onClick = {
+                                        val url = "https://anilist.co/user/${user.name}"
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier.weight(0.9f),
+                                    height = 42.dp,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                )
+
+                                ColorOSOutlinedButton(
+                                    text = "Disconnect",
+                                    onClick = { showDisconnectConfirmDialog = true },
+                                    modifier = Modifier.weight(1.1f),
+                                    height = 42.dp,
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 6. DATA BACKUPS & STORAGE
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OxygenSectionHeader(title = "Backup & Restore")
                 OxygenGlassGroup(isDark = isDark) {
@@ -738,6 +997,113 @@ fun SettingsScreen(
             isDark = isDark,
             onBackClick = onNavigateBack
         )
+
+        if (showAniListConnectDialog) {
+            ColorOSDialog(
+                onDismissRequest = {
+                    if (!isConnectingAniList) showAniListConnectDialog = false
+                },
+                title = "Connect AniList",
+                confirmText = if (isConnectingAniList) "Verifying..." else "Authorize",
+                dismissText = "Cancel",
+                confirmButtonColor = Color(0xFF02A9FF),
+                onConfirm = {
+                    if (tokenInput.isBlank()) {
+                        aniListConnectError = "Please paste or enter your AniList token"
+                        return@ColorOSDialog
+                    }
+                    isConnectingAniList = true
+                    aniListConnectError = null
+                    viewModel.connectAniList(tokenInput.trim()) { res ->
+                        isConnectingAniList = false
+                        if (res.isSuccess) {
+                            val connected = res.getOrThrow()
+                            Toast.makeText(context, "Connected as @${connected.name}!", Toast.LENGTH_SHORT).show()
+                            showAniListConnectDialog = false
+                        } else {
+                            aniListConnectError = res.exceptionOrNull()?.localizedMessage ?: "Failed to verify token"
+                        }
+                    }
+                },
+                customContent = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "Follow these steps to connect your AniList account:",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        ColorOSOutlinedButton(
+                            text = "1. Open AniList Developer Settings",
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://anilist.co/settings/developer"))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 40.dp
+                        )
+
+                        Text(
+                            text = "2. Create a client or generate a Developer / Personal Access Token, then paste it below:",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        OutlinedTextField(
+                            value = tokenInput,
+                            onValueChange = {
+                                tokenInput = it
+                                aniListConnectError = null
+                            },
+                            label = { Text("AniList Access Token") },
+                            placeholder = { Text("Paste Bearer token here...") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            maxLines = 3,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                        val text = clipboard?.primaryClip?.getItemAt(0)?.text?.toString()
+                                        if (!text.isNullOrBlank()) {
+                                            tokenInput = text.trim()
+                                            aniListConnectError = null
+                                        }
+                                    }
+                                ) {
+                                    Icon(imageVector = Icons.Rounded.ContentPaste, contentDescription = "Paste")
+                                }
+                            }
+                        )
+
+                        if (aniListConnectError != null) {
+                            Text(
+                                text = aniListConnectError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            )
+        }
+
+        if (showDisconnectConfirmDialog) {
+            ColorOSDialog(
+                onDismissRequest = { showDisconnectConfirmDialog = false },
+                title = "Disconnect AniList?",
+                message = "Your local shows and watch progress will remain intact. Cloud tracking and auto-sync will be deactivated.",
+                confirmText = "Disconnect",
+                dismissText = "Cancel",
+                confirmButtonColor = MaterialTheme.colorScheme.error,
+                onConfirm = {
+                    viewModel.disconnectAniList()
+                    showDisconnectConfirmDialog = false
+                    Toast.makeText(context, "AniList disconnected", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
     }
 }
 

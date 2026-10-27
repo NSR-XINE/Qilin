@@ -16,6 +16,7 @@ class ShowRepositoryImpl @Inject constructor(
     override suspend fun getShowsByStatus(status: String): List<Show> = showDao.getShowsByStatus(status).map { it.toDomain() }
     override suspend fun getFavoriteShows(): List<Show> = showDao.getFavoriteShows().map { it.toDomain() }
     override suspend fun getShowById(id: String): Show? = showDao.getShowById(id)?.toDomain()
+    override suspend fun getShowByAniListId(aniListId: Int): Show? = showDao.getShowByAniListId(aniListId)?.toDomain()
     override fun getShowByIdFlow(id: String): Flow<Show?> = showDao.getShowByIdFlow(id).map { it?.toDomain() }
     override suspend fun searchShows(query: String): List<Show> = showDao.searchShows(query).map { it.toDomain() }
     override suspend fun getRecentlyUpdatedShows(limit: Int): List<Show> = showDao.getRecentlyUpdatedShows(limit).map { it.toDomain() }

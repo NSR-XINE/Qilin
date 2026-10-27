@@ -23,6 +23,9 @@ interface ShowDao {
     @Query("SELECT * FROM shows WHERE id = :id")
     fun getShowByIdFlow(id: String): Flow<ShowEntity?>
 
+    @Query("SELECT * FROM shows WHERE anilist_id = :aniListId LIMIT 1")
+    suspend fun getShowByAniListId(aniListId: Int): ShowEntity?
+
     @Query("SELECT * FROM shows WHERE title LIKE '%' || :query || '%' OR title_zh LIKE '%' || :query || '%' OR notes LIKE '%' || :query || '%' ORDER BY CASE WHEN title = :query THEN 0 WHEN title LIKE :query || '%' THEN 1 ELSE 2 END")
     suspend fun searchShows(query: String): List<ShowEntity>
 

@@ -1,5 +1,7 @@
 package com.mydonghua.app.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -23,9 +25,16 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.R
+import com.mydonghua.app.data.service.AniListMedia
+import com.mydonghua.app.data.service.AniListService
+import com.mydonghua.app.ui.common.ColorOSDialog
+import com.mydonghua.app.ui.common.ColorOSOutlinedButton
+import com.mydonghua.app.ui.common.ColorOSPillButton
 import com.mydonghua.app.ui.common.EmptyState
 import androidx.compose.ui.text.font.FontWeight
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
@@ -44,6 +53,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun ShowDetailScreen(
@@ -57,9 +67,16 @@ fun ShowDetailScreen(
     defaultStreamProvider: String = "donghuastream"
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val allShows by viewModel.allShows.collectAsState()
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
+    var showAniListMenu by remember { mutableStateOf(false) }
+    var showLinkAniListDialog by remember { mutableStateOf(false) }
+    var linkSearchQuery by remember { mutableStateOf("") }
+    var isSearchingAniList by remember { mutableStateOf(false) }
+    var aniListSearchResults by remember { mutableStateOf<List<AniListMedia>>(emptyList()) }
 
     if (show == null) {
         val isLoading by viewModel.isLoading.collectAsState()
@@ -439,13 +456,58 @@ fun ShowDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(
-                                text = "WATCH PROGRESS",
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0082FB),
-                                letterSpacing = 0.5.sp
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "WATCH PROGRESS",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0082FB),
+                                    letterSpacing = 0.5.sp
+                                )
+
+                                if (show.aniListId != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color(0xFF02A9FF).copy(alpha = 0.15f))
+                                            .clickable { showAniListMenu = true }
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "AniList #${show.aniListId}",
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF02A9FF)
+                                        )
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                            .clickable {
+                                                linkSearchQuery = show.title
+                                                isSearchingAniList = true
+                                                coroutineScope.launch {
+                                                    aniListSearchResults = AniListService.searchAnime(show.title, limit = 8)
+                                                    isSearchingAniList = false
+                                                }
+                                                showLinkAniListDialog = true
+                                            }
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "+ Link AniList",
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
                             val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
                             Text(
                                 text = "Episode ${show.currentEp}$totalStr",
@@ -707,6 +769,216 @@ fun ShowDetailScreen(
             onBackClick = onNavigateBack,
             onEditClick = { onEditClick(show) }
         )
+
+        if (showAniListMenu) {
+            ColorOSDialog(
+                onDismissRequest = { showAniListMenu = false },
+                title = "AniList Options",
+                confirmText = "Done",
+                dismissText = null,
+                onConfirm = { showAniListMenu = false },
+                customContent = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "Linked to AniList #${show.aniListId}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color(0xFF02A9FF)
+                        )
+
+                        ColorOSPillButton(
+                            text = "Sync Current Progress (EP ${show.currentEp})",
+                            onClick = {
+                                val token = AniListService.getToken()
+                                if (token.isNullOrBlank()) {
+                                    Toast.makeText(context, "AniList not connected. Log in from Settings.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    coroutineScope.launch {
+                                        val res = AniListService.updateProgress(token, show.aniListId!!, show.currentEp, show.totalEp)
+                                        if (res.isSuccess) {
+                                            Toast.makeText(context, "Synced Episode ${show.currentEp} to AniList!", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, "Sync failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                        showAniListMenu = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 42.dp,
+                            containerColor = Color(0xFF02A9FF)
+                        )
+
+                        ColorOSOutlinedButton(
+                            text = "Open on AniList",
+                            onClick = {
+                                val url = "https://anilist.co/anime/${show.aniListId}"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                context.startActivity(intent)
+                                showAniListMenu = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 42.dp
+                        )
+
+                        ColorOSOutlinedButton(
+                            text = "Change AniList Mapping",
+                            onClick = {
+                                showAniListMenu = false
+                                linkSearchQuery = show.title
+                                isSearchingAniList = true
+                                coroutineScope.launch {
+                                    aniListSearchResults = AniListService.searchAnime(show.title, limit = 8)
+                                    isSearchingAniList = false
+                                }
+                                showLinkAniListDialog = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 42.dp
+                        )
+
+                        ColorOSOutlinedButton(
+                            text = "Unlink from AniList",
+                            onClick = {
+                                viewModel.insertOrUpdateShow(show.copy(aniListId = null))
+                                showAniListMenu = false
+                                Toast.makeText(context, "Unlinked from AniList", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 42.dp,
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            )
+        }
+
+        if (showLinkAniListDialog) {
+            ColorOSDialog(
+                onDismissRequest = { showLinkAniListDialog = false },
+                title = "Link AniList Media",
+                confirmText = "Close",
+                dismissText = null,
+                onConfirm = { showLinkAniListDialog = false },
+                customContent = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 380.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = linkSearchQuery,
+                                onValueChange = { linkSearchQuery = it },
+                                placeholder = { Text("Search show name...") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            ColorOSPillButton(
+                                text = "Search",
+                                onClick = {
+                                    if (linkSearchQuery.isNotBlank()) {
+                                        isSearchingAniList = true
+                                        coroutineScope.launch {
+                                            aniListSearchResults = AniListService.searchAnime(linkSearchQuery, limit = 8)
+                                            isSearchingAniList = false
+                                        }
+                                    }
+                                },
+                                height = 50.dp,
+                                containerColor = Color(0xFF02A9FF)
+                            )
+                        }
+
+                        if (isSearchingAniList) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(28.dp), color = Color(0xFF02A9FF))
+                            }
+                        } else if (aniListSearchResults.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No results found on AniList",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                aniListSearchResults.forEach { media ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                                            .clickable {
+                                                val updated = show.copy(aniListId = media.id)
+                                                viewModel.insertOrUpdateShow(updated)
+                                                showLinkAniListDialog = false
+                                                Toast.makeText(context, "Linked to ${media.preferredTitle} (#${media.id})!", Toast.LENGTH_SHORT).show()
+
+                                                if (show.currentEp > 0) {
+                                                    coroutineScope.launch {
+                                                        AniListService.syncEpisodeProgress(updated, show.currentEp)
+                                                    }
+                                                }
+                                            }
+                                            .padding(8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        DonghuaPoster(
+                                            posterUrl = media.coverImage,
+                                            title = media.preferredTitle,
+                                            modifier = Modifier
+                                                .size(width = 38.dp, height = 52.dp)
+                                                .clip(RoundedCornerShape(6.dp))
+                                        )
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = media.preferredTitle,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 13.5.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "AniList #${media.id} • ${if (media.episodes > 0) "${media.episodes} eps" else "Episodes TBA"}",
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
     }
 }
 

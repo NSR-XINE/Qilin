@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [ShowEntity::class, WatchHistoryEntity::class, SettingEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -38,13 +38,14 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         val MIGRATION_1_2 = Migration(1, 2) { db ->
-            db.execSQL("CREATE TABLE IF NOT EXISTS `shows` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `title_zh` TEXT, `status` TEXT NOT NULL DEFAULT 'ongoing', `release_day` TEXT, `release_time` TEXT, `current_ep` INTEGER NOT NULL DEFAULT 0, `total_ep` INTEGER NOT NULL DEFAULT 0, `poster` TEXT, `watch_url` TEXT, `countdown_url` TEXT, `notes` TEXT, `is_favorite` INTEGER NOT NULL DEFAULT 0, `rating` INTEGER NOT NULL DEFAULT 0, `last_updated` INTEGER, `date_added` INTEGER, `alarm_request_code` INTEGER, `genres` TEXT, `studio` TEXT, `release_year` INTEGER NOT NULL DEFAULT 0, `language` TEXT DEFAULT 'Chinese', `collection_id` TEXT, PRIMARY KEY(`id`))")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `shows` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `title_zh` TEXT, `status` TEXT NOT NULL DEFAULT 'ongoing', `release_day` TEXT, `release_time` TEXT, `current_ep` INTEGER NOT NULL DEFAULT 0, `total_ep` INTEGER NOT NULL DEFAULT 0, `poster` TEXT, `watch_url` TEXT, `countdown_url` TEXT, `notes` TEXT, `is_favorite` INTEGER NOT NULL DEFAULT 0, `rating` INTEGER NOT NULL DEFAULT 0, `last_updated` INTEGER, `date_added` INTEGER, `alarm_request_code` INTEGER, `genres` TEXT, `studio` TEXT, `release_year` INTEGER NOT NULL DEFAULT 0, `language` TEXT DEFAULT 'Chinese', `collection_id` TEXT, `anilist_id` INTEGER, PRIMARY KEY(`id`))")
             db.execSQL("CREATE TABLE IF NOT EXISTS `watch_history` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `show_id` TEXT NOT NULL, `episode_num` INTEGER NOT NULL, `watched_timestamp` INTEGER NOT NULL, FOREIGN KEY(`show_id`) REFERENCES `shows`(`id`) ON DELETE CASCADE)")
             db.execSQL("CREATE TABLE IF NOT EXISTS `settings` (`key` TEXT NOT NULL, `value` TEXT, PRIMARY KEY(`key`))")
 
             addColumnIfNotExists(db, "shows", "last_updated", "INTEGER")
             addColumnIfNotExists(db, "shows", "date_added", "INTEGER")
             addColumnIfNotExists(db, "shows", "alarm_request_code", "INTEGER")
+            addColumnIfNotExists(db, "shows", "anilist_id", "INTEGER")
 
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_status` ON `shows` (`status`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_favorite` ON `shows` (`is_favorite`)")
@@ -57,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         val MIGRATION_2_3 = Migration(2, 3) { db ->
-            db.execSQL("CREATE TABLE IF NOT EXISTS `shows` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `title_zh` TEXT, `status` TEXT NOT NULL DEFAULT 'ongoing', `release_day` TEXT, `release_time` TEXT, `current_ep` INTEGER NOT NULL DEFAULT 0, `total_ep` INTEGER NOT NULL DEFAULT 0, `poster` TEXT, `watch_url` TEXT, `countdown_url` TEXT, `notes` TEXT, `is_favorite` INTEGER NOT NULL DEFAULT 0, `rating` INTEGER NOT NULL DEFAULT 0, `last_updated` INTEGER, `date_added` INTEGER, `alarm_request_code` INTEGER, `genres` TEXT, `studio` TEXT, `release_year` INTEGER NOT NULL DEFAULT 0, `language` TEXT DEFAULT 'Chinese', `collection_id` TEXT, PRIMARY KEY(`id`))")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `shows` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `title_zh` TEXT, `status` TEXT NOT NULL DEFAULT 'ongoing', `release_day` TEXT, `release_time` TEXT, `current_ep` INTEGER NOT NULL DEFAULT 0, `total_ep` INTEGER NOT NULL DEFAULT 0, `poster` TEXT, `watch_url` TEXT, `countdown_url` TEXT, `notes` TEXT, `is_favorite` INTEGER NOT NULL DEFAULT 0, `rating` INTEGER NOT NULL DEFAULT 0, `last_updated` INTEGER, `date_added` INTEGER, `alarm_request_code` INTEGER, `genres` TEXT, `studio` TEXT, `release_year` INTEGER NOT NULL DEFAULT 0, `language` TEXT DEFAULT 'Chinese', `collection_id` TEXT, `anilist_id` INTEGER, PRIMARY KEY(`id`))")
             db.execSQL("CREATE TABLE IF NOT EXISTS `watch_history` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `show_id` TEXT NOT NULL, `episode_num` INTEGER NOT NULL, `watched_timestamp` INTEGER NOT NULL, FOREIGN KEY(`show_id`) REFERENCES `shows`(`id`) ON DELETE CASCADE)")
             db.execSQL("CREATE TABLE IF NOT EXISTS `settings` (`key` TEXT NOT NULL, `value` TEXT, PRIMARY KEY(`key`))")
 
@@ -69,6 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
             addColumnIfNotExists(db, "shows", "last_updated", "INTEGER")
             addColumnIfNotExists(db, "shows", "date_added", "INTEGER")
             addColumnIfNotExists(db, "shows", "alarm_request_code", "INTEGER")
+            addColumnIfNotExists(db, "shows", "anilist_id", "INTEGER")
 
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_status` ON `shows` (`status`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_shows_favorite` ON `shows` (`is_favorite`)")
@@ -80,6 +82,10 @@ abstract class AppDatabase : RoomDatabase() {
             db.execSQL("CREATE INDEX IF NOT EXISTS `idx_history_timestamp` ON `watch_history` (`watched_timestamp`)")
         }
 
+        val MIGRATION_3_4 = Migration(3, 4) { db ->
+            addColumnIfNotExists(db, "shows", "anilist_id", "INTEGER")
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -87,7 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mydonghua.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
                 INSTANCE = instance

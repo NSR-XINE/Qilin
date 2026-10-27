@@ -52,7 +52,9 @@ data class ShowEntity(
     val releaseYear: Int = 0,
     val language: String? = "Chinese",
     @ColumnInfo(name = "collection_id")
-    val collectionId: String?
+    val collectionId: String?,
+    @ColumnInfo(name = "anilist_id")
+    val aniListId: Int? = null
 ) {
     fun toDomain(): com.mydonghua.app.domain.model.Show = com.mydonghua.app.domain.model.Show(
         id = id,
@@ -76,7 +78,8 @@ data class ShowEntity(
         studio = studio,
         releaseYear = releaseYear,
         language = language,
-        collectionId = collectionId
+        collectionId = collectionId,
+        aniListId = aniListId
     )
 
     companion object {
@@ -102,7 +105,8 @@ data class ShowEntity(
             studio = show.studio,
             releaseYear = show.releaseYear,
             language = show.language,
-            collectionId = show.collectionId
+            collectionId = show.collectionId,
+            aniListId = show.aniListId
         )
     }
 }

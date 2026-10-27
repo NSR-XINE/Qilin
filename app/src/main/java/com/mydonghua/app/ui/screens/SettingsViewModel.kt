@@ -2,23 +2,30 @@ package com.mydonghua.app.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mydonghua.app.data.service.AdBlocker
+import com.mydonghua.app.data.service.AniListService
+import com.mydonghua.app.data.service.AniListUser
+import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.repository.WatchHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -154,6 +161,7 @@ class SettingsViewModel @Inject constructor(
                     put("releaseYear", s.releaseYear)
                     put("language", s.language)
                     put("collectionId", s.collectionId)
+                    put("aniListId", s.aniListId)
                 }
                 showsArr.put(obj)
             }
@@ -240,7 +248,8 @@ class SettingsViewModel @Inject constructor(
                         studio = sObj.optString("studio").takeIf { it.isNotEmpty() && it != "null" },
                         releaseYear = sObj.optInt("releaseYear", 0),
                         language = sObj.optString("language", "Chinese"),
-                        collectionId = sObj.optString("collectionId").takeIf { it.isNotEmpty() && it != "null" }
+                        collectionId = sObj.optString("collectionId").takeIf { it.isNotEmpty() && it != "null" },
+                        aniListId = sObj.optInt("aniListId").takeIf { it > 0 }
                     )
                     importedShowsList.add(show)
                 }
@@ -265,6 +274,129 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 e.printStackTrace()
                 onFailure(e.localizedMessage ?: "Failed to parse backup JSON")
+            }
+        }
+    }
+
+    val aniListUser: StateFlow<AniListUser?> = AniListService.userFlow
+    val aniListAutoSync: StateFlow<Boolean> = AniListService.autoSyncFlow
+
+    private val _isImportingAniList = MutableStateFlow(false)
+    val isImportingAniList: StateFlow<Boolean> = _isImportingAniList.asStateFlow()
+
+    fun connectAniList(token: String, onResult: (Result<AniListUser>) -> Unit) {
+        viewModelScope.launch {
+            val result = AniListService.validateTokenAndFetchViewer(token)
+            if (result.isSuccess) {
+                val user = result.getOrThrow()
+                AniListService.saveSession(token, user)
+            }
+            onResult(result)
+        }
+    }
+
+    fun disconnectAniList() {
+        AniListService.clearSession()
+    }
+
+    fun setAniListAutoSync(enabled: Boolean) {
+        AniListService.setAutoSync(enabled)
+    }
+
+    fun importLibraryFromAniList(onComplete: (imported: Int, updated: Int, error: String?) -> Unit) {
+        val user = AniListService.userFlow.value ?: run {
+            onComplete(0, 0, "AniList account not connected")
+            return
+        }
+        val token = AniListService.getToken() ?: run {
+            onComplete(0, 0, "No access token found")
+            return
+        }
+        viewModelScope.launch {
+            _isImportingAniList.value = true
+            try {
+                val res = AniListService.fetchUserAnimeCollection(token, user.id)
+                if (res.isFailure) {
+                    onComplete(0, 0, res.exceptionOrNull()?.message ?: "Failed to fetch collection")
+                    return@launch
+                }
+
+                val entries = res.getOrThrow()
+                val currentShows = showRepository.getAllShowsList()
+                val showByAniListId = currentShows.filter { it.aniListId != null }.associateBy { it.aniListId!! }
+                val showByTitle = currentShows.associateBy { it.title.lowercase().trim() }
+
+                var importedCount = 0
+                var updatedCount = 0
+
+                for (entry in entries) {
+                    val existing = showByAniListId[entry.mediaId]
+                        ?: showByTitle[entry.media.preferredTitle.lowercase().trim()]
+                        ?: (entry.media.titleRomaji?.let { showByTitle[it.lowercase().trim()] })
+                        ?: (entry.media.titleEnglish?.let { showByTitle[it.lowercase().trim()] })
+                        ?: (entry.media.titleNative?.let { showByTitle[it.lowercase().trim()] })
+
+                    val status = when (entry.status) {
+                        "COMPLETED" -> "completed"
+                        "DROPPED", "PAUSED" -> "stopped"
+                        else -> "ongoing"
+                    }
+
+                    if (existing != null) {
+                        val targetEp = maxOf(existing.currentEp, entry.progress)
+                        val updatedShow = existing.copy(
+                            aniListId = entry.mediaId,
+                            currentEp = targetEp,
+                            totalEp = if (existing.totalEp <= 0 && entry.media.episodes > 0) entry.media.episodes else existing.totalEp,
+                            poster = existing.poster ?: entry.media.coverImage,
+                            notes = existing.notes ?: entry.media.description,
+                            genres = existing.genres ?: entry.media.genres?.joinToString(", "),
+                            studio = existing.studio ?: entry.media.studio,
+                            releaseYear = if (existing.releaseYear <= 0 && (entry.media.releaseYear ?: 0) > 0) entry.media.releaseYear!! else existing.releaseYear,
+                            status = if (existing.status == "ongoing" && status == "completed") "completed" else existing.status,
+                            rating = if (existing.rating <= 0 && entry.score > 0) entry.score.toInt() else existing.rating,
+                            lastUpdated = System.currentTimeMillis()
+                        )
+                        showRepository.insertOrUpdateShow(updatedShow)
+                        if (entry.progress > 0) {
+                            watchHistoryRepository.addWatchHistory(existing.id, targetEp)
+                        }
+                        updatedCount++
+                    } else {
+                        val newId = UUID.randomUUID().toString()
+                        val newShow = Show(
+                            id = newId,
+                            title = entry.media.preferredTitle,
+                            titleZh = entry.media.titleNative,
+                            status = status,
+                            releaseDay = "Sunday",
+                            releaseTime = "10:00",
+                            currentEp = entry.progress,
+                            totalEp = entry.media.episodes,
+                            poster = entry.media.coverImage,
+                            notes = entry.media.description,
+                            genres = entry.media.genres?.joinToString(", "),
+                            studio = entry.media.studio,
+                            releaseYear = entry.media.releaseYear ?: 0,
+                            rating = entry.score.toInt(),
+                            dateAdded = System.currentTimeMillis(),
+                            lastUpdated = System.currentTimeMillis(),
+                            aniListId = entry.mediaId
+                        )
+                        showRepository.insertOrUpdateShow(newShow)
+                        if (entry.progress > 0) {
+                            watchHistoryRepository.addWatchHistory(newId, entry.progress)
+                        }
+                        importedCount++
+                    }
+                }
+
+                onComplete(importedCount, updatedCount, null)
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Import from AniList failed", e)
+                onComplete(0, 0, e.localizedMessage ?: "Unknown import error")
+            } finally {
+                _isImportingAniList.value = false
             }
         }
     }

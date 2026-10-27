@@ -23,7 +23,8 @@ object DatabaseModule {
             AppDatabase::class.java,
             "mydonghua.db"
         )
-        .fallbackToDestructiveMigration()
+        .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
+        .fallbackToDestructiveMigrationOnDowngrade()
         .build()
     }
 

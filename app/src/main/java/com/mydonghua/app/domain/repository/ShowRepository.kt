@@ -9,6 +9,7 @@ interface ShowRepository {
     suspend fun getShowsByStatus(status: String): List<Show>
     suspend fun getFavoriteShows(): List<Show>
     suspend fun getShowById(id: String): Show?
+    suspend fun getShowByAniListId(aniListId: Int): Show?
     fun getShowByIdFlow(id: String): Flow<Show?>
     suspend fun searchShows(query: String): List<Show>
     suspend fun getRecentlyUpdatedShows(limit: Int): List<Show>

@@ -22,5 +22,6 @@ data class Show(
     val studio: String? = null,
     val releaseYear: Int = 0,
     val language: String? = "Chinese",
-    val collectionId: String? = null
+    val collectionId: String? = null,
+    val aniListId: Int? = null
 )

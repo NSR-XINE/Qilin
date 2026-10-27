@@ -70,6 +70,7 @@ fun AddEditShowScreen(
     var releaseYear by remember { mutableStateOf("") }
     var language by remember { mutableStateOf("") }
     var collectionId by remember { mutableStateOf("") }
+    var aniListId by remember { mutableStateOf("") }
     var isAutoFilling by remember { mutableStateOf(false) }
 
     LaunchedEffect(editingShow) {
@@ -91,6 +92,7 @@ fun AddEditShowScreen(
             releaseYear = if (show.releaseYear > 0) show.releaseYear.toString() else ""
             language = show.language ?: ""
             collectionId = show.collectionId ?: ""
+            aniListId = show.aniListId?.toString() ?: ""
         }
     }
 
@@ -140,9 +142,9 @@ fun AddEditShowScreen(
                                 }
                                 isAutoFilling = true
                                 coroutineScope.launch {
-                                    var result = PosterFetchService.fetchFromJikan(title)
+                                    var result = PosterFetchService.fetchFromAniList(title)
                                     if (result == null) {
-                                        result = PosterFetchService.fetchFromAniList(title)
+                                        result = PosterFetchService.fetchFromJikan(title)
                                     }
                                     if (result != null) {
                                         titleZh = result.titleZh ?: titleZh
@@ -150,6 +152,7 @@ fun AddEditShowScreen(
                                         poster = result.poster ?: poster
                                         if (result.totalEp > 0) totalEp = result.totalEp.toString()
                                         status = result.status ?: status
+                                        if (result.aniListId != null) aniListId = result.aniListId.toString()
                                         Toast.makeText(context, "Details auto-filled!", Toast.LENGTH_SHORT).show()
                                     } else {
                                         Toast.makeText(context, "No matching show found", Toast.LENGTH_SHORT).show()
@@ -461,6 +464,15 @@ fun AddEditShowScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(CornerRadius.md)
                         )
+                        OutlinedTextField(
+                            value = aniListId,
+                            onValueChange = { aniListId = it },
+                            label = { Text("AniList ID") },
+                            placeholder = { Text("e.g. 101920") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(CornerRadius.md)
+                        )
                     }
                 }
             }
@@ -501,7 +513,8 @@ fun AddEditShowScreen(
                         studio = studio.takeIf { it.isNotEmpty() },
                         releaseYear = releaseYear.toIntOrNull() ?: 0,
                         language = language.takeIf { it.isNotEmpty() },
-                        collectionId = collectionId.takeIf { it.isNotEmpty() }
+                        collectionId = collectionId.takeIf { it.isNotEmpty() },
+                        aniListId = aniListId.toIntOrNull()
                     )
 
                     if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty()) {

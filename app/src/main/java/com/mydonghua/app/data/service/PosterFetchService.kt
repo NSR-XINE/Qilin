@@ -14,7 +14,8 @@ data class AutoFillDetails(
     val synopsis: String?,
     val poster: String?,
     val totalEp: Int,
-    val status: String?
+    val status: String?,
+    val aniListId: Int? = null
 )
 
 object PosterFetchService {
@@ -83,6 +84,7 @@ object PosterFetchService {
                 query (${'$'}search: String) {
                   Page(page: 1, perPage: 1) {
                     media(search: ${'$'}search, type: ANIME) {
+                      id
                       title {
                         native
                         romaji
@@ -144,12 +146,15 @@ object PosterFetchService {
                     else -> null
                 }
 
+                val mediaId = media.optInt("id", 0).takeIf { it > 0 }
+
                 AutoFillDetails(
                     titleZh = titleZh?.takeIf { it.isNotEmpty() && it != "null" },
                     synopsis = description.takeIf { it.isNotEmpty() && it != "null" },
                     poster = imageUrl?.takeIf { it.isNotEmpty() && it != "null" },
                     totalEp = episodes,
-                    status = status
+                    status = status,
+                    aniListId = mediaId
                 )
             }
         } catch (e: Exception) {
@@ -186,6 +191,7 @@ object PosterFetchService {
     }
 
     data class AniListSearchResult(
+        val id: Int? = null,
         val title: String,
         val titleZh: String?,
         val synopsis: String?,
@@ -200,6 +206,7 @@ object PosterFetchService {
                 query (${'$'}search: String) {
                   Page(page: 1, perPage: $limit) {
                     media(search: ${'$'}search, type: ANIME) {
+                      id
                       title {
                         native
                         romaji
@@ -244,6 +251,7 @@ object PosterFetchService {
                 val results = mutableListOf<AniListSearchResult>()
                 for (i in 0 until mediaArr.length()) {
                     val media = mediaArr.getJSONObject(i)
+                    val mediaId = media.optInt("id", 0).takeIf { it > 0 }
                     val titles = media.optJSONObject("title")
                     val english = titles?.optString("english")?.takeIf { it.isNotEmpty() && it != "null" }
                     val romaji = titles?.optString("romaji")?.takeIf { it.isNotEmpty() && it != "null" }
@@ -268,6 +276,7 @@ object PosterFetchService {
 
                     results.add(
                         AniListSearchResult(
+                            id = mediaId,
                             title = mainTitle,
                             titleZh = native,
                             synopsis = description.takeIf { it.isNotEmpty() && it != "null" },

@@ -3,6 +3,7 @@ package com.mydonghua.app.ui.screens
 import android.content.Context
 import android.widget.Toast
 import com.mydonghua.app.AlarmScheduler
+import com.mydonghua.app.data.service.AniListService
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.repository.WatchHistoryRepository
@@ -19,6 +20,10 @@ object ShowActions {
         val updated = show.copy(currentEp = clampedEp, lastUpdated = System.currentTimeMillis())
         showRepository.insertOrUpdateShow(updated)
         watchHistoryRepository.addWatchHistory(show.id, clampedEp)
+
+        AniListService.syncEpisodeProgress(updated, clampedEp) { linkedShow ->
+            showRepository.insertOrUpdateShow(linkedShow)
+        }
     }
 
     suspend fun decrementEpisode(
@@ -29,6 +34,10 @@ object ShowActions {
             val prevEp = show.currentEp - 1
             val updated = show.copy(currentEp = prevEp, lastUpdated = System.currentTimeMillis())
             showRepository.insertOrUpdateShow(updated)
+
+            AniListService.syncEpisodeProgress(updated, prevEp) { linkedShow ->
+                showRepository.insertOrUpdateShow(linkedShow)
+            }
         }
     }
 
