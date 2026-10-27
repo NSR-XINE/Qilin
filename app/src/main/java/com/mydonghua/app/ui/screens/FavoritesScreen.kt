@@ -57,6 +57,10 @@ fun FavoritesScreen(
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "favorites")
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val effectiveTopPadding = if (topPadding > 0.dp) topPadding + Spacing.sm else statusBarTop + 80.dp
+    val emptyStateTopPadding = if (topPadding > 0.dp) topPadding else statusBarTop + 72.dp
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -66,7 +70,7 @@ fun FavoritesScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item {
                     Row(
@@ -153,7 +157,7 @@ fun FavoritesScreen(
                 title = "No favorite shows selected",
                 subtitle = "Mark shows as favorites to see them here",
                 painter = painterResource(id = R.drawable.ic_heart_outline),
-                modifier = Modifier.padding(top = topPadding)
+                modifier = Modifier.padding(top = emptyStateTopPadding)
             )
         } else {
             LazyColumn(
@@ -161,7 +165,7 @@ fun FavoritesScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item(key = "favorites_header") {
                     Row(

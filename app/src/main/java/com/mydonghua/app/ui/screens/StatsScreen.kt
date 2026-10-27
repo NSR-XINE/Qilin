@@ -58,6 +58,9 @@ fun StatsScreen(
         }.sortedBy { daysList.indexOf(it.releaseDay) }
     }
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -68,7 +71,7 @@ fun StatsScreen(
                 .fillMaxSize()
                 .padding(horizontal = Spacing.lg)
                 .verticalScroll(scrollState)
-                .padding(top = 88.dp, bottom = 96.dp),
+                .padding(top = headerTopPadding, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
             Spacer(modifier = Modifier.height(Spacing.xs))

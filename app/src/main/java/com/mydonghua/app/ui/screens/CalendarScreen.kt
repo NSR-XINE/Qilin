@@ -73,6 +73,9 @@ fun CalendarScreen(
         list
     }
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -88,7 +91,7 @@ fun CalendarScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
-                        .padding(top = 88.dp, bottom = 96.dp),
+                        .padding(top = headerTopPadding, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.md)
                 ) {
                     Spacer(modifier = Modifier.height(Spacing.xs))
@@ -138,14 +141,14 @@ fun CalendarScreen(
                     title = "No shows scheduled for release this week",
                     subtitle = "Add shows that are currently airing with release days set",
                     painter = painterResource(id = R.drawable.ic_calendar),
-                    modifier = Modifier.padding(top = 88.dp)
+                    modifier = Modifier.padding(top = headerTopPadding)
                 )
             } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
-                        .padding(top = 88.dp, bottom = 96.dp),
+                        .padding(top = headerTopPadding, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.lg)
                 ) {
                     Spacer(modifier = Modifier.height(Spacing.xs))

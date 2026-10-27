@@ -112,6 +112,8 @@ fun ShowDetailScreen(
             else -> "HIATUS"
         }
         val detailSubtitle = "$statusText • EP ${show.currentEp}${if (show.totalEp > 0) "/${show.totalEp}" else ""}"
+        val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val headerTopPadding = if (topPadding > 0.dp) topPadding + Spacing.sm else statusBarTop + 84.dp
 
         // Scrollable Body Content
         Column(
@@ -119,7 +121,7 @@ fun ShowDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.md)
-                .padding(top = 88.dp, bottom = 96.dp),
+                .padding(top = headerTopPadding, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Hero Backdrop Banner

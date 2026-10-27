@@ -233,6 +233,8 @@ fun SearchScreen(
     val searchPillBg = if (isLight) Color.White.copy(alpha = 0.70f) else Color(0xFF1E222D).copy(alpha = 0.65f)
     val searchPillShape = RoundedCornerShape(CornerRadius.surface)
     val headerBackdrop = LocalHeaderBackdrop.current ?: LocalLayerBackdrop.current ?: rememberLayerBackdrop()
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 80.dp
 
     Box(modifier = modifier.fillMaxSize()) {
         // 1. Scrollable Suggestions / Results List
@@ -242,7 +244,7 @@ fun SearchScreen(
                 if (suggestionsList.isNotEmpty()) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
-                        contentPadding = PaddingValues(top = 80.dp, bottom = 80.dp),
+                        contentPadding = PaddingValues(top = headerTopPadding, bottom = 80.dp),
                         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
                         val recents = suggestionsList.filterIsInstance<SearchSuggestion.Recent>()
@@ -326,7 +328,7 @@ fun SearchScreen(
                         icon = Icons.Rounded.WifiOff,
                         actionLabel = "Retry",
                         onAction = { viewModel.retryOnlineSearch() },
-                        modifier = Modifier.padding(top = 88.dp)
+                        modifier = Modifier.padding(top = headerTopPadding)
                     )
                 } else if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
                     EmptyState(
@@ -335,13 +337,13 @@ fun SearchScreen(
                         icon = Icons.Default.Search,
                         actionLabel = "Browse All",
                         onAction = onNavigateBack,
-                        modifier = Modifier.padding(top = 88.dp)
+                        modifier = Modifier.padding(top = headerTopPadding)
                     )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
                         state = resultsListState,
-                        contentPadding = PaddingValues(top = 80.dp, bottom = 80.dp)
+                        contentPadding = PaddingValues(top = headerTopPadding, bottom = 80.dp)
                     ) {
                         item {
                             FilterChipsRow(
@@ -511,7 +513,7 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(start = Spacing.md, end = Spacing.md, top = 8.dp, bottom = 6.dp)
+                    .padding(start = Spacing.lg, end = Spacing.lg, top = 8.dp, bottom = 8.dp)
                     .height(56.dp)
                     .clip(searchPillShape)
                     .drawBackdrop(

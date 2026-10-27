@@ -69,7 +69,8 @@ fun HomeScreen(
     defaultStreamProvider: String = "donghuastream",
 ) {
     val state by viewModel.uiState.collectAsState()
-    val effectiveTopPadding = if (topPadding.value > 0f) topPadding + Spacing.md else 88.dp
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val effectiveTopPadding = if (topPadding.value > 0f) topPadding + Spacing.md else statusBarTop + 84.dp
 
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "home")

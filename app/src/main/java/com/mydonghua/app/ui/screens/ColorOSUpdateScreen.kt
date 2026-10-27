@@ -73,6 +73,9 @@ fun ColorOSUpdateScreen(
         if (!model.isNullOrBlank() && model != "unknown") model else "OnePlus 15"
     }
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -85,7 +88,7 @@ fun ColorOSUpdateScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(top = 88.dp, bottom = 100.dp),
+                .padding(top = headerTopPadding, bottom = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 3. Iconic ColorOS 17 Hero Branding

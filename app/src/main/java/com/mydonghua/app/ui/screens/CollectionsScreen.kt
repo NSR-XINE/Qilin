@@ -55,6 +55,8 @@ fun CollectionsScreen(
     }
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
 
     Box(
         modifier = modifier
@@ -68,7 +70,7 @@ fun CollectionsScreen(
                     .padding(horizontal = Spacing.md)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                contentPadding = PaddingValues(top = 88.dp, bottom = 96.dp)
+                contentPadding = PaddingValues(top = headerTopPadding, bottom = 96.dp)
             ) {
                 items(3) {
                     Box(
@@ -116,7 +118,7 @@ fun CollectionsScreen(
                 title = "No Collections Created Yet",
                 subtitle = "Edit any show and set its Collection name to organize your donghua into custom folders.",
                 painter = painterResource(id = R.drawable.ic_collections),
-                modifier = Modifier.padding(top = 88.dp).padding(horizontal = Spacing.lg, vertical = 40.dp)
+                modifier = Modifier.padding(top = headerTopPadding).padding(horizontal = Spacing.lg, vertical = 40.dp)
             )
         } else {
             LazyColumn(
@@ -125,7 +127,7 @@ fun CollectionsScreen(
                     .padding(horizontal = Spacing.md)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                contentPadding = PaddingValues(top = 88.dp, bottom = 96.dp)
+                contentPadding = PaddingValues(top = headerTopPadding, bottom = 96.dp)
             ) {
                 items(sortedCollections, key = { it.key }) { (collectionName, showsList) ->
                     Box(

@@ -59,6 +59,8 @@ fun HistoryScreen(
     }
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
 
     Box(
         modifier = modifier
@@ -72,7 +74,7 @@ fun HistoryScreen(
                     .padding(horizontal = Spacing.md)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                contentPadding = PaddingValues(top = 88.dp, bottom = 96.dp)
+                contentPadding = PaddingValues(top = headerTopPadding, bottom = 96.dp)
             ) {
                 items(3) {
                     Box(
@@ -118,7 +120,7 @@ fun HistoryScreen(
                 title = "No Watch History Yet",
                 subtitle = "Episodes you watch and update will be logged here automatically.",
                 painter = painterResource(id = R.drawable.ic_history),
-                modifier = Modifier.padding(top = 88.dp).padding(horizontal = Spacing.lg, vertical = 40.dp)
+                modifier = Modifier.padding(top = headerTopPadding).padding(horizontal = Spacing.lg, vertical = 40.dp)
             )
         } else {
             LazyColumn(
@@ -127,7 +129,7 @@ fun HistoryScreen(
                     .padding(horizontal = Spacing.md)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(top = 88.dp, bottom = 96.dp)
+                contentPadding = PaddingValues(top = headerTopPadding, bottom = 96.dp)
             ) {
                 groupedHistory.forEach { (dateHeader, items) ->
                     item {

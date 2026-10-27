@@ -97,6 +97,9 @@ fun SettingsScreen(
         storageGranted = granted
     }
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -107,7 +110,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState)
-                .padding(top = 88.dp, bottom = 96.dp),
+                .padding(top = headerTopPadding, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             Spacer(modifier = Modifier.height(2.dp))

@@ -145,6 +145,8 @@ fun DownloadsScreen(
 
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTopPadding = statusBarTop + 84.dp
 
     Box(
         modifier = Modifier
@@ -153,7 +155,7 @@ fun DownloadsScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = Spacing.md, end = Spacing.md, top = 88.dp, bottom = 96.dp),
+            contentPadding = PaddingValues(start = Spacing.md, end = Spacing.md, top = headerTopPadding, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             // Storage Overview Card

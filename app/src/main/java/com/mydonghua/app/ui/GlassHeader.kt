@@ -46,6 +46,7 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
 import com.mydonghua.app.R
+import com.mydonghua.app.ui.theme.Spacing
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
@@ -145,7 +146,7 @@ fun GlassHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(start = Spacing.xl, end = Spacing.xl, top = 2.dp, bottom = 14.dp),
+                .padding(start = Spacing.lg, end = Spacing.lg, top = 8.dp, bottom = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Box(

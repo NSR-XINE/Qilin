@@ -58,17 +58,21 @@ fun CompletedScreen(
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "complete")
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val effectiveTopPadding = if (topPadding > 0.dp) topPadding + Spacing.sm else statusBarTop + 80.dp
+    val emptyStateTopPadding = if (topPadding > 0.dp) topPadding else statusBarTop + 72.dp
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         if (isLoading) {
-            SkeletonList(topPadding = topPadding)
+            SkeletonList(topPadding = effectiveTopPadding)
         } else if (shows.isEmpty()) {
             EmptyState(
                 title = "No completed shows tracked",
                 subtitle = "Shows you finish watching will appear here",
                 painter = painterResource(id = R.drawable.ic_complete),
-                modifier = Modifier.padding(top = topPadding)
+                modifier = Modifier.padding(top = emptyStateTopPadding)
             )
         } else {
             LazyColumn(
@@ -76,7 +80,7 @@ fun CompletedScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item(key = "completed_header") {
                     Row(

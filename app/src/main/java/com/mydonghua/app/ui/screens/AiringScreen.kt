@@ -57,6 +57,10 @@ fun AiringScreen(
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "airing")
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val effectiveTopPadding = if (topPadding > 0.dp) topPadding + Spacing.sm else statusBarTop + 80.dp
+    val emptyStateTopPadding = if (topPadding > 0.dp) topPadding else statusBarTop + 72.dp
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -66,7 +70,7 @@ fun AiringScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item { HeaderSkeleton() }
                 items(5) { ShowCardSkeleton() }
@@ -76,7 +80,7 @@ fun AiringScreen(
                 title = "No ongoing shows tracked",
                 subtitle = "Add shows that are currently airing to track them here",
                 painter = painterResource(id = R.drawable.ic_airing),
-                modifier = Modifier.padding(top = topPadding)
+                modifier = Modifier.padding(top = emptyStateTopPadding)
             )
         } else {
             LazyColumn(
@@ -84,7 +88,7 @@ fun AiringScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item(key = "airing_header") {
                     Row(

@@ -57,6 +57,10 @@ fun StoppedScreen(
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "stopped")
 
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val effectiveTopPadding = if (topPadding > 0.dp) topPadding + Spacing.sm else statusBarTop + 80.dp
+    val emptyStateTopPadding = if (topPadding > 0.dp) topPadding else statusBarTop + 72.dp
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -66,7 +70,7 @@ fun StoppedScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item {
                     Row(
@@ -153,7 +157,7 @@ fun StoppedScreen(
                 title = "No hiatus or upcoming shows tracked",
                 subtitle = "Shows on hiatus or yet to premiere will show up here",
                 painter = painterResource(id = R.drawable.ic_stopped),
-                modifier = Modifier.padding(top = topPadding)
+                modifier = Modifier.padding(top = emptyStateTopPadding)
             )
         } else {
             LazyColumn(
@@ -161,7 +165,7 @@ fun StoppedScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding + Spacing.sm, bottom = 96.dp)
+                contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
             ) {
                 item(key = "stopped_header") {
                     Row(
