@@ -55,6 +55,9 @@ import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.mydonghua.app.data.service.AniListService
+import com.mydonghua.app.domain.model.Show
+import com.mydonghua.app.domain.model.CountdownCalculator
+import kotlinx.coroutines.delay
 
 @Composable
 fun GlassHeader(
@@ -63,6 +66,8 @@ fun GlassHeader(
     isDark: Boolean = MaterialTheme.colorScheme.background.luminance() <= 0.5f,
     subtitle: String? = null,
     avatarUrl: String? = null,
+    countdownShow: Show? = null,
+    onCountdownClick: (() -> Unit)? = null,
     onDrawerOpen: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
     onEditClick: (() -> Unit)? = null,
@@ -71,6 +76,27 @@ fun GlassHeader(
 ) {
     val aniListUser by AniListService.userFlow.collectAsState()
     val effectiveAvatarUrl = avatarUrl ?: aniListUser?.avatarUrl
+
+    var remainingTime by remember(countdownShow?.id, countdownShow?.releaseDay, countdownShow?.releaseTime) {
+        mutableStateOf(
+            countdownShow?.let {
+                CountdownCalculator.calculateTimeRemaining(
+                    CountdownCalculator.getNextReleaseDateMs(it.releaseDay, it.releaseTime)
+                )
+            }
+        )
+    }
+
+    LaunchedEffect(countdownShow?.id, countdownShow?.releaseDay, countdownShow?.releaseTime) {
+        if (countdownShow != null) {
+            while (true) {
+                remainingTime = CountdownCalculator.calculateTimeRemaining(
+                    CountdownCalculator.getNextReleaseDateMs(countdownShow.releaseDay, countdownShow.releaseTime)
+                )
+                delay(1000)
+            }
+        }
+    }
 
     val contentColor = if (isDark) Color.White else Color(0xFF1E1E1E)
     val menuBtnBg = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.06f)
@@ -232,32 +258,91 @@ fun GlassHeader(
                     }
                 }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = Spacing.md)
-                ) {
-                    Text(
-                        text = title,
-                        style = TextStyle(
-                            fontSize = if (subtitle != null) 16.sp else 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = contentColor
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (subtitle != null) {
+                if (countdownShow != null && remainingTime != null) {
+                    val rem = remainingTime!!
+                    val isAiring = rem.airingNow
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = Spacing.md)
+                            .colorOSPressBounce(pressedScale = 0.96f) {
+                                onCountdownClick?.invoke()
+                            },
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isAiring) Color(0xFFFF334B) else Color(0xFF00E676))
+                            )
+                            Text(
+                                text = countdownShow.title,
+                                style = TextStyle(
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = contentColor
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        val timeFormatted = if (isAiring) {
+                            "EP ${countdownShow.currentEp + 1} • Releasing Now!"
+                        } else if (!rem.elapsed) {
+                            buildString {
+                                append("EP ${countdownShow.currentEp + 1} in ")
+                                if (rem.days > 0) append("${rem.days}d ")
+                                append("${rem.hours}h ${rem.minutes}m ${rem.seconds}s")
+                            }
+                        } else {
+                            "EP ${countdownShow.currentEp + 1} soon"
+                        }
+
                         Text(
-                            text = subtitle,
+                            text = timeFormatted,
                             style = TextStyle(
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF0082FB)
+                                color = if (isAiring) Color(0xFFFF334B) else Color(0xFF0082FB)
                             ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = Spacing.md)
+                    ) {
+                        Text(
+                            text = title,
+                            style = TextStyle(
+                                fontSize = if (subtitle != null) 16.sp else 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = contentColor
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (subtitle != null) {
+                            Text(
+                                text = subtitle,
+                                style = TextStyle(
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF0082FB)
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 

@@ -14,6 +14,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.mydonghua.app.CountdownWidget
+import com.mydonghua.app.data.service.AniListService
+import com.mydonghua.app.data.service.AniListMedia
+import java.util.UUID
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -21,6 +24,8 @@ data class HomeUiState(
     val continueWatching: List<Show> = emptyList(),
     val recentlyUpdated: List<Show> = emptyList(),
     val allShows: List<Show> = emptyList(),
+    val trendingDonghua: List<AniListMedia> = emptyList(),
+    val isTrendingLoading: Boolean = false,
     val showCountdownBanner: Boolean = true,
     val showContinueWatching: Boolean = true,
     val showRecentlyUpdated: Boolean = true,
@@ -41,6 +46,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadHomeData()
+        loadTrendingDonghua()
     }
 
     private data class DashboardSettings(
@@ -88,6 +94,8 @@ class HomeViewModel @Inject constructor(
                 continueWatching = continueWatchingList,
                 recentlyUpdated = recentlyUpdatedList,
                 allShows = shows,
+                trendingDonghua = _uiState.value.trendingDonghua,
+                isTrendingLoading = _uiState.value.isTrendingLoading,
                 showCountdownBanner = settings.showBanner,
                 showContinueWatching = settings.showContinue,
                 showRecentlyUpdated = settings.showRecent,
@@ -139,5 +147,58 @@ class HomeViewModel @Inject constructor(
 
     fun setShowRecent(show: Boolean) {
         viewModelScope.launch { settingsRepository.putBool(SettingsKeys.SHOW_RECENT, show) }
+    }
+
+    fun loadTrendingDonghua() {
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isTrendingLoading = true) }
+                val trending = AniListService.fetchTrendingDonghua(page = 1, perPage = 10)
+                _uiState.update { it.copy(trendingDonghua = trending, isTrendingLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isTrendingLoading = false) }
+            }
+        }
+    }
+
+    fun addTrendingShow(media: AniListMedia, onComplete: (String) -> Unit) {
+        viewModelScope.launch {
+            val existing = _uiState.value.allShows.find { s ->
+                s.aniListId == media.id ||
+                s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+            }
+            if (existing != null) {
+                onComplete(existing.id)
+                return@launch
+            }
+            val id = UUID.randomUUID().toString()
+            val show = Show(
+                id = id,
+                title = media.preferredTitle,
+                titleZh = media.titleNative,
+                status = when (media.status?.lowercase()) {
+                    "completed" -> "completed"
+                    "releasing" -> "ongoing"
+                    else -> "ongoing"
+                },
+                releaseDay = "Sunday",
+                releaseTime = "10:00",
+                currentEp = 0,
+                totalEp = media.episodes,
+                poster = media.coverImage,
+                notes = media.description,
+                genres = media.genres?.joinToString(", "),
+                studio = media.studio,
+                releaseYear = media.releaseYear ?: 0,
+                rating = media.averageScore ?: 0,
+                aniListId = media.id,
+                dateAdded = System.currentTimeMillis(),
+                lastUpdated = System.currentTimeMillis()
+            )
+            showRepository.insertOrUpdateShow(show)
+            onComplete(id)
+        }
     }
 }

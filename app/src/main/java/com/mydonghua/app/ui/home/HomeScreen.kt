@@ -43,11 +43,19 @@ import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.screens.HomeViewModel
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import com.mydonghua.app.data.service.AniListMedia
+import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 @Composable
@@ -83,31 +91,67 @@ fun HomeScreen(
             item { SectionHeaderSkeleton() }
             item { RecentlyUpdatedRowSkeleton() }
         } else if (state.allShows.isEmpty()) {
+            if (state.showCountdownBanner && state.trendingDonghua.isNotEmpty()) {
+                item(key = "trending_hero_carousel_empty") {
+                    TrendingHeroCarousel(
+                        trendingList = state.trendingDonghua,
+                        allShows = state.allShows,
+                        onTrendingClick = { media ->
+                            viewModel.addTrendingShow(media) { targetId ->
+                                onShowClick(targetId)
+                            }
+                        },
+                        onWatchClick = { media ->
+                            viewModel.addTrendingShow(media) { targetId ->
+                                val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                    showTitle = media.preferredTitle,
+                                    customWatchUrl = null,
+                                    providerPreference = defaultStreamProvider
+                                )
+                                onWatchClick(url)
+                            }
+                        }
+                    )
+                }
+                item(key = "trending_empty_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
+            }
             item {
                 EmptyState(
                     title = "No shows tracked yet",
-                    subtitle = "Tap the search or add button below to start tracking your favorite donghua",
+                    subtitle = "Tap any trending show above or search to start tracking your favorite donghua",
                     painter = painterResource(id = R.drawable.ic_airing),
-                    modifier = Modifier.padding(top = effectiveTopPadding)
+                    modifier = Modifier.padding(top = if (state.showCountdownBanner && state.trendingDonghua.isNotEmpty()) Spacing.md else effectiveTopPadding)
                 )
             }
         } else {
-            if (state.showCountdownBanner && state.nextUpShow != null) {
-                item(key = "hero_banner_${state.nextUpShow!!.id}") {
-                    HeroBanner(
-                        show = state.nextUpShow!!,
-                        onWatchClick = {
-                            val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
-                                showTitle = state.nextUpShow!!.title,
-                                customWatchUrl = state.nextUpShow!!.watchUrl,
-                                providerPreference = defaultStreamProvider
-                            )
-                            onWatchClick(url)
-                        },
-                        onBannerClick = { onShowClick(state.nextUpShow!!.id) }
-                    )
+            if (state.showCountdownBanner) {
+                if (state.trendingDonghua.isNotEmpty()) {
+                    item(key = "trending_hero_carousel") {
+                        TrendingHeroCarousel(
+                            trendingList = state.trendingDonghua,
+                            allShows = state.allShows,
+                            onTrendingClick = { media ->
+                                viewModel.addTrendingShow(media) { targetId ->
+                                    onShowClick(targetId)
+                                }
+                            },
+                            onWatchClick = { media ->
+                                viewModel.addTrendingShow(media) { targetId ->
+                                    val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                        showTitle = media.preferredTitle,
+                                        customWatchUrl = null,
+                                        providerPreference = defaultStreamProvider
+                                    )
+                                    onWatchClick(url)
+                                }
+                            }
+                        )
+                    }
+                    item(key = "trending_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
+                } else if (state.isTrendingLoading) {
+                    item(key = "trending_skeleton") { HeroBannerSkeleton() }
+                    item(key = "trending_skeleton_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
                 }
-                item(key = "hero_banner_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
             }
 
             if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
@@ -137,40 +181,110 @@ fun HomeScreen(
 }
 
 @Composable
-fun HeroBanner(
-    show: Show,
-    onWatchClick: () -> Unit,
-    onBannerClick: () -> Unit,
+fun TrendingHeroCarousel(
+    trendingList: List<AniListMedia>,
+    allShows: List<Show>,
+    onTrendingClick: (AniListMedia) -> Unit,
+    onWatchClick: (AniListMedia) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val hazeState = LocalHazeState.current
+    if (trendingList.isEmpty()) return
+
+    val displayList = remember(trendingList) { trendingList.take(6) }
+    val pagerState = rememberPagerState(pageCount = { displayList.size })
+    val coroutineScope = rememberCoroutineScope()
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
-    var remainingTime by remember(show.id) {
-        mutableStateOf(
-            CountdownCalculator.calculateTimeRemaining(
-                CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)
-            )
-        )
-    }
-
-    LaunchedEffect(show.id, show.releaseDay, show.releaseTime) {
+    // Auto-advance every 6 seconds
+    LaunchedEffect(pagerState.pageCount) {
         while (true) {
-            remainingTime = CountdownCalculator.calculateTimeRemaining(
-                CountdownCalculator.getNextReleaseDateMs(show.releaseDay, show.releaseTime)
-            )
-            delay(1000)
+            delay(6000)
+            if (displayList.size > 1 && !pagerState.isScrollInProgress) {
+                val next = (pagerState.currentPage + 1) % displayList.size
+                pagerState.animateScrollToPage(next)
+            }
         }
     }
 
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth()
+        ) { page ->
+            val media = displayList[page]
+            val isAlreadyInLibrary = remember(media.id, allShows) {
+                allShows.any { s ->
+                    s.aniListId == media.id ||
+                    s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                    (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                    (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+                }
+            }
+            TrendingHeroCard(
+                media = media,
+                rank = page + 1,
+                isAlreadyInLibrary = isAlreadyInLibrary,
+                isLight = isLight,
+                onClick = { onTrendingClick(media) },
+                onWatchClick = { onWatchClick(media) }
+            )
+        }
+
+        if (displayList.size > 1) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                displayList.indices.forEach { index ->
+                    val isSelected = pagerState.currentPage == index
+                    val dotWidth by animateDpAsState(
+                        targetValue = if (isSelected) 18.dp else 6.dp,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+                        label = "dotWidth"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .height(5.dp)
+                            .width(dotWidth)
+                            .clip(CircleShape)
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else if (isLight) Color.Black.copy(alpha = 0.15f)
+                                else Color.White.copy(alpha = 0.20f)
+                            )
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrendingHeroCard(
+    media: AniListMedia,
+    rank: Int,
+    isAlreadyInLibrary: Boolean,
+    isLight: Boolean,
+    onClick: () -> Unit,
+    onWatchClick: () -> Unit
+) {
+    val hazeState = LocalHazeState.current
     val bannerShape = RoundedCornerShape(28.dp)
     val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
-    val hasSchedule = !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
-    val posterShape = RoundedCornerShape(20.dp)
+    val posterShape = RoundedCornerShape(18.dp)
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .clip(bannerShape)
@@ -184,10 +298,10 @@ fun HeroBanner(
                 brush = bannerBorderBrush,
                 shape = bannerShape
             )
-            .colorOSPressBounce(pressedScale = 0.985f, onClick = { onBannerClick() })
+            .colorOSPressBounce(pressedScale = 0.985f, onClick = onClick)
             .padding(14.dp)
     ) {
-        // Ambient Aquamorphic Aurora Glow behind the poster
+        // Ambient Backdrop Glow
         Box(
             modifier = Modifier
                 .size(160.dp)
@@ -206,11 +320,11 @@ fun HeroBanner(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // LEFT SIDE: PICTURE (Donghua Poster Tile)
+            // LEFT SIDE: Donghua Poster Tile
             Box(
                 modifier = Modifier
-                    .width(122.dp)
-                    .height(180.dp)
+                    .width(118.dp)
+                    .height(176.dp)
                     .clip(posterShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                     .border(
@@ -222,287 +336,188 @@ fun HeroBanner(
                     )
             ) {
                 DonghuaPoster(
-                    posterUrl = show.poster,
-                    title = show.title,
+                    posterUrl = media.coverImage,
+                    title = media.preferredTitle,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     showAcronym = false,
                     immediate = true
                 )
 
-                // Atmospheric bottom vignette on poster
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.5f to Color.Transparent,
-                                1.0f to Color.Black.copy(alpha = 0.72f)
-                            )
-                        )
-                )
-
-                // Top-Left Episode Capsule Pill on Poster
-                val epText = if (show.totalEp > 0) "EP ${show.currentEp + 1}/${show.totalEp}" else "EP ${show.currentEp + 1}"
+                // Top-Left Rank Pill
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(7.dp)
+                        .padding(6.dp)
                         .clip(RoundedCornerShape(percent = 50))
-                        .background(Color.Black.copy(alpha = 0.60f))
-                        .border(0.6.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(percent = 50))
-                        .padding(horizontal = 7.dp, vertical = 2.5.dp)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Color(0xFFFF334B), Color(0xFFFF8A00))
+                            )
+                        )
+                        .border(0.6.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(percent = 50))
+                        .padding(horizontal = 7.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = epText,
-                        fontSize = 9.5.sp,
+                        text = "#$rank Trending",
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = JustSansFamily,
                         color = Color.White
                     )
                 }
 
-                // Bottom-Right Glowing Quick-Play Button on Poster
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(7.dp)
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(primaryAccent)
-                        .border(1.dp, Color.White.copy(alpha = 0.35f), CircleShape)
-                        .colorOSPressBounce(pressedScale = 0.88f, onClick = onWatchClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.PlayArrow,
-                        contentDescription = "Quick Watch",
-                        modifier = Modifier.size(19.dp),
-                        tint = Color.White
-                    )
+                // Top-Right Score Pill
+                if (media.averageScore != null && media.averageScore > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(6.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color.Black.copy(alpha = 0.72f))
+                            .padding(horizontal = 5.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "★ ${media.averageScore}%",
+                            color = Color(0xFFFFB300),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 8.5.sp
+                        )
+                    }
+                }
+
+                // Bottom Tag if In Library
+                if (isAlreadyInLibrary) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .background(Color(0xFF00C853).copy(alpha = 0.88f))
+                            .padding(vertical = 2.5.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "In Library",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.5.sp
+                        )
+                    }
                 }
             }
 
-            // RIGHT SIDE: DETAILS
+            // RIGHT SIDE: Details & Action Button
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(180.dp),
+                    .height(176.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Section: Status pill & meta pill row
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Left Status Pill
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(percent = 50))
-                                .background(
-                                    if (remainingTime.airingNow) Color(0xFF00E676).copy(alpha = 0.16f)
-                                    else primaryAccent.copy(alpha = 0.14f)
-                                )
-                                .border(
-                                    width = 0.75.dp,
-                                    color = if (remainingTime.airingNow) Color(0xFF00E676).copy(alpha = 0.40f)
-                                    else primaryAccent.copy(alpha = 0.35f),
-                                    shape = RoundedCornerShape(percent = 50)
-                                )
-                                .padding(horizontal = 9.dp, vertical = 3.5.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(if (remainingTime.airingNow) Color(0xFF00E676) else primaryAccent)
-                                )
-                                Text(
-                                    text = when {
-                                        remainingTime.airingNow -> "AIRING NOW"
-                                        hasSchedule -> "${show.releaseDay?.take(3)?.uppercase()} • ${show.releaseTime ?: ""}"
-                                        else -> "NEXT UP"
-                                    },
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = JustSansFamily,
-                                    color = if (remainingTime.airingNow) Color(0xFF00E676) else primaryAccent,
-                                    letterSpacing = 0.5.sp
-                                )
-                            }
-                        }
-
-                        // Right Meta Pill (Year or Status)
-                        val rightTag = when {
-                            show.releaseYear > 0 -> "${show.releaseYear}"
-                            !show.status.isNullOrBlank() -> show.status.replaceFirstChar { it.uppercase() }
-                            else -> "HD"
-                        }
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(percent = 50))
-                                .background(Color.White.copy(alpha = if (isLight) 0.12f else 0.08f))
-                                .border(0.6.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(percent = 50))
-                                .padding(horizontal = 7.dp, vertical = 2.5.dp)
-                        ) {
-                            Text(
-                                text = rightTag,
-                                fontSize = 9.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = JustSansFamily,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    // Main Title
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    // Trending category label
                     Text(
-                        text = show.title,
-                        fontSize = 16.5.sp,
+                        text = "POPULAR ON ANILIST",
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = JustSansFamily,
+                        color = primaryAccent,
+                        letterSpacing = 0.8.sp
+                    )
+
+                    // Title
+                    Text(
+                        text = media.preferredTitle,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        lineHeight = 21.sp
+                        lineHeight = 19.sp
                     )
 
-                    // Subtitle / Chinese Title & Mini Genre Pills
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (!show.titleZh.isNullOrBlank()) {
-                            Text(
-                                text = show.titleZh,
-                                fontSize = 11.5.sp,
-                                fontFamily = JustSansFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = primaryAccent,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                    // Year • Status • Episodes
+                    val statusText = when (media.status?.lowercase()) {
+                        "releasing" -> "Airing"
+                        "completed" -> "Completed"
+                        else -> media.status?.replaceFirstChar { it.uppercase() } ?: "Ongoing"
+                    }
+                    val epCountText = if (media.episodes > 0) "${media.episodes} eps" else "Series"
+                    val metaLine = buildString {
+                        if (media.releaseYear != null && media.releaseYear > 0) {
+                            append("${media.releaseYear} • ")
                         }
+                        append("$statusText • $epCountText")
+                    }
+                    Text(
+                        text = metaLine,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
-                        val genresList = show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.take(2) ?: emptyList()
-                        if (genresList.isNotEmpty()) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                genresList.forEach { genre ->
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(percent = 50))
-                                            .background(
-                                                if (isLight) Color.Black.copy(alpha = 0.05f)
-                                                else Color.White.copy(alpha = 0.07f)
-                                            )
-                                            .border(0.6.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(percent = 50))
-                                            .padding(horizontal = 7.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = genre,
-                                            fontSize = 9.5.sp,
-                                            fontFamily = JustSansFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // Genres
+                    if (!media.genres.isNullOrEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            media.genres.take(2).forEach { genre ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(percent = 50))
+                                        .background(
+                                            if (isLight) Color.Black.copy(alpha = 0.05f)
+                                            else Color.White.copy(alpha = 0.08f)
                                         )
-                                    }
+                                        .border(0.6.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(percent = 50))
+                                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = genre,
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
                     }
                 }
 
-                // Bottom: Action or Countdown Deck
-                if (remainingTime.airingNow) {
-                    // Watch Ep Now Button (50% capsule in ColorOS 17 Electric Blue)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(primaryAccent)
-                            .colorOSPressBounce(pressedScale = 0.95f, onClick = { onWatchClick() }),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(22.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.22f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.PlayArrow,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = Color.White
-                                )
-                            }
-                            Text(
-                                text = "Watch Ep ${show.currentEp + 1} Now",
-                                fontSize = 12.5.sp,
-                                fontFamily = JustSansFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                    }
-                } else if (hasSchedule && !remainingTime.elapsed) {
-                    // Sleek 4-Block Micro-Tile Countdown Deck
+                // Action Button (50% capsule in ColorOS 17 Electric Blue)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(primaryAccent)
+                        .colorOSPressBounce(pressedScale = 0.95f, onClick = { onWatchClick() }),
+                    contentAlignment = Alignment.Center
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        CompactTimerPill(value = remainingTime.days, label = "DAYS", modifier = Modifier.weight(1f))
-                        CompactTimerPill(value = remainingTime.hours, label = "HRS", modifier = Modifier.weight(1f))
-                        CompactTimerPill(value = remainingTime.minutes, label = "MIN", modifier = Modifier.weight(1f))
-                        CompactTimerPill(value = remainingTime.seconds, label = "SEC", modifier = Modifier.weight(1f))
-                    }
-                } else {
-                    // Frosted Details Pill
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(percent = 50))
-                            .background(
-                                if (isLight) Color.Black.copy(alpha = 0.06f)
-                                else Color.White.copy(alpha = 0.10f)
-                            )
-                            .border(
-                                width = 0.75.dp,
-                                color = rememberLiquidGlassChipBorder(isLight),
-                                shape = RoundedCornerShape(percent = 50)
-                            )
-                            .colorOSPressBounce(pressedScale = 0.95f, onClick = { onBannerClick() }),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.22f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "View Details & Episodes",
-                                fontSize = 12.5.sp,
-                                fontFamily = JustSansFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
                             Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = null,
                                 modifier = Modifier.size(13.dp),
-                                tint = primaryAccent
+                                tint = Color.White
                             )
                         }
+                        Text(
+                            text = if (isAlreadyInLibrary) "Watch Now" else "Track & Watch",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -510,55 +525,7 @@ fun HeroBanner(
     }
 }
 
-@Composable
-private fun CompactTimerPill(
-    value: Long,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
-    val shape = RoundedCornerShape(10.dp)
 
-    Box(
-        modifier = modifier
-            .height(38.dp)
-            .clip(shape)
-            .background(
-                if (isLight) Color.Black.copy(alpha = 0.05f)
-                else Color(0xFF141926).copy(alpha = 0.65f)
-            )
-            .border(
-                width = 0.75.dp,
-                color = rememberLiquidGlassChipBorder(isLight),
-                shape = shape
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = String.format(Locale.getDefault(), "%02d", value),
-                fontSize = 13.5.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = JustSansFamily,
-                color = if (isLight) Color.Black else Color.White,
-                lineHeight = 15.sp
-            )
-            Text(
-                text = label,
-                fontSize = 7.5.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = JustSansFamily,
-                color = primaryAccent,
-                letterSpacing = 0.5.sp,
-                lineHeight = 9.sp
-            )
-        }
-    }
-}
 
 @Composable
 fun SectionHeader(title: String) {

@@ -229,10 +229,18 @@ class MainActivity : ComponentActivity() {
                                             "favorites" -> "Favorites"
                                             else -> ""
                                         }
+                                        val isHome = currentRoute == "home"
+                                        val countdownShow = if (isHome && settingsState.showBanner) state.nextUpShow else null
                                         GlassHeader(
                                             title = headerTitle,
                                             backdrop = headerBackdrop,
                                             isDark = settingsState.themeMode.lowercase() != "light",
+                                            countdownShow = countdownShow,
+                                            onCountdownClick = {
+                                                if (countdownShow != null) {
+                                                    navController.navigate("show_detail/${countdownShow.id}")
+                                                }
+                                            },
                                             onDrawerOpen = { isDrawerOpen = true },
                                         )
                                     }

@@ -842,8 +842,8 @@ fun SettingsScreen(
                 OxygenGlassGroup(isDark = isDark) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         OxygenTogglePreferenceItem(
-                            title = "Hero Countdown Banner",
-                            subtitle = "Live release countdown timer on home screen",
+                            title = "Trending Hero Banner",
+                            subtitle = "Top trending donghua carousel on home screen",
                             iconRes = R.drawable.ic_clock,
                             iconGradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
                             checked = uiState.showBanner,
