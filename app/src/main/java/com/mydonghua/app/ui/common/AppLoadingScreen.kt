@@ -59,12 +59,12 @@ fun AppLoadingScreen(
         label = "glowAlpha"
     )
 
-    // Indeterminate shimmer sweep for progress beam (-0.7f to 1.7f)
+    // Relaxed fluid shimmer sweep for progress beam (-0.7f to 1.7f)
     val shimmerOffset by infiniteTransition.animateFloat(
         initialValue = -0.7f,
         targetValue = 1.7f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1350, easing = CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)),
+            animation = tween(durationMillis = 2500, easing = CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmerOffset"
