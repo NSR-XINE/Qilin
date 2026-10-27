@@ -4,8 +4,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +39,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.SubcomposeAsyncImage
@@ -71,6 +77,7 @@ fun SettingsScreen(
     val isImportingAniList by viewModel.isImportingAniList.collectAsState()
 
     var showAniListConnectDialog by remember { mutableStateOf(false) }
+    var showAniListWebView by remember { mutableStateOf(false) }
     var showDisconnectConfirmDialog by remember { mutableStateOf(false) }
     var tokenInput by remember { mutableStateOf("") }
     var isConnectingAniList by remember { mutableStateOf(false) }
@@ -1034,20 +1041,43 @@ fun SettingsScreen(
                         )
 
                         ColorOSPillButton(
-                            text = "1. Authorize on AniList",
+                            text = "Log In with AniList (Automatic)",
+                            onClick = {
+                                showAniListWebView = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            height = 46.dp,
+                            containerColor = Color(0xFF02A9FF),
+                            contentColor = Color.White
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.1f))
+                            Text(
+                                text = "  OR  ",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.1f))
+                        }
+
+                        ColorOSOutlinedButton(
+                            text = "Open in External Browser",
                             onClick = {
                                 val url = "https://anilist.co/api/v2/oauth/authorize?client_id=24757&response_type=token"
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                 context.startActivity(intent)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 42.dp,
-                            containerColor = Color(0xFF02A9FF),
-                            contentColor = Color.White
+                            height = 40.dp
                         )
 
                         Text(
-                            text = "2. Tap 'Authorize', then copy and paste the token (or full address bar URL) below:",
+                            text = "Paste your Access Token or full address bar URL below:",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1090,6 +1120,88 @@ fun SettingsScreen(
                     }
                 }
             )
+        }
+
+        if (showAniListWebView) {
+            Dialog(
+                onDismissRequest = { showAniListWebView = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = statusBarTop + 10.dp, bottom = 20.dp, start = 16.dp, end = 16.dp)
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(if (isDark) Color(0xFF141923) else Color.White)
+                        .border(1.dp, Color.White.copy(alpha = if (isDark) 0.15f else 0.35f), RoundedCornerShape(26.dp))
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "AniList Account Login",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            IconButton(
+                                onClick = { showAniListWebView = false },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(imageVector = Icons.Rounded.Close, contentDescription = "Close")
+                            }
+                        }
+
+                        HorizontalDivider(color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f))
+
+                        AndroidView(
+                            factory = { ctx ->
+                                WebView(ctx).apply {
+                                    settings.javaScriptEnabled = true
+                                    settings.domStorageEnabled = true
+                                    settings.userAgentString = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+                                    webViewClient = object : WebViewClient() {
+                                        private var handled = false
+
+                                        private fun checkUrl(url: String?) {
+                                            if (!handled && url != null && url.contains("access_token=")) {
+                                                handled = true
+                                                val token = url.substringAfter("access_token=").substringBefore("&")
+                                                showAniListWebView = false
+                                                showAniListConnectDialog = false
+                                                viewModel.connectAniList(token) { res ->
+                                                    if (res.isSuccess) {
+                                                        Toast.makeText(context, "Connected as @${res.getOrThrow().name}!", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        Toast.makeText(context, "Authentication failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                            super.onPageStarted(view, url, favicon)
+                                            checkUrl(url)
+                                        }
+
+                                        override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                                            super.doUpdateVisitedHistory(view, url, isReload)
+                                            checkUrl(url)
+                                        }
+                                    }
+                                    loadUrl("https://anilist.co/api/v2/oauth/authorize?client_id=24757&response_type=token")
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
         }
 
         if (showDisconnectConfirmDialog) {
