@@ -22,6 +22,8 @@ import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.common.EmptyState
 import kotlinx.coroutines.delay
@@ -73,6 +75,7 @@ fun CalendarScreen(
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
@@ -82,6 +85,7 @@ fun CalendarScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
                 .padding(horizontal = Spacing.lg)
         ) {
             if (isLoading) {
@@ -218,6 +222,7 @@ fun CalendarScreen(
 
         GlassHeader(
             title = "$monthName $yearName",
+            backdrop = screenBackdrop,
             onBackClick = onNavigateBack
         )
     }

@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.GlassHeader
@@ -141,6 +143,7 @@ fun DownloadsScreen(
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = Modifier
@@ -148,7 +151,9 @@ fun DownloadsScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(screenBackdrop),
             contentPadding = PaddingValues(start = Spacing.md, end = Spacing.md, top = headerTopPadding, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
@@ -323,6 +328,8 @@ fun DownloadsScreen(
         GlassHeader(
             title = "Offline Downloads",
             subtitle = "${offlineFiles.size} saved • ${activeTasks.size} active",
+            backdrop = screenBackdrop,
+            isDark = !isLight,
             onBackClick = onNavigateBack,
             actions = {
                 Box(

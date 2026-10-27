@@ -65,6 +65,7 @@ import com.mydonghua.app.ui.theme.ColorOSTransitions
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
@@ -216,13 +217,18 @@ fun SearchScreen(
     val isLight = !isDark
     val searchPillBg = if (isLight) Color.White.copy(alpha = 0.70f) else Color(0xFF1E222D).copy(alpha = 0.65f)
     val searchPillShape = RoundedCornerShape(CornerRadius.surface)
-    val headerBackdrop = LocalHeaderBackdrop.current ?: LocalLayerBackdrop.current ?: rememberLayerBackdrop()
+    val headerBackdrop = rememberLayerBackdrop()
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 80.dp
 
     Box(modifier = modifier.fillMaxSize()) {
         // 1. Scrollable Suggestions / Results List
-        Box(modifier = Modifier.fillMaxSize().imePadding()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(headerBackdrop)
+                .imePadding()
+        ) {
             if (query.isEmpty() && !hasActiveFilters) {
                 val suggestionsList = suggestions
                 if (suggestionsList.isNotEmpty()) {

@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.common.EmptyState
 import androidx.compose.ui.text.font.FontWeight
@@ -57,9 +59,11 @@ fun ShowDetailScreen(
     val context = LocalContext.current
     val allShows by viewModel.allShows.collectAsState()
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     if (show == null) {
         val isLoading by viewModel.isLoading.collectAsState()
+        val emptyBackdrop = rememberLayerBackdrop()
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -68,6 +72,7 @@ fun ShowDetailScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .layerBackdrop(emptyBackdrop)
                     .padding(horizontal = Spacing.lg),
                 contentAlignment = Alignment.Center
             ) {
@@ -98,6 +103,8 @@ fun ShowDetailScreen(
             }
             GlassHeader(
                 title = "Show Details",
+                backdrop = emptyBackdrop,
+                isDark = !isLight,
                 onBackClick = onNavigateBack
             )
         }
@@ -118,8 +125,10 @@ fun ShowDetailScreen(
     }
 
     var isSynopsisExpanded by remember { mutableStateOf(false) }
-    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
+    val screenBackdrop = rememberLayerBackdrop()
+    val cardBgColor = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
+    val chipBgColor = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
 
     Box(
         modifier = modifier
@@ -139,6 +148,7 @@ fun ShowDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.md)
                 .padding(top = headerTopPadding, bottom = 96.dp),
@@ -532,7 +542,7 @@ fun ShowDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(Color(0xFF1E2638).copy(alpha = 0.45f))
+                        .background(cardBgColor)
                         .border(
                             width = 0.85.dp,
                             brush = glassBorder,
@@ -569,10 +579,10 @@ fun ShowDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                DetailCountdownBox(value = countdownTime.days, label = "days")
-                                DetailCountdownBox(value = countdownTime.hours, label = "hours")
-                                DetailCountdownBox(value = countdownTime.minutes, label = "mins")
-                                DetailCountdownBox(value = countdownTime.seconds, label = "secs")
+                                DetailCountdownBox(value = countdownTime.days, label = "days", isLight = isLight)
+                                DetailCountdownBox(value = countdownTime.hours, label = "hours", isLight = isLight)
+                                DetailCountdownBox(value = countdownTime.minutes, label = "mins", isLight = isLight)
+                                DetailCountdownBox(value = countdownTime.seconds, label = "secs", isLight = isLight)
                             }
                         }
                     }
@@ -592,12 +602,12 @@ fun ShowDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                DetailGlassChip(label = "Language", value = formattedLanguage, modifier = Modifier.weight(1.2f))
+                DetailGlassChip(label = "Language", value = formattedLanguage, isLight = isLight, modifier = Modifier.weight(1.2f))
                 if (show.totalEp > 0) {
-                    DetailGlassChip(label = "Episodes", value = "${show.totalEp}", modifier = Modifier.weight(0.9f))
+                    DetailGlassChip(label = "Episodes", value = "${show.totalEp}", isLight = isLight, modifier = Modifier.weight(0.9f))
                 }
                 if (show.releaseYear > 0) {
-                    DetailGlassChip(label = "Year", value = "${show.releaseYear}", modifier = Modifier.weight(0.9f))
+                    DetailGlassChip(label = "Year", value = "${show.releaseYear}", isLight = isLight, modifier = Modifier.weight(0.9f))
                 }
             }
 
@@ -620,10 +630,10 @@ fun ShowDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(percent = 50))
-                                    .background(Color(0xFF1E2638).copy(alpha = 0.45f))
+                                    .background(chipBgColor)
                                     .border(
                                         width = 0.75.dp,
-                                        color = rememberLiquidGlassChipBorder(),
+                                        brush = rememberLiquidGlassBorder(isLight),
                                         shape = RoundedCornerShape(percent = 50)
                                     )
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
@@ -646,10 +656,10 @@ fun ShowDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(CornerRadius.card))
-                        .background(Color(0xFF1E2638).copy(alpha = 0.45f))
+                        .background(cardBgColor)
                         .border(
                             width = 0.85.dp,
-                            brush = rememberLiquidGlassBorder(),
+                            brush = glassBorder,
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
                         .padding(Spacing.md)
@@ -692,6 +702,8 @@ fun ShowDetailScreen(
         GlassHeader(
             title = show.title,
             subtitle = detailSubtitle,
+            backdrop = screenBackdrop,
+            isDark = !isLight,
             onBackClick = onNavigateBack,
             onEditClick = { onEditClick(show) }
         )
@@ -699,17 +711,19 @@ fun ShowDetailScreen(
 }
 
 @Composable
-private fun DetailCountdownBox(value: Long, label: String) {
+private fun DetailCountdownBox(value: Long, label: String, isLight: Boolean = false) {
     val shape = RoundedCornerShape(16.dp)
+    val boxBg = if (isLight) Color(0xFFE8EEF5).copy(alpha = 0.90f) else Color(0xFF1E2638).copy(alpha = 0.45f)
+    val numColor = if (isLight) Color(0xFF141824) else Color.White
     Box(
         modifier = Modifier
             .width(56.dp)
             .height(50.dp)
             .clip(shape)
-            .background(Color(0xFF1E2638).copy(alpha = 0.45f))
+            .background(boxBg)
             .border(
                 width = 0.75.dp,
-                brush = rememberLiquidGlassBorder(),
+                brush = rememberLiquidGlassBorder(isLight),
                 shape = shape
             ),
         contentAlignment = Alignment.Center
@@ -722,7 +736,7 @@ private fun DetailCountdownBox(value: Long, label: String) {
                 text = String.format("%02d", value),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = numColor,
                 textAlign = TextAlign.Center
             )
             Text(
@@ -738,15 +752,16 @@ private fun DetailCountdownBox(value: Long, label: String) {
 }
 
 @Composable
-private fun DetailGlassChip(label: String, value: String, modifier: Modifier = Modifier) {
+private fun DetailGlassChip(label: String, value: String, isLight: Boolean = false, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(18.dp)
+    val chipBg = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
     Box(
         modifier = modifier
             .clip(shape)
-            .background(Color(0xFF1E2638).copy(alpha = 0.45f))
+            .background(chipBg)
             .border(
                 width = 0.75.dp,
-                color = rememberLiquidGlassChipBorder(),
+                brush = rememberLiquidGlassBorder(isLight),
                 shape = shape
             )
             .padding(horizontal = Spacing.md, vertical = 9.dp),

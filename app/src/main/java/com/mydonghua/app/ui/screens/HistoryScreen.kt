@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,13 +57,19 @@ fun HistoryScreen(
     val glassBorder = rememberLiquidGlassBorder(isLight)
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
+        ) {
+            if (isLoading) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -234,10 +242,13 @@ fun HistoryScreen(
                 }
             }
         }
+    }
 
-        GlassHeader(
+    GlassHeader(
             title = "Watch History",
             subtitle = "${historyList.size} logged episodes",
+            backdrop = screenBackdrop,
+            isDark = !isLight,
             onBackClick = onNavigateBack
         )
     }

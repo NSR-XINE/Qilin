@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.AlarmScheduler
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
@@ -94,6 +96,7 @@ fun AddEditShowScreen(
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
@@ -103,6 +106,7 @@ fun AddEditShowScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.lg)
                 .padding(top = headerTopPadding, bottom = 96.dp),
@@ -539,6 +543,7 @@ fun AddEditShowScreen(
 
         GlassHeader(
             title = if (editingShow != null) "Edit Show" else "Add New Show",
+            backdrop = screenBackdrop,
             onBackClick = onNavigateBack
         )
     }

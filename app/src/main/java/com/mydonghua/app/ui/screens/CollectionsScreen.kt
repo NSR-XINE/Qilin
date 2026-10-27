@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.text.font.FontWeight
@@ -53,13 +55,19 @@ fun CollectionsScreen(
     val glassBorder = rememberLiquidGlassBorder(isLight)
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
+        ) {
+            if (isLoading) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -274,10 +282,13 @@ fun CollectionsScreen(
                 }
             }
         }
+    }
 
-        GlassHeader(
+    GlassHeader(
             title = "Collections",
             subtitle = "${sortedCollections.size} folder groups",
+            backdrop = screenBackdrop,
+            isDark = !isLight,
             onBackClick = onNavigateBack
         )
     }

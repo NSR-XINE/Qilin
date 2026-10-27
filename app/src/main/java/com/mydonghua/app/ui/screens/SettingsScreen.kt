@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
@@ -93,6 +95,7 @@ fun SettingsScreen(
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
@@ -102,6 +105,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
                 .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState)
                 .padding(top = headerTopPadding, bottom = 96.dp),
@@ -818,6 +822,8 @@ fun SettingsScreen(
 
         GlassHeader(
             title = "Settings",
+            backdrop = screenBackdrop,
+            isDark = isDark,
             onBackClick = onNavigateBack
         )
     }

@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.JustSansFamily
@@ -72,22 +74,28 @@ fun ColorOSUpdateScreen(
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF080A14))
     ) {
-        // 1. ColorOS 17 Atmospheric Dusk / Sunset Aurora Canvas
-        ColorOSAtmosphereBackground(modifier = Modifier.fillMaxSize())
-
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(top = headerTopPadding, bottom = 100.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .layerBackdrop(screenBackdrop)
         ) {
+            // 1. ColorOS 17 Atmospheric Dusk / Sunset Aurora Canvas
+            ColorOSAtmosphereBackground(modifier = Modifier.fillMaxSize())
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(top = headerTopPadding, bottom = 100.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // 3. Iconic ColorOS 17 Hero Branding
                     Spacer(modifier = Modifier.height(18.dp))
 
@@ -320,9 +328,12 @@ fun ColorOSUpdateScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
+            }
 
         GlassHeader(
             title = "Software update",
+            backdrop = screenBackdrop,
+            isDark = true,
             onBackClick = onNavigateBack
         )
     }

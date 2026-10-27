@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.GlassSection
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -59,6 +61,7 @@ fun StatsScreen(
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
+    val screenBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = modifier
@@ -68,6 +71,7 @@ fun StatsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .layerBackdrop(screenBackdrop)
                 .padding(horizontal = Spacing.lg)
                 .verticalScroll(scrollState)
                 .padding(top = headerTopPadding, bottom = 96.dp),
@@ -264,6 +268,7 @@ fun StatsScreen(
 
         GlassHeader(
             title = "Detailed Statistics",
+            backdrop = screenBackdrop,
             onBackClick = onNavigateBack
         )
     }
