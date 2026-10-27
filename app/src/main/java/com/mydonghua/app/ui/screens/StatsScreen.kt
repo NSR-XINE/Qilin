@@ -25,10 +25,7 @@ import com.mydonghua.app.domain.model.StatsCalculator
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
-import androidx.compose.ui.res.painterResource
-import com.mydonghua.app.R
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)

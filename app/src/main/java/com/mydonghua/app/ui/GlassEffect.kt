@@ -3,7 +3,6 @@ package com.mydonghua.app.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,13 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -26,18 +23,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
-import android.graphics.RenderEffect
-import android.graphics.RuntimeShader
-import android.os.Build
-import androidx.compose.ui.graphics.asComposeRenderEffect
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.RoundedRectRefractionShaderString
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -58,8 +46,6 @@ val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 val LocalHeaderBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 val Spacing = com.mydonghua.app.ui.theme.Spacing
-
-private val GlassTintAlpha = 0.04f
 
 @Composable
 fun GlassBackground(
@@ -84,20 +70,9 @@ fun GlassBackground(
     val orb2Y = 0.75f
     val orb2Scale = 1.1f
 
-    // Orb 3: Complementary Floating Glare (Center-Right)
-    val orb3X = 0.35f
-    val orb3Y = 0.6f
-
-    // Orb 4: Center Plasma Ambient Core
-    val orb4X = 0.55f
-    val orb4Y = 0.4f
-    val orb4Scale = 1.1f
-
     val isDark = backgroundColor.luminance() < 0.5f
     val orb1Alpha = if (isDark) 0.04f else 0.12f
     val orb2Alpha = if (isDark) 0.03f else 0.08f
-    val orb3Alpha = if (isDark) 0.03f else 0.08f
-    val orb4Alpha = if (isDark) 0.02f else 0.06f
     val linearAlpha = if (isDark) 0.015f else 0.04f
 
     Box(
@@ -216,19 +191,6 @@ fun GlassBackground(
             }
         }
         content()
-    }
-}
-@Composable
-fun rememberLiquidGlassBorderColor(
-    isLight: Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f,
-    isAmoled: Boolean = MaterialTheme.colorScheme.background == Color.Black || MaterialTheme.colorScheme.background.luminance() < 0.01f
-): Color {
-    return remember(isLight, isAmoled) {
-        when {
-            isAmoled -> Color.White.copy(alpha = 0.18f)
-            isLight -> Color.Black.copy(alpha = 0.10f)
-            else -> Color.White.copy(alpha = 0.14f)
-        }
     }
 }
 
@@ -381,8 +343,6 @@ fun MenuGlassPanel(
         isLightMode -> Color(0xFFF8F9FA).copy(alpha = 0.88f)
         else -> Color(0xFF0C0E14).copy(alpha = 0.80f)
     }
-
-    val accentColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = modifier.clip(shape)

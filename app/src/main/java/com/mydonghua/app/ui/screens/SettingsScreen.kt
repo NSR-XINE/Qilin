@@ -8,7 +8,6 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import androidx.compose.foundation.*
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,15 +39,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.GlassHeader
-import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
-import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.common.ColorOSSwitch
 import com.mydonghua.app.ui.common.ColorOSPillButton
 import com.mydonghua.app.ui.common.ColorOSOutlinedButton
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.JustSansFamily
-import com.mydonghua.app.ui.theme.Spacing
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
 

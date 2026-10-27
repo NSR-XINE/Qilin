@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -99,7 +98,6 @@ fun ShowDetailScreen(
     var isSynopsisExpanded by remember { mutableStateOf(false) }
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
-    val chipBorder = rememberLiquidGlassChipBorder(isLight)
 
     Box(
         modifier = modifier

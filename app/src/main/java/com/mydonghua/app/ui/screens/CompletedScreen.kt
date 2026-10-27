@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.mydonghua.app.R
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.Spacing
-import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard

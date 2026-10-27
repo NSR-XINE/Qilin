@@ -1,7 +1,6 @@
 package com.mydonghua.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +20,6 @@ import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
-import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
 import com.mydonghua.app.R

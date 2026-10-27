@@ -7,12 +7,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,10 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import com.mydonghua.app.R
 import com.mydonghua.app.AlarmScheduler
 import com.mydonghua.app.data.service.PosterFetchService
 import com.mydonghua.app.domain.model.Show
@@ -36,7 +30,6 @@ import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.ColorOSPillButton
-import com.mydonghua.app.ui.theme.ButtonHeight
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.colorOSPressBounce

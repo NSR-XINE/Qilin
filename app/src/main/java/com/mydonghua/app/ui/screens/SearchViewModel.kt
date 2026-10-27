@@ -186,23 +186,25 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
-    private val onlineSearchJob = searchQuery
-        .onEach { q ->
-            if (q.trim().length >= 2) {
-                _isSearchingOnline.value = true
-                _searchError.value = false
-            } else {
-                _isSearchingOnline.value = false
-                _onlineResults.value = emptyList()
+    init {
+        @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
+        searchQuery
+            .onEach { q ->
+                if (q.trim().length >= 2) {
+                    _isSearchingOnline.value = true
+                    _searchError.value = false
+                } else {
+                    _isSearchingOnline.value = false
+                    _onlineResults.value = emptyList()
+                }
             }
-        }
-        .debounce(300)
-        .flatMapLatest { q ->
-            flow { emit(performOnlineSearch(q)) }
-        }
-        .onEach { _onlineResults.value = it }
-        .launchIn(viewModelScope)
+            .debounce(300)
+            .flatMapLatest { q ->
+                flow { emit(performOnlineSearch(q)) }
+            }
+            .onEach { _onlineResults.value = it }
+            .launchIn(viewModelScope)
+    }
 
     fun retryOnlineSearch() {
         viewModelScope.launch {

@@ -50,32 +50,7 @@ object ButtonHeight {
     val xl = 52.dp
 }
 
-object AppElevation {
-    val none = 0.dp
-    val sm = 1.dp
-    val md = 2.dp
-    val lg = 4.dp
-    val xl = 8.dp
-}
-
-object CardImage {
-    val posterWidth = 52.dp
-    val posterHeight = 72.dp
-    val thumbnail = 42.dp
-    val miniThumbnail = 32.dp
-    val posterPreview = 56.dp
-    val heroAspectRatio = 16f / 9f
-}
-
-object TopBarHeight {
-    val compact = 48.dp
-    val standard = 56.dp
-}
-
 object NavBarHeight {
     val bar = 64.dp
-    val blob = 56.dp
     val icon = 48.dp
-    val searchButton = 48.dp
-    val addButton = 48.dp
 }

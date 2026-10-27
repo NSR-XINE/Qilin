@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Remove
@@ -92,7 +91,6 @@ fun ShowCard(
 
     // Unified liquid glass border across all boxes
     val cardBorderBrush = rememberLiquidGlassBorder(isLight)
-    val chipBorderColor = rememberLiquidGlassChipBorder(isLight)
 
     // Official ColorOS 17 Translucent Liquid Frosted Glass (Matches Reference Screenshots)
     val cardBgBrush = if (isLight) {
