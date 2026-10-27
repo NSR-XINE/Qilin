@@ -148,7 +148,7 @@ fun DownloadsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
     ) {
         LazyColumn(
             modifier = Modifier

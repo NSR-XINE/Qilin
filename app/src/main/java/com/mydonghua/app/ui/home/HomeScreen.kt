@@ -42,7 +42,6 @@ import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
-import com.mydonghua.app.ui.DynamicShowBackground
 import com.mydonghua.app.ui.screens.HomeViewModel
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -81,27 +80,14 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "home")
 
-    val activeTrendingBg = if (state.showCountdownBanner) {
-        state.activeTrendingMedia?.bannerImage ?: state.activeTrendingMedia?.coverImage
-    } else null
-
-    Box(modifier = modifier.fillMaxSize()) {
-        if (!activeTrendingBg.isNullOrBlank()) {
-            DynamicShowBackground(
-                imageUrl = activeTrendingBg,
-                themeMode = state.themeMode,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Transparent)
-                .navigationBarsPadding(),
-            state = listState,
-            contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
-        ) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Transparent)
+            .navigationBarsPadding(),
+        state = listState,
+        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
+    ) {
             if (state.isLoading) {
                 item { HeroBannerSkeleton() }
                 item { SectionHeaderSkeleton() }
@@ -201,7 +187,6 @@ fun HomeScreen(
             }
         }
     }
-}
 
 @Composable
 fun TrendingHeroCarousel(
@@ -312,7 +297,7 @@ private fun TrendingHeroCard(
 ) {
     val hazeState = LocalHazeState.current
     val bannerShape = RoundedCornerShape(26.dp)
-    val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
+    val bannerBorderBrush = rememberLiquidGlassBorder(isLight = isLight, isAmoled = isAmoled)
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     val posterShape = RoundedCornerShape(16.dp)
 
@@ -324,9 +309,9 @@ private fun TrendingHeroCard(
             .hazeChild(state = hazeState, shape = bannerShape)
             .background(
                 when {
-                    isLight -> Color.White.copy(alpha = 0.72f)
-                    isAmoled -> Color(0xFF070707).copy(alpha = 0.78f)
-                    else -> Color(0xFF131726).copy(alpha = 0.62f)
+                    isLight -> Color.White.copy(alpha = 0.85f)
+                    isAmoled -> Color.Black.copy(alpha = 0.82f)
+                    else -> Color(0xFF131726).copy(alpha = 0.65f)
                 }
             )
             .border(

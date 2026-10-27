@@ -62,7 +62,7 @@ fun HistoryScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
     ) {
         Box(
             modifier = Modifier

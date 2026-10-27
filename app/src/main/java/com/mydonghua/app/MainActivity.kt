@@ -215,12 +215,10 @@ class MainActivity : ComponentActivity() {
                                     .fillMaxSize()
                                     .layerBackdrop(contentBackdrop)
                             ) {
-                                val isHome = currentRoute == "home"
-                                val activeTrendingBg = if (isHome && settingsState.showBanner) {
-                                    state.activeTrendingMedia?.bannerImage ?: state.activeTrendingMedia?.coverImage
-                                } else null
+                                val activeTrendingBg = state.activeTrendingMedia?.bannerImage
+                                    ?: state.activeTrendingMedia?.coverImage
 
-                                if (isHome && !activeTrendingBg.isNullOrBlank()) {
+                                if (!activeTrendingBg.isNullOrBlank()) {
                                     DynamicShowBackground(
                                         imageUrl = activeTrendingBg,
                                         themeMode = settingsState.themeMode,
