@@ -200,7 +200,11 @@ class SearchViewModel @Inject constructor(
             }
             .debounce(300)
             .flatMapLatest { q ->
-                flow { emit(performOnlineSearch(q)) }
+                if (q.trim().length >= 2) {
+                    flow { emit(performOnlineSearch(q)) }
+                } else {
+                    flowOf(emptyList())
+                }
             }
             .onEach { _onlineResults.value = it }
             .launchIn(viewModelScope)

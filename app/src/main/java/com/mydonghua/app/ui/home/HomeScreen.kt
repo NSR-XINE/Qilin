@@ -37,6 +37,7 @@ import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
+import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
@@ -81,6 +82,15 @@ fun HomeScreen(
             item { HorizontalRowSkeleton() }
             item { SectionHeaderSkeleton() }
             item { RecentlyUpdatedRowSkeleton() }
+        } else if (state.allShows.isEmpty()) {
+            item {
+                EmptyState(
+                    title = "No shows tracked yet",
+                    subtitle = "Tap the search or add button below to start tracking your favorite donghua",
+                    painter = painterResource(id = R.drawable.ic_airing),
+                    modifier = Modifier.padding(top = effectiveTopPadding)
+                )
+            }
         } else {
             if (state.showCountdownBanner && state.nextUpShow != null) {
                 item(key = "hero_banner_${state.nextUpShow!!.id}") {

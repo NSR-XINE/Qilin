@@ -244,18 +244,32 @@ fun HistoryScreen(
 }
 
 private fun getRelativeDateGroup(timestamp: Long): String {
-    val now = Calendar.getInstance()
-    val itemTime = Calendar.getInstance().apply { timeInMillis = timestamp }
+    val now = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    val itemDate = Calendar.getInstance().apply {
+        timeInMillis = timestamp
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
 
-    return if (now.get(Calendar.YEAR) == itemTime.get(Calendar.YEAR)) {
-        val diffDays = now.get(Calendar.DAY_OF_YEAR) - itemTime.get(Calendar.DAY_OF_YEAR)
-        when (diffDays) {
-            0 -> "Today"
-            1 -> "Yesterday"
-            in 2..6 -> "${diffDays} days ago"
-            else -> SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
+    val diffMillis = now.timeInMillis - itemDate.timeInMillis
+    val diffDays = (diffMillis / (1000L * 60 * 60 * 24)).toInt()
+
+    return when {
+        diffDays <= 0 -> "Today"
+        diffDays == 1 -> "Yesterday"
+        diffDays in 2..6 -> "${diffDays} days ago"
+        now.get(Calendar.YEAR) == itemDate.get(Calendar.YEAR) -> {
+            SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
         }
-    } else {
-        SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
+        else -> {
+            SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
+        }
     }
 }

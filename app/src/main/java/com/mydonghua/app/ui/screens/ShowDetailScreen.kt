@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.mydonghua.app.R
+import com.mydonghua.app.ui.common.EmptyState
 import androidx.compose.ui.text.font.FontWeight
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
@@ -56,28 +59,47 @@ fun ShowDetailScreen(
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
 
     if (show == null) {
+        val isLoading by viewModel.isLoading.collectAsState()
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .statusBarsPadding(),
-            contentAlignment = Alignment.Center
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Spacing.lg),
+                contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(38.dp),
-                    strokeWidth = 3.5.dp,
-                    color = Color(0xFF0082FB)
-                )
-                Text(
-                    text = "Loading show details...",
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isLoading) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(38.dp),
+                            strokeWidth = 3.5.dp,
+                            color = Color(0xFF0082FB)
+                        )
+                        Text(
+                            text = "Loading show details...",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    EmptyState(
+                        title = "Show not found",
+                        subtitle = "This show may have been removed from your library",
+                        painter = painterResource(id = R.drawable.ic_airing)
+                    )
+                }
             }
+            GlassHeader(
+                title = "Show Details",
+                onBackClick = onNavigateBack
+            )
         }
         return
     }

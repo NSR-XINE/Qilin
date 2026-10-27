@@ -45,14 +45,16 @@ fun StatsScreen(
     val todayIndex = getDayOfWeekIndex(todayName)
 
     val ongoingShows = remember(shows) { shows.filter { it.status == "ongoing" } }
-    val todayShows = remember(ongoingShows) { ongoingShows.filter { it.releaseDay == todayName } }
+    val todayShows = remember(ongoingShows) { ongoingShows.filter { it.releaseDay?.trim().equals(todayName, ignoreCase = true) } }
 
     val daysList = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
     val thisWeekShows = remember(ongoingShows) {
         ongoingShows.filter { show ->
-            val dayIndex = daysList.indexOf(show.releaseDay)
-            dayIndex >= todayIndex
-        }.sortedBy { daysList.indexOf(it.releaseDay) }
+            val dayIndex = daysList.indexOfFirst { it.equals(show.releaseDay?.trim(), ignoreCase = true) }
+            dayIndex >= todayIndex && dayIndex != -1
+        }.sortedBy { show ->
+            daysList.indexOfFirst { it.equals(show.releaseDay?.trim(), ignoreCase = true) }
+        }
     }
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -215,7 +217,7 @@ fun StatsScreen(
                                 verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                             ) {
                                 thisWeekShows.forEach { show ->
-                                    val isToday = show.releaseDay == todayName
+                                    val isToday = show.releaseDay?.trim().equals(todayName, ignoreCase = true)
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()

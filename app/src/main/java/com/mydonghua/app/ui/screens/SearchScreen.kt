@@ -314,7 +314,7 @@ fun SearchScreen(
                         onAction = { viewModel.retryOnlineSearch() },
                         modifier = Modifier.padding(top = headerTopPadding)
                     )
-                } else if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline) {
+                } else if (results.isEmpty() && onlineResults.isEmpty() && !isSearchingOnline && showMatches.isEmpty()) {
                     EmptyState(
                         title = "No matching shows found",
                         subtitle = "Try searching for another title or browse all shows",
@@ -512,18 +512,10 @@ fun SearchScreen(
                         shadow = null,
                     )
                     .background(searchPillBg)
-                    .pointerInput(Unit) {
-                        awaitEachGesture {
-                            awaitFirstDown(requireUnconsumed = true)
-                            scope.launch {
-                                focusAndOpenKeyboard()
-                            }
-                        }
-                    }
                     .padding(horizontal = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Leading icon (search when idle / back when active)
+                // Leading icon (back / exit search)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -533,18 +525,15 @@ fun SearchScreen(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            if (isSearchActive) {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                            } else {
-                                onNavigateBack()
-                            }
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            onNavigateBack()
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isSearchActive) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Search,
-                        contentDescription = if (isSearchActive) "Back" else "Search",
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(IconSize.md)
                     )

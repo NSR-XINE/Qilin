@@ -33,8 +33,6 @@ class ShowRepositoryImpl @Inject constructor(
 
         if (status == "ongoing" && entity.totalEp > 0 && entity.currentEp >= entity.totalEp) {
             status = "completed"
-        } else if (status == "completed" && (entity.totalEp == 0 || entity.currentEp < entity.totalEp)) {
-            status = "ongoing"
         }
 
         val migratedEntity = entity.copy(status = status, lastUpdated = System.currentTimeMillis())
@@ -58,8 +56,6 @@ class ShowRepositoryImpl @Inject constructor(
 
             if (status == "ongoing" && entity.totalEp > 0 && entity.currentEp >= entity.totalEp) {
                 status = "completed"
-            } else if (status == "completed" && (entity.totalEp == 0 || entity.currentEp < entity.totalEp)) {
-                status = "ongoing"
             }
             entity.copy(status = status, lastUpdated = System.currentTimeMillis())
         }

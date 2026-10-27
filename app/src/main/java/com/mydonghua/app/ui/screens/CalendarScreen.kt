@@ -63,7 +63,7 @@ fun CalendarScreen(
                 add(Calendar.DAY_OF_YEAR, i)
             }
             val dayName = weekDays[d.get(Calendar.DAY_OF_WEEK) - 1]
-            val dayShows = ongoingShows.filter { it.releaseDay == dayName }
+            val dayShows = ongoingShows.filter { it.releaseDay?.trim().equals(dayName, ignoreCase = true) }
             if (dayShows.isNotEmpty()) {
                 list.add(UpcomingDayGroup(dayName, d.time, dayShows))
             }

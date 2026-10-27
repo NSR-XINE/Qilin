@@ -75,10 +75,11 @@ class HomeViewModel @Inject constructor(
             val continueWatchingList = history
                 .distinctBy { it.showId }
                 .mapNotNull { hist -> shows.find { it.id == hist.showId } }
-                .filter { it.status == "ongoing" && it.currentEp > 0 }
+                .filter { show ->
+                    if (show.totalEp > 0) show.currentEp < show.totalEp else show.status != "completed"
+                }
 
             val recentlyUpdatedList = shows
-                .filter { it.lastUpdated != null }
                 .sortedByDescending { it.lastUpdated ?: 0L }
                 .take(10)
 

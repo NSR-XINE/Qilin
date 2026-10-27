@@ -44,6 +44,7 @@ import com.kyant.backdrop.effects.vibrancy
 import com.mydonghua.app.R
 import com.mydonghua.app.ui.theme.Spacing
 import com.mydonghua.app.ui.theme.ColorOSMotion
+import com.mydonghua.app.ui.theme.colorOSPressBounce
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
 
@@ -61,20 +62,8 @@ fun GlassHeader(
     actions: (@Composable RowScope.() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val menuInteraction = remember { MutableInteractionSource() }
-    val isMenuPressed by menuInteraction.collectIsPressedAsState()
-    val menuScale by animateFloatAsState(
-        targetValue = if (isMenuPressed) 0.90f else 1f,
-        animationSpec = ColorOSMotion.TouchBounceSpring,
-        label = "menuScale"
-    )
-
-    val density = LocalDensity.current
-    val glowRadius = with(density) { (NavBarHeight.icon * 1.2f).toPx() }
-
     val contentColor = if (isDark) Color.White else Color(0xFF1E1E1E)
     val menuBtnBg = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.06f)
-    val menuBtnPressBg = if (isDark) Color.White.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.12f)
 
     val headerInteraction = remember { MutableInteractionSource() }
     val isHeaderPressed by headerInteraction.collectIsPressedAsState()
@@ -221,7 +210,7 @@ fun GlassHeader(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(menuBtnBg)
-                            .clickable(onClick = onBackClick),
+                            .colorOSPressBounce(pressedScale = 0.90f, onClick = onBackClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -268,12 +257,7 @@ fun GlassHeader(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(menuBtnBg)
-                            .scale(menuScale)
-                            .clickable(
-                                interactionSource = menuInteraction,
-                                indication = null,
-                                onClick = onEditClick
-                            ),
+                            .colorOSPressBounce(pressedScale = 0.90f, onClick = onEditClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -292,30 +276,9 @@ fun GlassHeader(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(menuBtnBg)
-                            .scale(menuScale)
-                            .clickable(
-                                interactionSource = menuInteraction,
-                                indication = null,
-                                onClick = onDrawerOpen
-                            ),
+                            .colorOSPressBounce(pressedScale = 0.90f, onClick = onDrawerOpen),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isMenuPressed) {
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.radialGradient(
-                                            colors = listOf(
-                                                menuBtnPressBg,
-                                                Color.Transparent
-                                            ),
-                                            radius = glowRadius
-                                        )
-                                    )
-                            )
-                        }
                         Icon(
                             painter = painterResource(id = R.drawable.ic_menu),
                             contentDescription = "Menu",
