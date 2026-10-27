@@ -78,6 +78,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import com.mydonghua.app.ui.DynamicShowBackground
 import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
 import com.mydonghua.app.ui.LiquidGlassNavBar
@@ -214,7 +215,20 @@ class MainActivity : ComponentActivity() {
                                     .fillMaxSize()
                                     .layerBackdrop(contentBackdrop)
                             ) {
-                                GlassBackground(modifier = Modifier.fillMaxSize())
+                                val isHome = currentRoute == "home"
+                                val activeTrendingBg = if (isHome && settingsState.showBanner) {
+                                    state.activeTrendingMedia?.bannerImage ?: state.activeTrendingMedia?.coverImage
+                                } else null
+
+                                if (isHome && !activeTrendingBg.isNullOrBlank()) {
+                                    DynamicShowBackground(
+                                        imageUrl = activeTrendingBg,
+                                        themeMode = settingsState.themeMode,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    GlassBackground(modifier = Modifier.fillMaxSize())
+                                }
                             }
                             Scaffold(
                                 containerColor = Color.Transparent,

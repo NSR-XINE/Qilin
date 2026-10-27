@@ -25,13 +25,17 @@ data class HomeUiState(
     val recentlyUpdated: List<Show> = emptyList(),
     val allShows: List<Show> = emptyList(),
     val trendingDonghua: List<AniListMedia> = emptyList(),
+    val activeTrendingIndex: Int = 0,
     val isTrendingLoading: Boolean = false,
     val showCountdownBanner: Boolean = true,
     val showContinueWatching: Boolean = true,
     val showRecentlyUpdated: Boolean = true,
     val themeMode: String = "dark",
     val isLoading: Boolean = false
-)
+) {
+    val activeTrendingMedia: AniListMedia?
+        get() = trendingDonghua.getOrNull(activeTrendingIndex) ?: trendingDonghua.firstOrNull()
+}
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -158,6 +162,12 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(isTrendingLoading = false) }
             }
+        }
+    }
+
+    fun setActiveTrendingIndex(index: Int) {
+        if (_uiState.value.activeTrendingIndex != index) {
+            _uiState.update { it.copy(activeTrendingIndex = index) }
         }
     }
 

@@ -42,6 +42,7 @@ import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.rememberLiquidGlassChipBorder
+import com.mydonghua.app.ui.DynamicShowBackground
 import com.mydonghua.app.ui.screens.HomeViewModel
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -80,74 +81,41 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     ScrollPerfMonitor(listState, "home")
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Transparent)
-            .navigationBarsPadding(),
-        state = listState,
-        contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
-    ) {
-        if (state.isLoading) {
-            item { HeroBannerSkeleton() }
-            item { SectionHeaderSkeleton() }
-            item { HorizontalRowSkeleton() }
-            item { SectionHeaderSkeleton() }
-            item { RecentlyUpdatedRowSkeleton() }
-        } else if (state.allShows.isEmpty()) {
-            if (state.showCountdownBanner && state.trendingDonghua.isNotEmpty()) {
-                item(key = "trending_hero_header_empty") {
-                    SectionHeader(
-                        title = "Trending Shows",
-                        subtitle = "Popular on AniList"
-                    )
-                }
-                item(key = "trending_hero_carousel_empty") {
-                    TrendingHeroCarousel(
-                        trendingList = state.trendingDonghua,
-                        allShows = state.allShows,
-                        themeMode = state.themeMode,
-                        onTrendingClick = { media ->
-                            viewModel.addTrendingShow(media) { targetId ->
-                                onShowClick(targetId)
-                            }
-                        },
-                        onWatchClick = { media ->
-                            viewModel.addTrendingShow(media) { targetId ->
-                                val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
-                                    showTitle = media.preferredTitle,
-                                    customWatchUrl = null,
-                                    providerPreference = defaultStreamProvider
-                                )
-                                onWatchClick(url)
-                            }
-                        }
-                    )
-                }
-                item(key = "trending_empty_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
-            }
-            item {
-                EmptyState(
-                    title = "No shows tracked yet",
-                    subtitle = "Tap any trending show above or search to start tracking your favorite donghua",
-                    painter = painterResource(id = R.drawable.ic_airing),
-                    modifier = Modifier.padding(top = if (state.showCountdownBanner && state.trendingDonghua.isNotEmpty()) Spacing.md else effectiveTopPadding)
-                )
-            }
-        } else {
-            if (state.showCountdownBanner) {
-                if (state.trendingDonghua.isNotEmpty()) {
-                    item(key = "trending_hero_header") {
-                        SectionHeader(
-                            title = "Trending Shows",
-                            subtitle = "Popular on AniList"
-                        )
-                    }
-                    item(key = "trending_hero_carousel") {
+    val activeTrendingBg = if (state.showCountdownBanner) {
+        state.activeTrendingMedia?.bannerImage ?: state.activeTrendingMedia?.coverImage
+    } else null
+
+    Box(modifier = modifier.fillMaxSize()) {
+        if (!activeTrendingBg.isNullOrBlank()) {
+            DynamicShowBackground(
+                imageUrl = activeTrendingBg,
+                themeMode = state.themeMode,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent)
+                .navigationBarsPadding(),
+            state = listState,
+            contentPadding = PaddingValues(top = effectiveTopPadding, bottom = 96.dp)
+        ) {
+            if (state.isLoading) {
+                item { HeroBannerSkeleton() }
+                item { SectionHeaderSkeleton() }
+                item { HorizontalRowSkeleton() }
+                item { SectionHeaderSkeleton() }
+                item { RecentlyUpdatedRowSkeleton() }
+            } else if (state.allShows.isEmpty()) {
+                if (state.showCountdownBanner && state.trendingDonghua.isNotEmpty()) {
+                    item(key = "trending_hero_carousel_empty") {
                         TrendingHeroCarousel(
                             trendingList = state.trendingDonghua,
                             allShows = state.allShows,
                             themeMode = state.themeMode,
+                            onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                             onTrendingClick = { media ->
                                 viewModel.addTrendingShow(media) { targetId ->
                                     onShowClick(targetId)
@@ -165,39 +133,70 @@ fun HomeScreen(
                             }
                         )
                     }
-                    item(key = "trending_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
-                } else if (state.isTrendingLoading) {
-                    item(key = "trending_skeleton_header") {
-                        SectionHeader(
-                            title = "Trending Shows",
-                            subtitle = "Popular on AniList"
+                    item(key = "trending_empty_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
+                }
+                item {
+                    EmptyState(
+                        title = "No shows tracked yet",
+                        subtitle = "Tap any trending show above or search to start tracking your favorite donghua",
+                        painter = painterResource(id = R.drawable.ic_airing),
+                        modifier = Modifier.padding(top = if (state.showCountdownBanner && state.trendingDonghua.isNotEmpty()) Spacing.md else effectiveTopPadding)
+                    )
+                }
+            } else {
+                if (state.showCountdownBanner) {
+                    if (state.trendingDonghua.isNotEmpty()) {
+                        item(key = "trending_hero_carousel") {
+                            TrendingHeroCarousel(
+                                trendingList = state.trendingDonghua,
+                                allShows = state.allShows,
+                                themeMode = state.themeMode,
+                                onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
+                                onTrendingClick = { media ->
+                                    viewModel.addTrendingShow(media) { targetId ->
+                                        onShowClick(targetId)
+                                    }
+                                },
+                                onWatchClick = { media ->
+                                    viewModel.addTrendingShow(media) { targetId ->
+                                        val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                            showTitle = media.preferredTitle,
+                                            customWatchUrl = null,
+                                            providerPreference = defaultStreamProvider
+                                        )
+                                        onWatchClick(url)
+                                    }
+                                }
+                            )
+                        }
+                        item(key = "trending_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
+                    } else if (state.isTrendingLoading) {
+                        item(key = "trending_skeleton") { HeroBannerSkeleton() }
+                        item(key = "trending_skeleton_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
+                    }
+                }
+
+                if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
+                    item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
+                    item(key = "section_continue_row") { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
+                }
+
+                if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
+                    item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
+                    item(key = "section_recent_row") {
+                        RecentlyUpdatedRow(
+                            shows = state.recentlyUpdated,
+                            onShowClick = onShowClick,
+                            onWatchClick = { show ->
+                                val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                    showTitle = show.title,
+                                    customWatchUrl = show.watchUrl,
+                                    providerPreference = defaultStreamProvider
+                                )
+                                onWatchClick(url)
+                            }
                         )
                     }
-                    item(key = "trending_skeleton") { HeroBannerSkeleton() }
-                    item(key = "trending_skeleton_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
-                }
-            }
-
-            if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
-                item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
-                item(key = "section_continue_row") { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
-            }
-
-            if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
-                item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
-                item(key = "section_recent_row") {
-                    RecentlyUpdatedRow(
-                        shows = state.recentlyUpdated,
-                        onShowClick = onShowClick,
-                        onWatchClick = { show ->
-                            val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
-                                showTitle = show.title,
-                                customWatchUrl = show.watchUrl,
-                                providerPreference = defaultStreamProvider
-                            )
-                            onWatchClick(url)
-                        }
-                    )
                 }
             }
         }
@@ -209,6 +208,7 @@ fun TrendingHeroCarousel(
     trendingList: List<AniListMedia>,
     allShows: List<Show>,
     themeMode: String = "dark",
+    onPageChanged: ((Int) -> Unit)? = null,
     onTrendingClick: (AniListMedia) -> Unit,
     onWatchClick: (AniListMedia) -> Unit,
     modifier: Modifier = Modifier
@@ -221,6 +221,11 @@ fun TrendingHeroCarousel(
     val isLight = themeMode.lowercase() == "light"
     val isAmoled = themeMode.lowercase() == "amoled"
 
+    // Notify parent whenever active page changes
+    LaunchedEffect(pagerState.currentPage) {
+        onPageChanged?.invoke(pagerState.currentPage)
+    }
+
     // Auto-advance every 6 seconds
     LaunchedEffect(pagerState.pageCount) {
         while (true) {
@@ -232,128 +237,63 @@ fun TrendingHeroCarousel(
         }
     }
 
-    // Active show's picture for dynamic ambient background changing
-    val currentMedia = displayList.getOrNull(pagerState.currentPage) ?: displayList.firstOrNull()
-    val activePicture = currentMedia?.bannerImage ?: currentMedia?.coverImage
-
-    Box(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Dynamic Ambient Backdrop Glow that crossfades whenever the active show changes
-        Crossfade(
-            targetState = activePicture,
-            animationSpec = tween(700),
-            label = "TrendingCarouselBgCrossfade"
-        ) { picUrl ->
-            if (!picUrl.isNullOrBlank()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(236.dp)
-                        .padding(horizontal = Spacing.md)
-                        .clip(RoundedCornerShape(32.dp))
-                ) {
-                    SubcomposeAsyncImage(
-                        model = picUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                alpha = if (isLight) 0.16f else if (isAmoled) 0.18f else 0.25f
-                            }
-                    )
-                    // Theme-adaptive vertical vignette
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.background.copy(alpha = 0.35f),
-                                        MaterialTheme.colorScheme.background.copy(alpha = 0.80f),
-                                        MaterialTheme.colorScheme.background
-                                    )
-                                )
-                            )
-                    )
-                    // Edge fade
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
-                                        Color.Transparent,
-                                        MaterialTheme.colorScheme.background.copy(alpha = 0.65f)
-                                    )
-                                )
-                            )
-                    )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth()
+        ) { page ->
+            val media = displayList[page]
+            val isAlreadyInLibrary = remember(media.id, allShows) {
+                allShows.any { s ->
+                    s.aniListId == media.id ||
+                    s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                    (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                    (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
                 }
             }
+            TrendingHeroCard(
+                media = media,
+                rank = page + 1,
+                isAlreadyInLibrary = isAlreadyInLibrary,
+                isLight = isLight,
+                isAmoled = isAmoled,
+                onClick = { onTrendingClick(media) },
+                onWatchClick = { onWatchClick(media) }
+            )
         }
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth()
-            ) { page ->
-                val media = displayList[page]
-                val isAlreadyInLibrary = remember(media.id, allShows) {
-                    allShows.any { s ->
-                        s.aniListId == media.id ||
-                        s.title.equals(media.preferredTitle, ignoreCase = true) ||
-                        (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
-                        (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
-                    }
-                }
-                TrendingHeroCard(
-                    media = media,
-                    rank = page + 1,
-                    isAlreadyInLibrary = isAlreadyInLibrary,
-                    isLight = isLight,
-                    isAmoled = isAmoled,
-                    onClick = { onTrendingClick(media) },
-                    onWatchClick = { onWatchClick(media) }
-                )
-            }
-
-            if (displayList.size > 1) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    displayList.indices.forEach { index ->
-                        val isSelected = pagerState.currentPage == index
-                        val dotWidth by animateDpAsState(
-                            targetValue = if (isSelected) 18.dp else 6.dp,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-                            label = "dotWidth"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .height(5.dp)
-                                .width(dotWidth)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary
-                                    else if (isLight) Color.Black.copy(alpha = 0.15f)
-                                    else Color.White.copy(alpha = 0.20f)
-                                )
-                                .clickable {
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
+        if (displayList.size > 1) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                displayList.indices.forEach { index ->
+                    val isSelected = pagerState.currentPage == index
+                    val dotWidth by animateDpAsState(
+                        targetValue = if (isSelected) 18.dp else 6.dp,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+                        label = "dotWidth"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .height(5.dp)
+                            .width(dotWidth)
+                            .clip(CircleShape)
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else if (isLight) Color.Black.copy(alpha = 0.20f)
+                                else Color.White.copy(alpha = 0.25f)
+                            )
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
                                 }
-                        )
-                    }
+                            }
+                    )
                 }
             }
         }
@@ -375,7 +315,6 @@ private fun TrendingHeroCard(
     val bannerBorderBrush = rememberLiquidGlassBorder(isLight)
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     val posterShape = RoundedCornerShape(16.dp)
-    val bgPicture = media.bannerImage ?: media.coverImage
 
     Box(
         modifier = Modifier
@@ -383,114 +322,24 @@ private fun TrendingHeroCard(
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .clip(bannerShape)
             .hazeChild(state = hazeState, shape = bannerShape)
+            .background(
+                when {
+                    isLight -> Color.White.copy(alpha = 0.72f)
+                    isAmoled -> Color(0xFF070707).copy(alpha = 0.78f)
+                    else -> Color(0xFF131726).copy(alpha = 0.62f)
+                }
+            )
             .border(
                 width = 0.85.dp,
                 brush = bannerBorderBrush,
                 shape = bannerShape
             )
             .colorOSPressBounce(pressedScale = 0.985f, onClick = onClick)
+            .padding(14.dp)
     ) {
-        // Show Picture as Backdrop
-        if (!bgPicture.isNullOrBlank()) {
-            SubcomposeAsyncImage(
-                model = bgPicture,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(bannerShape)
-            )
-        }
-
-        // Multi-Layer Theme Scrims for Flawless Contrast Across Light, Dark, and AMOLED
-        // Horizontal Scrim: subtle on poster side, richer over text content
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(bannerShape)
-                .background(
-                    if (isLight) {
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.80f),
-                                Color.White.copy(alpha = 0.90f),
-                                Color.White.copy(alpha = 0.97f)
-                            )
-                        )
-                    } else if (isAmoled) {
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.82f),
-                                Color.Black.copy(alpha = 0.90f),
-                                Color.Black.copy(alpha = 0.97f)
-                            )
-                        )
-                    } else {
-                        // Dark Mode
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF0E1320).copy(alpha = 0.80f),
-                                Color(0xFF13192B).copy(alpha = 0.90f),
-                                Color(0xFF0E1320).copy(alpha = 0.96f)
-                            )
-                        )
-                    }
-                )
-        )
-
-        // Vertical Scrim: depth gradient
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(bannerShape)
-                .background(
-                    if (isLight) {
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.20f),
-                                Color.White.copy(alpha = 0.70f)
-                            )
-                        )
-                    } else if (isAmoled) {
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.15f),
-                                Color.Black.copy(alpha = 0.70f)
-                            )
-                        )
-                    } else {
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF0E1320).copy(alpha = 0.20f),
-                                Color(0xFF0E1320).copy(alpha = 0.70f)
-                            )
-                        )
-                    }
-                )
-        )
-
-        // Ambient ColorOS Glow
-        Box(
-            modifier = Modifier
-                .size(160.dp)
-                .align(Alignment.CenterStart)
-                .offset(x = (-20).dp)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            primaryAccent.copy(alpha = if (isLight) 0.12f else 0.20f),
-                            Color.Transparent
-                        ),
-                        radius = 260f
-                    )
-                )
-        )
-
         // Foreground Content Row
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -524,16 +373,12 @@ private fun TrendingHeroCard(
                         .align(Alignment.TopStart)
                         .padding(6.dp)
                         .clip(RoundedCornerShape(percent = 50))
-                        .background(
-                            Brush.linearGradient(
-                                listOf(Color(0xFFFF334B), Color(0xFFFF8A00))
-                            )
-                        )
-                        .border(0.6.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(percent = 50))
-                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                        .background(Color.Black.copy(alpha = 0.68f))
+                        .border(0.6.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(percent = 50))
+                        .padding(horizontal = 7.dp, vertical = 2.5.dp)
                 ) {
                     Text(
-                        text = "#$rank Trending",
+                        text = "#$rank",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -586,25 +431,16 @@ private fun TrendingHeroCard(
                     .height(176.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    // Trending category label
-                    Text(
-                        text = "POPULAR ON ANILIST",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = primaryAccent,
-                        letterSpacing = 0.8.sp
-                    )
-
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     // Title
                     Text(
                         text = media.preferredTitle,
-                        fontSize = 15.sp,
+                        fontSize = 15.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        lineHeight = 19.sp
+                        lineHeight = 20.sp
                     )
 
                     // Year • Status • Episodes
@@ -622,7 +458,7 @@ private fun TrendingHeroCard(
                     }
                     Text(
                         text = metaLine,
-                        fontSize = 11.5.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -698,8 +534,6 @@ private fun TrendingHeroCard(
         }
     }
 }
-
-
 
 @Composable
 fun SectionHeader(
