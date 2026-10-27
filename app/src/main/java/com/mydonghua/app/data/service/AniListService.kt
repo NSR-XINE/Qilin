@@ -123,9 +123,21 @@ object AniListService {
         return prefs?.getString(KEY_TOKEN, null)
     }
 
+    fun sanitizeToken(raw: String): String {
+        var token = raw.trim()
+        if (token.contains("access_token=")) {
+            token = token.substringAfter("access_token=").substringBefore("&")
+        }
+        if (token.startsWith("Bearer ", ignoreCase = true)) {
+            token = token.substring(7).trim()
+        }
+        return token.trim()
+    }
+
     fun saveSession(token: String, user: AniListUser) {
+        val cleanToken = sanitizeToken(token)
         prefs?.edit()
-            ?.putString(KEY_TOKEN, token.trim())
+            ?.putString(KEY_TOKEN, cleanToken)
             ?.putInt(KEY_USER_ID, user.id)
             ?.putString(KEY_USERNAME, user.name)
             ?.putString(KEY_AVATAR, user.avatarUrl)
@@ -154,6 +166,11 @@ object AniListService {
 
     suspend fun validateTokenAndFetchViewer(token: String): Result<AniListUser> = withContext(Dispatchers.IO) {
         try {
+            val cleanToken = sanitizeToken(token)
+            if (cleanToken.isBlank()) {
+                return@withContext Result.failure(Exception("Token cannot be empty"))
+            }
+
             val query = """
                 query {
                   Viewer {
@@ -179,7 +196,7 @@ object AniListService {
 
             val request = Request.Builder()
                 .url(GRAPHQL_ENDPOINT)
-                .addHeader("Authorization", "Bearer ${token.trim()}")
+                .addHeader("Authorization", "Bearer $cleanToken")
                 .post(requestBodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
                 .build()
 

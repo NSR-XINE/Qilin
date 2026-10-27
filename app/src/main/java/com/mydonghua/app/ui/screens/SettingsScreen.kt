@@ -1033,18 +1033,21 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        ColorOSOutlinedButton(
-                            text = "1. Open AniList Developer Settings",
+                        ColorOSPillButton(
+                            text = "1. Authorize on AniList",
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://anilist.co/settings/developer"))
+                                val url = "https://anilist.co/api/v2/oauth/authorize?client_id=24757&response_type=token"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                 context.startActivity(intent)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 40.dp
+                            height = 42.dp,
+                            containerColor = Color(0xFF02A9FF),
+                            contentColor = Color.White
                         )
 
                         Text(
-                            text = "2. Create a client or generate a Developer / Personal Access Token, then paste it below:",
+                            text = "2. Tap 'Authorize', then copy and paste the token (or full address bar URL) below:",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
