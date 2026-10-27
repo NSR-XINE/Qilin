@@ -391,7 +391,7 @@ private fun NavBarIcon(
 ) {
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.12f else 1.0f,
-        animationSpec = ColorOSMotion.PopSpring,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
         label = "nav_icon_bounce"
     )
     Box(
@@ -495,10 +495,10 @@ class DampedDragAnimation(
     val onTap: DampedDragAnimation.(slot: Int) -> Unit,
 ) {
     private val snapAnimationSpec = ColorOSMotion.NavPillSpring
-    private val pressProgressAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
-    private val scaleXAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
-    private val scaleYAnimationSpec = ColorOSMotion.ExpressiveFastSpatialSpring
-    private val velocityAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
+    private val pressProgressAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
+    private val scaleXAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
+    private val scaleYAnimationSpec = ColorOSMotion.ExpressiveDefaultSpatialSpring
+    private val velocityAnimationSpec = ColorOSMotion.ExpressiveSlowSpatialSpring
 
     private val valueAnimation = Animatable(initialValue, visibilityThreshold)
     private val pressProgressAnimation = Animatable(0f, 0.001f)

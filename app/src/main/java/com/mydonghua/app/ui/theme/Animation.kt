@@ -105,7 +105,7 @@ object ColorOSMotion {
     val TactileSpring = spring<Float>(dampingRatio = 0.70f, stiffness = 600f)
     val BouncySpring = spring<Float>(dampingRatio = 0.58f, stiffness = 400f)
     val PopSpring = spring<Float>(dampingRatio = 0.55f, stiffness = 500f)
-    val NavPillSpring = spring<Float>(dampingRatio = 0.78f, stiffness = 220f)
+    val NavPillSpring = spring<Float>(dampingRatio = 0.85f, stiffness = 85f)
     val SwitchThumbSpring = spring<Dp>(dampingRatio = 0.72f, stiffness = 600f)
 
     // Official Stock ColorOS 17 Navigation & Tab Transition Specs
