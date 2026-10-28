@@ -1,5 +1,6 @@
 package com.mydonghua.app.ui.common
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +22,9 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.delay
 
+import com.mydonghua.app.ui.LocalNavAnimatedVisibilityScope
+import com.mydonghua.app.ui.LocalSharedTransitionScope
+import com.mydonghua.app.ui.SharedBoundsSpring
 import com.mydonghua.app.ui.theme.JustSansFamily
 
 private const val POSTER_LOAD_DELAY_MS = 250L
@@ -100,6 +104,7 @@ fun getTitleInitials(title: String?): String {
     return initials.ifEmpty { title.take(2).uppercase() }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DonghuaPoster(
     posterUrl: String?,
@@ -109,8 +114,22 @@ fun DonghuaPoster(
     showAcronym: Boolean = true,
     fontSize: TextUnit = TextUnit.Unspecified,
     crossfade: Boolean = true,
-    immediate: Boolean = false
+    immediate: Boolean = false,
+    sharedElementKey: String? = null
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+    val sharedModifier = if (sharedElementKey != null && sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                state = rememberSharedContentState(key = sharedElementKey),
+                animatedVisibilityScope = animatedVisibilityScope,
+                boundsTransform = { _, _ -> SharedBoundsSpring }
+            )
+        }
+    } else {
+        Modifier
+    }
     val context = LocalContext.current
     val initials = remember(title) { getTitleInitials(title) }
 
@@ -154,7 +173,7 @@ fun DonghuaPoster(
     SubcomposeAsyncImage(
         model = imageRequest,
         contentDescription = title,
-        modifier = modifier,
+        modifier = modifier.then(sharedModifier),
         contentScale = contentScale
     ) {
         val state = painter.state

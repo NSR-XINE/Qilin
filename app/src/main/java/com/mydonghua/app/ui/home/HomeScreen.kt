@@ -662,7 +662,8 @@ fun ContinueWatchingVerticalCard(
                     title = show.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    fontSize = 8.5.sp
+                    fontSize = 8.5.sp,
+                    sharedElementKey = "show-poster-${show.id}"
                 )
 
                 // Bottom vignette overlay

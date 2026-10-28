@@ -190,7 +190,8 @@ fun ShowCard(
                     posterUrl = show.poster,
                     title = show.title,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    sharedElementKey = "show-poster-${show.id}"
                 )
 
                 // Atmospheric cinematic gradient overlay

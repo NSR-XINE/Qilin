@@ -253,7 +253,8 @@ fun ShowDetailScreen(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 11.sp
+                            fontSize = 11.sp,
+                            sharedElementKey = "show-poster-${show.id}"
                         )
                     }
 

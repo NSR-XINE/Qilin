@@ -336,7 +336,6 @@ fun MenuGlassPanel(
     content: @Composable () -> Unit
 ) {
     val backdrop = LocalLayerBackdrop.current
-    val isDark = !isLightMode
 
     val baseColor = when {
         isAmoledMode -> Color.Black.copy(alpha = 0.88f)
@@ -382,23 +381,6 @@ fun MenuGlassPanel(
                     .background(fallbackBg, shape)
             )
         }
-
-        // Specular optical rim border on curved glass edges
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .border(
-                    width = 0.85.dp,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isDark) 0.22f else 0.55f),
-                            Color.White.copy(alpha = if (isDark) 0.06f else 0.15f),
-                            Color.White.copy(alpha = if (isDark) 0.20f else 0.40f),
-                        )
-                    ),
-                    shape = shape
-                )
-        )
 
         content()
     }

@@ -6,9 +6,12 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -58,12 +61,19 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.mydonghua.app.data.service.AniListService
 import com.mydonghua.app.data.service.AniListUser
+import com.mydonghua.app.ui.LocalNavAnimatedVisibilityScope
+import com.mydonghua.app.ui.LocalSharedTransitionScope
+import com.mydonghua.app.ui.SharedElementDestination
+import com.mydonghua.app.ui.scopedComposable
+import com.mydonghua.app.domain.repository.SettingsKeys
+import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -94,6 +104,7 @@ import com.mydonghua.app.ui.common.ColorOSDialog
 import com.mydonghua.app.ui.common.AppLoadingScreen
 import com.mydonghua.app.ui.theme.MyDonghuaTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -103,15 +114,28 @@ class MainActivity : ComponentActivity() {
     private val searchViewModel: SearchViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
-    @OptIn(ExperimentalHazeMaterialsApi::class)
+    @Inject lateinit var settingsRepository: SettingsRepository
+
+    @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         requestPermissionsOnStart()
 
+        val initialSettings = runBlocking {
+            withTimeoutOrNull(2000L) {
+                runCatching { settingsRepository.getAllSettings() }.getOrDefault(emptyMap())
+            } ?: emptyMap()
+        }
+
         setContent {
             val state by homeViewModel.uiState.collectAsState()
-            val settingsState by settingsViewModel.uiState.collectAsState()
+            val settingsState by settingsViewModel.uiState.collectAsState(
+                initial = SettingsUiState(
+                    themeMode = initialSettings[SettingsKeys.THEME_MODE] ?: "dark",
+                    accentColor = initialSettings[SettingsKeys.ACCENT_COLOR] ?: "default"
+                )
+            )
             val allShows by showsViewModel.allShows.collectAsState()
             val showsLoading by showsViewModel.isLoading.collectAsState()
             val navController = rememberNavController()
@@ -121,6 +145,12 @@ class MainActivity : ComponentActivity() {
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
             var isAppLoading by remember { mutableStateOf(true) }
+            var backProgress by remember { mutableFloatStateOf(0f) }
+            val backPreview = animateFloatAsState(
+                targetValue = backProgress,
+                animationSpec = tween(durationMillis = 120, easing = ColorOSMotion.FastOutSlowIn),
+                label = "backPreview"
+            )
 
             LaunchedEffect(Unit) {
                 val startTime = System.currentTimeMillis()
@@ -168,11 +198,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            androidx.activity.compose.BackHandler(enabled = !isSearchOpen && !isAppLoading) {
+            val canPredictiveBack = !isSearchOpen && !isDrawerOpen && !isAppLoading && currentRoute != "home"
+
+            androidx.activity.compose.BackHandler(
+                enabled = !isSearchOpen && !isAppLoading && !canPredictiveBack
+            ) {
                 when {
                     isDrawerOpen -> isDrawerOpen = false
                     currentRoute != "home" -> navController.popBackStack("home", inclusive = false)
                     else -> showExitDialog = true
+                }
+            }
+
+            PredictiveBackHandler(enabled = canPredictiveBack) { progress ->
+                try {
+                    progress.collect { backProgress = it.progress }
+                    navController.popBackStack()
+                } finally {
+                    backProgress = 0f
                 }
             }
 
@@ -231,7 +274,17 @@ class MainActivity : ComponentActivity() {
                             }
                             Scaffold(
                                 containerColor = Color.Transparent,
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        val progress = backPreview.value
+                                        val scale = 1f - 0.06f * progress
+                                        scaleX = scale
+                                        scaleY = scale
+                                        translationX = size.width * 0.10f * progress
+                                        shape = RoundedCornerShape(28.dp)
+                                        clip = progress > 0.001f
+                                    },
                                 topBar = {
                                     if (!isSearchOpen && showGlobalHeader) {
                                         val headerTitle = when (currentRoute) {
@@ -302,6 +355,10 @@ class MainActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .layerBackdrop(navBackdrop)
                                 ) {
+                            SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
+                                CompositionLocalProvider(
+                                    LocalSharedTransitionScope provides this
+                                ) {
                             NavHost(
                                 navController = navController,
                                 startDestination = "home",
@@ -312,7 +369,12 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         EnterTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
+                                        val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec) +
+                                            slideInHorizontally(
+                                                animationSpec = ColorOSMotion.TabSlideInSpec,
+                                                initialOffsetX = { direction * it / 18 }
+                                            )
                                     } else {
                                         slideInHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideInSpec,
@@ -328,7 +390,12 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         ExitTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
+                                        val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
+                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec) +
+                                            slideOutHorizontally(
+                                                animationSpec = ColorOSMotion.TabSlideOutSpec,
+                                                targetOffsetX = { -direction * it / 18 }
+                                            )
                                     } else {
                                         slideOutHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideOutSpec,
@@ -345,7 +412,12 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         EnterTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
+                                        val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec) +
+                                            slideInHorizontally(
+                                                animationSpec = ColorOSMotion.TabSlideInSpec,
+                                                initialOffsetX = { direction * it / 18 }
+                                            )
                                     } else {
                                         slideInHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideInSpec,
@@ -361,7 +433,12 @@ class MainActivity : ComponentActivity() {
                                     if (from == to) {
                                         ExitTransition.None
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
-                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec)
+                                        val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
+                                        fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec) +
+                                            slideOutHorizontally(
+                                                animationSpec = ColorOSMotion.TabSlideOutSpec,
+                                                targetOffsetX = { -direction * it / 18 }
+                                            )
                                     } else {
                                         slideOutHorizontally(
                                             animationSpec = ColorOSMotion.NavSlideOutSpec,
@@ -372,7 +449,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) {
-                        composable("home") {
+                        scopedComposable("home") {
                                 HomeScreen(
                                 viewModel = homeViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
@@ -389,7 +466,7 @@ class MainActivity : ComponentActivity() {
                                 onWatchClick = launchWatch
                             )
                         }
-                        composable("airing") {
+                        scopedComposable("airing") {
                                 AiringScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
@@ -402,7 +479,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable("complete") {
+                        scopedComposable("complete") {
                                 CompletedScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
@@ -415,7 +492,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable("stopped") {
+                        scopedComposable("stopped") {
                                 StoppedScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
@@ -428,7 +505,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable("favorites") {
+                        scopedComposable("favorites") {
                                 FavoritesScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
@@ -458,7 +535,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        composable("show_detail/{showId}") { backStackEntry ->
+                        scopedComposable("show_detail/{showId}") { backStackEntry ->
                                 val showIdArg = backStackEntry.arguments?.getString("showId") ?: ""
                                 ShowDetailScreen(
                                 showId = showIdArg,
@@ -519,6 +596,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                                }
+                            }
                 }
 
                 AnimatedVisibility(
@@ -567,6 +646,39 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+            val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+            val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
+            val isLightMode = settingsState.themeMode.lowercase() == "light"
+
+            AnimatedVisibility(
+                visible = isDrawerOpen,
+                modifier = Modifier.zIndex(999f),
+                enter = fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 220,
+                        easing = ColorOSMotion.FastOutSlowIn
+                    )
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 180,
+                        easing = ColorOSMotion.FastOutSlowIn
+                    )
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = if (isLightMode) 0.35f else 0.55f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            isDrawerOpen = false
+                        }
+                )
+            }
+
             AnimatedVisibility(
                 visible = isDrawerOpen,
                 modifier = Modifier.zIndex(1000f),
@@ -583,20 +695,8 @@ class MainActivity : ComponentActivity() {
                     animationSpec = ColorOSMotion.NavFadeOutSpec
                 )
             ) {
-                val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
-                val isLightMode = settingsState.themeMode.lowercase() == "light"
-
                 BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = if (isLightMode) 0.35f else 0.55f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            isDrawerOpen = false
-                        },
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     MenuGlassPanel(

@@ -1,5 +1,11 @@
 package com.mydonghua.app.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -501,16 +507,33 @@ fun GlassHeader(
                             .weight(1f)
                             .padding(horizontal = Spacing.md)
                     ) {
-                        Text(
-                            text = title,
-                            style = TextStyle(
-                                fontSize = if (subtitle != null) 16.sp else 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = contentColor
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        AnimatedContent(
+                            targetState = title,
+                            transitionSpec = {
+                                (fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec) +
+                                    slideInVertically(
+                                        animationSpec = ColorOSMotion.TabSlideInSpec,
+                                        initialOffsetY = { it / 3 }
+                                    )) togetherWith
+                                    (fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec) +
+                                        slideOutVertically(
+                                            animationSpec = ColorOSMotion.TabSlideOutSpec,
+                                            targetOffsetY = { -it / 3 }
+                                        ))
+                            },
+                            label = "headerTitle"
+                        ) { animatedTitle ->
+                            Text(
+                                text = animatedTitle,
+                                style = TextStyle(
+                                    fontSize = if (subtitle != null) 16.sp else 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = contentColor
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                         if (subtitle != null) {
                             Text(
                                 text = subtitle,

@@ -126,12 +126,20 @@ object ColorOSMotion {
         easing = FastOutSlowIn
     )
     val TabFadeInSpec = tween<Float>(
-        durationMillis = 180,
+        durationMillis = 200,
         easing = LinearOutSlowIn
     )
     val TabFadeOutSpec = tween<Float>(
-        durationMillis = 120,
+        durationMillis = 140,
         easing = FastOutSlowIn
+    )
+    val TabSlideInSpec = tween<IntOffset>(
+        durationMillis = 280,
+        easing = EmphasizedDecelerate
+    )
+    val TabSlideOutSpec = tween<IntOffset>(
+        durationMillis = 220,
+        easing = EmphasizedAccelerate
     )
 
     // Float Transitions
