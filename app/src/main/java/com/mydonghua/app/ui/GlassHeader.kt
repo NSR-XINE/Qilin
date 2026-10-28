@@ -239,7 +239,7 @@ fun GlassHeader(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = if (onBackClick != null) Spacing.sm else Spacing.xxl, end = Spacing.sm),
+                    .padding(start = if (onBackClick != null || countdownShow != null) Spacing.sm else Spacing.xxl, end = Spacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (onBackClick != null) {
@@ -267,7 +267,7 @@ fun GlassHeader(
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(start = if (onBackClick != null) Spacing.xs else Spacing.xs, end = Spacing.sm)
+                            .padding(start = Spacing.xs, end = Spacing.xs)
                             .colorOSPressBounce(pressedScale = 0.96f) {
                                 onCountdownClick?.invoke()
                             },
@@ -275,19 +275,19 @@ fun GlassHeader(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         // 1. Mini Poster Thumbnail Squircle
-                        val posterShape = RoundedCornerShape(10.dp)
+                        val posterShape = RoundedCornerShape(11.dp)
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(40.dp)
                                 .clip(posterShape)
-                                .background(if (isDark) Color(0xFF192233) else Color(0xFFE2E8F0))
+                                .background(if (isDark) Color(0xFF161F2E) else Color(0xFFE4E9F2))
                                 .border(
-                                    width = 0.75.dp,
+                                    width = 1.dp,
                                     brush = Brush.verticalGradient(
                                         listOf(
-                                            Color.White.copy(alpha = if (isDark) 0.35f else 0.75f),
+                                            Color.White.copy(alpha = if (isDark) 0.45f else 0.85f),
                                             Color(0xFF0082FB).copy(alpha = 0.25f),
-                                            Color.Transparent
+                                            Color.White.copy(alpha = if (isDark) 0.08f else 0.35f)
                                         )
                                     ),
                                     shape = posterShape
@@ -308,7 +308,7 @@ fun GlassHeader(
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_tv),
                                             contentDescription = null,
-                                            tint = if (isDark) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.5f),
+                                            tint = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.4f),
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }
@@ -317,7 +317,7 @@ fun GlassHeader(
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_tv),
                                     contentDescription = null,
-                                    tint = if (isDark) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.5f),
+                                    tint = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.4f),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -330,15 +330,27 @@ fun GlassHeader(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(5.5.dp)
                             ) {
                                 // Pulsing status indicator dot
                                 Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isAiring) Color(0xFFFF3B30) else Color(0xFF0082FB))
-                                )
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.size(8.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background((if (isAiring) Color(0xFFFF3B30) else Color(0xFF0082FB)).copy(alpha = 0.30f))
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(4.5.dp)
+                                            .clip(CircleShape)
+                                            .background(if (isAiring) Color(0xFFFF3B30) else Color(0xFF0082FB))
+                                    )
+                                }
+
                                 Text(
                                     text = countdownShow.title,
                                     fontFamily = OnePlusSansFamily,
@@ -351,11 +363,17 @@ fun GlassHeader(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f, fill = false)
                                 )
+
                                 if (isAiring) {
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(4.dp))
-                                            .background(Color(0xFFFF3B30).copy(alpha = 0.15f))
+                                            .background(Color(0xFFFF3B30).copy(alpha = 0.16f))
+                                            .border(
+                                                width = 0.5.dp,
+                                                color = Color(0xFFFF3B30).copy(alpha = 0.40f),
+                                                shape = RoundedCornerShape(4.dp)
+                                            )
                                             .padding(horizontal = 4.5.dp, vertical = 1.dp)
                                     ) {
                                         Text(
@@ -379,9 +397,14 @@ fun GlassHeader(
                                 // Episode Chip Pill
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(Color(0xFF0082FB).copy(alpha = if (isDark) 0.16f else 0.10f))
-                                        .padding(horizontal = 4.5.dp, vertical = 1.dp)
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(Color(0xFF0082FB).copy(alpha = if (isDark) 0.18f else 0.12f))
+                                        .border(
+                                            width = 0.6.dp,
+                                            color = Color(0xFF0082FB).copy(alpha = if (isDark) 0.35f else 0.25f),
+                                            shape = RoundedCornerShape(5.dp)
+                                        )
+                                        .padding(horizontal = 5.dp, vertical = 1.5.dp)
                                 ) {
                                     Text(
                                         text = "EP ${countdownShow.currentEp + 1}",
@@ -393,50 +416,73 @@ fun GlassHeader(
                                 }
 
                                 if (isAiring) {
-                                    Text(
-                                        text = "Releasing Now!",
-                                        fontFamily = OnePlusSansFamily,
-                                        style = TextStyle(
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color(0xFFFF3B30)
-                                        ),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                } else if (!rem.elapsed) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(3.5.dp)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(5.dp))
+                                            .background(Color(0xFFFF3B30).copy(alpha = 0.12f))
+                                            .padding(horizontal = 6.dp, vertical = 1.5.dp)
                                     ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_clock),
-                                            contentDescription = null,
-                                            tint = contentColor.copy(alpha = 0.55f),
-                                            modifier = Modifier.size(10.5.dp)
-                                        )
-                                        val countdownText = buildString {
-                                            if (rem.days > 0) append("${rem.days}d ")
-                                            append("${rem.hours}h ${rem.minutes}m ${rem.seconds}s")
-                                        }
                                         Text(
-                                            text = countdownText,
+                                            text = "Air Now",
                                             fontFamily = OnePlusSansFamily,
                                             style = TextStyle(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = contentColor.copy(alpha = 0.82f)
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFFFF3B30)
                                             ),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            maxLines = 1
                                         )
+                                    }
+                                } else if (!rem.elapsed) {
+                                    val countdownText = buildString {
+                                        if (rem.days > 0) append("${rem.days}d ")
+                                        append(rem.hours.toString().padStart(2, '0')).append("h ")
+                                        append(rem.minutes.toString().padStart(2, '0')).append("m ")
+                                        append(rem.seconds.toString().padStart(2, '0')).append("s")
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(5.dp))
+                                            .background(
+                                                if (isDark) Color.White.copy(alpha = 0.07f)
+                                                else Color.Black.copy(alpha = 0.05f)
+                                            )
+                                            .border(
+                                                width = 0.6.dp,
+                                                color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f),
+                                                shape = RoundedCornerShape(5.dp)
+                                            )
+                                            .padding(horizontal = 5.5.dp, vertical = 1.5.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(3.5.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_clock),
+                                                contentDescription = null,
+                                                tint = Color(0xFF0082FB),
+                                                modifier = Modifier.size(10.dp)
+                                            )
+                                            Text(
+                                                text = countdownText,
+                                                fontFamily = OnePlusSansFamily,
+                                                style = TextStyle(
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = contentColor.copy(alpha = 0.90f)
+                                                ),
+                                                maxLines = 1
+                                            )
+                                        }
                                     }
                                 } else {
                                     Text(
                                         text = "Soon",
                                         fontFamily = OnePlusSansFamily,
                                         style = TextStyle(
-                                            fontSize = 11.sp,
+                                            fontSize = 10.5.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = contentColor.copy(alpha = 0.70f)
                                         ),

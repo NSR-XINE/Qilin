@@ -448,55 +448,5 @@ fun AppLoadingScreen(
                 )
             }
         }
-
-        // 3. Bottom Architecture & Version System Tag
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 22.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.5.dp)
-            ) {
-                Text(
-                    text = "COLOROS 17",
-                    fontFamily = OnePlusSansFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 9.5.sp,
-                    letterSpacing = 1.6.sp,
-                    color = primaryTextColor.copy(alpha = 0.32f)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(3.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF0082FB).copy(alpha = 0.45f))
-                )
-                Text(
-                    text = "FLUID EXPERIENCE",
-                    fontFamily = OnePlusSansFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 9.5.sp,
-                    letterSpacing = 1.6.sp,
-                    color = primaryTextColor.copy(alpha = 0.28f)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(3.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF0082FB).copy(alpha = 0.45f))
-                )
-                Text(
-                    text = "V${BuildConfig.VERSION_NAME.uppercase()}",
-                    fontFamily = OnePlusSansFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 9.5.sp,
-                    letterSpacing = 1.6.sp,
-                    color = Color(0xFF0082FB).copy(alpha = 0.60f)
-                )
-            }
-        }
     }
 }
