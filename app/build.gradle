@@ -15,8 +15,8 @@ android {
         applicationId "com.mydonghua.app"
         minSdk 29
         targetSdk 35
-        versionCode 58
-        versionName "6.8"
+        versionCode 59
+        versionName "6.8-beta"
 
         ndk {
             abiFilters 'arm64-v8a'

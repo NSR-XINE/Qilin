@@ -102,7 +102,7 @@ object AniListService {
         .readTimeout(20, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .header("User-Agent", "MyDonghua/6.8 (Android)")
+                .header("User-Agent", "MyDonghua/${com.mydonghua.app.BuildConfig.VERSION_NAME} (Android)")
                 .header("Accept", "application/json")
                 .build()
             chain.proceed(request)

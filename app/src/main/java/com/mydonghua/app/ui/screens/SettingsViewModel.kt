@@ -183,7 +183,7 @@ class SettingsViewModel @Inject constructor(
             val backup = JSONObject().apply {
                 put("version", 2)
                 put("exportedAt", java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date()))
-                put("appVersion", "v6.8")
+                put("appVersion", "v${com.mydonghua.app.BuildConfig.VERSION_NAME}")
                 put("shows", showsArr)
                 put("watchHistory", historyArr)
                 put("notifyPrefs", settingsJson.toString())

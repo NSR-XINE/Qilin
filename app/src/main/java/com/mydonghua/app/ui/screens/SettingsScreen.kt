@@ -1125,7 +1125,7 @@ fun SettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Version 6.8.8 (Build 2026.10)",
+                                    text = "Version ${com.mydonghua.app.BuildConfig.VERSION_NAME} (Build 2026.10)",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
