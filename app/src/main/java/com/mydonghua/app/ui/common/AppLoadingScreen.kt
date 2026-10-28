@@ -102,27 +102,6 @@ fun AppLoadingScreen(
         label = "orbitalAngle"
     )
 
-    // Radar pulse wave expanding from behind emblem
-    val radarTransition = rememberInfiniteTransition(label = "radarTransition")
-    val radarScale by radarTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.32f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "radarScale"
-    )
-    val radarAlpha by radarTransition.animateFloat(
-        initialValue = if (isAmoled) 0.22f else 0.35f,
-        targetValue = 0.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "radarAlpha"
-    )
-
     // Shimmer sweep for fluid progress beam (-0.7f to 1.7f)
     val shimmerOffset by infiniteTransition.animateFloat(
         initialValue = -0.7f,
@@ -191,43 +170,12 @@ fun AppLoadingScreen(
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
-        // 1. Atmospheric Ambient Aurora & Kinetic Particle Depth
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            if (w > 0 && h > 0) {
-                if (isDark) {
-                    // Primary Aurora: drifting upper-center electric cobalt bloom
-                    val primaryDriftX = w * (0.50f + sin(timePhase) * 0.08f)
-                    val primaryDriftY = h * (0.36f + cos(timePhase) * 0.04f)
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF0082FB).copy(alpha = if (isAmoled) 0.10f else 0.18f),
-                                Color(0xFF0052B4).copy(alpha = if (isAmoled) 0.04f else 0.08f),
-                                Color.Transparent
-                            ),
-                            center = Offset(primaryDriftX, primaryDriftY),
-                            radius = w * 0.70f
-                        )
-                    )
-
-                    // Secondary Aurora: counter-drifting lower cyan & amethyst horizon aura
-                    val secDriftX = w * (0.50f - sin(timePhase * 0.8f) * 0.06f)
-                    val secDriftY = h * (0.64f - cos(timePhase * 0.8f) * 0.04f)
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF00D2FF).copy(alpha = if (isAmoled) 0.07f else 0.12f),
-                                Color(0xFF6C5CE7).copy(alpha = if (isAmoled) 0.03f else 0.06f),
-                                Color.Transparent
-                            ),
-                            center = Offset(secDriftX, secDriftY),
-                            radius = w * 0.58f
-                        )
-                    )
-
-                    // Floating Cosmic Stardust Particles
+        // 1. Atmospheric Kinetic Particle Depth (Clean canvas with zero circular background shapes)
+        if (isDark) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                if (w > 0 && h > 0) {
                     for (p in particles) {
                         val particlePhase = timePhase * p.speed + p.phaseOffset
                         val driftY = sin(particlePhase) * 10.dp.toPx()
@@ -241,21 +189,6 @@ fun AppLoadingScreen(
                             alpha = p.baseAlpha * alphaFactor * glowAlpha * (if (isAmoled) 0.65f else 0.90f)
                         )
                     }
-                } else {
-                    // Light mode luminous sky-blue blush
-                    val lightDriftX = w * (0.50f + sin(timePhase) * 0.05f)
-                    val lightDriftY = h * (0.40f + cos(timePhase) * 0.03f)
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF0082FB).copy(alpha = 0.08f),
-                                Color(0xFF00D2FF).copy(alpha = 0.04f),
-                                Color.Transparent
-                            ),
-                            center = Offset(lightDriftX, lightDriftY),
-                            radius = w * 0.72f
-                        )
-                    )
                 }
             }
         }
@@ -266,154 +199,103 @@ fun AppLoadingScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            // Hero Emblem Stack with Rotating Squircle Border Light & Radiance
+            // Hero Emblem with Rotating Squircle Border Light
+            val emblemShape = RoundedCornerShape(30.dp)
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(176.dp)
-            ) {
-                // Expanding Radial Pulse Wave (Radar effect)
-                Box(
-                    modifier = Modifier
-                        .size(116.dp)
-                        .scale(radarScale)
-                        .clip(RoundedCornerShape(36.dp))
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFF0082FB).copy(alpha = radarAlpha),
-                            shape = RoundedCornerShape(36.dp)
-                        )
-                )
-
-                // Soft Atmospheric Radial Core Glow
-                Box(
-                    modifier = Modifier
-                        .size(160.dp)
-                        .scale(pulseScale)
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color(0xFF0082FB).copy(alpha = 0.38f * glowAlpha),
-                                    Color(0xFF00D2FF).copy(alpha = 0.18f * glowAlpha),
-                                    Color.Transparent
-                                )
-                            ),
-                            shape = CircleShape
-                        )
-                )
-
-                // Signature ColorOS 17 Liquid Glass Squircle Container
-                val emblemShape = RoundedCornerShape(30.dp)
-                Box(
-                    modifier = Modifier
-                        .size(104.dp)
-                        .scale(pulseScale)
-                        .clip(emblemShape)
-                        .background(
-                            if (isDark) Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFF16233B).copy(alpha = 0.88f),
-                                    Color(0xFF0B1322).copy(alpha = 0.94f)
-                                )
-                            )
-                            else Brush.verticalGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.98f),
-                                    Color(0xFFF0F5FA).copy(alpha = 0.94f)
-                                )
+                modifier = Modifier
+                    .size(104.dp)
+                    .scale(pulseScale)
+                    .clip(emblemShape)
+                    .background(
+                        if (isDark) Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF16233B).copy(alpha = 0.88f),
+                                Color(0xFF0B1322).copy(alpha = 0.94f)
                             )
                         )
-                        .border(
-                            width = 1.dp,
-                            brush = Brush.verticalGradient(
-                                listOf(
-                                    Color.White.copy(alpha = if (isDark) 0.35f else 0.80f),
-                                    Color(0xFF0082FB).copy(alpha = if (isDark) 0.20f else 0.15f),
-                                    Color.White.copy(alpha = if (isDark) 0.05f else 0.25f)
-                                )
-                            ),
-                            shape = emblemShape
+                        else Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.98f),
+                                Color(0xFFF0F5FA).copy(alpha = 0.94f)
+                            )
+                        )
+                    )
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = if (isDark) 0.35f else 0.80f),
+                                Color(0xFF0082FB).copy(alpha = if (isDark) 0.20f else 0.15f),
+                                Color.White.copy(alpha = if (isDark) 0.05f else 0.25f)
+                            )
                         ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Concentrated inner ambient core glow behind dragon
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color(0xFF00D2FF).copy(alpha = 0.30f * glowAlpha),
-                                        Color.Transparent
-                                    )
-                                ),
-                                shape = CircleShape
-                            )
+                        shape = emblemShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                // Official Transparent Cyan-Cobalt Dragon Emblem
+                Image(
+                    painter = painterResource(id = R.drawable.ic_dragon_emblem),
+                    contentDescription = "My Donghua Emblem",
+                    modifier = Modifier.size(68.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                // Kinetic Rotating Light Beam directly on the Squircle Border
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val strokeWidth = 2.4.dp.toPx()
+                    val halfStroke = strokeWidth / 2f
+                    val cornerRadiusPx = 30.dp.toPx() - halfStroke
+
+                    // Sweep gradient rotated by orbitalAngle around squircle center
+                    val sweepShader = SweepGradient(
+                        size.width / 2f,
+                        size.height / 2f,
+                        intArrayOf(
+                            android.graphics.Color.TRANSPARENT,
+                            0x000082FB.toInt(),
+                            0x330082FB.toInt(),
+                            0xFF0082FB.toInt(),
+                            0xFF00D2FF.toInt(),
+                            0xFFFFFFFF.toInt(),
+                            0xFF00D2FF.toInt(),
+                            0x330082FB.toInt(),
+                            android.graphics.Color.TRANSPARENT
+                        ),
+                        floatArrayOf(0.0f, 0.40f, 0.65f, 0.82f, 0.92f, 0.96f, 0.98f, 0.99f, 1.0f)
+                    )
+                    val matrix = Matrix()
+                    matrix.postRotate(orbitalAngle, size.width / 2f, size.height / 2f)
+                    sweepShader.setLocalMatrix(matrix)
+
+                    val rotatingBrush = ShaderBrush(sweepShader)
+
+                    // 1. Soft outer neon glow along the squircle border
+                    val glowWidth = 4.8.dp.toPx()
+                    val halfGlow = glowWidth / 2f
+                    drawRoundRect(
+                        brush = rotatingBrush,
+                        topLeft = Offset(halfGlow, halfGlow),
+                        size = Size(size.width - glowWidth, size.height - glowWidth),
+                        cornerRadius = CornerRadius(
+                            (30.dp.toPx() - halfGlow).coerceAtLeast(0f),
+                            (30.dp.toPx() - halfGlow).coerceAtLeast(0f)
+                        ),
+                        style = Stroke(width = glowWidth),
+                        alpha = 0.45f
                     )
 
-                    // Official Transparent Cyan-Cobalt Dragon Emblem
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_dragon_emblem),
-                        contentDescription = "My Donghua Emblem",
-                        modifier = Modifier.size(68.dp),
-                        contentScale = ContentScale.Fit
+                    // 2. High-intensity crisp light beam tracing the squircle border
+                    drawRoundRect(
+                        brush = rotatingBrush,
+                        topLeft = Offset(halfStroke, halfStroke),
+                        size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                        cornerRadius = CornerRadius(
+                            cornerRadiusPx.coerceAtLeast(0f),
+                            cornerRadiusPx.coerceAtLeast(0f)
+                        ),
+                        style = Stroke(width = strokeWidth)
                     )
-
-                    // Kinetic Rotating Light Beam directly on the Squircle Border
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val strokeWidth = 2.4.dp.toPx()
-                        val halfStroke = strokeWidth / 2f
-                        val cornerRadiusPx = 30.dp.toPx() - halfStroke
-
-                        // Sweep gradient rotated by orbitalAngle around squircle center
-                        val sweepShader = SweepGradient(
-                            size.width / 2f,
-                            size.height / 2f,
-                            intArrayOf(
-                                android.graphics.Color.TRANSPARENT,
-                                0x000082FB.toInt(),
-                                0x330082FB.toInt(),
-                                0xFF0082FB.toInt(),
-                                0xFF00D2FF.toInt(),
-                                0xFFFFFFFF.toInt(),
-                                0xFF00D2FF.toInt(),
-                                0x330082FB.toInt(),
-                                android.graphics.Color.TRANSPARENT
-                            ),
-                            floatArrayOf(0.0f, 0.40f, 0.65f, 0.82f, 0.92f, 0.96f, 0.98f, 0.99f, 1.0f)
-                        )
-                        val matrix = Matrix()
-                        matrix.postRotate(orbitalAngle, size.width / 2f, size.height / 2f)
-                        sweepShader.setLocalMatrix(matrix)
-
-                        val rotatingBrush = ShaderBrush(sweepShader)
-
-                        // 1. Soft outer neon glow along the squircle border
-                        val glowWidth = 4.8.dp.toPx()
-                        val halfGlow = glowWidth / 2f
-                        drawRoundRect(
-                            brush = rotatingBrush,
-                            topLeft = Offset(halfGlow, halfGlow),
-                            size = Size(size.width - glowWidth, size.height - glowWidth),
-                            cornerRadius = CornerRadius(
-                                (30.dp.toPx() - halfGlow).coerceAtLeast(0f),
-                                (30.dp.toPx() - halfGlow).coerceAtLeast(0f)
-                            ),
-                            style = Stroke(width = glowWidth),
-                            alpha = 0.45f
-                        )
-
-                        // 2. High-intensity crisp light beam tracing the squircle border
-                        drawRoundRect(
-                            brush = rotatingBrush,
-                            topLeft = Offset(halfStroke, halfStroke),
-                            size = Size(size.width - strokeWidth, size.height - strokeWidth),
-                            cornerRadius = CornerRadius(
-                                cornerRadiusPx.coerceAtLeast(0f),
-                                cornerRadiusPx.coerceAtLeast(0f)
-                            ),
-                            style = Stroke(width = strokeWidth)
-                        )
-                    }
                 }
             }
 
