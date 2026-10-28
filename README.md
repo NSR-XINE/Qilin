@@ -75,7 +75,7 @@ my_donghua/
 │                   ├── theme/                # Color palettes, Material 3, ColorOS 17 animations
 │                   ├── common/               # ShowCard, DonghuaPoster, EmptyState, ShimmerEffect
 │                   ├── home/                 # HomeScreen layout, hero banner, continue watching
-│                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, Calendar, History
+│                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, AniList, Calendar, History
 ├── AGENTS.md
 └── README.md
 ```
@@ -91,6 +91,7 @@ my_donghua/
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
 - 🎨 **ColorOS 17 Fluid Motion & Liquid Glass**: Bouncy physics-driven tap interactions, fluid card press effects, and Kyant liquid glass shader navigation bar.
 - 🔍 **Smart Search**: Auto-focus search bar, recent search history with individual delete or clear-all, and debounced online search across AniList and MyAnimeList.
+- ☁️ **Dedicated AniList Screen**: Account login, auto-sync toggle, 2-way sync, cloud import/push, profile stats, and disconnect — accessible directly from the navigation drawer.
 - 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
 - 🔔 **Native Push Notifications**: Automatic DST-aware heads-up notifications when a new episode releases.
 - 📊 **Statistics Dashboard**: Analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.

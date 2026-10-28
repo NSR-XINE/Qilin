@@ -476,6 +476,12 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                        composable("anilist") {
+                            AniListScreen(
+                                viewModel = settingsViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
                         composable("stats") {
                                 StatsScreen(
                                 showsViewModel = showsViewModel,
@@ -728,7 +734,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     .colorOSPressBounce(pressedScale = 0.98f) {
                                         isDrawerOpen = false
-                                        navController.navigate("settings")
+                                        navController.navigate("anilist")
                                     }
                                     .padding(14.dp)
                             ) {
@@ -851,7 +857,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     .colorOSPressBounce(pressedScale = 0.98f) {
                                         isDrawerOpen = false
-                                        navController.navigate("settings")
+                                        navController.navigate("anilist")
                                     }
                                     .padding(horizontal = 16.dp, vertical = 12.dp)
                             ) {
@@ -1005,6 +1011,19 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "history",
                                     isLight = isLightMode,
                                     onClick = { isDrawerOpen = false; navController.navigate("history") }
+                                )
+                                HorizontalDivider(
+                                    color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
+                                    modifier = Modifier.padding(start = 66.dp, end = 16.dp)
+                                )
+                                OxygenDrawerListItem(
+                                    title = "AniList",
+                                    subtitle = "Cloud sync & watch tracking",
+                                    iconRes = R.drawable.ic_anilist,
+                                    iconGradient = listOf(Color(0xFF02A9FF), Color(0xFF0066CC)),
+                                    isSelected = currentRoute == "anilist",
+                                    isLight = isLightMode,
+                                    onClick = { isDrawerOpen = false; navController.navigate("anilist") }
                                 )
                                 HorizontalDivider(
                                     color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
