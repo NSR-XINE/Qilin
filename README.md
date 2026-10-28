@@ -23,7 +23,7 @@ A sleek, high-aesthetic dark-themed native Android application designed for Chin
   - Built-in multi-layered Ad Blocker with dynamic anti-adblock defusal (P21 probe spoofing, transparent pixel interception, anti-anti-adblock bypass)
   - User-configurable toggle switch in Settings
 - **Architecture**: Clean Architecture + MVVM + Dagger Hilt Dependency Injection
-- **Database & Storage**: Room Database (v3 Schema) with `StateFlow` reactive queries — unified Room-backed settings store
+- **Database & Storage**: Room Database (v4 Schema) with `StateFlow` reactive queries — unified Room-backed app settings store, with dedicated local persistence for downloads and AniList session state
 - **Network & Parsing**: Retrofit 2.11 + OkHttp 4.12 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
 - **Media Playback**: ExoPlayer / Media3 1.3.1 (Supports direct `.mp4`, `.m3u8`, `.mkv` playback, hardware acceleration, and in-app web player fallback with stream sniffer)
 - **Background & Scheduling**: Android `AlarmManager` (DST-aware exact alarms), `PowerManager.WakeLock` boot receivers, App Widgets
@@ -57,7 +57,7 @@ my_donghua/
 │               │   ├── DatabaseModule.kt     # Room AppDatabase & DAO injection
 │               │   └── RepositoryModule.kt   # Repository interface bindings
 │               ├── data/
-│               │   ├── db/                   # Room v3 (shows, settings, watch_history) + DAOs
+│               │   ├── db/                   # Room v4 (shows, settings, watch_history) + DAOs and migrations
 │               │   ├── pref/
 │               │   │   └── LegacySettingsMigrator.kt # Settings migration
 │               │   ├── repository/           # Show / Settings / WatchHistory repository impls
@@ -100,7 +100,7 @@ my_donghua/
 
 ---
 
-## 🗄️ Database Schema (Room v3)
+## 🗄️ Database Schema (Room v4)
 
 All records are stored locally in native SQLite (`mydonghua.db`):
 
@@ -129,6 +129,7 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 | `release_year` | INTEGER | Year of release |
 | `language` | TEXT | Language |
 | `collection_id` | TEXT | Collection folder name |
+| `anilist_id` | INTEGER | Optional AniList media ID for matching and synchronization |
 
 ### 2. `settings`
 | Column | Type | Description |
@@ -154,6 +155,8 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 - **Gradle**: 8.6+ with Kotlin 2.0.0
 
 ### Build Commands
+
+Run these Gradle tasks from AndroidIDE, which provides the required embedded Java 17 JDK. The repository environment does not provide a supported shell-level `java` command.
 
 ```bash
 # Build Debug APK

@@ -20,7 +20,7 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
   - `@Language("AGSL")` annotations removed (not on classpath)
   - Vendored source adapted for Compose 1.7.x (no `roundRectPath`/`fastCoerceAtMost` dependency)
 - Compose BOM upgraded to `2024.09.00` for `GraphicsLayer` API availability (requires Kotlin 2.0+)
-- `ExperimentalGraphicsLayerApi` opt-in set globally via `-opt-in=` compiler arg
+- Compose Compiler Gradle Plugin (`org.jetbrains.kotlin.plugin.compose`) handles Compose compiler integration
 
 ## Performance Rules (IMPORTANT)
 The app previously lagged with many cards on screen, when opening search/settings, and during tab switches. Preserve these mitigations:
@@ -51,13 +51,10 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Recent searches: stored in the Room `settings` table under key `"recent_searches"` (JSON array) via `SearchViewModel`. `SearchScreen` offers per-row delete (x) and "Clear all".
 
 ## Settings Storage
-- **Single source of truth: the Room `settings` table** (`SettingsDao` / `SettingsRepositoryImpl`), accessed through `SettingsRepository` + typed helpers (`getBoolFlow`/`putBool`) and key constants in `domain/repository/SettingsKeys.kt`.
-- Keys: `app_theme`, `pref_accent_color`, `show_banner`, `show_continue`, `show_recent`, `auto_open_keyboard`, `default_stream_provider`, `recent_searches` (JSON), `search_frequency` (JSON), `prefs_migrated`.
-- Legacy stores were consolidated away:
-  - `ThemePreference` (DataStore "settings") was **deleted** — values migrated once into Room by `LegacySettingsMigrator` (`data/pref/LegacySettingsMigrator.kt`), run from `DonghuaApp.onCreate`, gated by `prefs_migrated`.
-  - SharedPreferences `notification_prefs` was **removed**; its keys are migrated into Room too.
-  - Backup/restore (`SettingsViewModel`) now round-trips all Room settings under the `notifyPrefs` JSON field (kept for backward compatibility with old backups).
-- Do NOT reintroduce DataStore/SharedPreferences for app settings; add new keys to `SettingsKeys`.
+- **Single source of truth for app settings: the Room `settings` table** (`SettingsDao` / `SettingsRepositoryImpl`), accessed through `SettingsRepository` + typed helpers (`getBoolFlow`/`putBool`) and key constants in `domain/repository/SettingsKeys.kt`.
+- Keys include theme/accent/UI preferences, stream provider, ad blocker, recent searches, search frequency, migration state, storage permission state, and AniList account metadata.
+- Legacy stores are retained only for one-time migration or dedicated subsystems: `LegacySettingsMigrator` reads the old DataStore/notification preferences; `AniListService` persists its session in `anilist_tracking_prefs`; downloads use the `DownloadService` preference store; widgets and the ad blocker have their own small preference stores.
+- Do NOT reintroduce DataStore/SharedPreferences for ordinary app settings; add new keys to `SettingsKeys`.
 
 ## Runtime Permissions
 - Storage permission is requested **once on first launch** (`MainActivity.requestStoragePermissionOnce`, gated by the Room key `storage_permission_prompted`). On API 33+ this is `READ_MEDIA_IMAGES`; below it is `READ_EXTERNAL_STORAGE`. It is NOT re-requested on later launches.
@@ -92,6 +89,6 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `app/build.gradle`:
   - Added `id 'org.jetbrains.kotlin.plugin.compose'` to plugins
   - Removed `composeOptions { kotlinCompilerExtensionVersion '1.5.14' }`
-  - Added `-opt-in=androidx.compose.ui.graphics.ExperimentalGraphicsLayerApi` to freeCompilerArgs
+  - Compose Compiler Gradle Plugin handles compiler configuration
   - Compose BOM: `2024.06.00 -> 2024.09.00`
 - No changes needed to settings.gradle or gradle-wrapper
