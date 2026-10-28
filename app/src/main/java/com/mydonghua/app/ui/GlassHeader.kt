@@ -7,6 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mydonghua.app.ui.theme.OnePlusSansFamily
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -261,59 +263,189 @@ fun GlassHeader(
                 if (countdownShow != null && remainingTime != null) {
                     val rem = remainingTime!!
                     val isAiring = rem.airingNow
-                    Column(
+
+                    Row(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = Spacing.md)
+                            .padding(start = if (onBackClick != null) Spacing.xs else Spacing.xs, end = Spacing.sm)
                             .colorOSPressBounce(pressedScale = 0.96f) {
                                 onCountdownClick?.invoke()
                             },
-                        verticalArrangement = Arrangement.Center
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isAiring) Color(0xFFFF334B) else Color(0xFF00E676))
-                            )
-                            Text(
-                                text = countdownShow.title,
-                                style = TextStyle(
-                                    fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = contentColor
+                        // 1. Mini Poster Thumbnail Squircle
+                        val posterShape = RoundedCornerShape(10.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(posterShape)
+                                .background(if (isDark) Color(0xFF192233) else Color(0xFFE2E8F0))
+                                .border(
+                                    width = 0.75.dp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = if (isDark) 0.35f else 0.75f),
+                                            Color(0xFF0082FB).copy(alpha = 0.25f),
+                                            Color.Transparent
+                                        )
+                                    ),
+                                    shape = posterShape
                                 ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        val timeFormatted = if (isAiring) {
-                            "EP ${countdownShow.currentEp + 1} • Releasing Now!"
-                        } else if (!rem.elapsed) {
-                            buildString {
-                                append("EP ${countdownShow.currentEp + 1} in ")
-                                if (rem.days > 0) append("${rem.days}d ")
-                                append("${rem.hours}h ${rem.minutes}m ${rem.seconds}s")
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (!countdownShow.poster.isNullOrBlank()) {
+                                SubcomposeAsyncImage(
+                                    model = countdownShow.poster,
+                                    contentDescription = countdownShow.title,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                ) {
+                                    val state = painter.state
+                                    if (state is AsyncImagePainter.State.Success) {
+                                        SubcomposeAsyncImageContent()
+                                    } else {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_tv),
+                                            contentDescription = null,
+                                            tint = if (isDark) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            } else {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_tv),
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
-                        } else {
-                            "EP ${countdownShow.currentEp + 1} soon"
                         }
 
-                        Text(
-                            text = timeFormatted,
-                            style = TextStyle(
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isAiring) Color(0xFFFF334B) else Color(0xFF0082FB)
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        // 2. Title & Countdown Details
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                // Pulsing status indicator dot
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isAiring) Color(0xFFFF3B30) else Color(0xFF0082FB))
+                                )
+                                Text(
+                                    text = countdownShow.title,
+                                    fontFamily = OnePlusSansFamily,
+                                    style = TextStyle(
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = contentColor
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                                if (isAiring) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(Color(0xFFFF3B30).copy(alpha = 0.15f))
+                                            .padding(horizontal = 4.5.dp, vertical = 1.dp)
+                                    ) {
+                                        Text(
+                                            text = "LIVE",
+                                            fontFamily = OnePlusSansFamily,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 8.5.sp,
+                                            letterSpacing = 0.5.sp,
+                                            color = Color(0xFFFF3B30)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(2.5.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Episode Chip Pill
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color(0xFF0082FB).copy(alpha = if (isDark) 0.16f else 0.10f))
+                                        .padding(horizontal = 4.5.dp, vertical = 1.dp)
+                                ) {
+                                    Text(
+                                        text = "EP ${countdownShow.currentEp + 1}",
+                                        fontFamily = OnePlusSansFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 9.5.sp,
+                                        color = Color(0xFF0082FB)
+                                    )
+                                }
+
+                                if (isAiring) {
+                                    Text(
+                                        text = "Releasing Now!",
+                                        fontFamily = OnePlusSansFamily,
+                                        style = TextStyle(
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFFFF3B30)
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                } else if (!rem.elapsed) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(3.5.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_clock),
+                                            contentDescription = null,
+                                            tint = contentColor.copy(alpha = 0.55f),
+                                            modifier = Modifier.size(10.5.dp)
+                                        )
+                                        val countdownText = buildString {
+                                            if (rem.days > 0) append("${rem.days}d ")
+                                            append("${rem.hours}h ${rem.minutes}m ${rem.seconds}s")
+                                        }
+                                        Text(
+                                            text = countdownText,
+                                            fontFamily = OnePlusSansFamily,
+                                            style = TextStyle(
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = contentColor.copy(alpha = 0.82f)
+                                            ),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        text = "Soon",
+                                        fontFamily = OnePlusSansFamily,
+                                        style = TextStyle(
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = contentColor.copy(alpha = 0.70f)
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
                     }
                 } else {
                     Column(

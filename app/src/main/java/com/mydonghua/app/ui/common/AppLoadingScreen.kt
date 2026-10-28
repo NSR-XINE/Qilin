@@ -199,11 +199,11 @@ fun AppLoadingScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            // Hero Emblem with Rotating Squircle Border Light
-            val emblemShape = RoundedCornerShape(30.dp)
+            // Hero Emblem with Rotating Squircle Border Light (Enlarged)
+            val emblemShape = RoundedCornerShape(36.dp)
             Box(
                 modifier = Modifier
-                    .size(104.dp)
+                    .size(128.dp)
                     .scale(pulseScale)
                     .clip(emblemShape)
                     .background(
@@ -221,7 +221,7 @@ fun AppLoadingScreen(
                         )
                     )
                     .border(
-                        width = 1.dp,
+                        width = 1.2.dp,
                         brush = Brush.verticalGradient(
                             listOf(
                                 Color.White.copy(alpha = if (isDark) 0.35f else 0.80f),
@@ -233,19 +233,19 @@ fun AppLoadingScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                // Official Transparent Cyan-Cobalt Dragon Emblem
+                // Official Transparent Cyan-Cobalt Dragon Emblem (Enlarged)
                 Image(
                     painter = painterResource(id = R.drawable.ic_dragon_emblem),
                     contentDescription = "My Donghua Emblem",
-                    modifier = Modifier.size(68.dp),
+                    modifier = Modifier.size(94.dp),
                     contentScale = ContentScale.Fit
                 )
 
                 // Kinetic Rotating Light Beam directly on the Squircle Border
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val strokeWidth = 2.4.dp.toPx()
+                    val strokeWidth = 2.8.dp.toPx()
                     val halfStroke = strokeWidth / 2f
-                    val cornerRadiusPx = 30.dp.toPx() - halfStroke
+                    val cornerRadiusPx = 36.dp.toPx() - halfStroke
 
                     // Sweep gradient rotated by orbitalAngle around squircle center
                     val sweepShader = SweepGradient(
@@ -271,18 +271,18 @@ fun AppLoadingScreen(
                     val rotatingBrush = ShaderBrush(sweepShader)
 
                     // 1. Soft outer neon glow along the squircle border
-                    val glowWidth = 4.8.dp.toPx()
+                    val glowWidth = 5.6.dp.toPx()
                     val halfGlow = glowWidth / 2f
                     drawRoundRect(
                         brush = rotatingBrush,
                         topLeft = Offset(halfGlow, halfGlow),
                         size = Size(size.width - glowWidth, size.height - glowWidth),
                         cornerRadius = CornerRadius(
-                            (30.dp.toPx() - halfGlow).coerceAtLeast(0f),
-                            (30.dp.toPx() - halfGlow).coerceAtLeast(0f)
+                            (36.dp.toPx() - halfGlow).coerceAtLeast(0f),
+                            (36.dp.toPx() - halfGlow).coerceAtLeast(0f)
                         ),
                         style = Stroke(width = glowWidth),
-                        alpha = 0.45f
+                        alpha = 0.50f
                     )
 
                     // 2. High-intensity crisp light beam tracing the squircle border
