@@ -191,7 +191,11 @@ fun ShowCard(
                     title = show.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    sharedElementKey = "show-poster-${show.id}"
+                    sharedElementKey = "show-poster-card-${show.id}",
+                    sharedOverlayShape = RoundedCornerShape(
+                        topStart = CornerRadius.card,
+                        topEnd = CornerRadius.card
+                    )
                 )
 
                 // Atmospheric cinematic gradient overlay

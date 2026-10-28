@@ -67,7 +67,7 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onShowClick: (String) -> Unit,
+    onShowClick: (String, String?) -> Unit,
     onWatchClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     topPadding: androidx.compose.ui.unit.Dp = 0.dp,
@@ -104,7 +104,7 @@ fun HomeScreen(
                             onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                             onTrendingClick = { media ->
                                 viewModel.addTrendingShow(media) { targetId ->
-                                    onShowClick(targetId)
+                                    onShowClick(targetId, null)
                                 }
                             },
                             onWatchClick = { media ->
@@ -140,7 +140,7 @@ fun HomeScreen(
                                 onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                                 onTrendingClick = { media ->
                                     viewModel.addTrendingShow(media) { targetId ->
-                                        onShowClick(targetId)
+                                        onShowClick(targetId, null)
                                     }
                                 },
                                 onWatchClick = { media ->
@@ -164,7 +164,12 @@ fun HomeScreen(
 
                 if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
                     item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
-                    item(key = "section_continue_row") { ContinueWatchingRow(shows = state.continueWatching, onShowClick = onShowClick) }
+                    item(key = "section_continue_row") {
+                        ContinueWatchingRow(
+                            shows = state.continueWatching,
+                            onShowClick = { id -> onShowClick(id, "show-poster-cw-$id") }
+                        )
+                    }
                 }
 
                 if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
@@ -172,7 +177,7 @@ fun HomeScreen(
                     item(key = "section_recent_row") {
                         RecentlyUpdatedRow(
                             shows = state.recentlyUpdated,
-                            onShowClick = onShowClick,
+                            onShowClick = { id -> onShowClick(id, "show-poster-ru-$id") },
                             onWatchClick = { show ->
                                 val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
                                     showTitle = show.title,
@@ -663,7 +668,8 @@ fun ContinueWatchingVerticalCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     fontSize = 8.5.sp,
-                    sharedElementKey = "show-poster-${show.id}"
+                    sharedElementKey = "show-poster-cw-${show.id}",
+                    sharedOverlayShape = posterShape
                 )
 
                 // Bottom vignette overlay
@@ -907,7 +913,9 @@ fun RecentlyUpdatedVerticalCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     fontSize = 8.5.sp,
-                    showAcronym = true
+                    showAcronym = true,
+                    sharedElementKey = "show-poster-ru-${show.id}",
+                    sharedOverlayShape = posterShape
                 )
 
                 // Bottom vignette overlay

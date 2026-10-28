@@ -19,7 +19,15 @@ val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?
 val LocalNavAnimatedVisibilityScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-val SharedBoundsSpring = spring<Rect>(dampingRatio = 0.80f, stiffness = 380f)
+val SharedBoundsSpring = spring<Rect>(dampingRatio = 1f, stiffness = 350f)
+
+/**
+ * Key of the poster that launched the current detail screen. Set right before
+ * navigating so the detail poster matches exactly one source card.
+ */
+object SharedPosterKey {
+    var current: String? = null
+}
 
 @Composable
 fun SharedElementDestination(

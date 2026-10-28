@@ -92,6 +92,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import com.mydonghua.app.ui.DynamicShowBackground
 import com.mydonghua.app.ui.GlassBackground
 import com.mydonghua.app.ui.GlassHeader
+import com.mydonghua.app.ui.SharedPosterKey
 import com.mydonghua.app.ui.LiquidGlassNavBar
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.LocalHeaderBackdrop
@@ -146,11 +147,19 @@ class MainActivity : ComponentActivity() {
             var isSearchOpen by remember { mutableStateOf(false) }
             var isAppLoading by remember { mutableStateOf(true) }
             var backProgress by remember { mutableFloatStateOf(0f) }
+            var drawerNavigating by remember { mutableStateOf(false) }
             val backPreview = animateFloatAsState(
                 targetValue = backProgress,
                 animationSpec = tween(durationMillis = 120, easing = ColorOSMotion.FastOutSlowIn),
                 label = "backPreview"
             )
+
+            LaunchedEffect(currentRoute) {
+                if (drawerNavigating) {
+                    delay(420)
+                    drawerNavigating = false
+                }
+            }
 
             LaunchedEffect(Unit) {
                 val startTime = System.currentTimeMillis()
@@ -195,6 +204,19 @@ class MainActivity : ComponentActivity() {
                         @Suppress("DEPRECATION")
                         overridePendingTransition(R.anim.oplus_open_slide_enter, R.anim.oplus_open_slide_exit)
                     }
+                }
+            }
+
+            val openDetail: (String, String?) -> Unit = { showId, posterKey ->
+                SharedPosterKey.current = posterKey
+                navController.navigate("show_detail/$showId")
+            }
+
+            val navigateFromDrawer: (String) -> Unit = { route ->
+                isDrawerOpen = false
+                if (route != currentRoute) {
+                    drawerNavigating = true
+                    navController.navigate(route)
                 }
             }
 
@@ -304,7 +326,7 @@ class MainActivity : ComponentActivity() {
                                             countdownShow = countdownShow,
                                             onCountdownClick = {
                                                 if (countdownShow != null) {
-                                                    navController.navigate("show_detail/${countdownShow.id}")
+                                                    openDetail(countdownShow.id, null)
                                                 }
                                             },
                                             onDrawerOpen = { isDrawerOpen = true },
@@ -366,8 +388,11 @@ class MainActivity : ComponentActivity() {
                                 enterTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
+                                    val toDetail = to?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         EnterTransition.None
+                                    } else if (drawerNavigating || toDetail) {
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
                                         fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec) +
@@ -387,8 +412,11 @@ class MainActivity : ComponentActivity() {
                                 exitTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
+                                    val toDetail = to?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         ExitTransition.None
+                                    } else if (drawerNavigating || toDetail) {
+                                        fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
                                         fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec) +
@@ -409,8 +437,11 @@ class MainActivity : ComponentActivity() {
                                 popEnterTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
+                                    val fromDetail = from?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         EnterTransition.None
+                                    } else if (fromDetail) {
+                                        fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
                                         fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec) +
@@ -430,8 +461,11 @@ class MainActivity : ComponentActivity() {
                                 popExitTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
+                                    val fromDetail = from?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         ExitTransition.None
+                                    } else if (fromDetail) {
+                                        fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
                                         fadeOut(animationSpec = ColorOSMotion.TabFadeOutSpec) +
@@ -460,8 +494,8 @@ class MainActivity : ComponentActivity() {
                                 onSettingsClick = {
                                     navController.navigate("settings")
                                 },
-                                onShowClick = { showId ->
-                                    navController.navigate("show_detail/$showId")
+                                onShowClick = { showId, posterKey ->
+                                    openDetail(showId, posterKey)
                                 },
                                 onWatchClick = launchWatch
                             )
@@ -475,7 +509,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    navController.navigate("show_detail/${show.id}")
+                                    openDetail(show.id, "show-poster-card-${show.id}")
                                 }
                             )
                         }
@@ -488,7 +522,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    navController.navigate("show_detail/${show.id}")
+                                    openDetail(show.id, "show-poster-card-${show.id}")
                                 }
                             )
                         }
@@ -501,7 +535,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    navController.navigate("show_detail/${show.id}")
+                                    openDetail(show.id, "show-poster-card-${show.id}")
                                 }
                             )
                         }
@@ -514,7 +548,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    navController.navigate("show_detail/${show.id}")
+                                    openDetail(show.id, "show-poster-card-${show.id}")
                                 }
                             )
                         }
@@ -576,7 +610,7 @@ class MainActivity : ComponentActivity() {
                                 HistoryScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
-                                    navController.navigate("show_detail/$showId")
+                                    openDetail(showId, null)
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
@@ -585,7 +619,7 @@ class MainActivity : ComponentActivity() {
                             CollectionsScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
-                                    navController.navigate("show_detail/$showId")
+                                    openDetail(showId, null)
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
@@ -637,7 +671,7 @@ class MainActivity : ComponentActivity() {
                             onWatchClick = launchWatch,
                             onShowClick = { showId ->
                                 isSearchOpen = false
-                                navController.navigate("show_detail/$showId")
+                                openDetail(showId, null)
                             },
                             onNavigateBack = {
                                 isSearchOpen = false
@@ -815,10 +849,7 @@ class MainActivity : ComponentActivity() {
                                 user = aniListUser,
                                 isLight = isLightMode,
                                 isSelected = currentRoute == "anilist",
-                                onClick = {
-                                    isDrawerOpen = false
-                                    navController.navigate("anilist")
-                                }
+                                onClick = { navigateFromDrawer("anilist") }
                             )
 
                         // Quick Tiles (2x2 Grid)
@@ -838,7 +869,7 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "stats",
                                     isLight = isLightMode,
                                     modifier = Modifier.weight(1f),
-                                    onClick = { isDrawerOpen = false; navController.navigate("stats") }
+                                    onClick = { navigateFromDrawer("stats") }
                                 )
                                 OxygenDrawerTile(
                                     title = "Schedule",
@@ -848,7 +879,7 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "calendar",
                                     isLight = isLightMode,
                                     modifier = Modifier.weight(1f),
-                                    onClick = { isDrawerOpen = false; navController.navigate("calendar") }
+                                    onClick = { navigateFromDrawer("calendar") }
                                 )
                             }
 
@@ -864,7 +895,7 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "collections",
                                     isLight = isLightMode,
                                     modifier = Modifier.weight(1f),
-                                    onClick = { isDrawerOpen = false; navController.navigate("collections") }
+                                    onClick = { navigateFromDrawer("collections") }
                                 )
                                 OxygenDrawerTile(
                                     title = "Downloads",
@@ -874,7 +905,7 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "downloads",
                                     isLight = isLightMode,
                                     modifier = Modifier.weight(1f),
-                                    onClick = { isDrawerOpen = false; navController.navigate("downloads") }
+                                    onClick = { navigateFromDrawer("downloads") }
                                 )
                             }
                         }
@@ -909,7 +940,7 @@ class MainActivity : ComponentActivity() {
                                     iconGradient = listOf(Color(0xFFE11D48), Color(0xFFFB7185)),
                                     isSelected = currentRoute == "favorites",
                                     isLight = isLightMode,
-                                    onClick = { isDrawerOpen = false; navController.navigate("favorites") }
+                                    onClick = { navigateFromDrawer("favorites") }
                                 )
                                 HorizontalDivider(
                                     color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
@@ -922,7 +953,7 @@ class MainActivity : ComponentActivity() {
                                     iconGradient = listOf(Color(0xFF334155), Color(0xFF64748B)),
                                     isSelected = currentRoute == "history",
                                     isLight = isLightMode,
-                                    onClick = { isDrawerOpen = false; navController.navigate("history") }
+                                    onClick = { navigateFromDrawer("history") }
                                 )
                                 HorizontalDivider(
                                     color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
@@ -935,7 +966,7 @@ class MainActivity : ComponentActivity() {
                                     iconGradient = listOf(Color(0xFFE50914), Color(0xFFFF5252)),
                                     isSelected = currentRoute == "settings",
                                     isLight = isLightMode,
-                                    onClick = { isDrawerOpen = false; navController.navigate("settings") }
+                                    onClick = { navigateFromDrawer("settings") }
                                 )
                             }
                         }

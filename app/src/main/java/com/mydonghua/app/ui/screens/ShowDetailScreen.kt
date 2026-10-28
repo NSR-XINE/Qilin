@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.mydonghua.app.domain.model.CountdownCalculator
 import com.mydonghua.app.domain.model.Show
 import com.mydonghua.app.ui.GlassHeader
+import com.mydonghua.app.ui.SharedPosterKey
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.DonghuaPoster
 import com.mydonghua.app.ui.theme.CornerRadius
@@ -254,7 +255,8 @@ fun ShowDetailScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
                             fontSize = 11.sp,
-                            sharedElementKey = "show-poster-${show.id}"
+                            sharedElementKey = SharedPosterKey.current,
+                            sharedOverlayShape = thumbShape
                         )
                     }
 
