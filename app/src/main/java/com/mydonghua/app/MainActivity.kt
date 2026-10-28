@@ -129,11 +129,11 @@ class MainActivity : ComponentActivity() {
                 ) { home, sLoading ->
                     !home.isLoading && !sLoading
                 }
-                withTimeoutOrNull(4500L) {
+                withTimeoutOrNull(8000L) {
                     readyFlow.filter { it }.first()
                 }
                 val elapsed = System.currentTimeMillis() - startTime
-                val minDisplayTime = 2600L
+                val minDisplayTime = 5200L
                 if (elapsed < minDisplayTime) {
                     delay(minDisplayTime - elapsed)
                 }

@@ -1,5 +1,7 @@
 package com.mydonghua.app.ui.common
 
+import android.graphics.Matrix
+import android.graphics.SweepGradient
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -20,10 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -167,7 +171,7 @@ fun AppLoadingScreen(
     var stepIndex by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(850)
+            delay(1300)
             stepIndex = (stepIndex + 1) % loadingSteps.size
         }
     }
@@ -262,7 +266,7 @@ fun AppLoadingScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            // Hero Emblem Stack with Kinetic Orbital Scanner & Radiance
+            // Hero Emblem Stack with Rotating Squircle Border Light & Radiance
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.size(176.dp)
@@ -297,57 +301,6 @@ fun AppLoadingScreen(
                         )
                 )
 
-                // Kinetic Rotating Orbital Arc with Satellite Flare Particle
-                Canvas(modifier = Modifier.size(136.dp)) {
-                    val strokeWidth = 1.6.dp.toPx()
-                    val arcSize = size.width - strokeWidth
-                    val topLeft = Offset(strokeWidth / 2f, strokeWidth / 2f)
-
-                    // Faint ambient orbital track
-                    drawCircle(
-                        color = Color(0xFF0082FB).copy(alpha = if (isDark) 0.12f else 0.08f),
-                        radius = arcSize / 2f,
-                        style = Stroke(width = 1.dp.toPx())
-                    )
-
-                    // Dynamic sweeping radiant arc
-                    drawArc(
-                        brush = Brush.sweepGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color(0xFF0082FB).copy(alpha = 0.20f),
-                                Color(0xFF00D2FF),
-                                Color(0xFF80E5FF)
-                            )
-                        ),
-                        startAngle = orbitalAngle,
-                        sweepAngle = 100f,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = Size(arcSize, arcSize),
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                    )
-
-                    // Glowing Satellite Flare Dot at leading tip of orbital arc
-                    val tipAngleRad = Math.toRadians((orbitalAngle + 100.0)).toFloat()
-                    val ringRadius = arcSize / 2f
-                    val tipX = size.width / 2f + ringRadius * cos(tipAngleRad)
-                    val tipY = size.height / 2f + ringRadius * sin(tipAngleRad)
-
-                    // Flare aura
-                    drawCircle(
-                        color = Color(0xFF00D2FF).copy(alpha = 0.5f),
-                        radius = 4.5.dp.toPx(),
-                        center = Offset(tipX, tipY)
-                    )
-                    // Flare core
-                    drawCircle(
-                        color = Color.White,
-                        radius = 2.dp.toPx(),
-                        center = Offset(tipX, tipY)
-                    )
-                }
-
                 // Signature ColorOS 17 Liquid Glass Squircle Container
                 val emblemShape = RoundedCornerShape(30.dp)
                 Box(
@@ -370,12 +323,12 @@ fun AppLoadingScreen(
                             )
                         )
                         .border(
-                            width = 1.2.dp,
+                            width = 1.dp,
                             brush = Brush.verticalGradient(
                                 listOf(
-                                    Color.White.copy(alpha = if (isDark) 0.50f else 0.92f),
-                                    Color(0xFF0082FB).copy(alpha = if (isDark) 0.32f else 0.25f),
-                                    Color.White.copy(alpha = if (isDark) 0.08f else 0.40f)
+                                    Color.White.copy(alpha = if (isDark) 0.35f else 0.80f),
+                                    Color(0xFF0082FB).copy(alpha = if (isDark) 0.20f else 0.15f),
+                                    Color.White.copy(alpha = if (isDark) 0.05f else 0.25f)
                                 )
                             ),
                             shape = emblemShape
@@ -404,6 +357,63 @@ fun AppLoadingScreen(
                         modifier = Modifier.size(68.dp),
                         contentScale = ContentScale.Fit
                     )
+
+                    // Kinetic Rotating Light Beam directly on the Squircle Border
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeWidth = 2.4.dp.toPx()
+                        val halfStroke = strokeWidth / 2f
+                        val cornerRadiusPx = 30.dp.toPx() - halfStroke
+
+                        // Sweep gradient rotated by orbitalAngle around squircle center
+                        val sweepShader = SweepGradient(
+                            size.width / 2f,
+                            size.height / 2f,
+                            intArrayOf(
+                                android.graphics.Color.TRANSPARENT,
+                                0x000082FB.toInt(),
+                                0x330082FB.toInt(),
+                                0xFF0082FB.toInt(),
+                                0xFF00D2FF.toInt(),
+                                0xFFFFFFFF.toInt(),
+                                0xFF00D2FF.toInt(),
+                                0x330082FB.toInt(),
+                                android.graphics.Color.TRANSPARENT
+                            ),
+                            floatArrayOf(0.0f, 0.40f, 0.65f, 0.82f, 0.92f, 0.96f, 0.98f, 0.99f, 1.0f)
+                        )
+                        val matrix = Matrix()
+                        matrix.postRotate(orbitalAngle, size.width / 2f, size.height / 2f)
+                        sweepShader.setLocalMatrix(matrix)
+
+                        val rotatingBrush = ShaderBrush(sweepShader)
+
+                        // 1. Soft outer neon glow along the squircle border
+                        val glowWidth = 4.8.dp.toPx()
+                        val halfGlow = glowWidth / 2f
+                        drawRoundRect(
+                            brush = rotatingBrush,
+                            topLeft = Offset(halfGlow, halfGlow),
+                            size = Size(size.width - glowWidth, size.height - glowWidth),
+                            cornerRadius = CornerRadius(
+                                (30.dp.toPx() - halfGlow).coerceAtLeast(0f),
+                                (30.dp.toPx() - halfGlow).coerceAtLeast(0f)
+                            ),
+                            style = Stroke(width = glowWidth),
+                            alpha = 0.45f
+                        )
+
+                        // 2. High-intensity crisp light beam tracing the squircle border
+                        drawRoundRect(
+                            brush = rotatingBrush,
+                            topLeft = Offset(halfStroke, halfStroke),
+                            size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                            cornerRadius = CornerRadius(
+                                cornerRadiusPx.coerceAtLeast(0f),
+                                cornerRadiusPx.coerceAtLeast(0f)
+                            ),
+                            style = Stroke(width = strokeWidth)
+                        )
+                    }
                 }
             }
 
