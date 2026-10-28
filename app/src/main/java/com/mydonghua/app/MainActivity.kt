@@ -57,6 +57,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.mydonghua.app.data.service.AniListService
+import com.mydonghua.app.data.service.AniListUser
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -708,206 +709,17 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            // AniList Profile Card in Drawer (when connected)
+                            // AniList drawer card (opens AniList screen)
                             val aniListUser by AniListService.userFlow.collectAsState()
-                        if (aniListUser != null) {
-                            val user = aniListUser!!
-                            val profileShape = RoundedCornerShape(20.dp)
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(profileShape)
-                                    .background(
-                                        if (isLightMode) Color(0xFF02A9FF).copy(alpha = 0.08f)
-                                        else Color(0xFF02A9FF).copy(alpha = 0.12f),
-                                        profileShape
-                                    )
-                                    .border(
-                                        0.85.dp,
-                                        Brush.horizontalGradient(
-                                            listOf(
-                                                Color(0xFF02A9FF).copy(alpha = 0.50f),
-                                                Color(0xFF00D2FF).copy(alpha = 0.25f)
-                                            )
-                                        ),
-                                        profileShape
-                                    )
-                                    .colorOSPressBounce(pressedScale = 0.98f) {
-                                        isDrawerOpen = false
-                                        navController.navigate("anilist")
-                                    }
-                                    .padding(14.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    if (!user.avatarUrl.isNullOrEmpty()) {
-                                        SubcomposeAsyncImage(
-                                            model = user.avatarUrl,
-                                            contentDescription = "Avatar",
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .clip(CircleShape)
-                                                .border(1.5.dp, Color(0xFF02A9FF), CircleShape),
-                                            contentScale = ContentScale.Crop
-                                        ) {
-                                            if (painter.state is AsyncImagePainter.State.Success) {
-                                                SubcomposeAsyncImageContent()
-                                            } else {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxSize()
-                                                        .background(Color(0xFF02A9FF).copy(alpha = 0.2f)),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Rounded.Person,
-                                                        contentDescription = null,
-                                                        tint = Color(0xFF02A9FF),
-                                                        modifier = Modifier.size(20.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0xFF02A9FF)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = user.name.take(1).uppercase(),
-                                                color = Color.White,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 18.sp
-                                            )
-                                        }
-                                    }
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = user.name,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 15.sp,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(
-                                                        Brush.horizontalGradient(
-                                                            listOf(Color(0xFF02A9FF), Color(0xFF0072FF))
-                                                        )
-                                                    )
-                                                    .padding(horizontal = 5.dp, vertical = 1.5.dp)
-                                            ) {
-                                                Text(
-                                                    text = "ANILIST",
-                                                    color = Color.White,
-                                                    fontSize = 8.5.sp,
-                                                    fontWeight = FontWeight.Black
-                                                )
-                                            }
-                                        }
-                                        Text(
-                                            text = "${user.episodesWatched} eps • ${user.animeCount} anime",
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-
-                                    Icon(
-                                        imageVector = Icons.Rounded.ChevronRight,
-                                        contentDescription = "Account Settings",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                            AniListDrawerCard(
+                                user = aniListUser,
+                                isLight = isLightMode,
+                                isSelected = currentRoute == "anilist",
+                                onClick = {
+                                    isDrawerOpen = false
+                                    navController.navigate("anilist")
                                 }
-                            }
-                        } else {
-                            val guestShape = RoundedCornerShape(20.dp)
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(guestShape)
-                                    .background(
-                                        if (isLightMode) Color(0xFF0082FB).copy(alpha = 0.06f)
-                                        else Color(0xFF0082FB).copy(alpha = 0.10f),
-                                        guestShape
-                                    )
-                                    .border(
-                                        0.85.dp,
-                                        Brush.horizontalGradient(
-                                            listOf(
-                                                Color(0xFF0082FB).copy(alpha = if (isLightMode) 0.35f else 0.25f),
-                                                Color(0xFF00D2FF).copy(alpha = if (isLightMode) 0.15f else 0.10f)
-                                            )
-                                        ),
-                                        guestShape
-                                    )
-                                    .colorOSPressBounce(pressedScale = 0.98f) {
-                                        isDrawerOpen = false
-                                        navController.navigate("anilist")
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                Brush.linearGradient(
-                                                    listOf(Color(0xFF0082FB), Color(0xFF00D2FF))
-                                                )
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_dragon_emblem),
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "My Donghua",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.5.sp,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "Connect AniList in Settings to sync progress",
-                                            fontSize = 11.5.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-
-                                    Icon(
-                                        imageVector = Icons.Rounded.ChevronRight,
-                                        contentDescription = "Connect",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
+                            )
 
                         // Quick Tiles (2x2 Grid)
                         Column(
@@ -1011,19 +823,6 @@ class MainActivity : ComponentActivity() {
                                     isSelected = currentRoute == "history",
                                     isLight = isLightMode,
                                     onClick = { isDrawerOpen = false; navController.navigate("history") }
-                                )
-                                HorizontalDivider(
-                                    color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
-                                    modifier = Modifier.padding(start = 66.dp, end = 16.dp)
-                                )
-                                OxygenDrawerListItem(
-                                    title = "AniList",
-                                    subtitle = "Cloud sync & watch tracking",
-                                    iconRes = R.drawable.ic_anilist,
-                                    iconGradient = listOf(Color(0xFF02A9FF), Color(0xFF0066CC)),
-                                    isSelected = currentRoute == "anilist",
-                                    isLight = isLightMode,
-                                    onClick = { isDrawerOpen = false; navController.navigate("anilist") }
                                 )
                                 HorizontalDivider(
                                     color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
@@ -1162,6 +961,233 @@ private fun StarsBackground(modifier: Modifier = Modifier) {
                     radius = radius,
                     center = Offset(x, y),
                     alpha = alpha
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AniListDrawerCard(
+    user: AniListUser?,
+    isLight: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.965f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "aniListCardScale"
+    )
+    val arrowOffset by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isPressed) 3.dp else 0.dp,
+        animationSpec = ColorOSMotion.SnappyDp,
+        label = "aniListArrowOffset"
+    )
+
+    val accentStart = Color(0xFF02A9FF)
+    val accentEnd = Color(0xFF0066CC)
+    val shape = RoundedCornerShape(22.dp)
+
+    val connectedUser = user
+    val isConnected = connectedUser != null
+    val avatarUrl = connectedUser?.avatarUrl
+    val initial = connectedUser?.name?.take(1)?.uppercase() ?: "AL"
+    val displayName = connectedUser?.name ?: "AniList"
+    val subtitle = connectedUser?.let {
+        "${it.episodesWatched} eps • ${it.animeCount} anime • ${it.daysWatched}"
+    } ?: "Connect to sync watch progress across devices"
+
+    val cardBrush = when {
+        isSelected -> Brush.linearGradient(
+            listOf(
+                accentStart.copy(alpha = if (isLight) 0.18f else 0.26f),
+                accentEnd.copy(alpha = if (isLight) 0.08f else 0.14f)
+            )
+        )
+        isLight -> Brush.linearGradient(
+            listOf(Color.White.copy(alpha = 0.88f), Color(0xFFEAF3FF).copy(alpha = 0.78f))
+        )
+        else -> Brush.linearGradient(
+            listOf(Color(0xFF18202F).copy(alpha = 0.78f), Color(0xFF0F141E).copy(alpha = 0.70f))
+        )
+    }
+
+    val borderBrush = if (isSelected) {
+        Brush.linearGradient(
+            listOf(accentStart.copy(alpha = 0.90f), Color(0xFF00D2FF).copy(alpha = 0.45f))
+        )
+    } else {
+        Brush.linearGradient(
+            listOf(
+                if (isLight) Color.White.copy(alpha = 0.95f) else Color.White.copy(alpha = 0.16f),
+                if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.03f)
+            )
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
+            .background(cardBrush, shape)
+            .border(if (isSelected) 1.25.dp else 0.85.dp, borderBrush, shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+    ) {
+        // Soft top sheen
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isLight) 0.35f else 0.08f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(accentStart, accentEnd)))
+                    .border(1.5.dp, Color.White.copy(alpha = 0.45f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!avatarUrl.isNullOrEmpty()) {
+                    SubcomposeAsyncImage(
+                        model = avatarUrl,
+                        contentDescription = "AniList avatar",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    ) {
+                        if (painter.state is AsyncImagePainter.State.Success) {
+                            SubcomposeAsyncImageContent()
+                        } else {
+                            Text(
+                                text = initial,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 19.sp
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = initial,
+                        color = Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = if (isConnected) 19.sp else 15.sp,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = displayName,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.5.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    if (isConnected) listOf(accentStart, accentEnd)
+                                    else listOf(
+                                        accentStart.copy(alpha = 0.18f),
+                                        accentEnd.copy(alpha = 0.14f)
+                                    )
+                                )
+                            )
+                            .padding(horizontal = 5.dp, vertical = 1.5.dp)
+                    ) {
+                        Text(
+                            text = if (isConnected) "ANILIST" else "SYNC",
+                            color = if (isConnected) Color.White else accentStart,
+                            fontSize = 8.5.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.4.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Text(
+                    text = subtitle,
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (isConnected) {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF00C853))
+                        )
+                        Text(
+                            text = "Connected",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF00C853)
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .offset(x = arrowOffset)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isLight) Color.Black.copy(alpha = 0.05f)
+                        else Color.White.copy(alpha = 0.07f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = "Open AniList",
+                    tint = if (isSelected) accentStart
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
