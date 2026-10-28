@@ -339,9 +339,9 @@ fun MenuGlassPanel(
     val isDark = !isLightMode
 
     val baseColor = when {
-        isAmoledMode -> Color.Black.copy(alpha = 0.85f)
-        isLightMode -> Color(0xFFF8F9FA).copy(alpha = 0.88f)
-        else -> Color(0xFF0C0E14).copy(alpha = 0.80f)
+        isAmoledMode -> Color.Black.copy(alpha = 0.88f)
+        isLightMode -> Color(0xFFF8F9FA).copy(alpha = 0.90f)
+        else -> Color(0xFF0C0E16).copy(alpha = 0.82f)
     }
 
     Box(
@@ -350,7 +350,7 @@ fun MenuGlassPanel(
         if (backdrop != null) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { shape },
@@ -360,10 +360,10 @@ fun MenuGlassPanel(
                             vibrancy()
                             colorControls(
                                 brightness = if (isLightMode) 0.08f else 0.04f,
-                                contrast = 1f,
-                                saturation = 1.5f
+                                contrast = 1.02f,
+                                saturation = 1.4f
                             )
-                            blur(12f.dp.toPx())
+                            blur(18f.dp.toPx())
                         },
                         onDrawSurface = {
                             drawRect(color = baseColor)
@@ -378,10 +378,27 @@ fun MenuGlassPanel(
             }
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .background(fallbackBg, shape)
             )
         }
+
+        // Specular optical rim border on curved glass edges
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .border(
+                    width = 0.85.dp,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = if (isDark) 0.22f else 0.55f),
+                            Color.White.copy(alpha = if (isDark) 0.06f else 0.15f),
+                            Color.White.copy(alpha = if (isDark) 0.20f else 0.40f),
+                        )
+                    ),
+                    shape = shape
+                )
+        )
 
         content()
     }

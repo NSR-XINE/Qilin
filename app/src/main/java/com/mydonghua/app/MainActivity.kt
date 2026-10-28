@@ -562,14 +562,7 @@ class MainActivity : ComponentActivity() {
 
             AnimatedVisibility(
                 visible = isDrawerOpen,
-                modifier = Modifier
-                    .zIndex(1000f)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        isDrawerOpen = false
-                    },
+                modifier = Modifier.zIndex(1000f),
                 enter = slideInVertically(
                     initialOffsetY = { -it },
                     animationSpec = ColorOSMotion.SheetIntOffset
@@ -583,84 +576,134 @@ class MainActivity : ComponentActivity() {
                     animationSpec = ColorOSMotion.NavFadeOutSpec
                 )
             ) {
-                val menuShape = RoundedCornerShape(bottomStart = 36.dp, bottomEnd = 36.dp)
+                val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 val isAmoledMode = settingsState.themeMode.lowercase() == "amoled"
                 val isLightMode = settingsState.themeMode.lowercase() == "light"
 
-                MenuGlassPanel(
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(Color.Black.copy(alpha = if (isLightMode) 0.35f else 0.55f))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            // Consumes touch events on menu panel so background touches are disabled
+                            isDrawerOpen = false
                         },
-                    shape = menuShape,
-                    isAmoledMode = isAmoledMode,
-                    isLightMode = isLightMode
+                    contentAlignment = Alignment.TopCenter
                 ) {
-                    Column(
+                    MenuGlassPanel(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .statusBarsPadding()
-                            .navigationBarsPadding()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Header
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Navigation",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-
-                            // Frosted Liquid Close Button with ColorOS 17 elastic bounce
-                            val closeInteraction = remember { MutableInteractionSource() }
-                            val isClosePressed by closeInteraction.collectIsPressedAsState()
-                            val closeScale by animateFloatAsState(
-                                targetValue = if (isClosePressed) 0.88f else 1f,
-                                animationSpec = ColorOSMotion.TouchBounceSpring,
-                                label = "closeScale"
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .graphicsLayer {
-                                        scaleX = closeScale
-                                        scaleY = closeScale
-                                    }
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isLightMode) Color.Black.copy(alpha = 0.06f)
-                                        else Color.White.copy(alpha = 0.10f)
-                                    )
-                                    .clickable(
-                                        interactionSource = closeInteraction,
-                                        indication = null,
-                                        onClick = { isDrawerOpen = false }
-                                    ),
-                                contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .heightIn(max = maxHeight * 0.90f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = "Close Menu",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
+                                // Consumes touch events inside menu panel so background touches are disabled
+                            },
+                        shape = menuShape,
+                        isAmoledMode = isAmoledMode,
+                        isLightMode = isLightMode
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .statusBarsPadding()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 20.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Header
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(11.dp))
+                                            .background(
+                                                Brush.linearGradient(
+                                                    listOf(Color(0xFF0082FB), Color(0xFF00D2FF))
+                                                )
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_dragon_emblem),
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
 
-                        // AniList Profile Card in Drawer (when connected)
-                        val aniListUser by AniListService.userFlow.collectAsState()
+                                    Column {
+                                        Text(
+                                            text = "Navigation",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            letterSpacing = (-0.3).sp
+                                        )
+                                        Text(
+                                            text = "Quick access & library",
+                                            fontSize = 11.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
+
+                                // Frosted Liquid Close Button with ColorOS 17 elastic bounce
+                                val closeInteraction = remember { MutableInteractionSource() }
+                                val isClosePressed by closeInteraction.collectIsPressedAsState()
+                                val closeScale by animateFloatAsState(
+                                    targetValue = if (isClosePressed) 0.88f else 1f,
+                                    animationSpec = ColorOSMotion.TouchBounceSpring,
+                                    label = "closeScale"
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .graphicsLayer {
+                                            scaleX = closeScale
+                                            scaleY = closeScale
+                                        }
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isLightMode) Color.Black.copy(alpha = 0.05f)
+                                            else Color.White.copy(alpha = 0.08f)
+                                        )
+                                        .border(
+                                            0.75.dp,
+                                            if (isLightMode) Color.Black.copy(alpha = 0.08f)
+                                            else Color.White.copy(alpha = 0.15f),
+                                            CircleShape
+                                        )
+                                        .clickable(
+                                            interactionSource = closeInteraction,
+                                            indication = null,
+                                            onClick = { isDrawerOpen = false }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Close Menu",
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            // AniList Profile Card in Drawer (when connected)
+                            val aniListUser by AniListService.userFlow.collectAsState()
                         if (aniListUser != null) {
                             val user = aniListUser!!
                             val profileShape = RoundedCornerShape(20.dp)
@@ -670,12 +713,17 @@ class MainActivity : ComponentActivity() {
                                     .clip(profileShape)
                                     .background(
                                         if (isLightMode) Color(0xFF02A9FF).copy(alpha = 0.08f)
-                                        else Color(0xFF02A9FF).copy(alpha = 0.14f),
+                                        else Color(0xFF02A9FF).copy(alpha = 0.12f),
                                         profileShape
                                     )
                                     .border(
-                                        1.dp,
-                                        Color(0xFF02A9FF).copy(alpha = 0.35f),
+                                        0.85.dp,
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                Color(0xFF02A9FF).copy(alpha = 0.50f),
+                                                Color(0xFF00D2FF).copy(alpha = 0.25f)
+                                            )
+                                        ),
                                         profileShape
                                     )
                                     .colorOSPressBounce(pressedScale = 0.98f) {
@@ -695,7 +743,8 @@ class MainActivity : ComponentActivity() {
                                             contentDescription = "Avatar",
                                             modifier = Modifier
                                                 .size(44.dp)
-                                                .clip(CircleShape),
+                                                .clip(CircleShape)
+                                                .border(1.5.dp, Color(0xFF02A9FF), CircleShape),
                                             contentScale = ContentScale.Crop
                                         ) {
                                             if (painter.state is AsyncImagePainter.State.Success) {
@@ -749,13 +798,17 @@ class MainActivity : ComponentActivity() {
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(4.dp))
-                                                    .background(Color(0xFF02A9FF))
-                                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    .background(
+                                                        Brush.horizontalGradient(
+                                                            listOf(Color(0xFF02A9FF), Color(0xFF0072FF))
+                                                        )
+                                                    )
+                                                    .padding(horizontal = 5.dp, vertical = 1.5.dp)
                                             ) {
                                                 Text(
-                                                    text = "AL",
+                                                    text = "ANILIST",
                                                     color = Color.White,
-                                                    fontSize = 9.sp,
+                                                    fontSize = 8.5.sp,
                                                     fontWeight = FontWeight.Black
                                                 )
                                             }
@@ -775,6 +828,79 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
+                        } else {
+                            val guestShape = RoundedCornerShape(20.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(guestShape)
+                                    .background(
+                                        if (isLightMode) Color(0xFF0082FB).copy(alpha = 0.06f)
+                                        else Color(0xFF0082FB).copy(alpha = 0.10f),
+                                        guestShape
+                                    )
+                                    .border(
+                                        0.85.dp,
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                Color(0xFF0082FB).copy(alpha = if (isLightMode) 0.35f else 0.25f),
+                                                Color(0xFF00D2FF).copy(alpha = if (isLightMode) 0.15f else 0.10f)
+                                            )
+                                        ),
+                                        guestShape
+                                    )
+                                    .colorOSPressBounce(pressedScale = 0.98f) {
+                                        isDrawerOpen = false
+                                        navController.navigate("settings")
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                Brush.linearGradient(
+                                                    listOf(Color(0xFF0082FB), Color(0xFF00D2FF))
+                                                )
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_dragon_emblem),
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "My Donghua",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "Connect AniList in Settings to sync progress",
+                                            fontSize = 11.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Icon(
+                                        imageVector = Icons.Rounded.ChevronRight,
+                                        contentDescription = "Connect",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
                         }
 
                         // Quick Tiles (2x2 Grid)
@@ -788,6 +914,7 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 OxygenDrawerTile(
                                     title = "Statistics",
+                                    subtitle = "Watch analytics",
                                     iconRes = R.drawable.ic_stats,
                                     gradient = listOf(Color(0xFFFF5722), Color(0xFFFF8A65)),
                                     isSelected = currentRoute == "stats",
@@ -797,8 +924,9 @@ class MainActivity : ComponentActivity() {
                                 )
                                 OxygenDrawerTile(
                                     title = "Schedule",
+                                    subtitle = "Weekly releases",
                                     iconRes = R.drawable.ic_calendar,
-                                    gradient = listOf(Color(0xFF0288D1), Color(0xFF26C6DA)),
+                                    gradient = listOf(Color(0xFF0082FB), Color(0xFF00D2FF)),
                                     isSelected = currentRoute == "calendar",
                                     isLight = isLightMode,
                                     modifier = Modifier.weight(1f),
@@ -812,6 +940,7 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 OxygenDrawerTile(
                                     title = "Collections",
+                                    subtitle = "Custom lists",
                                     iconRes = R.drawable.ic_collections,
                                     gradient = listOf(Color(0xFF7B1FA2), Color(0xFFBA68C8)),
                                     isSelected = currentRoute == "collections",
@@ -821,7 +950,8 @@ class MainActivity : ComponentActivity() {
                                 )
                                 OxygenDrawerTile(
                                     title = "Downloads",
-                                    iconRes = R.drawable.ic_history,
+                                    subtitle = "Offline episodes",
+                                    iconRes = R.drawable.ic_download,
                                     gradient = listOf(Color(0xFF00897B), Color(0xFF26A69A)),
                                     isSelected = currentRoute == "downloads",
                                     isLight = isLightMode,
@@ -831,20 +961,45 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        // Grouped Island List (Borderless)
+                        // Grouped Island List with Specular Border
                         val listCardShape = RoundedCornerShape(22.dp)
-                        val listCardBg = if (isLightMode) Color.White.copy(alpha = 0.70f)
-                        else Color.White.copy(alpha = 0.05f)
+                        val listCardBg = if (isLightMode) Color.White.copy(alpha = 0.80f)
+                        else Color(0xFF141926).copy(alpha = 0.55f)
 
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(listCardShape)
                                 .background(listCardBg, listCardShape)
+                                .border(
+                                    width = 0.85.dp,
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = if (isLightMode) 0.60f else 0.16f),
+                                            Color.White.copy(alpha = if (isLightMode) 0.10f else 0.03f)
+                                        )
+                                    ),
+                                    shape = listCardShape
+                                )
+                                .padding(4.dp)
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 OxygenDrawerListItem(
+                                    title = "Favorites",
+                                    subtitle = "Saved donghua collection",
+                                    iconRes = R.drawable.ic_heart_filled,
+                                    iconGradient = listOf(Color(0xFFE11D48), Color(0xFFFB7185)),
+                                    isSelected = currentRoute == "favorites",
+                                    isLight = isLightMode,
+                                    onClick = { isDrawerOpen = false; navController.navigate("favorites") }
+                                )
+                                HorizontalDivider(
+                                    color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
+                                    modifier = Modifier.padding(start = 66.dp, end = 16.dp)
+                                )
+                                OxygenDrawerListItem(
                                     title = "Watch History",
+                                    subtitle = "Recently watched episodes",
                                     iconRes = R.drawable.ic_history,
                                     iconGradient = listOf(Color(0xFF334155), Color(0xFF64748B)),
                                     isSelected = currentRoute == "history",
@@ -852,23 +1007,12 @@ class MainActivity : ComponentActivity() {
                                     onClick = { isDrawerOpen = false; navController.navigate("history") }
                                 )
                                 HorizontalDivider(
-                                    color = if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f),
-                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp)
-                                )
-                                OxygenDrawerListItem(
-                                    title = "Seasonal View",
-                                    iconRes = R.drawable.ic_seasonal,
-                                    iconGradient = listOf(Color(0xFFD97706), Color(0xFFF59E0B)),
-                                    isSelected = currentRoute == "seasonal",
-                                    isLight = isLightMode,
-                                    onClick = { isDrawerOpen = false }
-                                )
-                                HorizontalDivider(
-                                    color = if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f),
-                                    modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                                    color = if (isLightMode) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.06f),
+                                    modifier = Modifier.padding(start = 66.dp, end = 16.dp)
                                 )
                                 OxygenDrawerListItem(
                                     title = "Settings",
+                                    subtitle = "Theme, streaming & player",
                                     iconRes = R.drawable.ic_settings,
                                     iconGradient = listOf(Color(0xFFE50914), Color(0xFFFF5252)),
                                     isSelected = currentRoute == "settings",
@@ -877,9 +1021,28 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
+                        // Bottom drag handle / dismiss indicator
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp, bottom = 2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 38.dp, height = 4.5.dp)
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(
+                                        if (isLightMode) Color.Black.copy(alpha = 0.16f)
+                                        else Color.White.copy(alpha = 0.22f)
+                                    )
+                            )
+                        }
                     }
                 }
             }
+        }
 
             AnimatedVisibility(
                 visible = isAppLoading,
@@ -1005,11 +1168,11 @@ private fun OxygenDrawerTile(
         label = "tileScale"
     )
 
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(20.dp)
     val cardBg = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isLight) 0.35f else 0.25f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isLight) 0.40f else 0.28f)
     } else {
-        if (isLight) Color.White.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.05f)
+        if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF141926).copy(alpha = 0.55f)
     }
 
     Box(
@@ -1018,9 +1181,26 @@ private fun OxygenDrawerTile(
                 scaleX = scale
                 scaleY = scale
             }
-            .height(if (subtitle != null) 108.dp else 92.dp)
+            .height(if (subtitle != null) 104.dp else 92.dp)
             .clip(shape)
             .background(cardBg, shape)
+            .border(
+                width = 0.85.dp,
+                brush = Brush.verticalGradient(
+                    colors = if (isSelected) {
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                        )
+                    } else {
+                        listOf(
+                            Color.White.copy(alpha = if (isLight) 0.60f else 0.16f),
+                            Color.White.copy(alpha = if (isLight) 0.12f else 0.03f)
+                        )
+                    }
+                ),
+                shape = shape
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -1058,9 +1238,9 @@ private fun OxygenDrawerTile(
                     Box(contentAlignment = Alignment.Center) {
                         Box(
                             modifier = Modifier
-                                .size(12.dp)
+                                .size(14.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                         )
                         Box(
                             modifier = Modifier
@@ -1105,7 +1285,7 @@ private fun OxygenDrawerListItem(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val itemScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.975f else 1f,
+        targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "itemScale"
     )
@@ -1122,7 +1302,7 @@ private fun OxygenDrawerListItem(
         0f
     }
 
-    val itemShape = RoundedCornerShape(14.dp)
+    val itemShape = RoundedCornerShape(16.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -1141,7 +1321,7 @@ private fun OxygenDrawerListItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = if (subtitle != null) 12.dp else 14.dp),
+                .padding(horizontal = 14.dp, vertical = if (subtitle != null) 12.dp else 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
@@ -1187,11 +1367,11 @@ private fun OxygenDrawerListItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "›",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
