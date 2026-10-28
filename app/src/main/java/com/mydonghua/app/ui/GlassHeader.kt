@@ -274,8 +274,8 @@ fun GlassHeader(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // 1. Mini Poster Thumbnail Squircle
-                        val posterShape = RoundedCornerShape(11.dp)
+                        // 1. Mini Poster Thumbnail Circular Avatar
+                        val posterShape = CircleShape
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -285,8 +285,8 @@ fun GlassHeader(
                                     width = 1.dp,
                                     brush = Brush.verticalGradient(
                                         listOf(
-                                            Color.White.copy(alpha = if (isDark) 0.45f else 0.85f),
-                                            Color(0xFF0082FB).copy(alpha = 0.25f),
+                                            Color.White.copy(alpha = if (isDark) 0.50f else 0.85f),
+                                            Color(0xFF0082FB).copy(alpha = 0.30f),
                                             Color.White.copy(alpha = if (isDark) 0.08f else 0.35f)
                                         )
                                     ),
@@ -298,7 +298,9 @@ fun GlassHeader(
                                 SubcomposeAsyncImage(
                                     model = countdownShow.poster,
                                     contentDescription = countdownShow.title,
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 ) {
                                     val state = painter.state
@@ -367,14 +369,14 @@ fun GlassHeader(
                                 if (isAiring) {
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
+                                            .clip(CircleShape)
                                             .background(Color(0xFFFF3B30).copy(alpha = 0.16f))
                                             .border(
                                                 width = 0.5.dp,
                                                 color = Color(0xFFFF3B30).copy(alpha = 0.40f),
-                                                shape = RoundedCornerShape(4.dp)
+                                                shape = CircleShape
                                             )
-                                            .padding(horizontal = 4.5.dp, vertical = 1.dp)
+                                            .padding(horizontal = 6.dp, vertical = 1.5.dp)
                                     ) {
                                         Text(
                                             text = "LIVE",
@@ -394,17 +396,17 @@ fun GlassHeader(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                // Episode Chip Pill
+                                // Episode Chip Pill (Circular capsule)
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(5.dp))
+                                        .clip(CircleShape)
                                         .background(Color(0xFF0082FB).copy(alpha = if (isDark) 0.18f else 0.12f))
                                         .border(
                                             width = 0.6.dp,
                                             color = Color(0xFF0082FB).copy(alpha = if (isDark) 0.35f else 0.25f),
-                                            shape = RoundedCornerShape(5.dp)
+                                            shape = CircleShape
                                         )
-                                        .padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                        .padding(horizontal = 6.dp, vertical = 1.5.dp)
                                 ) {
                                     Text(
                                         text = "EP ${countdownShow.currentEp + 1}",
@@ -418,9 +420,9 @@ fun GlassHeader(
                                 if (isAiring) {
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(5.dp))
+                                            .clip(CircleShape)
                                             .background(Color(0xFFFF3B30).copy(alpha = 0.12f))
-                                            .padding(horizontal = 6.dp, vertical = 1.5.dp)
+                                            .padding(horizontal = 7.dp, vertical = 1.5.dp)
                                     ) {
                                         Text(
                                             text = "Air Now",
@@ -443,7 +445,7 @@ fun GlassHeader(
 
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(5.dp))
+                                            .clip(CircleShape)
                                             .background(
                                                 if (isDark) Color.White.copy(alpha = 0.07f)
                                                 else Color.Black.copy(alpha = 0.05f)
@@ -451,13 +453,13 @@ fun GlassHeader(
                                             .border(
                                                 width = 0.6.dp,
                                                 color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f),
-                                                shape = RoundedCornerShape(5.dp)
+                                                shape = CircleShape
                                             )
-                                            .padding(horizontal = 5.5.dp, vertical = 1.5.dp)
+                                            .padding(horizontal = 7.dp, vertical = 1.5.dp)
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(3.5.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.ic_clock),
