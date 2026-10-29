@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -30,6 +31,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.EmptyState
 import com.mydonghua.app.ui.common.ScrollPerfMonitor
 import com.mydonghua.app.ui.common.ShowCard
+import com.mydonghua.app.ui.theme.RevealOnEnter
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
@@ -143,7 +145,13 @@ fun CompletedScreen(
                     }
                 }
 
-                items(shows, key = { it.id }) { show ->
+                itemsIndexed(shows, key = { _, show -> show.id }) { index, show ->
+                    RevealOnEnter(
+                        index = index.coerceAtMost(7),
+                        distance = 24.dp,
+                        scaleFrom = 0.96f,
+                        onceKey = "completed-${show.id}"
+                    ) {
                     ShowCard(
                         show = show,
                         onWatchClick = onWatchClick,
@@ -155,6 +163,7 @@ fun CompletedScreen(
                         onEpDecrement = onDecrement,
                         onCardClick = onCardClick
                     )
+                    }
                 }
             }
         }

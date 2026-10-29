@@ -23,6 +23,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.rememberLiquidGlassBorder
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.IconSize
+import com.mydonghua.app.ui.theme.RevealOnEnter
 
 @Composable
 fun EmptyState(
@@ -41,6 +42,7 @@ fun EmptyState(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        RevealOnEnter(index = 0, distance = 18.dp) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -132,6 +134,7 @@ fun EmptyState(
                     onClick = onSecondaryAction
                 )
             }
+        }
         }
     }
 }

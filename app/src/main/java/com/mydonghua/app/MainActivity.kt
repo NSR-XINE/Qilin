@@ -21,6 +21,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -49,6 +50,7 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +70,9 @@ import com.mydonghua.app.ui.scopedComposable
 import com.mydonghua.app.domain.repository.SettingsKeys
 import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.ui.theme.colorOSPressBounce
+import com.mydonghua.app.ui.theme.Haptics
+import com.mydonghua.app.ui.theme.hapticOnTap
+import com.mydonghua.app.ui.theme.RevealOnEnter
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -261,7 +266,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .hapticOnTap()
+                    ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -729,6 +738,13 @@ class MainActivity : ComponentActivity() {
                     animationSpec = ColorOSMotion.NavFadeOutSpec
                 )
             ) {
+                var drawerShown by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) { drawerShown = true }
+                val drawerEnter by animateFloatAsState(
+                    targetValue = if (drawerShown) 1f else 0f,
+                    animationSpec = spring(dampingRatio = 0.60f, stiffness = 300f),
+                    label = "drawerEnter"
+                )
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.TopCenter
@@ -737,6 +753,13 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = maxHeight * 0.90f)
+                            .graphicsLayer {
+                                alpha = drawerEnter.coerceIn(0f, 1f)
+                                val s = 0.90f + 0.10f * drawerEnter
+                                scaleX = s
+                                scaleY = s
+                                transformOrigin = TransformOrigin(0.5f, 0f)
+                            }
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -756,6 +779,7 @@ class MainActivity : ComponentActivity() {
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             // Header
+                            RevealOnEnter(index = 0, distance = 16.dp, scaleFrom = 0.94f) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -842,17 +866,21 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
+                            }
 
                             // AniList drawer card (opens AniList screen)
                             val aniListUser by AniListService.userFlow.collectAsState()
+                            RevealOnEnter(index = 1, distance = 18.dp, scaleFrom = 0.94f) {
                             AniListDrawerCard(
                                 user = aniListUser,
                                 isLight = isLightMode,
                                 isSelected = currentRoute == "anilist",
                                 onClick = { navigateFromDrawer("anilist") }
                             )
+                            }
 
                         // Quick Tiles (2x2 Grid)
+                        RevealOnEnter(index = 2, distance = 20.dp, scaleFrom = 0.94f) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -909,12 +937,14 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+                        }
 
                         // Grouped Island List with Specular Border
                         val listCardShape = RoundedCornerShape(22.dp)
                         val listCardBg = if (isLightMode) Color.White.copy(alpha = 0.80f)
                         else Color(0xFF141926).copy(alpha = 0.55f)
 
+                        RevealOnEnter(index = 3, distance = 22.dp, scaleFrom = 0.94f) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -970,8 +1000,10 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+                        }
 
                         // Bottom drag handle / dismiss indicator
+                        RevealOnEnter(index = 4, distance = 14.dp, scaleFrom = 0.96f) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -987,6 +1019,7 @@ class MainActivity : ComponentActivity() {
                                         else Color.White.copy(alpha = 0.22f)
                                     )
                             )
+                        }
                         }
                     }
                 }
@@ -1172,7 +1205,10 @@ private fun AniListDrawerCard(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    Haptics.confirm()
+                    onClick()
+                }
             )
     ) {
         // Soft top sheen
@@ -1380,7 +1416,10 @@ private fun OxygenDrawerTile(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    Haptics.confirm()
+                    onClick()
+                }
             )
     ) {
         Column(
@@ -1491,7 +1530,10 @@ private fun OxygenDrawerListItem(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    Haptics.confirm()
+                    onClick()
+                }
             )
     ) {
         Row(

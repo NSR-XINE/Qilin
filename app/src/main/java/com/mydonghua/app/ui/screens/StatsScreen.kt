@@ -28,6 +28,7 @@ import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.colorOSPressBounce
+import com.mydonghua.app.ui.theme.rememberAnimatedCount
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -326,6 +327,8 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 rowItems.forEach { item ->
+                    val numericValue = item.value.toIntOrNull()
+                    val animatedValue = rememberAnimatedCount(numericValue ?: 0)
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -352,7 +355,7 @@ fun StatsGrid(items: List<StatItem>, columns: Int = 2) {
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = item.value,
+                                text = if (numericValue != null) animatedValue.toString() else item.value,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,

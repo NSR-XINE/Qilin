@@ -34,6 +34,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.refraction
 import com.kyant.backdrop.effects.vibrancy
+import com.mydonghua.app.ui.theme.Haptics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.sign
@@ -56,7 +57,10 @@ class GlassInteraction(
                     touchPosition = down.position
                     animationScope.launch { pressAnimation.animateTo(1f, pressSpec) }
                 },
-                onDragEnd = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
+                onDragEnd = {
+                    Haptics.tick()
+                    animationScope.launch { pressAnimation.animateTo(0f, pressSpec) }
+                },
                 onDragCancel = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
             ) { change, _ ->
                 touchPosition = change.position

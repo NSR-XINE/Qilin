@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -251,9 +253,19 @@ fun Modifier.colorOSPressBounce(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) pressedScale else 1.0f,
-        animationSpec = ColorOSMotion.TouchBounceSpring,
+        animationSpec = if (isPressed) {
+            spring(dampingRatio = 0.62f, stiffness = 900f)
+        } else {
+            spring(dampingRatio = 0.44f, stiffness = 380f)
+        },
         label = "colorOSScale"
     )
+
+    LaunchedEffect(localInteractionSource) {
+        localInteractionSource.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Release) Haptics.tick()
+        }
+    }
 
     val pointerMod = if (onClick == null && interactionSource == null) {
         val viewConfiguration = LocalViewConfiguration.current
@@ -284,6 +296,7 @@ fun Modifier.colorOSPressBounce(
                         if (change.changedToUpIgnoreConsumed()) {
                             pointerDown = false
                             if (!slopExceeded) {
+                                Haptics.tick()
                                 coroutineScope.launch {
                                     manualPressed = true
                                     delay(60L)

@@ -46,6 +46,7 @@ import com.mydonghua.app.ui.common.ColorOSSwitch
 import com.mydonghua.app.ui.common.ColorOSPillButton
 import com.mydonghua.app.ui.common.ColorOSOutlinedButton
 import com.mydonghua.app.ui.theme.JustSansFamily
+import com.mydonghua.app.ui.theme.Haptics
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
 
@@ -745,6 +746,48 @@ fun SettingsScreen(
                 }
             }
 
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(title = "Developers")
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        DeveloperRow(
+                            name = "NSR-XINE",
+                            subtitle = "github.com/NSR-XINE",
+                            avatarRes = R.drawable.developer_nsr_xine,
+                            isDark = isDark,
+                            onClick = {
+                                try {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE"))
+                                    )
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 74.dp, end = 16.dp)
+                        )
+                        DeveloperRow(
+                            name = "TenSei てんせい",
+                            subtitle = "github.com/Koustubh12345",
+                            avatarRes = R.drawable.developer_tensei,
+                            isDark = isDark,
+                            onClick = {
+                                try {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Koustubh12345"))
+                                    )
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
         }
 
@@ -1209,6 +1252,75 @@ private fun OxygenProviderItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DeveloperRow(
+    name: String,
+    subtitle: String,
+    avatarRes: Int,
+    isDark: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "developerRowScale"
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    Haptics.tick()
+                    onClick()
+                }
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Image(
+            painter = painterResource(id = avatarRes),
+            contentDescription = name,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .border(
+                    1.dp,
+                    if (isDark) Color.White.copy(alpha = 0.22f) else Color.Black.copy(alpha = 0.08f),
+                    CircleShape
+                ),
+            contentScale = ContentScale.Crop
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            imageVector = Icons.Rounded.OpenInNew,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 

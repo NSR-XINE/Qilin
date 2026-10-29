@@ -20,6 +20,7 @@ import com.mydonghua.app.ui.GlassSection
 import com.mydonghua.app.ui.Spacing
 import com.mydonghua.app.ui.common.shimmerEffect
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.RevealOnEnter
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import androidx.compose.ui.res.painterResource
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -154,7 +155,12 @@ fun CalendarScreen(
                     verticalArrangement = Arrangement.spacedBy(Spacing.lg)
                 ) {
                     Spacer(modifier = Modifier.height(Spacing.xs))
-                    upcomingWeekList.forEach { group ->
+                    upcomingWeekList.forEachIndexed { groupIndex, group ->
+                        RevealOnEnter(
+                            index = groupIndex.coerceAtMost(6),
+                            distance = 26.dp,
+                            scaleFrom = 0.95f
+                        ) {
                         GlassSection(
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -214,6 +220,7 @@ fun CalendarScreen(
                                     }
                                 }
                             }
+                        }
                         }
                     }
                 }

@@ -41,7 +41,6 @@ fun DynamicShowBackground(
                 label = "DynamicShowBackgroundCrossfade"
             ) { activeUrl ->
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // Show Backdrop Artwork
                     SubcomposeAsyncImage(
                         model = activeUrl,
                         contentDescription = null,
@@ -50,14 +49,30 @@ fun DynamicShowBackground(
                             .fillMaxSize()
                             .graphicsLayer {
                                 alpha = when {
-                                    isLight -> 0.60f
-                                    isAmoled -> 0.65f
-                                    else -> 0.65f
+                                    isLight -> 0.22f
+                                    isAmoled -> 0.24f
+                                    else -> 0.26f
+                                }
+                                scaleX = 1.12f
+                                scaleY = 1.12f
+                            }
+                    )
+
+                    SubcomposeAsyncImage(
+                        model = activeUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                alpha = when {
+                                    isLight -> 0.88f
+                                    isAmoled -> 0.82f
+                                    else -> 0.84f
                                 }
                             }
                     )
 
-                    // Theme-Adaptive Vertical Gradient Scrim
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -65,23 +80,23 @@ fun DynamicShowBackground(
                                 when {
                                     isLight -> Brush.verticalGradient(
                                         listOf(
-                                            Color.White.copy(alpha = 0.15f),
-                                            Color.White.copy(alpha = 0.45f),
-                                            Color(0xFFF6F8FA).copy(alpha = 0.85f)
+                                            Color.White.copy(alpha = 0.10f),
+                                            Color.White.copy(alpha = 0.34f),
+                                            Color(0xFFF6F8FA).copy(alpha = 0.82f)
                                         )
                                     )
                                     isAmoled -> Brush.verticalGradient(
                                         listOf(
-                                            Color.Black.copy(alpha = 0.20f),
-                                            Color.Black.copy(alpha = 0.55f),
-                                            Color.Black.copy(alpha = 0.98f)
+                                            Color.Black.copy(alpha = 0.08f),
+                                            Color.Black.copy(alpha = 0.38f),
+                                            Color.Black.copy(alpha = 0.90f)
                                         )
                                     )
                                     else -> Brush.verticalGradient(
                                         listOf(
-                                            Color(0xFF090C16).copy(alpha = 0.22f),
-                                            Color(0xFF0E1424).copy(alpha = 0.52f),
-                                            Color(0xFF090C16).copy(alpha = 0.88f)
+                                            Color(0xFF090C16).copy(alpha = 0.10f),
+                                            Color(0xFF0E1424).copy(alpha = 0.38f),
+                                            Color(0xFF090C16).copy(alpha = 0.86f)
                                         )
                                     )
                                 }

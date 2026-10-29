@@ -1,13 +1,16 @@
 package com.mydonghua.app.ui
 
 import android.graphics.Bitmap
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
@@ -45,6 +48,7 @@ import com.mydonghua.app.ui.common.PosterStagger
 import com.mydonghua.app.ui.common.PosterTrace
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.Haptics
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
 import com.kyant.backdrop.Backdrop
@@ -180,6 +184,7 @@ fun LiquidGlassNavBar(
                         val hoveredIndex = currentSlot.roundToInt().coerceIn(0, totalSlots.toInt() - 1)
                         if (currentTabIndex != hoveredIndex) {
                             currentTabIndex = hoveredIndex
+                            Haptics.soft()
                         }
                     },
                     onDragFinished = { targetIndex ->
@@ -390,26 +395,81 @@ private fun NavBarIcon(
     selected: Boolean,
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1.12f else 1.0f,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 200f),
+        targetValue = if (selected) 1.16f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.46f, stiffness = 320f),
         label = "nav_icon_bounce"
     )
+    val lift by animateDpAsState(
+        targetValue = if (selected) (-2).dp else 0.dp,
+        animationSpec = ColorOSMotion.FluidDp,
+        label = "nav_icon_lift"
+    )
+    val tint by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 220, easing = ColorOSMotion.FastOutSlowIn),
+        label = "nav_icon_tint"
+    )
+    val glow by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = tween(durationMillis = 260, easing = ColorOSMotion.FastOutSlowIn),
+        label = "nav_icon_glow"
+    )
+    val dotScale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
+        label = "nav_icon_dot"
+    )
+    val tilt = remember { Animatable(0f) }
+    LaunchedEffect(selected) {
+        if (selected) {
+            tilt.snapTo(0f)
+            tilt.animateTo(-13f, tween(durationMillis = 95, easing = ColorOSMotion.EmphasizedDecelerate))
+            tilt.animateTo(0f, spring(dampingRatio = 0.32f, stiffness = 240f))
+        }
+    }
     Box(
         modifier = Modifier
+            .offset(y = lift)
             .size(NavBarHeight.icon)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
-            }
-            .clip(CapsuleShape),
+                rotationZ = tilt.value
+            },
         contentAlignment = Alignment.Center,
     ) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .graphicsLayer { alpha = glow * 0.32f }
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0f)
+                        )
+                    ),
+                    CircleShape
+                )
+        )
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = contentDescription,
             modifier = Modifier.size(IconSize.xl),
-            tint = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = tint,
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .offset(y = 7.dp)
+                .size(3.5.dp)
+                .graphicsLayer {
+                    scaleX = dotScale
+                    scaleY = dotScale
+                    alpha = dotScale
+                }
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
     }
 }

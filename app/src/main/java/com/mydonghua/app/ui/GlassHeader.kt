@@ -6,7 +6,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -55,6 +58,8 @@ import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import com.mydonghua.app.ui.theme.IconSize
 import com.mydonghua.app.ui.theme.NavBarHeight
+import com.mydonghua.app.ui.theme.Haptics
+import kotlinx.coroutines.launch
 
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
@@ -570,21 +575,53 @@ fun GlassHeader(
 
                 if (onDrawerOpen != null) {
                     val hasAvatar = !effectiveAvatarUrl.isNullOrBlank()
+                    val menuSpin = remember { Animatable(0f) }
+                    val menuPulse = remember { Animatable(0f) }
+                    val menuScope = rememberCoroutineScope()
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(menuBtnBg)
-                            .colorOSPressBounce(pressedScale = 0.90f, onClick = onDrawerOpen),
+                            .colorOSPressBounce(pressedScale = 0.90f, onClick = {
+                                Haptics.impact()
+                                menuScope.launch {
+                                    menuPulse.snapTo(0f)
+                                    menuPulse.animateTo(1f, tween(durationMillis = 460, easing = ColorOSMotion.EmphasizedDecelerate))
+                                    menuPulse.snapTo(0f)
+                                }
+                                menuScope.launch {
+                                    menuSpin.snapTo(0f)
+                                    menuSpin.animateTo(1f, tween(durationMillis = 170, easing = ColorOSMotion.EmphasizedDecelerate))
+                                    menuSpin.animateTo(0f, spring(dampingRatio = 0.34f, stiffness = 260f))
+                                }
+                                onDrawerOpen()
+                            }),
                         contentAlignment = Alignment.Center
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .graphicsLayer {
+                                    val p = menuPulse.value
+                                    scaleX = 1f + p * 0.85f
+                                    scaleY = 1f + p * 0.85f
+                                    alpha = (1f - p) * 0.5f
+                                }
+                                .border(1.4.dp, contentColor.copy(alpha = 0.8f), CircleShape)
+                        )
                         if (hasAvatar) {
                             SubcomposeAsyncImage(
                                 model = effectiveAvatarUrl,
                                 contentDescription = "AniList Profile",
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .clip(CircleShape),
+                                    .clip(CircleShape)
+                                    .graphicsLayer {
+                                        val p = menuPulse.value
+                                        scaleX = 1f + p * 0.08f
+                                        scaleY = 1f + p * 0.08f
+                                    },
                                 contentScale = ContentScale.Crop
                             ) {
                                 val state = painter.state
@@ -595,7 +632,14 @@ fun GlassHeader(
                                         painter = painterResource(id = R.drawable.ic_menu),
                                         contentDescription = "Menu",
                                         tint = contentColor,
-                                        modifier = Modifier.size(IconSize.md)
+                                        modifier = Modifier
+                                            .size(IconSize.md)
+                                            .graphicsLayer {
+                                                rotationZ = menuSpin.value * 90f
+                                                val s = 1f - menuSpin.value * 0.12f
+                                                scaleX = s
+                                                scaleY = s
+                                            }
                                     )
                                 }
                             }
@@ -604,7 +648,14 @@ fun GlassHeader(
                                 painter = painterResource(id = R.drawable.ic_menu),
                                 contentDescription = "Menu",
                                 tint = contentColor,
-                                modifier = Modifier.size(IconSize.md)
+                                modifier = Modifier
+                                    .size(IconSize.md)
+                                    .graphicsLayer {
+                                        rotationZ = menuSpin.value * 90f
+                                        val s = 1f - menuSpin.value * 0.12f
+                                        scaleX = s
+                                        scaleY = s
+                                    }
                             )
                         }
                     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -46,6 +48,11 @@ import com.mydonghua.app.ui.screens.HomeViewModel
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.pager.HorizontalPager
@@ -57,6 +64,7 @@ import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
+import com.mydonghua.app.ui.theme.RevealOnEnter
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -133,27 +141,29 @@ fun HomeScreen(
                 if (state.showCountdownBanner) {
                     if (state.trendingDonghua.isNotEmpty()) {
                         item(key = "trending_hero_carousel") {
-                            TrendingHeroCarousel(
-                                trendingList = state.trendingDonghua,
-                                allShows = state.allShows,
-                                themeMode = state.themeMode,
-                                onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
-                                onTrendingClick = { media ->
-                                    viewModel.addTrendingShow(media) { targetId ->
-                                        onShowClick(targetId, null)
+                            RevealOnEnter(index = 0) {
+                                TrendingHeroCarousel(
+                                    trendingList = state.trendingDonghua,
+                                    allShows = state.allShows,
+                                    themeMode = state.themeMode,
+                                    onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
+                                    onTrendingClick = { media ->
+                                        viewModel.addTrendingShow(media) { targetId ->
+                                            onShowClick(targetId, null)
+                                        }
+                                    },
+                                    onWatchClick = { media ->
+                                        viewModel.addTrendingShow(media) { targetId ->
+                                            val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                                showTitle = media.preferredTitle,
+                                                customWatchUrl = null,
+                                                providerPreference = defaultStreamProvider
+                                            )
+                                            onWatchClick(url)
+                                        }
                                     }
-                                },
-                                onWatchClick = { media ->
-                                    viewModel.addTrendingShow(media) { targetId ->
-                                        val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
-                                            showTitle = media.preferredTitle,
-                                            customWatchUrl = null,
-                                            providerPreference = defaultStreamProvider
-                                        )
-                                        onWatchClick(url)
-                                    }
-                                }
-                            )
+                                )
+                            }
                         }
                         item(key = "trending_spacer") { Spacer(modifier = Modifier.height(Spacing.sm)) }
                     } else if (state.isTrendingLoading) {
@@ -163,30 +173,42 @@ fun HomeScreen(
                 }
 
                 if (state.showContinueWatching && state.continueWatching.isNotEmpty()) {
-                    item(key = "section_continue_header") { SectionHeader(title = "Continue Watching") }
+                    item(key = "section_continue_header") {
+                        RevealOnEnter(index = 1) {
+                            SectionHeader(title = "Continue Watching")
+                        }
+                    }
                     item(key = "section_continue_row") {
-                        ContinueWatchingRow(
-                            shows = state.continueWatching,
-                            onShowClick = { id -> onShowClick(id, "show-poster-cw-$id") }
-                        )
+                        RevealOnEnter(index = 2) {
+                            ContinueWatchingRow(
+                                shows = state.continueWatching,
+                                onShowClick = { id -> onShowClick(id, "show-poster-cw-$id") }
+                            )
+                        }
                     }
                 }
 
                 if (state.showRecentlyUpdated && state.recentlyUpdated.isNotEmpty()) {
-                    item(key = "section_recent_header") { SectionHeader(title = "Recently Updated") }
+                    item(key = "section_recent_header") {
+                        RevealOnEnter(index = 3) {
+                            SectionHeader(title = "Recently Updated")
+                        }
+                    }
                     item(key = "section_recent_row") {
-                        RecentlyUpdatedRow(
-                            shows = state.recentlyUpdated,
-                            onShowClick = { id -> onShowClick(id, "show-poster-ru-$id") },
-                            onWatchClick = { show ->
-                                val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
-                                    showTitle = show.title,
-                                    customWatchUrl = show.watchUrl,
-                                    providerPreference = defaultStreamProvider
-                                )
-                                onWatchClick(url)
-                            }
-                        )
+                        RevealOnEnter(index = 4) {
+                            RecentlyUpdatedRow(
+                                shows = state.recentlyUpdated,
+                                onShowClick = { id -> onShowClick(id, "show-poster-ru-$id") },
+                                onWatchClick = { show ->
+                                    val url = com.mydonghua.app.data.service.PosterFetchService.resolveWatchUrl(
+                                        showTitle = show.title,
+                                        customWatchUrl = show.watchUrl,
+                                        providerPreference = defaultStreamProvider
+                                    )
+                                    onWatchClick(url)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -485,6 +507,16 @@ private fun TrendingHeroCard(
                 }
 
                 // Action Button (50% capsule in ColorOS 17 Electric Blue)
+                val watchPulse = rememberInfiniteTransition(label = "homeWatchPulse")
+                    .animateFloat(
+                        initialValue = 0.9f,
+                        targetValue = 1.12f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 950, easing = ColorOSMotion.FastOutSlowIn),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "homeWatchPulseValue"
+                    )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -501,6 +533,10 @@ private fun TrendingHeroCard(
                         Box(
                             modifier = Modifier
                                 .size(20.dp)
+                                .graphicsLayer {
+                                    scaleX = watchPulse.value
+                                    scaleY = watchPulse.value
+                                }
                                 .clip(CircleShape)
                                 .background(Color.White.copy(alpha = 0.22f)),
                             contentAlignment = Alignment.Center
@@ -533,6 +569,14 @@ fun SectionHeader(
 ) {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val accent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
+    var grown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { grown = true }
+    val grow by animateFloatAsState(
+        targetValue = if (grown) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 360f),
+        label = "sectionHeaderGrow"
+    )
+    val accentHeight = if (subtitle.isNullOrBlank()) 18.dp else 28.dp
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -541,12 +585,21 @@ fun SectionHeader(
         Box(
             modifier = Modifier
                 .width(4.dp)
-                .height(if (subtitle.isNullOrBlank()) 18.dp else 28.dp)
+                .height(accentHeight)
+                .graphicsLayer {
+                    scaleY = grow
+                    transformOrigin = TransformOrigin(0.5f, 0.5f)
+                }
                 .clip(CircleShape)
                 .background(accent)
         )
         Spacer(modifier = Modifier.width(10.dp))
-        Column {
+        Column(
+            modifier = Modifier.graphicsLayer {
+                alpha = grow.coerceIn(0f, 1f)
+                translationX = (1f - grow) * 14f
+            }
+        ) {
             Text(
                 text = title,
                 fontSize = 19.sp,
@@ -582,14 +635,21 @@ fun ContinueWatchingRow(
         contentPadding = PaddingValues(horizontal = Spacing.lg),
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        items(shows, key = { it.id }) { show ->
-            ContinueWatchingVerticalCard(
-                show = show,
-                cardWidth = cardWidth,
-                isLight = isLight,
-                hazeState = hazeState,
-                onShowClick = { onShowClick(show.id) }
-            )
+        itemsIndexed(shows, key = { _, show -> show.id }) { index, show ->
+            RevealOnEnter(
+                index = index.coerceAtMost(6),
+                distance = 22.dp,
+                scaleFrom = 0.94f,
+                onceKey = "home-cw-${show.id}"
+            ) {
+                ContinueWatchingVerticalCard(
+                    show = show,
+                    cardWidth = cardWidth,
+                    isLight = isLight,
+                    hazeState = hazeState,
+                    onShowClick = { onShowClick(show.id) }
+                )
+            }
         }
     }
 }
@@ -816,15 +876,22 @@ fun RecentlyUpdatedRow(
         contentPadding = PaddingValues(horizontal = Spacing.lg),
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        items(shows, key = { it.id }) { show ->
-            RecentlyUpdatedVerticalCard(
-                show = show,
-                cardWidth = cardWidth,
-                isLight = isLight,
-                hazeState = hazeState,
-                onCardClick = { onShowClick(show.id) },
-                onWatchClick = if (onWatchClick != null) { { onWatchClick(show) } } else null
-            )
+        itemsIndexed(shows, key = { _, show -> show.id }) { index, show ->
+            RevealOnEnter(
+                index = index.coerceAtMost(6),
+                distance = 24.dp,
+                scaleFrom = 0.94f,
+                onceKey = "home-recent-${show.id}"
+            ) {
+                RecentlyUpdatedVerticalCard(
+                    show = show,
+                    cardWidth = cardWidth,
+                    isLight = isLight,
+                    hazeState = hazeState,
+                    onCardClick = { onShowClick(show.id) },
+                    onWatchClick = if (onWatchClick != null) { { onWatchClick(show) } } else null
+                )
+            }
         }
     }
 }

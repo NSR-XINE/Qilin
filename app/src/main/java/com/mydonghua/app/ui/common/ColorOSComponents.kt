@@ -1,10 +1,15 @@
 package com.mydonghua.app.ui.common
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +23,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -28,6 +34,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.mydonghua.app.ui.LocalHazeState
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
+import com.mydonghua.app.ui.theme.Haptics
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.hazeChild
@@ -234,11 +241,19 @@ fun ColorOSSwitch(
     val thumbPadding = 3.dp
 
     val maxOffset = trackWidth - thumbSize - (thumbPadding * 2)
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
 
     val thumbOffset by animateDpAsState(
         targetValue = if (checked) maxOffset else 0.dp,
         animationSpec = ColorOSMotion.SwitchThumbSpring,
         label = "thumbOffset"
+    )
+
+    val thumbScale by animateFloatAsState(
+        targetValue = if (pressed) 1.22f else 1f,
+        animationSpec = spring(dampingRatio = 0.42f, stiffness = 900f),
+        label = "thumbScale"
     )
 
     val trackColor = if (checked) {
@@ -249,18 +264,24 @@ fun ColorOSSwitch(
 
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val inactiveTrackColor = if (isLight) Color.Black.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.16f)
+    val animatedTrackColor by animateColorAsState(
+        targetValue = if (checked) trackColor else inactiveTrackColor,
+        animationSpec = tween(durationMillis = 220, easing = ColorOSMotion.FastOutSlowIn),
+        label = "trackColor"
+    )
 
     Box(
         modifier = modifier
             .size(width = trackWidth, height = trackHeight)
             .clip(RoundedCornerShape(percent = 50))
-            .background(if (checked) trackColor else inactiveTrackColor)
+            .background(animatedTrackColor)
             .then(
                 if (enabled && onCheckedChange != null) {
                     Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
+                        interactionSource = interactionSource,
                         indication = null
                     ) {
+                        Haptics.toggle(!checked)
                         onCheckedChange(!checked)
                     }
                 } else Modifier
@@ -272,6 +293,10 @@ fun ColorOSSwitch(
             modifier = Modifier
                 .offset(x = thumbOffset)
                 .size(thumbSize)
+                .graphicsLayer {
+                    scaleX = thumbScale
+                    scaleY = thumbScale
+                }
                 .shadow(elevation = 2.dp, shape = CircleShape)
                 .clip(CircleShape)
                 .background(Color.White)
@@ -326,9 +351,23 @@ fun ColorOSDialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        var dialogShown by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { dialogShown = true }
+        val dialogEnter by animateFloatAsState(
+            targetValue = if (dialogShown) 1f else 0f,
+            animationSpec = spring(dampingRatio = 0.60f, stiffness = 300f),
+            label = "dialogEnter"
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.90f)
+                .graphicsLayer {
+                    alpha = dialogEnter.coerceIn(0f, 1f)
+                    val s = 0.86f + 0.14f * dialogEnter
+                    scaleX = s
+                    scaleY = s
+                    translationY = (1f - dialogEnter) * 48f
+                }
                 .clip(dialogShape)
                 .background(brush = dialogBg, shape = dialogShape)
                 .border(width = 1.dp, brush = dialogBorder, shape = dialogShape)

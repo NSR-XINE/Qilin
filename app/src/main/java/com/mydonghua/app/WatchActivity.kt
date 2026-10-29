@@ -82,6 +82,7 @@ import com.mydonghua.app.data.service.AdBlocker
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.colorOSPressBounce
+import com.mydonghua.app.ui.theme.hapticOnTap
 import com.mydonghua.app.ui.common.ColorOSPillButton
 import com.mydonghua.app.ui.common.ColorOSOutlinedButton
 import kotlinx.coroutines.delay
@@ -118,6 +119,11 @@ class WatchActivity : ComponentActivity() {
                 watchUrl.contains(".m3u8?", ignoreCase = true)
 
         setContent {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hapticOnTap()
+            ) {
             val context = LocalContext.current
             val isInPip by remember { isInPipModeState }
             var useWebPlayer by remember { mutableStateOf(!isDirectVideo) }
@@ -338,6 +344,7 @@ class WatchActivity : ComponentActivity() {
                         )
                     }
                 )
+            }
             }
         }
     }

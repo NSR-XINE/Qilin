@@ -22,6 +22,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -358,6 +367,16 @@ fun ShowDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                val watchShimmer = rememberInfiniteTransition(label = "watchNowShimmer")
+                    .animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 2400, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart
+                        ),
+                        label = "watchNowShimmerSweep"
+                    )
                 // Main "Watch Online" Hero Button (ColorOS 17 50% Capsule Action Pill)
                 Box(
                     modifier = Modifier
@@ -375,11 +394,30 @@ fun ShowDetailScreen(
                                 )
                                 onWatchClick(targetUrl)
                             }
-                        )
-                        .padding(horizontal = 16.dp),
+                        ),
                     contentAlignment = Alignment.CenterStart
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .drawWithContent {
+                                val travel = size.width * 2.4f
+                                val x = -size.width * 0.6f + watchShimmer.value * travel
+                                drawRect(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.White.copy(alpha = 0.26f),
+                                            Color.Transparent
+                                        ),
+                                        start = Offset(x - size.width * 0.22f, 0f),
+                                        end = Offset(x + size.width * 0.22f, size.height)
+                                    )
+                                )
+                            }
+                    )
                     Row(
+                        modifier = Modifier.padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
