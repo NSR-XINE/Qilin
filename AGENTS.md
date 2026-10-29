@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid glass bottom nav.
+MyDonghua — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bottom nav, shared-element poster transitions, and predictive back.
 - Package: `com.mydonghua.app`
 - Branch: `staging`
 - Remote: `https://github.com/NSR-XINE/my_donguha.git`
@@ -9,8 +9,8 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 ## Workflow
 - Before pushing: `git pull --rebase origin staging`, then `git push origin staging`.
 - Commit message style: concise imperative sentence summarizing the change.
-- Build must run inside AndroidIDE (Java 17 JDK embedded there; no shell-level `java` command). AGP 8.6.0, Kotlin 2.0.0.
-- Keep `README.md` in sync with the current state of the app (folder structure, features, DB schema, build steps).
+- JDK 17 required. AndroidIDE bundles it; for terminal builds set `JAVA_HOME` to a Java 17 JDK. AGP 8.6.0, Kotlin 2.0.0.
+- Keep `README.md` in sync with the current state of the app (folder structure, features, DB schema, build steps). Update `CREDITS.md` when dependencies or bundled assets change.
 
 ## Glass Effect Strategy
 - **Haze 0.7.3** for general glass backgrounds (stars background, drawer, etc.)
@@ -26,7 +26,7 @@ MyDonghua — Anime tracking app with Haze glass backgrounds and Kyant liquid gl
 The app previously lagged with many cards on screen, when opening search/settings, and during tab switches. Preserve these mitigations:
 - **Glass background orbs are STATIC.** `GlassBackground` in `ui/GlassEffect.kt` used to run an `infiniteTransition` with 11 animators that re-rasterized 5 full-screen gradient layers every frame. It now uses fixed orb positions/scales. Do NOT reintroduce per-frame animation here.
 - **Navbar luminance readback runs off the main thread every 2s.** In `ui/LiquidGlassNavBar.kt` the whole `layer.toImageBitmap()` + 5x5 thumbnail average runs inside `withContext(Dispatchers.Default)`, skipped while the user is dragging or the capsule is animating (`userInteracting`). Keep it off the UI thread and slow (>= 1s).
-- **NavHost transitions are short pure cross-fades** (`MainActivity.kt`): `fadeIn(tween(140))` / `fadeOut(tween(110))` for enter/exit/pop. Avoid scale/slide transitions — they rendered two screens diverging around the seam during tab switches.
+- **Keep navigation motion short and small.** Tab switches use direction-aware fades + tiny horizontal slides (`TabFade*`/`TabSlide*`, 140–280ms); detail/settings use 200ms cross-fades; drawer selections use a fade. Predictive back scales the Scaffold to 0.94 with a 10% x-translation. Keep full-screen scale/slide subtle and never animate the glass/blur surfaces — larger motion previously made two screens diverge around the seam during tab switches.
 - **Liquid glass blur intensity MUST stay low.** Tab-switch lag was traced to per-frame shader cost: the capsule's blur had a 20dp constant floor (~22-36dp total, ~66-108px @3x) plus 10/14dp dispersion, re-run every frame during the slide. Fixed by cutting capsule blur to 7-14dp (adaptive 1-8dp + 6dp constant), halving dispersion to 5/7dp, and reducing search-button blur to 1-10dp with refraction halved to size/8 & size/4. Do NOT bump these values back up without re-measuring NavLag `maxFrameGapMs`.
 - **First-time poster loads are deferred past the capsule slide.** A burst of full-width Coil decodes during a tab switch stalled the slide (141-166ms frame gap). `PosterStagger` in `ui/common/DonghuaPoster.kt` defers first-time loads that start within 800ms of a tab switch by ~250ms (staggered 30ms each), so decodes happen after the slide; scroll reveals and cached repeats load immediately. Do NOT remove the deferral or drop the switch-burst window.
 - **Poster loads wait for the scroll to settle.** During a fling, Coil decodes of posters entering the viewport stalled frames (33-49ms `maxFrameGapMs` on Airing). `ScrollGate` in `ui/common/ScrollPerf.kt` is set `true` by `ScrollPerfMonitor` while `LazyListState.isScrollInProgress`, cleared in `finally` on cancellation; `DonghuaPoster` defers enabling a poster until `ScrollGate.scrolling` is `false` (50ms poll). Do NOT remove this gate or the `finally` cleanup — a leaked `true` would block every future poster load.
@@ -35,6 +35,14 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Compose BOM: `2024.09.00` (provides `rememberGraphicsLayer` / `GraphicsLayer` via Compose UI 1.7.x)
 - Haze: `0.7.3`
 - Kyant Liquid Glass: **none (vendored)**
+- Compose shared-element APIs are experimental in 1.7.x — opt in with `@OptIn(ExperimentalSharedTransitionApi::class)`
+
+## Motion & Shared Elements
+- `ui/SharedTransition.kt` provides `LocalSharedTransitionScope`, `LocalNavAnimatedVisibilityScope`, `SharedBoundsSpring`, `SharedPosterKey`, and `NavGraphBuilder.scopedComposable`.
+- `MainActivity` wraps the NavHost in `SharedTransitionLayout`; detail-bearing destinations use `scopedComposable`.
+- Poster keys are unique per source surface: `show-poster-card-*` (library grids), `show-poster-cw-*` (Continue Watching), `show-poster-ru-*` (Recently Updated). `openDetail(showId, posterKey)` stores the source key in `SharedPosterKey.current` before navigating; the detail poster reads it. Never place two shared posters with the same key on one screen.
+- `DonghuaPoster` accepts `sharedElementKey` + `sharedOverlayShape`; pass the banner's exact `RoundedCornerShape` so overlay clipping matches during flight.
+- Tab switches use direction-aware fade + slide; detail uses a cross-fade + bounds spring; drawer navigation uses a fade (`drawerNavigating`). Predictive back is enabled only off Home and while search, drawer, and loading are closed.
 
 ## Liquid Glass Nav Bar
 - `LiquidGlassNavBar.kt` in `com.mydonghua.app.ui` package
@@ -73,12 +81,13 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `app/build.gradle` — bumped Compose BOM to `2024.09.00`, Kyant AAR dependency removed, Kotlin 2.0.0 + compose compiler plugin
 - `app/src/main/java/com/mydonghua/app/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
 - `app/src/main/java/com/mydonghua/app/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
-- `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)` on NavHost content; replaced old nav with `LiquidGlassNavBar`; short cross-fade transitions; search bar keyboard focus handling
+- `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; `SharedTransitionLayout`/`scopedComposable` NavHost; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
+- `app/src/main/java/com/mydonghua/app/ui/SharedTransition.kt` — NEW: shared-element scope locals, bounds spring, `SharedPosterKey`, and `scopedComposable`
+- `app/src/main/java/com/mydonghua/app/ui/common/AppLoadingScreen.kt` — minimal trimmed-emblem loading screen with a standard progress indicator
 - `app/src/main/java/com/kyant/backdrop/` — NEW: 22 vendored Kyant Backdrop source files
 
 ## Build
-- Java 17 JDK embedded in AndroidIDE (no shell-level `java` command).
-- Build must be run from within AndroidIDE, not from shell.
+- JDK 17 required. AndroidIDE bundles it; for terminal builds, set `JAVA_HOME` to a Java 17 JDK before `./gradlew`.
 - `compileSdk 36`, `targetSdk 35`, `minSdk 29`
 - Kotlin 2.0.0, AGP 8.6.0
 - Compose Compiler Gradle Plugin (`org.jetbrains.kotlin.plugin.compose`) replaces `composeOptions { kotlinCompilerExtensionVersion }`

@@ -27,6 +27,8 @@ Thank you to everyone who maintains them.
 | [Jetpack Compose](https://developer.android.com/jetpack/compose) (BOM) | 2024.09.00 | Apache-2.0 |
 | [Material 3](https://m3.material.io) / Material Icons Extended | Compose BOM | Apache-2.0 |
 | [AndroidX Activity](https://developer.android.com/jetpack/androidx/releases/activity) | 1.9.0 | Apache-2.0 |
+| [AndroidX AppCompat](https://developer.android.com/jetpack/androidx/releases/appcompat) | 1.6.1 | Apache-2.0 |
+| [Material Components](https://github.com/material-components/material-components-android) | 1.11.0 | Apache-2.0 |
 | [AndroidX Navigation Compose](https://developer.android.com/jetpack/androidx/releases/navigation) | 2.7.7 | Apache-2.0 |
 | [AndroidX Lifecycle](https://developer.android.com/jetpack/androidx/releases/lifecycle) | 2.8.0 | Apache-2.0 |
 | [AndroidX DataStore](https://developer.android.com/jetpack/androidx/releases/datastore) | 1.1.1 | Apache-2.0 |

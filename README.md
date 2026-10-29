@@ -1,6 +1,6 @@
 # 东画 My Donghua (Android App)
 
-A sleek, high-aesthetic dark-themed native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, download episodes with 16-stream accelerated downloading, install home screen widgets, and receive native push notifications.
+A sleek, high-aesthetic, themeable native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, download episodes with 16-stream accelerated downloading, install home screen widgets, and receive native push notifications.
 
 ---
 
@@ -10,9 +10,11 @@ A sleek, high-aesthetic dark-themed native Android application designed for Chin
 - **UI Framework**: Jetpack Compose (BOM `2024.09.00`), Material 3, Navigation-Compose
 - **Visual Design & Motion**:
   - **ColorOS 17 Fluid Motion** — Natural spring physics, fluid press bounce responses (`colorOSPressBounce`), and smooth easing curves across all interactive cards and controls
+  - **Shared-Element Transitions** — Poster artwork morphs from Home rows and library cards into the detail hero, using route-scoped keys and exact per-banner corner clipping
+  - **Predictive Back** — Back gestures shrink and round the current screen in real time before the navigation commits
   - **Haze 0.7.3** — Real-time backdrop blur & glassmorphism
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
-  - **Performance-tuned**: Static glass background (zero per-frame gradient overhead), off-main-thread GPU luminance sampling, tuned cross-fade transitions
+  - **Performance-tuned**: Static glass background (zero per-frame gradient overhead), off-main-thread GPU luminance sampling, short direction-aware tab transitions, and cross-fade detail transitions
 - **Accelerated Download Engine**:
   - **YoutubeDL-Android 0.18.1** (embedded Python runtime + `yt-dlp` core)
   - **Aria2c 16-Connection Acceleration** — Multi-stream split downloading for ultra-fast transfers (`-j 16 -x 16 -s 16 -k 1M -c`)
@@ -47,7 +49,7 @@ my_donghua/
 │           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system
 │           └── com/mydonghua/app/
 │               ├── DonghuaApp.kt             # Application class (@HiltAndroidApp), engine bootstrap
-│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav
+│               ├── MainActivity.kt           # Entry activity, NavHost, shared-element + predictive-back host, Haze glass layer, LiquidGlass nav
 │               ├── WatchActivity.kt          # Media3 ExoPlayer & In-App Web Player with stream sniffer
 │               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
 │               ├── BootReceiver.kt           # Re-schedules alarms on boot or app update (WakeLock)
@@ -72,11 +74,13 @@ my_donghua/
 │               │   ├── model/                # Show, CountdownCalculator (DST-safe), StatsCalculator
 │               │   └── repository/           # Domain repository interfaces
 │               └── ui/
-│                   ├── theme/                # Color palettes, Material 3, ColorOS 17 animations
-│                   ├── common/               # ShowCard, DonghuaPoster, EmptyState, ShimmerEffect
-│                   ├── home/                 # HomeScreen layout, hero banner, continue watching
-│                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, AniList, Calendar, History
+│                   ├── theme/                # Color palettes, Material 3, ColorOS 17 motion specs
+│                   ├── common/               # ShowCard, DonghuaPoster, loading screen, shimmer, scroll perf
+│                   ├── home/                 # HomeScreen, hero banner, continue watching, recently updated
+│                   ├── SharedTransition.kt   # Shared-element scopes, bounds spring, poster key routing
+│                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, AniList, Calendar, History, Stats, Collections
 ├── AGENTS.md
+├── CREDITS.md
 └── README.md
 ```
 
@@ -90,6 +94,8 @@ my_donghua/
 - ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
 - 🎨 **ColorOS 17 Fluid Motion & Liquid Glass**: Bouncy physics-driven tap interactions, fluid card press effects, and Kyant liquid glass shader navigation bar.
+- 🖼️ **Shared-Element Poster Transitions**: Posters morph from Continue Watching, Recently Updated, and library cards into the detail screen, then return to their source on back.
+- 🔙 **Predictive Back Gesture**: Swipe back to scale the current screen into a rounded card as a live preview before navigation completes.
 - 🔍 **Smart Search**: Auto-focus search bar, recent search history with individual delete or clear-all, and debounced online search across AniList and MyAnimeList.
 - ☁️ **Dedicated AniList Screen**: Account login, auto-sync toggle, 2-way sync, cloud import/push, profile stats, and disconnect — accessible directly from the navigation drawer.
 - 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
@@ -157,7 +163,7 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 
 ### Build Commands
 
-Run these Gradle tasks from AndroidIDE, which provides the required embedded Java 17 JDK. The repository environment does not provide a supported shell-level `java` command.
+Run these Gradle tasks from AndroidIDE (which bundles a Java 17 JDK) or from a terminal where `JAVA_HOME` points to a Java 17 JDK.
 
 ```bash
 # Build Debug APK
