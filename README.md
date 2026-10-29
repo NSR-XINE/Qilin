@@ -169,3 +169,9 @@ Run these Gradle tasks from AndroidIDE, which provides the required embedded Jav
 # Run Unit Tests
 ./gradlew test
 ```
+
+---
+
+## Credits
+
+See [CREDITS.md](CREDITS.md) for third-party libraries, data sources, fonts, and acknowledgments.
