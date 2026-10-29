@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Log
 import android.webkit.CookieManager
 import androidx.core.app.NotificationCompat
@@ -22,15 +23,22 @@ import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 class DownloadService : Service() {
 
@@ -39,6 +47,10 @@ class DownloadService : Service() {
         const val PREFS_NAME = "donghua_prefs"
         const val SAVED_DOWNLOADS_KEY = "saved_downloads"
         private const val TAG = "DownloadService"
+        private const val NOTIFY_INTERVAL_MS = 1000L
+        private const val PERSIST_INTERVAL_MS = 2000L
+        private const val USER_AGENT =
+            "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 
         fun logDebug(msg: String) {
             try {
@@ -51,7 +63,20 @@ class DownloadService : Service() {
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
     private val downloadJobs = ConcurrentHashMap<String, Job>()
+    private val pausedIds = ConcurrentHashMap.newKeySet<String>()
+    private val cancelledIds = ConcurrentHashMap.newKeySet<String>()
     private var wakeLock: PowerManager.WakeLock? = null
+
+    private val httpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .retryOnConnectionFailure(true)
+            .build()
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -117,8 +142,22 @@ class DownloadService : Service() {
                 val expectedSize = intent.getStringExtra("expectedSize") ?: ""
                 val referer = intent.getStringExtra("referer")
                 val isAudioOnly = intent.getBooleanExtra("isAudioOnly", false) || (formatId?.contains("audio", ignoreCase = true) == true)
+                val isHls = intent.getBooleanExtra("isHls", false) ||
+                        url.contains(".m3u8", ignoreCase = true) ||
+                        url.contains("/hls/", ignoreCase = true)
+                val isResume = intent.getBooleanExtra("resume", false)
 
-                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly)
+                pausedIds.remove(downloadId)
+                cancelledIds.remove(downloadId)
+                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly, isHls, isResume)
+            }
+            "PAUSE_DOWNLOAD" -> {
+                val downloadId = intent.getStringExtra("downloadId")
+                    ?: intent.getStringExtra("download_id")
+                    ?: intent.getStringExtra("id")
+                if (downloadId != null) {
+                    pauseDownload(downloadId)
+                }
             }
             "CANCEL_DOWNLOAD" -> {
                 val downloadId = intent.getStringExtra("downloadId")
@@ -141,7 +180,9 @@ class DownloadService : Service() {
         path: String,
         expectedSize: String,
         referer: String? = null,
-        isAudioOnly: Boolean = false
+        isAudioOnly: Boolean = false,
+        isHls: Boolean = false,
+        isResume: Boolean = false
     ) {
         try {
             if (wakeLock?.isHeld == false) {
@@ -167,10 +208,11 @@ class DownloadService : Service() {
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
-            .setContentText("Connecting download stream...")
+            .setContentText(if (isResume) "Resuming download..." else "Connecting download stream...")
             .setSmallIcon(R.drawable.ic_download)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .setSilent(true)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel", cancelPendingIntent)
 
@@ -182,8 +224,15 @@ class DownloadService : Service() {
         }
 
         val job = serviceScope.launch {
+            var lastNotifyAt = 0L
+            var lastPersistAt = 0L
+            var finalFilePath: String? = null
+            var lastLogLine = ""
+            val destDir = File(path)
+            var tempDir = File(cacheDir, "downloads/$id")
+
             try {
-                logDebug("START_DOWNLOAD: id=$id, url=$url, formatId=$formatId, isAudioOnly=$isAudioOnly, referer=$referer")
+                logDebug("START_DOWNLOAD: id=$id, url=$url, formatId=$formatId, isAudioOnly=$isAudioOnly, isHls=$isHls, resume=$isResume, referer=$referer")
                 ensureInitialized(this@DownloadService)
 
                 if (url.isBlank()) {
@@ -202,11 +251,13 @@ class DownloadService : Service() {
                     throw Exception("Cannot download directly from website webpage URL. Please start video playback in the app to capture the video stream.")
                 }
 
-                val destDir = File(path)
                 if (!destDir.exists()) destDir.mkdirs()
+                if (destDir.usableSpace in 1 until 50L * 1024L * 1024L) {
+                    throw Exception("Not enough free storage space to start this download")
+                }
 
                 val sanitizedTitle = title.replace(Regex("[^a-zA-Z0-9._-]"), "_")
-                val isHls = url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true)
+                val hls = isHls || url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true)
 
                 val finalReferer = if (!referer.isNullOrEmpty()) {
                     referer
@@ -226,50 +277,18 @@ class DownloadService : Service() {
                     }
                 } else null
 
-                val outputTemplate = "$path/$sanitizedTitle.%(ext)s"
+                // Download into a per-task temp folder and move the finished file afterwards.
+                // This keeps partial fragments (.part/.ts) out of the user's offline library.
+                if (!isResume && tempDir.exists()) tempDir.deleteRecursively()
+                if (!tempDir.exists()) tempDir.mkdirs()
+                val outputTemplate = "${tempDir.absolutePath}/$sanitizedTitle.%(ext)s"
 
-                val request = YoutubeDLRequest(url).apply {
-                    if (!formatId.isNullOrEmpty() && !formatId.startsWith("http://") && !formatId.startsWith("https://") && formatId != "best" && formatId != "auto" && !isAudioOnly) {
-                        addOption("-f", formatId)
-                    }
-                    if (isAudioOnly) {
-                        addOption("-x")
-                        addOption("--audio-format", targetAudioExt ?: "m4a")
-                        addOption("--audio-quality", "0")
-                    }
-                    addOption("-o", outputTemplate)
-                    addOption("--no-check-certificates")
-                    addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                val speedRegex = Regex("([\\d.]+)\\s*([KMGT]?i?B)/s")
+                val sizeRegex = Regex("([\\d.]+)\\s*([KMGT]?i?B)\\s+of\\s+~?\\s*([\\d.]+)\\s*([KMGT]?i?B)")
+                val totalOnlyRegex = Regex("of\\s+~?\\s*([\\d.]+)\\s*([KMGT]?i?B)")
+                val etaRegex = Regex("ETA\\s+(\\d+:\\d+(?::\\d+)?)")
 
-                    if (!finalReferer.isNullOrEmpty()) {
-                        addOption("--referer", finalReferer)
-                    }
-
-                    try {
-                        val cookie = CookieManager.getInstance().getCookie(url)
-                        if (!cookie.isNullOrEmpty()) {
-                            addOption("--add-header", "Cookie:$cookie")
-                        }
-                    } catch (ignored: Exception) {}
-
-                    if (isHls) {
-                        addOption("--downloader", "m3u8:native")
-                        addOption("--concurrent-fragments", "16")
-                        addOption("--hls-use-mpegts")
-                    } else {
-                        addOption("--concurrent-fragments", "16")
-                        addOption("--buffer-size", "16M")
-                    }
-                    addOption("--retries", "10")
-                    addOption("--fragment-retries", "10")
-                }
-
-                val speedRegex = Regex("(\\d+\\.?\\d*\\s*[KMGT]?i?B/s)")
-                val sizeRegex = Regex("(\\d+\\.?\\d*\\s*[KMGT]?i?B)/(\\d+\\.?\\d*\\s*[KMGT]?i?B)")
-                var finalFilePath: String? = null
-                var lastLogLine = ""
-
-                val progressCallback: (Float, Long, String) -> Unit = { progress, etaInSeconds, line ->
+                fun publishProgress(progress: Float, line: String, force: Boolean = false) {
                     lastLogLine = line
                     if (line.contains("Destination:")) {
                         finalFilePath = line.substringAfter("Destination:").trim().replace("\"", "")
@@ -277,96 +296,146 @@ class DownloadService : Service() {
                         finalFilePath = line.substringAfter("into").trim().replace("\"", "")
                     }
 
-                    var speed = speedRegex.find(line)?.value ?: "0 MB/s"
-                    speed = speed.replace("MiB", "MB").replace("KiB", "KB")
+                    val now = SystemClock.elapsedRealtime()
+                    if (!force && now - lastNotifyAt < NOTIFY_INTERVAL_MS) return
+                    lastNotifyAt = now
+
+                    val speedMatch = speedRegex.find(line)
+                    val speedText = speedMatch?.let {
+                        "${it.groupValues[1]} ${it.groupValues[2]}/s".replace("MiB", "MB").replace("KiB", "KB")
+                    } ?: "0 MB/s"
 
                     val sizeMatch = sizeRegex.find(line)
-                    val downloadedSize = sizeMatch?.groupValues?.getOrNull(1)?.replace("iB", "B") ?: ""
-                    val totalSize = sizeMatch?.groupValues?.getOrNull(2)?.replace("iB", "B") ?: expectedSize
+                    val totalMatch = totalOnlyRegex.find(line)
+                    var downloadedBytes = 0L
+                    var totalBytes = 0L
+                    if (sizeMatch != null) {
+                        downloadedBytes = parseSize(sizeMatch.groupValues[1], sizeMatch.groupValues[2])
+                        totalBytes = parseSize(sizeMatch.groupValues[3], sizeMatch.groupValues[4])
+                    } else if (totalMatch != null) {
+                        totalBytes = parseSize(totalMatch.groupValues[1], totalMatch.groupValues[2])
+                    }
+                    if (totalBytes <= 0L && expectedSize.isNotBlank()) {
+                        totalBytes = parseReadableSize(expectedSize)
+                    }
+                    if (downloadedBytes <= 0L && totalBytes > 0L) {
+                        downloadedBytes = (totalBytes * (progress / 100f)).toLong()
+                    }
 
+                    val etaSeconds = etaRegex.find(line)?.groupValues?.getOrNull(1)?.let { parseEta(it) } ?: 0L
                     val progressInt = progress.toInt().coerceIn(0, 100)
-                    val etaStr = if (etaInSeconds > 0) "${etaInSeconds}s" else "--:--"
+                    val etaStr = if (etaSeconds > 0) "${etaSeconds}s" else "--:--"
 
-                    builder.setProgress(100, progressInt, false)
-                    builder.setContentText("$speed - $progressInt%")
-                    notificationManager.notify(notificationId, builder.build())
+                    builder.setProgress(100, progressInt, totalBytes <= 0L)
+                    builder.setContentText("$speedText - $progressInt%")
+                    try {
+                        notificationManager.notify(notificationId, builder.build())
+                    } catch (ignored: Exception) {}
 
                     val progressIntent = Intent("DOWNLOAD_PROGRESS").apply {
                         putExtra("id", id)
                         putExtra("progress", progressInt)
-                        putExtra("speed", speed)
-                        putExtra("downloadedSize", downloadedSize)
-                        putExtra("totalSize", totalSize)
+                        putExtra("speed", speedText)
+                        putExtra("downloadedSize", formatBytes(downloadedBytes))
+                        putExtra("totalSize", formatBytes(totalBytes))
+                        putExtra("downloadedBytes", downloadedBytes)
+                        putExtra("totalBytes", totalBytes)
                         putExtra("eta", etaStr)
                         setPackage(packageName)
                     }
                     sendBroadcast(progressIntent)
 
-                    val updateIntent = Intent("UPDATE_DOWNLOAD_PROGRESS").apply {
-                        putExtra("id", id)
-                        putExtra("progress", progressInt)
-                        putExtra("speed", speed)
-                        putExtra("downloadedSize", downloadedSize)
-                        putExtra("totalSize", totalSize)
-                        putExtra("eta", etaStr)
-                        setPackage(packageName)
+                    if (now - lastPersistAt >= PERSIST_INTERVAL_MS) {
+                        lastPersistAt = now
+                        updateProgressPrefs(id, progressInt, speedText, downloadedBytes, totalBytes, etaStr)
                     }
-                    sendBroadcast(updateIntent)
                 }
 
-                val response = withContext(Dispatchers.IO) {
+                val progressCallback: (Float, Long, String) -> Unit = { progress, _, line ->
+                    if (!cancelledIds.contains(id) && !pausedIds.contains(id)) {
+                        publishProgress(progress, line)
+                    }
+                }
+
+                val request = buildRequest(
+                    url = url,
+                    formatId = formatId,
+                    outputTemplate = outputTemplate,
+                    referer = finalReferer,
+                    isAudioOnly = isAudioOnly,
+                    targetAudioExt = targetAudioExt,
+                    isHls = hls,
+                    isResume = isResume,
+                    includeFormatSelector = true
+                )
+
+                var response = withContext(Dispatchers.IO) {
                     try {
                         YoutubeDL.getInstance().execute(request, id, progressCallback)
+                    } catch (e: YoutubeDL.CanceledException) {
+                        throw e
                     } catch (primaryEx: Exception) {
-                        Log.w(TAG, "Primary download attempt threw exception (${primaryEx.message}). Executing safe native fallback...", primaryEx)
-                        val fallbackRequest = YoutubeDLRequest(url).apply {
-                            if (isAudioOnly) {
-                                addOption("-x")
-                                addOption("--audio-format", targetAudioExt ?: "m4a")
-                                addOption("--audio-quality", "0")
-                            }
-                            addOption("-o", outputTemplate)
-                            addOption("--no-check-certificates")
-                            addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
-                            if (!finalReferer.isNullOrEmpty()) {
-                                addOption("--referer", finalReferer)
-                            }
-                            try {
-                                val cookie = CookieManager.getInstance().getCookie(url)
-                                if (!cookie.isNullOrEmpty()) {
-                                    addOption("--add-header", "Cookie:$cookie")
-                                }
-                            } catch (ignored: Exception) {}
-                            if (isHls) {
-                                addOption("--downloader", "m3u8:native")
-                                addOption("--hls-use-mpegts")
-                            }
-                            addOption("--retries", "10")
-                        }
+                        Log.w(TAG, "Primary download attempt failed (${primaryEx.message}). Trying safe fallback...", primaryEx)
+                        val fallbackRequest = buildRequest(
+                            url = url,
+                            formatId = null,
+                            outputTemplate = outputTemplate,
+                            referer = finalReferer,
+                            isAudioOnly = isAudioOnly,
+                            targetAudioExt = targetAudioExt,
+                            isHls = hls,
+                            isResume = true,
+                            includeFormatSelector = false
+                        )
                         YoutubeDL.getInstance().execute(fallbackRequest, id, progressCallback)
                     }
                 }
 
-                if (response.exitCode == 0) {
-                    var currentPath = finalFilePath
-                    if (currentPath == null || !File(currentPath).exists()) {
-                        val files = destDir.listFiles()
-                        currentPath = files?.filter { it.name.startsWith(sanitizedTitle) }?.maxByOrNull { it.lastModified() }?.absolutePath
-                            ?: files?.maxByOrNull { it.lastModified() }?.absolutePath
+                // Direct progressive streams often fail inside yt-dlp (expired signatures,
+                // unsupported mime types). Fall back to a plain ranged HTTP download.
+                var directCompleted = false
+                if (response.exitCode != 0 && !hls && isDirectStream) {
+                    val direct = withContext(Dispatchers.IO) {
+                        downloadDirectHttp(
+                            url = url,
+                            tempDir = tempDir,
+                            fileName = sanitizedTitle,
+                            referer = finalReferer,
+                            expectedSize = expectedSize,
+                            id = id,
+                            onProgress = { progress, line -> publishProgress(progress, line) }
+                        )
+                    }
+                    directCompleted = direct != null
+                }
+
+                if (response.exitCode == 0 || directCompleted) {
+                    val produced = findProducedFile(tempDir, sanitizedTitle, destDir)
+                    if (produced == null) {
+                        throw Exception("Download finished but no video file was produced")
                     }
 
-                    logDebug("DOWNLOAD_SUCCESS: id=$id, path=$currentPath")
-                    updatePrefs(id, "Completed", currentPath ?: "")
+                    val finalFile = moveToLibrary(produced, destDir)
+                    finalFilePath = finalFile.absolutePath
+                    try {
+                        tempDir.deleteRecursively()
+                    } catch (ignored: Exception) {}
+
+                    logDebug("DOWNLOAD_SUCCESS: id=$id, path=$finalFilePath")
+                    updatePrefs(id, "Completed", finalFilePath ?: "")
+                    publishProgress(100f, "Download complete", force = true)
 
                     builder.setContentText("Download complete")
                         .setProgress(0, 0, false)
                         .setOngoing(false)
-                    notificationManager.notify(notificationId, builder.build())
+                    try {
+                        notificationManager.notify(notificationId, builder.build())
+                    } catch (ignored: Exception) {}
 
                     val successIntent = Intent("DOWNLOAD_SUCCESS").apply {
                         putExtra("id", id)
                         putExtra("title", title)
-                        putExtra("path", currentPath ?: "")
+                        putExtra("path", finalFilePath ?: "")
                         setPackage(packageName)
                     }
                     sendBroadcast(successIntent)
@@ -377,7 +446,9 @@ class DownloadService : Service() {
                     builder.setContentText("Download failed (code ${response.exitCode})")
                         .setProgress(0, 0, false)
                         .setOngoing(false)
-                    notificationManager.notify(notificationId, builder.build())
+                    try {
+                        notificationManager.notify(notificationId, builder.build())
+                    } catch (ignored: Exception) {}
 
                     val failedIntent = Intent("DOWNLOAD_FAILED").apply {
                         putExtra("id", id)
@@ -386,31 +457,47 @@ class DownloadService : Service() {
                     }
                     sendBroadcast(failedIntent)
                 }
+            } catch (e: CancellationException) {
+                Log.d(TAG, "Download cancelled by coroutine for ID: $id")
+            } catch (e: YoutubeDL.CanceledException) {
+                Log.d(TAG, "Download process cancelled for ID: $id")
             } catch (e: Exception) {
-                logDebug("DOWNLOAD_EXCEPTION: id=$id, error=${e.message}")
-                Log.e(TAG, "Download failed for ID: $id", e)
-                updatePrefs(id, "Failed", "")
-                val cleanError = when {
-                    e.message?.contains("403", ignoreCase = true) == true -> "Server HTTP 403 Forbidden (stream access expired or protected)"
-                    e.message?.contains("Requested format", ignoreCase = true) == true -> "Requested video/audio format is not available"
-                    e.message?.contains("Unable to extract", ignoreCase = true) == true -> "Unable to extract stream from website"
-                    else -> e.message?.lines()?.lastOrNull { it.isNotBlank() } ?: "Download failed or interrupted"
-                }
+                if (cancelledIds.contains(id)) {
+                    logDebug("DOWNLOAD_CANCELLED_DURING_WORK: id=$id")
+                } else if (pausedIds.contains(id)) {
+                    logDebug("DOWNLOAD_PAUSED_DURING_WORK: id=$id")
+                } else {
+                    logDebug("DOWNLOAD_EXCEPTION: id=$id, error=${e.message}")
+                    Log.e(TAG, "Download failed for ID: $id", e)
+                    updatePrefs(id, "Failed", "")
+                    val cleanError = when {
+                        e.message?.contains("403", ignoreCase = true) == true -> "Server HTTP 403 Forbidden (stream access expired or protected)"
+                        e.message?.contains("Requested format", ignoreCase = true) == true -> "Requested video/audio format is not available"
+                        e.message?.contains("Unable to extract", ignoreCase = true) == true -> "Unable to extract stream from website"
+                        else -> e.message?.lines()?.lastOrNull { it.isNotBlank() } ?: "Download failed or interrupted"
+                    }
 
-                builder.setContentText("Download failed: $cleanError")
-                    .setProgress(0, 0, false)
-                    .setOngoing(false)
-                notificationManager.notify(notificationId, builder.build())
+                    builder.setContentText("Download failed: $cleanError")
+                        .setProgress(0, 0, false)
+                        .setOngoing(false)
+                    try {
+                        notificationManager.notify(notificationId, builder.build())
+                    } catch (ignored: Exception) {}
 
-                val failedIntent = Intent("DOWNLOAD_FAILED").apply {
-                    putExtra("id", id)
-                    putExtra("error", cleanError)
-                    setPackage(packageName)
+                    val failedIntent = Intent("DOWNLOAD_FAILED").apply {
+                        putExtra("id", id)
+                        putExtra("error", cleanError)
+                        setPackage(packageName)
+                    }
+                    sendBroadcast(failedIntent)
                 }
-                sendBroadcast(failedIntent)
             } finally {
                 downloadJobs.remove(id)
-                notificationManager.cancel(notificationId)
+                cancelledIds.remove(id)
+                pausedIds.remove(id)
+                try {
+                    notificationManager.cancel(notificationId)
+                } catch (ignored: Exception) {}
                 if (downloadJobs.isEmpty()) {
                     try {
                         if (wakeLock?.isHeld == true) {
@@ -426,36 +513,266 @@ class DownloadService : Service() {
         downloadJobs[id] = job
     }
 
-    fun cancelDownload(id: String) {
-        serviceScope.launch {
+    private fun buildRequest(
+        url: String,
+        formatId: String?,
+        outputTemplate: String,
+        referer: String?,
+        isAudioOnly: Boolean,
+        targetAudioExt: String?,
+        isHls: Boolean,
+        isResume: Boolean,
+        includeFormatSelector: Boolean
+    ): YoutubeDLRequest {
+        val isDirectFormat = formatId?.startsWith("http://") == true || formatId?.startsWith("https://") == true
+        return YoutubeDLRequest(url).apply {
+            if (includeFormatSelector && !isAudioOnly && !formatId.isNullOrEmpty() &&
+                !isDirectFormat && formatId != "best" && formatId != "auto"
+            ) {
+                // Video-only formats need an audio track; the trailing fallback keeps
+                // already-muxed formats working when bestaudio is unavailable.
+                val selector = if (formatId.contains("+")) formatId else "$formatId+bestaudio/$formatId"
+                addOption("-f", selector)
+                addOption("--merge-output-format", "mp4")
+            }
+            if (isAudioOnly) {
+                addOption("-x")
+                addOption("--audio-format", targetAudioExt ?: "m4a")
+                addOption("--audio-quality", "0")
+            }
+            addOption("-o", outputTemplate)
+            addOption("--no-check-certificates")
+            addOption("--no-warnings")
+            addOption("--no-playlist")
+            addOption("--newline")
+            addOption("--progress")
+            addOption("--progress-delta", "2")
+            addOption("--user-agent", USER_AGENT)
+
+            if (!referer.isNullOrEmpty()) {
+                addOption("--referer", referer)
+            }
+
             try {
-                YoutubeDL.getInstance().destroyProcessById(id)
-            } catch (e: Exception) {
-                Log.e(TAG, "Cancel process failed", e)
+                val cookie = CookieManager.getInstance().getCookie(url)
+                if (!cookie.isNullOrEmpty()) {
+                    addOption("--add-header", "Cookie:$cookie")
+                }
+            } catch (ignored: Exception) {}
+
+            if (isHls) {
+                addOption("--hls-prefer-native")
+                addOption("--hls-use-mpegts")
+            } else {
+                addOption("--buffer-size", "16M")
+            }
+            addOption("-N", "16")
+            addOption("--retries", "10")
+            addOption("--fragment-retries", "10")
+            if (isResume) {
+                addOption("--continue")
+            }
+        }
+    }
+
+    private fun findProducedFile(tempDir: File, sanitizedTitle: String, destDir: File): File? {
+        val mediaExtensions = setOf("mp4", "mkv", "webm", "ts", "mp3", "m4a", "aac", "flv")
+        val candidates = tempDir.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase() in mediaExtensions && !it.name.contains(".part") }
+            .toList()
+
+        return candidates.filter { it.name.startsWith(sanitizedTitle) }.maxByOrNull { it.lastModified() }
+            ?: candidates.maxByOrNull { it.lastModified() }
+            ?: destDir.listFiles()
+                ?.filter { it.isFile && it.name.startsWith(sanitizedTitle) && !it.name.contains(".part") }
+                ?.maxByOrNull { it.lastModified() }
+    }
+
+    private fun moveToLibrary(source: File, destDir: File): File {
+        if (source.parentFile?.canonicalPath == destDir.canonicalPath) {
+            return source
+        }
+        val target = File(destDir, source.name)
+        if (target.exists()) target.delete()
+        try {
+            source.renameTo(target)
+        } catch (ignored: Exception) {
+        }
+        if (!target.exists()) {
+            source.inputStream().use { input ->
+                FileOutputStream(target).use { output ->
+                    input.copyTo(output, 64 * 1024)
+                }
+            }
+            source.delete()
+        }
+        return target
+    }
+
+    private fun downloadDirectHttp(
+        url: String,
+        tempDir: File,
+        fileName: String,
+        referer: String?,
+        expectedSize: String,
+        id: String,
+        onProgress: (Float, String) -> Unit
+    ): File? {
+        val extension = try {
+            val path = android.net.Uri.parse(url).lastPathSegment.orEmpty()
+            val ext = path.substringAfterLast('.', "").lowercase()
+            if (ext in setOf("mp4", "mkv", "webm", "flv", "m4a", "mp3", "aac")) ext else "mp4"
+        } catch (ignored: Exception) {
+            "mp4"
+        }
+
+        if (!tempDir.exists()) tempDir.mkdirs()
+        val partFile = File(tempDir, "$fileName.$extension.part")
+        val existingBytes = if (partFile.exists()) partFile.length() else 0L
+
+        val requestBuilder = Request.Builder()
+            .url(url)
+            .header("User-Agent", USER_AGENT)
+            .header("Accept", "*/*")
+        if (!referer.isNullOrEmpty()) requestBuilder.header("Referer", referer)
+        try {
+            val cookie = CookieManager.getInstance().getCookie(url)
+            if (!cookie.isNullOrEmpty()) requestBuilder.header("Cookie", cookie)
+        } catch (ignored: Exception) {}
+        if (existingBytes > 0) {
+            requestBuilder.header("Range", "bytes=$existingBytes-")
+        }
+
+        val response = try {
+            httpClient.newCall(requestBuilder.build()).execute()
+        } catch (e: Exception) {
+            throw Exception("HTTP fallback failed: ${e.message}")
+        }
+
+        response.use { resp ->
+            if (!resp.isSuccessful) {
+                throw Exception("HTTP fallback failed with code ${resp.code}")
+            }
+            val body = resp.body ?: throw Exception("HTTP fallback returned an empty body")
+
+            var append = existingBytes > 0 && resp.code == 206
+            if (!append && existingBytes > 0) {
+                // Server ignored the Range header; restart from the beginning.
+                partFile.delete()
+            }
+            if (!append) {
+                partFile.delete()
             }
 
-            downloadJobs[id]?.cancel()
-            downloadJobs.remove(id)
-            updatePrefs(id, "Cancelled", "")
-
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(id.hashCode() and 0x7FFFFFFF)
-
-            val cancelIntent = Intent("DOWNLOAD_CANCELLED").apply {
-                putExtra("id", id)
-                setPackage(packageName)
+            val contentLength = body.contentLength()
+            val totalBytes = when {
+                contentLength > 0 && append -> contentLength + existingBytes
+                contentLength > 0 -> contentLength
+                else -> parseReadableSize(expectedSize)
             }
-            sendBroadcast(cancelIntent)
 
-            if (downloadJobs.isEmpty()) {
-                try {
-                    if (wakeLock?.isHeld == true) {
-                        wakeLock?.release()
+            val startAt = if (append) existingBytes else 0L
+            var downloaded = startAt
+            var lastUpdate = 0L
+            var lastTime = SystemClock.elapsedRealtime()
+            var lastBytes = downloaded
+
+            val input: InputStream = body.byteStream()
+            val output = FileOutputStream(partFile, append)
+            try {
+                val buffer = ByteArray(64 * 1024)
+                var read: Int
+                while (input.read(buffer).also { read = it } > 0) {
+                    if (cancelledIds.contains(id) || pausedIds.contains(id)) {
+                        throw CancellationException("Download paused or cancelled")
                     }
-                } catch (ignored: Exception) {}
-                ServiceCompat.stopForeground(this@DownloadService, ServiceCompat.STOP_FOREGROUND_REMOVE)
-                stopSelf()
+                    output.write(buffer, 0, read)
+                    downloaded += read
+
+                    val now = SystemClock.elapsedRealtime()
+                    if (now - lastUpdate >= 500L) {
+                        val elapsed = (now - lastTime).coerceAtLeast(1L) / 1000.0
+                        val speedBps = ((downloaded - lastBytes) / elapsed).toLong().coerceAtLeast(0L)
+                        lastTime = now
+                        lastBytes = downloaded
+                        lastUpdate = now
+                        val percent = if (totalBytes > 0) (downloaded * 100.0 / totalBytes).toFloat() else 0f
+                        val speedText = when {
+                            speedBps >= 1024L * 1024L -> String.format(Locale.US, "%.1f MB/s", speedBps / (1024.0 * 1024.0))
+                            speedBps >= 1024L -> String.format(Locale.US, "%.1f KB/s", speedBps / 1024.0)
+                            else -> "$speedBps B/s"
+                        }
+                        val sizeText = if (totalBytes > 0) "${formatBytes(downloaded)} / ${formatBytes(totalBytes)}" else formatBytes(downloaded)
+                        onProgress(percent, "[download] ${percent.toInt()}% of $sizeText at $speedText")
+                    }
+                }
+                output.flush()
+            } finally {
+                try { output.close() } catch (ignored: Exception) {}
+                try { input.close() } catch (ignored: Exception) {}
             }
+        }
+
+        val finalFile = File(tempDir, "$fileName.$extension")
+        if (finalFile.exists()) finalFile.delete()
+        if (!partFile.renameTo(finalFile)) {
+            partFile.copyTo(finalFile, overwrite = true)
+            partFile.delete()
+        }
+        onProgress(100f, "Download complete")
+        return finalFile
+    }
+
+    fun pauseDownload(id: String) {
+        pausedIds.add(id)
+        try {
+            YoutubeDL.getInstance().destroyProcessById(id)
+        } catch (e: Exception) {
+            Log.e(TAG, "Pause process failed", e)
+        }
+        updatePrefs(id, "PAUSED", "")
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            notificationManager.cancel(id.hashCode() and 0x7FFFFFFF)
+        } catch (ignored: Exception) {}
+        downloadJobs[id]?.cancel()
+    }
+
+    fun cancelDownload(id: String) {
+        cancelledIds.add(id)
+        try {
+            YoutubeDL.getInstance().destroyProcessById(id)
+        } catch (e: Exception) {
+            Log.e(TAG, "Cancel process failed", e)
+        }
+
+        downloadJobs[id]?.cancel()
+        downloadJobs.remove(id)
+
+        try {
+            File(cacheDir, "downloads/$id").deleteRecursively()
+        } catch (ignored: Exception) {}
+        removeModelFromPrefs(id)
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            notificationManager.cancel(id.hashCode() and 0x7FFFFFFF)
+        } catch (ignored: Exception) {}
+
+        val cancelIntent = Intent("DOWNLOAD_CANCELLED").apply {
+            putExtra("id", id)
+            setPackage(packageName)
+        }
+        sendBroadcast(cancelIntent)
+
+        if (downloadJobs.isEmpty()) {
+            try {
+                if (wakeLock?.isHeld == true) {
+                    wakeLock?.release()
+                }
+            } catch (ignored: Exception) {}
+            ServiceCompat.stopForeground(this@DownloadService, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            stopSelf()
         }
     }
 
@@ -479,6 +796,84 @@ class DownloadService : Service() {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update prefs", e)
         }
+    }
+
+    private fun updateProgressPrefs(
+        id: String,
+        progress: Int,
+        speed: String,
+        downloadedBytes: Long,
+        totalBytes: Long,
+        eta: String
+    ) {
+        try {
+            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val json = prefs.getString(SAVED_DOWNLOADS_KEY, "[]") ?: "[]"
+            val type = object : TypeToken<MutableList<DownloadModel>>() {}.type
+            val list: MutableList<DownloadModel> = Gson().fromJson(json, type) ?: mutableListOf()
+            val item = list.firstOrNull { it.id == id } ?: return
+            item.progress = progress
+            item.speed = speed
+            item.eta = eta
+            item.downloadedBytes = downloadedBytes
+            item.totalBytes = totalBytes
+            item.downloadedSize = formatBytes(downloadedBytes)
+            item.totalSize = formatBytes(totalBytes)
+            item.status = "DOWNLOADING"
+            prefs.edit().putString(SAVED_DOWNLOADS_KEY, Gson().toJson(list)).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update progress prefs", e)
+        }
+    }
+
+    private fun removeModelFromPrefs(id: String) {
+        try {
+            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val json = prefs.getString(SAVED_DOWNLOADS_KEY, "[]") ?: "[]"
+            val type = object : TypeToken<MutableList<DownloadModel>>() {}.type
+            val list: MutableList<DownloadModel> = Gson().fromJson(json, type) ?: mutableListOf()
+            if (list.removeAll { it.id == id }) {
+                prefs.edit().putString(SAVED_DOWNLOADS_KEY, Gson().toJson(list)).apply()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to remove model from prefs", e)
+        }
+    }
+
+    private fun parseSize(value: String, unit: String): Long {
+        val number = value.toDoubleOrNull() ?: return 0L
+        return when (unit) {
+            "GiB", "GB" -> (number * 1024 * 1024 * 1024).toLong()
+            "MiB", "MB" -> (number * 1024 * 1024).toLong()
+            "KiB", "KB" -> (number * 1024).toLong()
+            else -> number.toLong()
+        }
+    }
+
+    private fun parseReadableSize(text: String): Long {
+        if (text.isBlank()) return 0L
+        val match = Regex("([\\d.]+)\\s*([KMGT]?i?B)").find(text) ?: return 0L
+        return parseSize(match.groupValues[1], match.groupValues[2])
+    }
+
+    private fun parseEta(eta: String): Long {
+        return try {
+            val parts = eta.split(":")
+            when (parts.size) {
+                2 -> (parts[0].toLongOrNull() ?: 0L) * 60 + (parts[1].toLongOrNull() ?: 0L)
+                3 -> (parts[0].toLongOrNull() ?: 0L) * 3600 + (parts[1].toLongOrNull() ?: 0L) * 60 + (parts[2].toLongOrNull() ?: 0L)
+                else -> 0L
+            }
+        } catch (ignored: Exception) {
+            0L
+        }
+    }
+
+    private fun formatBytes(bytes: Long): String = when {
+        bytes >= 1024L * 1024L * 1024L -> String.format(Locale.US, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+        bytes >= 1024L * 1024L -> String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0))
+        bytes >= 1024L -> String.format(Locale.US, "%.1f KB", bytes / 1024.0)
+        else -> "$bytes B"
     }
 
     override fun onDestroy() {

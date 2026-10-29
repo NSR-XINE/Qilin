@@ -54,7 +54,10 @@ data class DownloadTask(
 )
 
 /**
- * Fresh High-Performance Download Engine powered by YoutubeDL + Aria2c 16-connection acceleration.
+ * High-Performance Download Engine powered by YoutubeDL + Aria2c 16-connection acceleration.
+ *
+ * Task metadata (URL, format, referer, progress) is persisted so paused downloads can be
+ * resumed with `--continue` both during the session and after the process is restarted.
  */
 object DownloadEngine {
 
@@ -112,12 +115,16 @@ object DownloadEngine {
                         val etaStr = intent.getStringExtra("eta") ?: "0s"
                         val speedBps = parseSpeedToBps(speedStr)
                         val etaSec = parseEtaToSeconds(etaStr)
+                        val downloadedBytes = intent.getLongExtra("downloadedBytes", 0L)
+                        val totalBytes = intent.getLongExtra("totalBytes", 0L)
 
                         val current = activeTasks[id]
                         if (current != null) {
                             activeTasks[id] = current.copy(
                                 status = DownloadStatus.DOWNLOADING,
                                 progress = progress,
+                                downloadedBytes = downloadedBytes,
+                                totalBytes = totalBytes,
                                 speedBps = speedBps,
                                 etaSeconds = etaSec
                             )
@@ -128,14 +135,16 @@ object DownloadEngine {
                         val path = intent.getStringExtra("path")
                         val current = activeTasks[id]
                         if (current != null) {
-                            activeTasks[id] = current.copy(
+                            val completed = current.copy(
                                 status = DownloadStatus.COMPLETED,
                                 progress = 100f,
                                 speedBps = 0L,
                                 etaSeconds = 0L,
                                 filePath = path
                             )
+                            activeTasks[id] = completed
                             _tasksState.value = activeTasks.values.toList()
+                            persistTask(app, completed, "Completed")
                         }
                         showToast(app, "Download complete: ${current?.title ?: "Video"}")
                     }
@@ -143,19 +152,22 @@ object DownloadEngine {
                         val error = intent.getStringExtra("error") ?: "Download failed or interrupted"
                         val current = activeTasks[id]
                         if (current != null) {
-                            activeTasks[id] = current.copy(
+                            val failed = current.copy(
                                 status = DownloadStatus.FAILED,
                                 speedBps = 0L,
                                 etaSeconds = 0L,
                                 errorMessage = error
                             )
+                            activeTasks[id] = failed
                             _tasksState.value = activeTasks.values.toList()
+                            persistTask(app, failed, "Failed")
                         }
                         showToast(app, "Download failed: $error")
                     }
                     "DOWNLOAD_CANCELLED" -> {
                         activeTasks.remove(id)
                         _tasksState.value = activeTasks.values.toList()
+                        removeModelFromPrefs(app, id)
                     }
                 }
             }
@@ -177,24 +189,28 @@ object DownloadEngine {
         title: String,
         formatId: String? = null,
         referer: String? = null,
-        isAudioOnly: Boolean = false
+        isAudioOnly: Boolean = false,
+        resumeId: String? = null,
+        resumeProgress: Float = 0f,
+        isResume: Boolean = false
     ) {
         val app = context.applicationContext
         val cleanTitle = title.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
-        val taskId = UUID.randomUUID().toString()
+        val taskId = resumeId ?: UUID.randomUUID().toString()
 
         val isDirectUrlFormat = formatId?.startsWith("http://") == true || formatId?.startsWith("https://") == true
         val effectiveUrl = if (isDirectUrlFormat) formatId!! else url
         val effectiveFormatId = if (isDirectUrlFormat) null else formatId
+        val isHls = effectiveUrl.contains(".m3u8", ignoreCase = true) || effectiveUrl.contains("/hls/", ignoreCase = true)
 
         val task = DownloadTask(
             id = taskId,
             title = cleanTitle,
             url = effectiveUrl,
             status = DownloadStatus.DOWNLOADING,
-            progress = 0f,
+            progress = resumeProgress,
             numThreads = 16,
-            isHls = effectiveUrl.contains(".m3u8", ignoreCase = true) || effectiveUrl.contains("/hls/", ignoreCase = true),
+            isHls = isHls,
             formatId = effectiveFormatId,
             referer = referer,
             isAudioOnly = isAudioOnly
@@ -204,13 +220,7 @@ object DownloadEngine {
 
         val saveDir = getPrimaryStorageDir(app)
 
-        saveModelToPrefs(app, DownloadModel(
-            id = taskId,
-            title = cleanTitle,
-            progress = 0,
-            speed = "0 MB/s",
-            status = "DOWNLOADING"
-        ))
+        persistTask(app, task, "DOWNLOADING")
 
         val serviceIntent = Intent(app, DownloadService::class.java).apply {
             action = "START_DOWNLOAD"
@@ -218,6 +228,8 @@ object DownloadEngine {
             putExtra("downloadId", taskId)
             putExtra("title", cleanTitle)
             putExtra("path", saveDir.absolutePath)
+            putExtra("isHls", isHls)
+            putExtra("resume", isResume)
             if (!effectiveFormatId.isNullOrEmpty()) {
                 putExtra("formatId", effectiveFormatId)
             }
@@ -233,7 +245,14 @@ object DownloadEngine {
             } else {
                 app.startService(serviceIntent)
             }
-            showToast(app, if (isAudioOnly) "Extracting audio with high speed..." else "Accelerating download with 16 streams...")
+            showToast(
+                app,
+                when {
+                    isResume -> "Resuming download..."
+                    isAudioOnly -> "Extracting audio with high speed..."
+                    else -> "Accelerating download with 16 streams..."
+                }
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start DownloadService", e)
             showToast(app, "Error starting download: ${e.message}")
@@ -250,29 +269,40 @@ object DownloadEngine {
 
         activeTasks.remove(id)
         _tasksState.value = activeTasks.values.toList()
+        removeModelFromPrefs(app, id)
     }
 
     fun pauseDownload(context: Context, id: String) {
         val current = activeTasks[id] ?: return
         val serviceIntent = Intent(context, DownloadService::class.java).apply {
-            action = "CANCEL_DOWNLOAD"
+            action = "PAUSE_DOWNLOAD"
             putExtra("downloadId", id)
         }
         context.startService(serviceIntent)
 
-        activeTasks[id] = current.copy(status = DownloadStatus.PAUSED, speedBps = 0L)
+        val paused = current.copy(status = DownloadStatus.PAUSED, speedBps = 0L, etaSeconds = 0L)
+        activeTasks[id] = paused
         _tasksState.value = activeTasks.values.toList()
+        persistTask(context.applicationContext, paused, "PAUSED")
     }
 
     fun resumeDownload(context: Context, id: String) {
         val current = activeTasks[id] ?: return
+        val url = current.url.ifBlank { loadPersistedModel(context, id)?.url.orEmpty() }
+        if (url.isBlank()) {
+            showToast(context, "Cannot resume: stream URL is no longer available")
+            return
+        }
         startDownload(
             context = context,
-            url = current.url,
+            url = url,
             title = current.title,
             formatId = current.formatId,
             referer = current.referer,
-            isAudioOnly = current.isAudioOnly
+            isAudioOnly = current.isAudioOnly,
+            resumeId = current.id,
+            resumeProgress = current.progress,
+            isResume = true
         )
     }
 
@@ -353,43 +383,121 @@ object DownloadEngine {
         }
     }
 
-    private fun saveModelToPrefs(context: Context, model: DownloadModel) {
-        try {
+    private fun readModels(context: Context): MutableList<DownloadModel> {
+        return try {
             val prefs = context.getSharedPreferences(DownloadService.PREFS_NAME, Context.MODE_PRIVATE)
             val json = prefs.getString(DownloadService.SAVED_DOWNLOADS_KEY, "[]") ?: "[]"
             val type = object : TypeToken<MutableList<DownloadModel>>() {}.type
-            val list: MutableList<DownloadModel> = Gson().fromJson(json, type) ?: mutableListOf()
-            list.removeAll { it.id == model.id }
-            list.add(0, model)
+            Gson().fromJson(json, type) ?: mutableListOf()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to read saved downloads", e)
+            mutableListOf()
+        }
+    }
+
+    private fun writeModels(context: Context, list: List<DownloadModel>) {
+        try {
+            val prefs = context.getSharedPreferences(DownloadService.PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putString(DownloadService.SAVED_DOWNLOADS_KEY, Gson().toJson(list)).apply()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to save model to prefs", e)
+            Log.e(TAG, "Failed to write saved downloads", e)
         }
+    }
+
+    private fun persistTask(context: Context, task: DownloadTask, status: String) {
+        try {
+            val list = readModels(context)
+            list.removeAll { it.id == task.id }
+            list.add(
+                0,
+                DownloadModel(
+                    id = task.id,
+                    title = task.title,
+                    progress = task.progress.toInt().coerceIn(0, 100),
+                    speed = formatSpeed(task.speedBps),
+                    status = status,
+                    filePath = task.filePath.orEmpty(),
+                    downloadedSize = formatBytes(task.downloadedBytes),
+                    totalSize = formatBytes(task.totalBytes),
+                    eta = if (task.etaSeconds > 0) "${task.etaSeconds}s" else "--:--",
+                    url = task.url,
+                    formatId = task.formatId.orEmpty(),
+                    referer = task.referer.orEmpty(),
+                    isAudioOnly = task.isAudioOnly,
+                    isHls = task.isHls,
+                    downloadedBytes = task.downloadedBytes,
+                    totalBytes = task.totalBytes,
+                    errorMessage = task.errorMessage.orEmpty()
+                )
+            )
+            writeModels(context, list)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to persist task", e)
+        }
+    }
+
+    private fun removeModelFromPrefs(context: Context, id: String) {
+        try {
+            val list = readModels(context)
+            if (list.removeAll { it.id == id }) {
+                writeModels(context, list)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to remove saved download", e)
+        }
+    }
+
+    private fun loadPersistedModel(context: Context, id: String): DownloadModel? {
+        return readModels(context).firstOrNull { it.id == id }
     }
 
     private fun loadSavedDownloads(context: Context) {
         try {
-            val prefs = context.getSharedPreferences(DownloadService.PREFS_NAME, Context.MODE_PRIVATE)
-            val json = prefs.getString(DownloadService.SAVED_DOWNLOADS_KEY, "[]") ?: "[]"
-            val type = object : TypeToken<List<DownloadModel>>() {}.type
-            val list: List<DownloadModel> = Gson().fromJson(json, type) ?: emptyList()
+            val list = readModels(context)
+            var changed = false
             for (model in list) {
-                if (model.status == "DOWNLOADING") {
+                val status = model.status.orEmpty()
+                if (status == "DOWNLOADING" || status == "PAUSED") {
+                    if (status == "DOWNLOADING") {
+                        model.status = "PAUSED"
+                        changed = true
+                    }
                     val task = DownloadTask(
                         id = model.id,
                         title = model.title,
-                        url = "",
+                        url = model.url.orEmpty(),
                         status = DownloadStatus.PAUSED,
-                        progress = model.progress.toFloat(),
-                        filePath = model.filePath.takeIf { it.isNotEmpty() }
+                        progress = model.progress.toFloat().coerceIn(0f, 100f),
+                        downloadedBytes = model.downloadedBytes,
+                        totalBytes = model.totalBytes,
+                        filePath = model.filePath.orEmpty().takeIf { it.isNotEmpty() },
+                        isHls = model.isHls,
+                        formatId = model.formatId.orEmpty().takeIf { it.isNotEmpty() },
+                        referer = model.referer.orEmpty().takeIf { it.isNotEmpty() },
+                        isAudioOnly = model.isAudioOnly
                     )
                     activeTasks[model.id] = task
                 }
             }
+            if (changed) writeModels(context, list)
             _tasksState.value = activeTasks.values.toList()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load saved downloads", e)
         }
+    }
+
+    private fun formatSpeed(bps: Long): String = when {
+        bps >= 1024L * 1024L * 1024L -> String.format(java.util.Locale.US, "%.1f GB/s", bps / (1024.0 * 1024.0 * 1024.0))
+        bps >= 1024L * 1024L -> String.format(java.util.Locale.US, "%.1f MB/s", bps / (1024.0 * 1024.0))
+        bps >= 1024L -> String.format(java.util.Locale.US, "%.1f KB/s", bps / 1024.0)
+        else -> "$bps B/s"
+    }
+
+    private fun formatBytes(bytes: Long): String = when {
+        bytes >= 1024L * 1024L * 1024L -> String.format(java.util.Locale.US, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+        bytes >= 1024L * 1024L -> String.format(java.util.Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0))
+        bytes >= 1024L -> String.format(java.util.Locale.US, "%.1f KB", bytes / 1024.0)
+        else -> "$bytes B"
     }
 
     private fun showToast(context: Context, message: String) {

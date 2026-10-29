@@ -17,5 +17,13 @@ data class DownloadModel(
     var duration: String = "",
     var formatName: String = "",
     var resolution: String = "",
-    var statusDetail: String = ""
+    var statusDetail: String = "",
+    var url: String = "",
+    var formatId: String = "",
+    var referer: String = "",
+    var isAudioOnly: Boolean = false,
+    var isHls: Boolean = false,
+    var downloadedBytes: Long = 0L,
+    var totalBytes: Long = 0L,
+    var errorMessage: String = ""
 )
