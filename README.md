@@ -2,6 +2,8 @@
 
 A sleek, high-aesthetic, themeable native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, download episodes with 16-stream accelerated downloading, install home screen widgets, and receive native push notifications.
 
+**Created by** [NSR-XINE](https://github.com/NSR-XINE) and [Koustubh Gaikwad](https://github.com/Koustubh12345).
+
 ---
 
 ## 🌟 Tech Stack & Key Technologies

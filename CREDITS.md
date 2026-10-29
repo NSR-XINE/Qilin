@@ -5,8 +5,9 @@ Thank you to everyone who maintains them.
 
 ## Project
 
-- **My Donghua** — created and maintained by [NSR-XINE](https://github.com/NSR-XINE)
-- **Contributors** — [Koustubh Gaikwad](https://github.com/Koustubh12345)
+- **My Donghua** — created by [NSR-XINE](https://github.com/NSR-XINE) and
+  [Koustubh Gaikwad](https://github.com/Koustubh12345).
+- **Maintainers** — NSR-XINE and Koustubh Gaikwad.
 
 ## Design & Inspiration
 
