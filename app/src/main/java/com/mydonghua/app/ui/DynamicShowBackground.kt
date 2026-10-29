@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 
 @Composable
@@ -47,14 +49,15 @@ fun DynamicShowBackground(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxSize()
+                            .blur(30.dp)
                             .graphicsLayer {
                                 alpha = when {
-                                    isLight -> 0.22f
-                                    isAmoled -> 0.24f
-                                    else -> 0.26f
+                                    isLight -> 0.26f
+                                    isAmoled -> 0.28f
+                                    else -> 0.30f
                                 }
-                                scaleX = 1.12f
-                                scaleY = 1.12f
+                                scaleX = 1.16f
+                                scaleY = 1.16f
                             }
                     )
 
@@ -64,11 +67,12 @@ fun DynamicShowBackground(
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxSize()
+                            .blur(24.dp)
                             .graphicsLayer {
                                 alpha = when {
-                                    isLight -> 0.88f
-                                    isAmoled -> 0.82f
-                                    else -> 0.84f
+                                    isLight -> 0.92f
+                                    isAmoled -> 0.86f
+                                    else -> 0.88f
                                 }
                             }
                     )

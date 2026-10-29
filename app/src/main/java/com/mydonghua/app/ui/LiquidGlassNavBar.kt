@@ -415,11 +415,6 @@ private fun NavBarIcon(
         animationSpec = tween(durationMillis = 260, easing = ColorOSMotion.FastOutSlowIn),
         label = "nav_icon_glow"
     )
-    val dotScale by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
-        label = "nav_icon_dot"
-    )
     val tilt = remember { Animatable(0f) }
     LaunchedEffect(selected) {
         if (selected) {
@@ -458,18 +453,6 @@ private fun NavBarIcon(
             contentDescription = contentDescription,
             modifier = Modifier.size(IconSize.xl),
             tint = tint,
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = 7.dp)
-                .size(3.5.dp)
-                .graphicsLayer {
-                    scaleX = dotScale
-                    scaleY = dotScale
-                    alpha = dotScale
-                }
-                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
     }
 }
