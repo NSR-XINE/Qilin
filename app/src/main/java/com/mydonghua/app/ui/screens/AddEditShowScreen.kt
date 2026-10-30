@@ -508,7 +508,7 @@ fun AddEditShowScreen(
                         aniListId = aniListId.toIntOrNull()
                     )
 
-                    if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty()) {
+                    if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty() && !show.releaseDay.isNullOrEmpty()) {
                         val scheduleCode = show.alarmRequestCode ?: newAlarmCode
                         show = show.copy(alarmRequestCode = scheduleCode)
                         AlarmScheduler.schedule(
