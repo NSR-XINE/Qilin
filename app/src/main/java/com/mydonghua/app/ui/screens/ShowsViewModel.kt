@@ -21,7 +21,8 @@ data class WatchHistoryItem(
 @HiltViewModel
 class ShowsViewModel @Inject constructor(
     private val showRepository: ShowRepository,
-    private val watchHistoryRepository: WatchHistoryRepository
+    private val watchHistoryRepository: WatchHistoryRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
@@ -78,6 +79,11 @@ class ShowsViewModel @Inject constructor(
 
     fun deleteShow(showId: String) {
         viewModelScope.launch {
+            val show = showRepository.getShowById(showId)
+            val code = show?.alarmRequestCode
+            if (code != null && code > 0) {
+                com.mydonghua.app.AlarmScheduler.cancel(context, show.id, code)
+            }
             showRepository.deleteShow(showId)
         }
     }
