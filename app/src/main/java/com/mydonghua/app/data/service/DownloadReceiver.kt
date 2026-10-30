@@ -3,6 +3,8 @@ package com.mydonghua.app.data.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import androidx.core.content.ContextCompat
 
 class DownloadReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -13,7 +15,15 @@ class DownloadReceiver : BroadcastReceiver() {
                 putExtra("downloadId", downloadId)
                 putExtra("download_id", downloadId)
             }
-            context.startService(serviceIntent)
+            try {
+                context.startService(serviceIntent)
+            } catch (e: Exception) {
+                try {
+                    ContextCompat.startForegroundService(context, serviceIntent)
+                } catch (e2: Exception) {
+                    Log.e("DownloadReceiver", "Failed to deliver cancellation to DownloadService", e2)
+                }
+            }
         }
     }
 }
