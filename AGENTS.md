@@ -102,3 +102,4 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `gradle.properties`: removed `android.enableJetifier=true` and `android.suppressUnsupportedCompileSdk=36`
 - Haze call sites: `haze -> hazeSource`, `hazeChild(state, shape)` -> `hazeEffect(state) { blurredEdgeTreatment = BlurredEdgeTreatment(shape) }`; `LocalHazeStyle provides HazeMaterials.ultraThin()` preserves the former source-level default style
 - `DonghuaPoster`: Compose 1.12 shared-element argument rename `state -> sharedContentState`
+- `app/proguard-rules.pro`: keep Commons Compress `ZipExtraField` implementations and no-arg constructors; `ExtraFieldUtils` instantiates them reflectively. Removing these rules reintroduces a release-only `class ... is not a concrete class` crash when opening ZIPs.
