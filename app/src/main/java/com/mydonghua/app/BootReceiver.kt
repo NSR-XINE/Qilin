@@ -14,13 +14,15 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (Intent.ACTION_BOOT_COMPLETED == intent.action ||
             Intent.ACTION_MY_PACKAGE_REPLACED == intent.action) {
-            rescheduleAlarms(context)
+            val pendingResult = goAsync()
+            rescheduleAlarms(context, pendingResult)
         }
     }
 
     companion object {
         @JvmStatic
-        fun rescheduleAlarms(context: Context) {
+        @JvmOverloads
+        fun rescheduleAlarms(context: Context, pendingResult: BroadcastReceiver.PendingResult? = null) {
             val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
             val wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyDonghua:AlarmReschedule")
             wakeLock?.acquire(30000L)
@@ -53,6 +55,10 @@ class BootReceiver : BroadcastReceiver() {
                             wakeLock.release()
                         } catch (ignored: Exception) {
                         }
+                    }
+                    try {
+                        pendingResult?.finish()
+                    } catch (ignored: Exception) {
                     }
                 }
             }
