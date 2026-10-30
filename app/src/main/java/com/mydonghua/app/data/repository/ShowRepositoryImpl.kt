@@ -36,7 +36,7 @@ class ShowRepositoryImpl @Inject constructor(
             status = "completed"
         }
 
-        val migratedEntity = entity.copy(status = status, lastUpdated = System.currentTimeMillis())
+        val migratedEntity = entity.copy(status = status, lastUpdated = entity.lastUpdated ?: System.currentTimeMillis())
         showDao.insertOrUpdateShow(migratedEntity)
     }
 
@@ -58,7 +58,7 @@ class ShowRepositoryImpl @Inject constructor(
             if (status == "ongoing" && entity.totalEp > 0 && entity.currentEp >= entity.totalEp) {
                 status = "completed"
             }
-            entity.copy(status = status, lastUpdated = System.currentTimeMillis())
+            entity.copy(status = status, lastUpdated = entity.lastUpdated ?: System.currentTimeMillis())
         }
         showDao.bulkInsert(migratedList)
     }

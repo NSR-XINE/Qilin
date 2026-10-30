@@ -5,6 +5,9 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
+import com.mydonghua.app.data.db.AppDatabase
+import com.mydonghua.app.data.db.WatchHistoryEntity
 import com.mydonghua.app.data.service.AdBlocker
 import com.mydonghua.app.data.service.AniListService
 import com.mydonghua.app.data.service.AniListUser
@@ -56,7 +59,8 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val settingsRepository: SettingsRepository,
     private val showRepository: ShowRepository,
-    private val watchHistoryRepository: WatchHistoryRepository
+    private val watchHistoryRepository: WatchHistoryRepository,
+    private val appDatabase: AppDatabase
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = combine(
@@ -254,18 +258,23 @@ class SettingsViewModel @Inject constructor(
                     importedShowsList.add(show)
                 }
 
-                showRepository.clearAllShows()
-                watchHistoryRepository.clearAllWatchHistory()
-                importedShowsList.forEach { s ->
-                    showRepository.insertOrUpdateShow(s)
-                }
-
+                val importedHistoryList = mutableListOf<WatchHistoryEntity>()
                 for (i in 0 until watchHistory.length()) {
                     val hObj = watchHistory.getJSONObject(i)
-                    watchHistoryRepository.addWatchHistory(
-                        hObj.getString("showId"),
-                        hObj.getInt("episodeNum")
+                    importedHistoryList.add(
+                        WatchHistoryEntity(
+                            showId = hObj.getString("showId"),
+                            episodeNum = hObj.getInt("episodeNum"),
+                            watchedTimestamp = hObj.optLong("watchedAt").takeIf { it > 0L } ?: System.currentTimeMillis()
+                        )
                     )
+                }
+
+                appDatabase.withTransaction {
+                    showRepository.clearAllShows()
+                    watchHistoryRepository.clearAllWatchHistory()
+                    showRepository.bulkInsert(importedShowsList)
+                    watchHistoryRepository.bulkInsertHistory(importedHistoryList)
                 }
 
                 com.mydonghua.app.AlarmScheduler.rescheduleAllAfterBoot(context)

@@ -17,6 +17,9 @@ interface WatchHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHistory(history: WatchHistoryEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun bulkInsertHistory(historyList: List<WatchHistoryEntity>)
+
     @Query("DELETE FROM watch_history WHERE id NOT IN (SELECT id FROM watch_history ORDER BY watched_timestamp DESC LIMIT 500)")
     suspend fun deleteOldHistoryEntries()
 

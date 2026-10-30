@@ -13,14 +13,19 @@ class WatchHistoryRepositoryImpl @Inject constructor(
     override suspend fun getWatchHistoryList(): List<WatchHistoryEntity> = watchHistoryDao.getWatchHistoryList()
     override suspend fun getWatchHistoryLimited(limit: Int): List<WatchHistoryEntity> = watchHistoryDao.getWatchHistoryLimited(limit)
 
-    override suspend fun addWatchHistory(showId: String, episodeNum: Int) {
+    override suspend fun addWatchHistory(showId: String, episodeNum: Int, timestamp: Long) {
         watchHistoryDao.insertHistory(
             WatchHistoryEntity(
                 showId = showId,
                 episodeNum = episodeNum,
-                watchedTimestamp = System.currentTimeMillis()
+                watchedTimestamp = timestamp
             )
         )
+        watchHistoryDao.deleteOldHistoryEntries()
+    }
+
+    override suspend fun bulkInsertHistory(historyList: List<WatchHistoryEntity>) {
+        watchHistoryDao.bulkInsertHistory(historyList)
         watchHistoryDao.deleteOldHistoryEntries()
     }
 
