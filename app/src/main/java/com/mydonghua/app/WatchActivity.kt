@@ -1723,7 +1723,7 @@ class WatchActivity : ComponentActivity() {
                             mediaPlaybackRequiresUserGesture = false
                             setSupportMultipleWindows(!adBlockActive)
                             javaScriptCanOpenWindowsAutomatically = !adBlockActive
-                            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                         }
 
                         webViewClient = object : WebViewClient() {
@@ -1869,7 +1869,12 @@ class WatchActivity : ComponentActivity() {
                                 } else {
                                     if (url.startsWith("intent:") || url.startsWith("market:")) {
                                         try {
-                                            context.startActivity(Intent.parseUri(url, Intent.URI_INTENT_SCHEME))
+                                            val parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME).apply {
+                                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                                component = null
+                                                selector = null
+                                            }
+                                            context.startActivity(parsedIntent)
                                             return true
                                         } catch (ignored: Exception) {
                                             return true
