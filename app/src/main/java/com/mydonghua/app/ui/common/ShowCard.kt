@@ -24,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -48,7 +49,7 @@ import com.mydonghua.app.ui.theme.ColorOSMotion
 import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun ShowCard(
@@ -162,7 +163,9 @@ fun ShowCard(
                 scaleY = cardScale
             }
             .clip(cardShape)
-            .hazeChild(state = hazeState, shape = cardShape)
+            .hazeEffect(state = hazeState) {
+                blurredEdgeTreatment = BlurredEdgeTreatment(cardShape)
+            }
             .background(
                 brush = cardBgBrush,
                 shape = cardShape

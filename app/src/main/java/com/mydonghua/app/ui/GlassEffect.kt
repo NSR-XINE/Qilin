@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -39,7 +40,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.Spacing
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 val LocalHazeState = compositionLocalOf { HazeState() }
 val LocalLayerBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
@@ -79,7 +80,7 @@ fun GlassBackground(
         modifier = modifier
             .fillMaxSize()
             .background(color = if (isDark) Color(0xFF080A14) else backgroundColor)
-            .hazeChild(state = hazeState)
+            .hazeEffect(state = hazeState)
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val widthPx = constraints.maxWidth.toFloat()
@@ -293,7 +294,9 @@ fun GlassSection(
             )
     } else {
         baseModifier
-            .hazeChild(state = hazeState, shape = shape)
+            .hazeEffect(state = hazeState) {
+                blurredEdgeTreatment = BlurredEdgeTreatment(shape)
+            }
             .background(
                 color = surfaceTint,
                 shape = shape

@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -37,7 +38,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.Haptics
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 /**
  * Official ColorOS 17 Liquid Glass Squircle Card.
@@ -87,7 +88,9 @@ fun ColorOSCard(
     Box(
         modifier = modifier
             .clip(shape)
-            .hazeChild(state = hazeState, shape = shape)
+            .hazeEffect(state = hazeState) {
+                blurredEdgeTreatment = BlurredEdgeTreatment(shape)
+            }
             .background(brush = cardBg, shape = shape)
             .border(width = 1.dp, brush = specularBorder, shape = shape)
             .then(clickModifier),

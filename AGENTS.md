@@ -9,17 +9,17 @@ MyDonghua — Anime tracking app with Haze glass backgrounds, Kyant liquid glass
 ## Workflow
 - Before pushing: `git pull --rebase origin staging`, then `git push origin staging`.
 - Commit message style: concise imperative sentence summarizing the change.
-- JDK 17 required. AndroidIDE bundles it; for terminal builds set `JAVA_HOME` to a Java 17 JDK. AGP 8.6.0, Kotlin 2.0.0.
+- JDK 21 required. AndroidIDE bundles it; for terminal builds set `JAVA_HOME` to a Java 21 JDK. Gradle 9.8.2, AGP 9.5.0, Kotlin 2.3.21.
 - Keep `README.md` in sync with the current state of the app (folder structure, features, DB schema, build steps). Update `CREDITS.md` when dependencies or bundled assets change.
 
 ## Glass Effect Strategy
-- **Haze 0.7.3** for general glass backgrounds (stars background, drawer, etc.)
+- **Haze 1.7.3** for general glass backgrounds (stars background, drawer, etc.). Use `hazeSource` on the captured content, `LocalHazeStyle` for the shared default style, and `hazeEffect` on glass surfaces; pass rounded clipping via `BlurredEdgeTreatment(shape)`.
 - **Kyant Backdrop (vendored source)** for the liquid glass bottom navigation bar
-  - AAR at `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15` is **unusable** — compiled with Java 21, env has JDK 17
+  - AAR at `com.github.Kyant0:AndroidLiquidGlass:1.0.0-alpha15` is **not used** — the vendored source keeps the custom low-blur/AGSL tuning and avoids AAR API drift
   - All 22 source files copied from tag `1.0.0-alpha15` to `app/src/main/java/com/kyant/backdrop/`
   - `@Language("AGSL")` annotations removed (not on classpath)
   - Vendored source adapted for Compose 1.7.x (no `roundRectPath`/`fastCoerceAtMost` dependency)
-- Compose BOM upgraded to `2024.09.00` for `GraphicsLayer` API availability (requires Kotlin 2.0+)
+- Compose BOM `2026.09.00` (Compose UI 1.12.x, `compileSdk 37` + `compileSdkMinor 2`)
 - Compose Compiler Gradle Plugin (`org.jetbrains.kotlin.plugin.compose`) handles Compose compiler integration
 
 ## Performance Rules (IMPORTANT)
@@ -32,10 +32,11 @@ The app previously lagged with many cards on screen, when opening search/setting
 - **Poster loads wait for the scroll to settle.** During a fling, Coil decodes of posters entering the viewport stalled frames (33-49ms `maxFrameGapMs` on Airing). `ScrollGate` in `ui/common/ScrollPerf.kt` is set `true` by `ScrollPerfMonitor` while `LazyListState.isScrollInProgress`, cleared in `finally` on cancellation; `DonghuaPoster` defers enabling a poster until `ScrollGate.scrolling` is `false` (50ms poll). Do NOT remove this gate or the `finally` cleanup — a leaked `true` would block every future poster load.
 
 ## Key Dependencies
-- Compose BOM: `2024.09.00` (provides `rememberGraphicsLayer` / `GraphicsLayer` via Compose UI 1.7.x)
-- Haze: `0.7.3`
+- Compose BOM: `2026.09.00` (Compose UI 1.12.x, requires `compileSdk 37` + `compileSdkMinor 2`)
+- Haze: `1.7.3`
+- Coil: `2.7.0` (Coil 3.x requires Kotlin 2.4 metadata, blocked by Hilt `2.60.1`/Kotlin `2.3.21`)
 - Kyant Liquid Glass: **none (vendored)**
-- Compose shared-element APIs are experimental in 1.7.x — opt in with `@OptIn(ExperimentalSharedTransitionApi::class)`
+- Compose shared-element APIs remain experimental — opt in with `@OptIn(ExperimentalSharedTransitionApi::class)`; Compose 1.12 renamed `sharedElement(state = ...)` to `sharedContentState = ...`
 
 ## Motion & Shared Elements
 - `ui/SharedTransition.kt` provides `LocalSharedTransitionScope`, `LocalNavAnimatedVisibilityScope`, `SharedBoundsSpring`, `SharedPosterKey`, and `NavGraphBuilder.scopedComposable`.
@@ -78,7 +79,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 
 ## Modified Files
 - `settings.gradle` — added JitPack repository (kept for other potential JitPack deps)
-- `app/build.gradle` — bumped Compose BOM to `2024.09.00`, Kyant AAR dependency removed, Kotlin 2.0.0 + compose compiler plugin
+- `app/build.gradle` — Compose BOM `2026.09.00`, Kyant AAR dependency removed, Kotlin `2.3.21` + compose compiler plugin, Hilt `2.60.1`, Room `2.8.5`, Media3 `1.11.1`, Haze `1.7.3`
 - `app/src/main/java/com/mydonghua/app/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
 - `app/src/main/java/com/mydonghua/app/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
 - `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; `SharedTransitionLayout`/`scopedComposable` NavHost; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
@@ -87,17 +88,17 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `app/src/main/java/com/kyant/backdrop/` — NEW: 22 vendored Kyant Backdrop source files
 
 ## Build
-- JDK 17 required. AndroidIDE bundles it; for terminal builds, set `JAVA_HOME` to a Java 17 JDK before `./gradlew`.
-- `compileSdk 36`, `targetSdk 35`, `minSdk 29`
-- Kotlin 2.0.0, AGP 8.6.0
+- JDK 21 required. AndroidIDE bundles it; for terminal builds, set `JAVA_HOME` to a Java 21 JDK before `./gradlew`.
+- `compileSdk 37` (`compileSdkMinor 2`), `targetSdk 35`, `minSdk 29`
+- Kotlin 2.3.21, AGP 9.5.0, Gradle 9.8.2, KSP 2.3.12
 - Compose Compiler Gradle Plugin (`org.jetbrains.kotlin.plugin.compose`) replaces `composeOptions { kotlinCompilerExtensionVersion }`
 - `composeOptions` block removed — compose plugin handles compilation
+- Robolectric `4.17` native runtime only supports Linux `x86_64`; the four `RoomMigrationTest` cases cannot run on Termux/aarch64. Run `./gradlew test` on CI/x86_64. Domain unit tests pass locally.
 
-## Build File Changes (Kotlin 2.0 Upgrade)
-- `build.gradle` (project): `kotlin 1.9.24 -> 2.0.0`, added `org.jetbrains.kotlin.plugin.compose 2.0.0`
-- `app/build.gradle`:
-  - Added `id 'org.jetbrains.kotlin.plugin.compose'` to plugins
-  - Removed `composeOptions { kotlinCompilerExtensionVersion '1.5.14' }`
-  - Compose Compiler Gradle Plugin handles compiler configuration
-  - Compose BOM: `2024.06.00 -> 2024.09.00`
-- No changes needed to settings.gradle or gradle-wrapper
+## Current Toolchain Changes
+- `gradle/wrapper/gradle-wrapper.properties`: Gradle `8.8 -> 9.8.2`
+- `build.gradle` (project): AGP `8.6.0 -> 9.5.0`; removed `org.jetbrains.kotlin.android` (AGP 9 built-in Kotlin); Compose/serialization plugin `2.3.21`; KSP `2.3.12`; Hilt `2.60.1`
+- `app/build.gradle`: `compileSdk 36 -> 37` + `compileSdkMinor 2`, Java `17 -> 21`, Hilt `2.51.1 -> 2.60.1`, hilt-navigation-compose `1.2.0 -> 1.4.0`, Room `2.6.1 -> 2.8.5`, Compose BOM `2024.09.00 -> 2026.09.00`, Media3 `1.3.1 -> 1.11.1`, Haze `0.7.3 -> 1.7.3`, Coil `2.6.0 -> 2.7.0`, Retrofit `2.11.0 -> 3.0.0`, OkHttp logging `4.12.0 -> 5.5.1`, coroutines `1.7.3 -> 1.11.0`, serialization `1.6.3 -> 1.12.0`, Gson `2.10.1 -> 2.15.0`
+- `gradle.properties`: removed `android.enableJetifier=true` and `android.suppressUnsupportedCompileSdk=36`
+- Haze call sites: `haze -> hazeSource`, `hazeChild(state, shape)` -> `hazeEffect(state) { blurredEdgeTreatment = BlurredEdgeTreatment(shape) }`; `LocalHazeStyle provides HazeMaterials.ultraThin()` preserves the former source-level default style
+- `DonghuaPoster`: Compose 1.12 shared-element argument rename `state -> sharedContentState`

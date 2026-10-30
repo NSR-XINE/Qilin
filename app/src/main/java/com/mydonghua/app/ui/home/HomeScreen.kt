@@ -21,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -65,7 +66,7 @@ import com.mydonghua.app.ui.theme.CornerRadius
 import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import com.mydonghua.app.ui.theme.RevealOnEnter
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -333,7 +334,9 @@ private fun TrendingHeroCard(
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.xs)
             .clip(bannerShape)
-            .hazeChild(state = hazeState, shape = bannerShape)
+            .hazeEffect(state = hazeState) {
+                blurredEdgeTreatment = BlurredEdgeTreatment(bannerShape)
+            }
             .background(
                 when {
                     isLight -> Color.White.copy(alpha = 0.85f)
@@ -694,7 +697,9 @@ fun ContinueWatchingVerticalCard(
         modifier = modifier
             .width(cardWidth)
             .clip(cardShape)
-            .hazeChild(state = hazeState, shape = cardShape)
+            .hazeEffect(state = hazeState) {
+                blurredEdgeTreatment = BlurredEdgeTreatment(cardShape)
+            }
             .background(cardBg)
             .border(
                 width = 0.85.dp,
@@ -950,7 +955,9 @@ fun RecentlyUpdatedVerticalCard(
         modifier = modifier
             .width(cardWidth)
             .clip(cardShape)
-            .hazeChild(state = hazeState, shape = cardShape)
+            .hazeEffect(state = hazeState) {
+                blurredEdgeTreatment = BlurredEdgeTreatment(cardShape)
+            }
             .background(cardBg)
             .border(width = 0.85.dp, brush = borderBrush, shape = cardShape)
             .colorOSPressBounce(

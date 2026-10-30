@@ -51,7 +51,7 @@ class CountdownCalculatorTest {
         assertEquals(targetDay, cal.get(Calendar.DAY_OF_WEEK))
         assertEquals(10, cal.get(Calendar.HOUR_OF_DAY))
         assertEquals(0, cal.get(Calendar.MINUTE))
-        assertTrue("target must be in the future", ms > System.currentTimeMillis())
+        assertTrue("target must be in the future", ms!! > System.currentTimeMillis())
     }
 
     @Test

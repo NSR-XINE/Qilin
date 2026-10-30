@@ -126,7 +126,7 @@ fun DonghuaPoster(
     val sharedModifier = if (sharedElementKey != null && sharedTransitionScope != null && animatedVisibilityScope != null) {
         with(sharedTransitionScope) {
             Modifier.sharedElement(
-                state = rememberSharedContentState(key = sharedElementKey),
+                sharedContentState = rememberSharedContentState(key = sharedElementKey),
                 animatedVisibilityScope = animatedVisibilityScope,
                 boundsTransform = { _, _ -> SharedBoundsSpring },
                 clipInOverlayDuringTransition = OverlayClip(

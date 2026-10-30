@@ -91,7 +91,8 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.LocalHazeStyle
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import com.mydonghua.app.ui.DynamicShowBackground
@@ -274,7 +275,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .haze(appHazeState, style = HazeMaterials.ultraThin())
+                                .hazeSource(appHazeState)
                         ) {
                             if (settingsState.themeMode.lowercase() != "light") {
                                 StarsBackground()
@@ -282,6 +283,7 @@ class MainActivity : ComponentActivity() {
                         }
                         CompositionLocalProvider(
                             LocalHazeState provides appHazeState,
+                            LocalHazeStyle provides HazeMaterials.ultraThin(),
                             LocalLayerBackdrop provides contentBackdrop,
                             LocalHeaderBackdrop provides contentBackdrop
                         ) {

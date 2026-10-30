@@ -8,13 +8,13 @@ A sleek, high-aesthetic, themeable native Android application designed for Chine
 
 ## 🌟 Tech Stack & Key Technologies
 
-- **Language & Runtime**: 100% Native Kotlin 2.0.0 (JVM 17)
-- **UI Framework**: Jetpack Compose (BOM `2024.09.00`), Material 3, Navigation-Compose
+- **Language & Runtime**: 100% Native Kotlin 2.3.21 (JVM 21)
+- **UI Framework**: Jetpack Compose (BOM `2026.09.00`), Material 3, Navigation-Compose
 - **Visual Design & Motion**:
   - **ColorOS 17 Fluid Motion** — Natural spring physics, fluid press bounce responses (`colorOSPressBounce`), and smooth easing curves across all interactive cards and controls
   - **Shared-Element Transitions** — Poster artwork morphs from Home rows and library cards into the detail hero, using route-scoped keys and exact per-banner corner clipping
   - **Predictive Back** — Back gestures shrink and round the current screen in real time before the navigation commits
-  - **Haze 0.7.3** — Real-time backdrop blur & glassmorphism
+  - **Haze 1.7.3** — Real-time backdrop blur & glassmorphism
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
   - **Performance-tuned**: Static glass background (zero per-frame gradient overhead), off-main-thread GPU luminance sampling, short direction-aware tab transitions, and cross-fade detail transitions
 - **Accelerated Download Engine**:
@@ -28,8 +28,8 @@ A sleek, high-aesthetic, themeable native Android application designed for Chine
   - User-configurable toggle switch in Settings
 - **Architecture**: Clean Architecture + MVVM + Dagger Hilt Dependency Injection
 - **Database & Storage**: Room Database (v4 Schema) with `StateFlow` reactive queries — unified Room-backed app settings store, with dedicated local persistence for downloads and AniList session state
-- **Network & Parsing**: Retrofit 2.11 + OkHttp 4.12 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
-- **Media Playback**: ExoPlayer / Media3 1.3.1 (Supports direct `.mp4`, `.m3u8`, `.mkv` playback, hardware acceleration, and in-app web player fallback with stream sniffer)
+- **Network & Parsing**: Retrofit 3.0 + OkHttp 5.5 + Kotlinx Serialization, AniList GraphQL & MAL scrapers
+- **Media Playback**: ExoPlayer / Media3 1.11.1 (Supports direct `.mp4`, `.m3u8`, `.mkv` playback, hardware acceleration, and in-app web player fallback with stream sniffer)
 - **Background & Scheduling**: Android `AlarmManager` (DST-aware exact alarms), `PowerManager.WakeLock` boot receivers, App Widgets
 
 ---
@@ -159,13 +159,13 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 ## 🛠️ Building & Compilation
 
 ### Requirements
-- **JDK**: Java 17+ (embedded in AndroidIDE)
-- **Android SDK**: `compileSdk 36`, `targetSdk 35`, `minSdk 29`
-- **Gradle**: 8.6+ with Kotlin 2.0.0
+- **JDK**: Java 21+ (embedded in AndroidIDE)
+- **Android SDK**: `compileSdk 37`, `targetSdk 35`, `minSdk 29`
+- **Gradle**: 9.8.2 with AGP 9.5.0 and Kotlin 2.3.21
 
 ### Build Commands
 
-Run these Gradle tasks from AndroidIDE (which bundles a Java 17 JDK) or from a terminal where `JAVA_HOME` points to a Java 17 JDK.
+Run these Gradle tasks from AndroidIDE (which bundles a Java 21 JDK) or from a terminal where `JAVA_HOME` points to a Java 21 JDK.
 
 ```bash
 # Build Debug APK
@@ -177,6 +177,8 @@ Run these Gradle tasks from AndroidIDE (which bundles a Java 17 JDK) or from a t
 # Run Unit Tests
 ./gradlew test
 ```
+
+> `RoomMigrationTest` requires the Robolectric native runtime, which supports Linux `x86_64` only. On Termux/`aarch64`, run the full test suite on CI or an x86_64 machine; the non-Robolectric domain tests pass locally.
 
 ---
 
