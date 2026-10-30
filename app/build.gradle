@@ -30,7 +30,12 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
+            // NOTE: Do NOT add signingConfig here. Sign release APKs/AABs outside of
+            // version control using a private keystore, e.g. via CI environment variables
+            // or Android Studio's "Generate Signed Bundle / APK" wizard.
+            //
+            // Example (never commit real credentials or the keystore file):
+            // signingConfig signingConfigs.release
         }
     }
     compileOptions {
