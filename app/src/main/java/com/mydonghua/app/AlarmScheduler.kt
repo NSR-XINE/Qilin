@@ -60,11 +60,17 @@ object AlarmScheduler {
         try {
             if (canExact && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pi)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pi)
             } else {
                 am.set(AlarmManager.RTC_WAKEUP, triggerTime, pi)
             }
         } catch (se: SecurityException) {
-            am.set(AlarmManager.RTC_WAKEUP, triggerTime, pi)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pi)
+            } else {
+                am.set(AlarmManager.RTC_WAKEUP, triggerTime, pi)
+            }
         }
     }
 
