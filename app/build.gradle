@@ -48,6 +48,12 @@ android {
         buildConfig true
     }
 
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
     packaging {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
@@ -65,6 +71,12 @@ android {
             keyAlias "androiddebugkey"
             keyPassword "android"
         }
+    }
+}
+
+androidComponents {
+    beforeVariants(selector().all()) { variant ->
+        variant.enableUnitTest = true
     }
 }
 
