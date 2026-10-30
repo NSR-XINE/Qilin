@@ -130,7 +130,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun decrementEpisode(show: Show) {
-        viewModelScope.launch { ShowActions.decrementEpisode(show, showRepository) }
+        viewModelScope.launch { ShowActions.decrementEpisode(show, showRepository, watchHistoryRepository) }
     }
 
     fun toggleFavorite(show: Show) {

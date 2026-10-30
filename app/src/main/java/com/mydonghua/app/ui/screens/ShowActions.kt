@@ -28,12 +28,15 @@ object ShowActions {
 
     suspend fun decrementEpisode(
         show: Show,
-        showRepository: ShowRepository
+        showRepository: ShowRepository,
+        watchHistoryRepository: WatchHistoryRepository? = null
     ) {
         if (show.currentEp > 0) {
+            val oldEp = show.currentEp
             val prevEp = show.currentEp - 1
             val updated = show.copy(currentEp = prevEp, lastUpdated = System.currentTimeMillis())
             showRepository.insertOrUpdateShow(updated)
+            watchHistoryRepository?.removeWatchHistory(show.id, oldEp)
 
             AniListService.syncEpisodeProgress(updated, prevEp) { linkedShow ->
                 showRepository.insertOrUpdateShow(linkedShow)

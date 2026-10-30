@@ -84,12 +84,22 @@ object StatsCalculator {
         val sortedByLastUpdated = shows.filter { it.lastUpdated != null }.sortedByDescending { it.lastUpdated ?: 0L }
         var streak = 0
         if (sortedByLastUpdated.isNotEmpty()) {
-            val checkDate = java.util.Calendar.getInstance()
+            val checkDate = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+
+            // If user hasn't watched anything yet today, check starting from yesterday so streak doesn't reset at midnight
+            val todayStart = checkDate.timeInMillis
+            val todayEnd = todayStart + 86400000L
+            val hasTodayActivity = sortedByLastUpdated.any { (it.lastUpdated ?: 0L) in todayStart until todayEnd }
+            if (!hasTodayActivity) {
+                checkDate.add(java.util.Calendar.DAY_OF_MONTH, -1)
+            }
+
             for (i in 0 until 365) {
-                checkDate.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                checkDate.set(java.util.Calendar.MINUTE, 0)
-                checkDate.set(java.util.Calendar.SECOND, 0)
-                checkDate.set(java.util.Calendar.MILLISECOND, 0)
                 val dayStart = checkDate.timeInMillis
                 val dayEnd = dayStart + 86400000L
 
