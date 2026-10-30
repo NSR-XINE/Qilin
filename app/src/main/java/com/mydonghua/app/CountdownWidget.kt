@@ -8,6 +8,9 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.mydonghua.app.data.db.AppDatabase
 import com.mydonghua.app.domain.model.CountdownCalculator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class CountdownWidget : AppWidgetProvider() {
 
@@ -28,7 +31,6 @@ class CountdownWidget : AppWidgetProvider() {
         }
         super.onReceive(context, intent)
     }
-
     companion object {
         private const val PREFS_NAME = "widget_data"
         private const val KEY_TITLE = "widget_title"
@@ -49,9 +51,24 @@ class CountdownWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_show_title, title)
                 views.setTextViewText(R.id.widget_countdown, countdown)
                 views.setTextViewText(R.id.widget_episode, episode ?: "")
+
+                val mainIntent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                val pendingIntent = android.app.PendingIntent.getActivity(
+                    context, 0, mainIntent,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                )
+                views.setOnClickPendingIntent(R.id.widget_show_title, pendingIntent)
+                views.setOnClickPendingIntent(R.id.widget_countdown, pendingIntent)
+                appWidgetManager.updateAppWidget(appWidgetId, views)
             } else {
-                try {
-                    kotlinx.coroutines.runBlocking {
+                // No cached data — fetch from Room on a background thread using goAsync() so the
+                // BroadcastReceiver is not killed before the coroutine finishes.
+                // Note: goAsync() is not available on AppWidgetProvider directly; we use a
+                // standalone IO coroutine and commit the final RemoteViews update on completion.
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
                         val db = AppDatabase.getDatabase(context)
                         val shows = db.showDao().getAllShowsList().map { it.toDomain() }
                         val nextUp = CountdownCalculator.getNextUpShow(shows)
@@ -74,27 +91,24 @@ class CountdownWidget : AppWidgetProvider() {
                             views.setTextViewText(R.id.widget_countdown, "--d --h --m")
                             views.setTextViewText(R.id.widget_episode, "Add a show to get started")
                         }
+                    } catch (e: Exception) {
+                        views.setTextViewText(R.id.widget_show_title, "No shows yet")
+                        views.setTextViewText(R.id.widget_countdown, "--d --h --m")
+                        views.setTextViewText(R.id.widget_episode, "Add a show to get started")
                     }
-                } catch (e: Exception) {
-                    views.setTextViewText(R.id.widget_show_title, "No shows yet")
-                    views.setTextViewText(R.id.widget_countdown, "--d --h --m")
-                    views.setTextViewText(R.id.widget_episode, "Add a show to get started")
+
+                    val mainIntent = Intent(context, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    val pendingIntent = android.app.PendingIntent.getActivity(
+                        context, 0, mainIntent,
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                    )
+                    views.setOnClickPendingIntent(R.id.widget_show_title, pendingIntent)
+                    views.setOnClickPendingIntent(R.id.widget_countdown, pendingIntent)
+                    appWidgetManager.updateAppWidget(appWidgetId, views)
                 }
             }
-
-            val mainIntent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            val pendingIntent = android.app.PendingIntent.getActivity(
-                context,
-                0,
-                mainIntent,
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-            )
-            views.setOnClickPendingIntent(R.id.widget_show_title, pendingIntent)
-            views.setOnClickPendingIntent(R.id.widget_countdown, pendingIntent)
-
-            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
         @JvmStatic
