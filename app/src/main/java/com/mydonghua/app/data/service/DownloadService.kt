@@ -53,10 +53,9 @@ class DownloadService : Service() {
             "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 
         fun logDebug(msg: String) {
-            try {
-                val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "donghua_debug.log")
-                f.appendText("[${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}] $msg\n")
-            } catch (ignored: Exception) {}
+            if (com.mydonghua.app.BuildConfig.DEBUG) {
+                Log.d(TAG, msg)
+            }
         }
     }
 
@@ -571,7 +570,6 @@ class DownloadService : Service() {
                 addOption("--audio-quality", "0")
             }
             addOption("-o", outputTemplate)
-            addOption("--no-check-certificates")
             addOption("--no-warnings")
             addOption("--no-playlist")
             addOption("--newline")

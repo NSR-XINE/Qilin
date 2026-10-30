@@ -176,7 +176,6 @@ class WatchActivity : ComponentActivity() {
                     if (detectedList.isEmpty()) {
                         try {
                             val ytdlReq = YoutubeDLRequest(stream).apply {
-                                addOption("--no-check-certificates")
                                 addOption("--user-agent", "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
                                 if (!capturedReferer.isNullOrEmpty()) addOption("--referer", capturedReferer!!)
                                 val c = try { CookieManager.getInstance().getCookie(stream) } catch (e: Exception) { null }
