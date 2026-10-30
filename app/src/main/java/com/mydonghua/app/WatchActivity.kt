@@ -361,6 +361,36 @@ class WatchActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        // Pause ExoPlayer so it does not consume resources or audio focus in the background.
+        // Do not pause while entering PiP — the player keeps running inside the PiP window.
+        if (!isInPictureInPictureMode) {
+            player?.pause()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Resume playback when the activity returns to the foreground.
+        player?.play()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Release player if Compose DisposableEffect has not already done so (e.g. process death).
+        player?.release()
+        player = null
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Automatically enter PiP when the user presses Home while a video is playing.
+        if (player?.isPlaying == true) {
+            enterPipMode()
+        }
+    }
+
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         isInPipModeState.value = isInPictureInPictureMode
