@@ -123,9 +123,27 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settingsRepository: SettingsRepository
 
+    private val pendingTargetShowId = mutableStateOf<String?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.getStringExtra("target_show_id")?.let { targetId ->
+            if (targetId.isNotBlank()) {
+                pendingTargetShowId.value = targetId
+            }
+        }
+    }
+
     @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        intent?.getStringExtra("target_show_id")?.let { targetId ->
+            if (targetId.isNotBlank()) {
+                pendingTargetShowId.value = targetId
+            }
+        }
 
         requestPermissionsOnStart()
 
@@ -216,6 +234,14 @@ class MainActivity : ComponentActivity() {
             val openDetail: (String, String?) -> Unit = { showId, posterKey ->
                 SharedPosterKey.current = posterKey
                 navController.navigate("show_detail/$showId")
+            }
+
+            val targetShowId by remember { pendingTargetShowId }
+            LaunchedEffect(targetShowId, isAppLoading) {
+                if (!isAppLoading && !targetShowId.isNullOrBlank()) {
+                    openDetail(targetShowId!!, null)
+                    pendingTargetShowId.value = null
+                }
             }
 
             val navigateFromDrawer: (String) -> Unit = { route ->
