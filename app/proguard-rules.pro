@@ -1,4 +1,13 @@
 -keep class com.mydonghua.app.domain.model.** { *; }
+-keep class com.mydonghua.app.data.service.DownloadModel { *; }
+-keep class com.mydonghua.app.data.service.DownloadTask { *; }
+-keep class com.mydonghua.app.data.service.AniListUser { *; }
+-keep class com.mydonghua.app.data.service.AniListMedia { *; }
+-keep class com.mydonghua.app.data.service.AniListMediaDetail { *; }
+-keep class com.mydonghua.app.data.service.AniListEntry { *; }
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
 -keepclassmembers class * extends androidx.room.RoomDatabase { *; }
 -keep class * extends com.google.gson.** { *; }
 
