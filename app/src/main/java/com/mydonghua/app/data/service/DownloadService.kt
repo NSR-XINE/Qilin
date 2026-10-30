@@ -127,11 +127,24 @@ class DownloadService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent == null) return START_NOT_STICKY
+        if (intent == null) {
+            if (downloadJobs.isEmpty()) {
+                ensureForegroundFallback()
+                stopSelf()
+            }
+            return START_NOT_STICKY
+        }
 
         when (intent.action) {
             "START_DOWNLOAD" -> {
-                val url = intent.getStringExtra("url") ?: return START_NOT_STICKY
+                val url = intent.getStringExtra("url")
+                if (url.isNullOrBlank()) {
+                    if (downloadJobs.isEmpty()) {
+                        ensureForegroundFallback()
+                        stopSelf()
+                    }
+                    return START_NOT_STICKY
+                }
                 val formatId = intent.getStringExtra("formatId")
                 val downloadId = intent.getStringExtra("downloadId")
                     ?: intent.getStringExtra("id")
@@ -170,6 +183,23 @@ class DownloadService : Service() {
         }
 
         return START_NOT_STICKY
+    }
+
+    private fun ensureForegroundFallback() {
+        try {
+            val fallback = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Video Download")
+                .setContentText("Initializing...")
+                .setSmallIcon(R.drawable.ic_download)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(1001, fallback, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            } else {
+                startForeground(1001, fallback)
+            }
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        } catch (ignored: Exception) {}
     }
 
     fun startDownload(
