@@ -67,8 +67,6 @@ import com.mydonghua.app.ui.LocalNavAnimatedVisibilityScope
 import com.mydonghua.app.ui.LocalSharedTransitionScope
 import com.mydonghua.app.ui.SharedElementDestination
 import com.mydonghua.app.ui.scopedComposable
-import com.mydonghua.app.domain.repository.SettingsKeys
-import com.mydonghua.app.domain.repository.SettingsRepository
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import com.mydonghua.app.ui.theme.Haptics
 import com.mydonghua.app.ui.theme.hapticOnTap
@@ -78,7 +76,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -121,8 +118,6 @@ class MainActivity : ComponentActivity() {
     private val searchViewModel: SearchViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
-    @Inject lateinit var settingsRepository: SettingsRepository
-
     private val pendingTargetShowId = mutableStateOf<String?>(null)
 
     override fun onNewIntent(intent: Intent) {
@@ -147,20 +142,9 @@ class MainActivity : ComponentActivity() {
 
         requestPermissionsOnStart()
 
-        val initialSettings = runBlocking {
-            withTimeoutOrNull(2000L) {
-                runCatching { settingsRepository.getAllSettings() }.getOrDefault(emptyMap())
-            } ?: emptyMap()
-        }
-
         setContent {
             val state by homeViewModel.uiState.collectAsState()
-            val settingsState by settingsViewModel.uiState.collectAsState(
-                initial = SettingsUiState(
-                    themeMode = initialSettings[SettingsKeys.THEME_MODE] ?: "dark",
-                    accentColor = initialSettings[SettingsKeys.ACCENT_COLOR] ?: "default"
-                )
-            )
+            val settingsState by settingsViewModel.uiState.collectAsState()
             val allShows by showsViewModel.allShows.collectAsState()
             val showsLoading by showsViewModel.isLoading.collectAsState()
             val navController = rememberNavController()
