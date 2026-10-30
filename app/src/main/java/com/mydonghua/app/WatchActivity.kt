@@ -90,6 +90,7 @@ import kotlinx.coroutines.delay
 class WatchActivity : ComponentActivity() {
 
     private var player: ExoPlayer? = null
+    private var activeWebView: WebView? = null
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
     private var fullscreenContainer: FrameLayout? = null
@@ -363,10 +364,12 @@ class WatchActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Pause ExoPlayer so it does not consume resources or audio focus in the background.
+        // Pause ExoPlayer and WebView so they do not consume resources or audio focus in the background.
         // Do not pause while entering PiP — the player keeps running inside the PiP window.
         if (!isInPictureInPictureMode) {
             player?.pause()
+            activeWebView?.onPause()
+            activeWebView?.pauseTimers()
         }
     }
 
@@ -374,13 +377,17 @@ class WatchActivity : ComponentActivity() {
         super.onResume()
         // Resume playback when the activity returns to the foreground.
         player?.play()
+        activeWebView?.onResume()
+        activeWebView?.resumeTimers()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Release player if Compose DisposableEffect has not already done so (e.g. process death).
+        // Release player and WebView if Compose DisposableEffect has not already done so (e.g. process death).
         player?.release()
         player = null
+        activeWebView?.destroy()
+        activeWebView = null
     }
 
     override fun onUserLeaveHint() {
@@ -409,6 +416,11 @@ class WatchActivity : ComponentActivity() {
             if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE) {
                 showSystemUI()
             }
+            return
+        }
+        val web = activeWebView
+        if (web != null && web.canGoBack()) {
+            web.goBack()
             return
         }
         super.onBackPressed()
@@ -1459,6 +1471,9 @@ class WatchActivity : ComponentActivity() {
         DisposableEffect(Unit) {
             onDispose {
                 webViewRef?.destroy()
+                if (activeWebView == webViewRef) {
+                    activeWebView = null
+                }
             }
         }
 
@@ -1729,6 +1744,7 @@ class WatchActivity : ComponentActivity() {
                 factory = { ctx ->
                     WebView(ctx).apply {
                         webViewRef = this
+                        activeWebView = this
                         layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
