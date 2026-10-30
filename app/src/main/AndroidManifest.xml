@@ -66,10 +66,9 @@
         <!-- Broadcast Receivers -->
         <receiver android:name=".NotificationReceiver" android:exported="false" />
 
-        <receiver android:name=".CountdownWidget" android:exported="false">
+        <receiver android:name=".CountdownWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.mydonghua.app.UPDATE_WIDGET" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
