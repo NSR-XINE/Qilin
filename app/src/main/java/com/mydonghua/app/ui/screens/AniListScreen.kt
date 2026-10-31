@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -661,6 +662,12 @@ fun AniListScreen(
                                             }
                                         }
 
+                                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                                            val url = request?.url?.toString()
+                                            checkUrl(url)
+                                            return super.shouldOverrideUrlLoading(view, request)
+                                        }
+
                                         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                             super.onPageStarted(view, url, favicon)
                                             checkUrl(url)
@@ -673,6 +680,10 @@ fun AniListScreen(
                                     }
                                     loadUrl("https://anilist.co/api/v2/oauth/authorize?client_id=24757&response_type=token")
                                 }
+                            },
+                            onRelease = { webView ->
+                                webView.stopLoading()
+                                webView.destroy()
                             },
                             modifier = Modifier.fillMaxSize()
                         )
