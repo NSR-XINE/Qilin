@@ -89,7 +89,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 
 ## Build
 - JDK 21 required. AndroidIDE bundles it; for terminal builds, set `JAVA_HOME` to a Java 21 JDK before `./gradlew`.
-- `compileSdk 37` (`compileSdkMinor 2`), `targetSdk 35`, `minSdk 29`
+- `compileSdk 37` (`compileSdkMinor 2`), `targetSdk 37`, `minSdk 30`
 - Kotlin 2.3.21, AGP 9.5.0, Gradle 9.8.2, KSP 2.3.12
 - Compose Compiler Gradle Plugin (`org.jetbrains.kotlin.plugin.compose`) replaces `composeOptions { kotlinCompilerExtensionVersion }`
 - `composeOptions` block removed — compose plugin handles compilation

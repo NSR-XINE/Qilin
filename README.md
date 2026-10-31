@@ -160,7 +160,7 @@ All records are stored locally in native SQLite (`mydonghua.db`):
 
 ### Requirements
 - **JDK**: Java 21+ (embedded in AndroidIDE)
-- **Android SDK**: `compileSdk 37`, `targetSdk 35`, `minSdk 29`
+- **Android SDK**: `compileSdk 37`, `targetSdk 37`, `minSdk 30`
 - **Gradle**: 9.8.2 with AGP 9.5.0 and Kotlin 2.3.21
 
 ### Build Commands
