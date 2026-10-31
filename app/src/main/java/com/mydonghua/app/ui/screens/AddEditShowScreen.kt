@@ -480,8 +480,6 @@ fun AddEditShowScreen(
                         return@ColorOSPillButton
                     }
 
-                    val newAlarmCode = UUID.randomUUID().toString().hashCode() and 0x7FFFFFFF
-
                     var show = Show(
                         id = editingShow?.id ?: UUID.randomUUID().toString(),
                         title = title,
@@ -509,14 +507,15 @@ fun AddEditShowScreen(
                     )
 
                     if (show.status == "ongoing" && !show.releaseTime.isNullOrEmpty() && !show.releaseDay.isNullOrEmpty()) {
-                        val scheduleCode = show.alarmRequestCode ?: newAlarmCode
-                        show = show.copy(alarmRequestCode = scheduleCode)
-                        AlarmScheduler.schedule(
-                            context, show.id, show.title, show.releaseDay,
-                            show.releaseTime, scheduleCode, show.currentEp
-                        )
+                        val activeCode = editingShow?.alarmRequestCode
+                        if (activeCode != null && activeCode > 0) {
+                            AlarmScheduler.schedule(
+                                context, show.id, show.title, show.releaseDay,
+                                show.releaseTime, activeCode, show.currentEp
+                            )
+                        }
                     } else {
-                        val cancelCode = show.alarmRequestCode ?: 0
+                        val cancelCode = editingShow?.alarmRequestCode ?: 0
                         if (cancelCode > 0) {
                             AlarmScheduler.cancel(context, show.id, cancelCode)
                         }
