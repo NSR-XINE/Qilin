@@ -53,6 +53,7 @@ fun CollectionsScreen(
     }
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     val glassBorder = rememberLiquidGlassBorder(isLight)
+    val chipBorder = rememberLiquidGlassChipBorder(isLight)
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
     val screenBackdrop = rememberLayerBackdrop()
@@ -218,7 +219,7 @@ fun CollectionsScreen(
                                             )
                                             .border(
                                                 width = 0.75.dp,
-                                                color = rememberLiquidGlassChipBorder(isLight),
+                                                color = chipBorder,
                                                 shape = RoundedCornerShape(16.dp)
                                             )
                                             .colorOSPressBounce(
