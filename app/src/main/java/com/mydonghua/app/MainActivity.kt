@@ -304,7 +304,7 @@ class MainActivity : ComponentActivity() {
                                 topBar = {
                                     if (!isSearchOpen && showGlobalHeader) {
                                         val headerTitle = when (currentRoute) {
-                                            "home" -> "My Donghua"
+                                            "home" -> "Qilin"
                                             "airing" -> "Airing Schedule"
                                             "complete" -> "Completed"
                                             "stopped" -> "Stopped"

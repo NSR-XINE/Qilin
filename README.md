@@ -1,4 +1,4 @@
-# 东画 My Donghua (Android App)
+# 麒麟 Qilin (formerly My Donghua) - Android App
 
 A sleek, high-aesthetic, themeable native Android application designed for Chinese anime (Donghua) fans to track watched episodes, view release calendars, follow live countdown clocks, download episodes with 16-stream accelerated downloading, install home screen widgets, and receive native push notifications.
 

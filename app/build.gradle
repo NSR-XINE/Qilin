@@ -23,6 +23,10 @@ android {
         }
     }
 
+    base {
+        archivesName = "Qilin"
+    }
+
     signingConfigs {
         debug {
             storeFile file("${project.rootDir}/debug.keystore")

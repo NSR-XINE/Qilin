@@ -26,7 +26,7 @@ object PosterFetchService {
         .addInterceptor { chain ->
             val original = chain.request()
             val request = original.newBuilder()
-                .header("User-Agent", "MyDonghua/${com.mydonghua.app.BuildConfig.VERSION_NAME} (Android)")
+                .header("User-Agent", "Qilin/${com.mydonghua.app.BuildConfig.VERSION_NAME} (Android)")
                 .build()
             chain.proceed(request)
         }

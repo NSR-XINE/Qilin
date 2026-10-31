@@ -195,7 +195,7 @@ fun AppLoadingScreen(
                 }
                 Image(
                     painter = painterResource(id = R.drawable.ic_dragon_emblem_trimmed),
-                    contentDescription = "My Donghua",
+                    contentDescription = "Qilin",
                     modifier = Modifier
                         .width(80.dp)
                         .height(64.5.dp)
@@ -210,7 +210,7 @@ fun AppLoadingScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = "My Donghua",
+                text = "Qilin",
                 style = TextStyle(
                     brush = Brush.linearGradient(
                         colors = listOf(

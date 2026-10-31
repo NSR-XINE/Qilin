@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">My Donghua</string>
+    <string name="app_name">Qilin</string>
     <string name="widget_description">Shows next donghua countdown</string>
 </resources>
