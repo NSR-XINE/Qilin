@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.PredictiveBackHandler
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
@@ -154,13 +154,7 @@ class MainActivity : ComponentActivity() {
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
             var isAppLoading by remember { mutableStateOf(true) }
-            var backProgress by remember { mutableFloatStateOf(0f) }
             var drawerNavigating by remember { mutableStateOf(false) }
-            val backPreview = animateFloatAsState(
-                targetValue = backProgress,
-                animationSpec = tween(durationMillis = 120, easing = ColorOSMotion.FastOutSlowIn),
-                label = "backPreview"
-            )
 
             LaunchedEffect(currentRoute) {
                 if (drawerNavigating) {
@@ -236,24 +230,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val canPredictiveBack = !isSearchOpen && !isDrawerOpen && !isAppLoading && currentRoute != "home"
-
-            androidx.activity.compose.BackHandler(
-                enabled = !isSearchOpen && !isAppLoading && !canPredictiveBack
+            BackHandler(
+                enabled = !isSearchOpen && !isAppLoading
             ) {
                 when {
                     isDrawerOpen -> isDrawerOpen = false
-                    currentRoute != "home" -> navController.popBackStack("home", inclusive = false)
+                    navController.previousBackStackEntry != null -> navController.popBackStack()
                     else -> showExitDialog = true
-                }
-            }
-
-            PredictiveBackHandler(enabled = canPredictiveBack) { progress ->
-                try {
-                    progress.collect { backProgress = it.progress }
-                    navController.popBackStack()
-                } finally {
-                    backProgress = 0f
                 }
             }
 
@@ -317,17 +300,7 @@ class MainActivity : ComponentActivity() {
                             }
                             Scaffold(
                                 containerColor = Color.Transparent,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        val progress = backPreview.value
-                                        val scale = 1f - 0.06f * progress
-                                        scaleX = scale
-                                        scaleY = scale
-                                        translationX = size.width * 0.10f * progress
-                                        shape = RoundedCornerShape(28.dp)
-                                        clip = progress > 0.001f
-                                    },
+                                modifier = Modifier.fillMaxSize(),
                                 topBar = {
                                     if (!isSearchOpen && showGlobalHeader) {
                                         val headerTitle = when (currentRoute) {
