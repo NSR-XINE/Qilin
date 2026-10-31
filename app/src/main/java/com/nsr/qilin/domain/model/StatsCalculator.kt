@@ -32,9 +32,7 @@ object StatsCalculator {
         val totalEpsPossible = shows.sumOf { it.totalEp }
 
         val hoursWatched = Math.round((totalEpisodes * 24.0) / 60.0).toInt()
-        val completionRate = if (totalEpsPossible > 0) {
-            Math.round((totalEpisodes.toDouble() / totalEpsPossible.toDouble()) * 100.0).toInt().coerceIn(0, 100)
-        } else if (total > 0) {
+        val completionRate = if (total > 0) {
             Math.round((completed.toDouble() / total.toDouble()) * 100.0).toInt().coerceIn(0, 100)
         } else {
             0
