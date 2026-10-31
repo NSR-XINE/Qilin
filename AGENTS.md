@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-Qilin — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bottom nav, shared-element poster transitions, and predictive back.
+Qilin — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bottom nav, and predictive back.
 - Application ID: `com.nsr.qilin`
 - Package / Namespace: `com.nsr.qilin`
 - Branch: `staging`
@@ -37,14 +37,10 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Haze: `1.7.3`
 - Coil: `2.7.0` (Coil 3.x requires Kotlin 2.4 metadata, blocked by Hilt `2.60.1`/Kotlin `2.3.21`)
 - Kyant Liquid Glass: **none (vendored)**
-- Compose shared-element APIs remain experimental — opt in with `@OptIn(ExperimentalSharedTransitionApi::class)`; Compose 1.12 renamed `sharedElement(state = ...)` to `sharedContentState = ...`
 
-## Motion & Shared Elements
-- `ui/SharedTransition.kt` provides `LocalSharedTransitionScope`, `LocalNavAnimatedVisibilityScope`, `SharedBoundsSpring`, `SharedPosterKey`, and `NavGraphBuilder.scopedComposable`.
-- `MainActivity` wraps the NavHost in `SharedTransitionLayout`; detail-bearing destinations use `scopedComposable`.
-- Poster keys are unique per source surface: `show-poster-card-*` (library grids), `show-poster-cw-*` (Continue Watching), `show-poster-ru-*` (Recently Updated). `openDetail(showId, posterKey)` stores the source key in `SharedPosterKey.current` before navigating; the detail poster reads it. Never place two shared posters with the same key on one screen.
-- `DonghuaPoster` accepts `sharedElementKey` + `sharedOverlayShape`; pass the banner's exact `RoundedCornerShape` so overlay clipping matches during flight.
-- Tab switches use direction-aware fade + slide; detail uses a cross-fade + bounds spring; drawer navigation uses a fade (`drawerNavigating`). Predictive back is enabled only off Home and while search, drawer, and loading are closed.
+## Motion & Navigation
+- Tab switches use direction-aware fade + slide; detail uses a cross-fade; drawer navigation uses a fade (`drawerNavigating`).
+- Predictive back is enabled off Home while search, drawer, and loading are closed, scaling the content container to 0.94 with edge-aware translation, Animatable progress tracking, and smooth corner curvature while keeping header and liquid glass navbar chrome stable.
 
 ## Liquid Glass Nav Bar
 - `LiquidGlassNavBar.kt` in `com.nsr.qilin.ui` package
@@ -83,8 +79,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `app/build.gradle` — Compose BOM `2026.09.00`, Kyant AAR dependency removed, Kotlin `2.3.21` + compose compiler plugin, Hilt `2.60.1`, Room `2.8.5`, Media3 `1.11.1`, Haze `1.7.3`
 - `app/src/main/java/com/nsr/qilin/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
 - `app/src/main/java/com/nsr/qilin/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
-- `app/src/main/java/com/nsr/qilin/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; `SharedTransitionLayout`/`scopedComposable` NavHost; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
-- `app/src/main/java/com/nsr/qilin/ui/SharedTransition.kt` — NEW: shared-element scope locals, bounds spring, `SharedPosterKey`, and `scopedComposable`
+- `app/src/main/java/com/nsr/qilin/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
 - `app/src/main/java/com/nsr/qilin/ui/common/AppLoadingScreen.kt` — minimal trimmed-emblem loading screen with a standard progress indicator
 - `app/src/main/java/com/kyant/backdrop/` — NEW: 22 vendored Kyant Backdrop source files
 
@@ -102,5 +97,4 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `app/build.gradle`: `compileSdk 36 -> 37` + `compileSdkMinor 2`, Java `17 -> 21`, Hilt `2.51.1 -> 2.60.1`, hilt-navigation-compose `1.2.0 -> 1.4.0`, Room `2.6.1 -> 2.8.5`, Compose BOM `2024.09.00 -> 2026.09.00`, Media3 `1.3.1 -> 1.11.1`, Haze `0.7.3 -> 1.7.3`, Coil `2.6.0 -> 2.7.0`, Retrofit `2.11.0 -> 3.0.0`, OkHttp logging `4.12.0 -> 5.5.1`, coroutines `1.7.3 -> 1.11.0`, serialization `1.6.3 -> 1.12.0`, Gson `2.10.1 -> 2.15.0`
 - `gradle.properties`: removed `android.enableJetifier=true` and `android.suppressUnsupportedCompileSdk=36`
 - Haze call sites: `haze -> hazeSource`, `hazeChild(state, shape)` -> `hazeEffect(state) { blurredEdgeTreatment = BlurredEdgeTreatment(shape) }`; `LocalHazeStyle provides HazeMaterials.ultraThin()` preserves the former source-level default style
-- `DonghuaPoster`: Compose 1.12 shared-element argument rename `state -> sharedContentState`
 - `app/proguard-rules.pro`: keep Commons Compress `ZipExtraField` implementations and no-arg constructors; `ExtraFieldUtils` instantiates them reflectively. Removing these rules reintroduces a release-only `class ... is not a concrete class` crash when opening ZIPs.

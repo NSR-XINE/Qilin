@@ -12,7 +12,6 @@ A sleek, high-aesthetic, themeable native Android application designed for Chine
 - **UI Framework**: Jetpack Compose (BOM `2026.09.00`), Material 3, Navigation-Compose
 - **Visual Design & Motion**:
   - **ColorOS 17 Fluid Motion** — Natural spring physics, fluid press bounce responses (`colorOSPressBounce`), and smooth easing curves across all interactive cards and controls
-  - **Shared-Element Transitions** — Poster artwork morphs from Home rows and library cards into the detail hero, using route-scoped keys and exact per-banner corner clipping
   - **Predictive Back** — Back gestures shrink and round the current screen in real time before the navigation commits
   - **Haze 1.7.3** — Real-time backdrop blur & glassmorphism
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
@@ -51,7 +50,7 @@ my_donghua/
 │           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system
 │           └── com/nsr/qilin/
 │               ├── QilinApp.kt               # Application class (@HiltAndroidApp), engine bootstrap
-│               ├── MainActivity.kt           # Entry activity, NavHost, shared-element + predictive-back host, Haze glass layer, LiquidGlass nav
+│               ├── MainActivity.kt           # Entry activity, NavHost, predictive-back host, Haze glass layer, LiquidGlass nav
 │               ├── WatchActivity.kt          # Media3 ExoPlayer & In-App Web Player with stream sniffer
 │               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
 │               ├── BootReceiver.kt           # Re-schedules alarms on boot or app update (WakeLock)
@@ -79,7 +78,6 @@ my_donghua/
 │                   ├── theme/                # Color palettes, Material 3, ColorOS 17 motion specs
 │                   ├── common/               # ShowCard, DonghuaPoster, loading screen, shimmer, scroll perf
 │                   ├── home/                 # HomeScreen, hero banner, continue watching, recently updated
-│                   ├── SharedTransition.kt   # Shared-element scopes, bounds spring, poster key routing
 │                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, AniList, Calendar, History, Stats, Collections
 ├── AGENTS.md
 ├── CREDITS.md
@@ -96,7 +94,6 @@ my_donghua/
 - ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
 - 🎨 **ColorOS 17 Fluid Motion & Liquid Glass**: Bouncy physics-driven tap interactions, fluid card press effects, and Kyant liquid glass shader navigation bar.
-- 🖼️ **Shared-Element Poster Transitions**: Posters morph from Continue Watching, Recently Updated, and library cards into the detail screen, then return to their source on back.
 - 🔙 **Predictive Back Gesture**: Swipe back to scale the current screen into a rounded card as a live preview before navigation completes.
 - 🔍 **Smart Search**: Auto-focus search bar, recent search history with individual delete or clear-all, and debounced online search across AniList and MyAnimeList.
 - ☁️ **Dedicated AniList Screen**: Account login, auto-sync toggle, 2-way sync, cloud import/push, profile stats, and disconnect — accessible directly from the navigation drawer.

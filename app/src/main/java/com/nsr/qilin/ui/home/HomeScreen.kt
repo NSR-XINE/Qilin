@@ -75,7 +75,7 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onShowClick: (String, String?) -> Unit,
+    onShowClick: (String) -> Unit,
     onWatchClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     topPadding: androidx.compose.ui.unit.Dp = 0.dp,
@@ -112,7 +112,7 @@ fun HomeScreen(
                             onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                             onTrendingClick = { media ->
                                 viewModel.addTrendingShow(media) { targetId ->
-                                    onShowClick(targetId, null)
+                                    onShowClick(targetId)
                                 }
                             },
                             onWatchClick = { media ->
@@ -149,7 +149,7 @@ fun HomeScreen(
                                     onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                                     onTrendingClick = { media ->
                                         viewModel.addTrendingShow(media) { targetId ->
-                                            onShowClick(targetId, null)
+                                            onShowClick(targetId)
                                         }
                                     },
                                     onWatchClick = { media ->
@@ -182,7 +182,7 @@ fun HomeScreen(
                         RevealOnEnter(index = 2) {
                             ContinueWatchingRow(
                                 shows = state.continueWatching,
-                                onShowClick = { id -> onShowClick(id, "show-poster-cw-$id") }
+                                onShowClick = onShowClick
                             )
                         }
                     }
@@ -198,7 +198,7 @@ fun HomeScreen(
                         RevealOnEnter(index = 4) {
                             RecentlyUpdatedRow(
                                 shows = state.recentlyUpdated,
-                                onShowClick = { id -> onShowClick(id, "show-poster-ru-$id") },
+                                onShowClick = onShowClick,
                                 onWatchClick = { show ->
                                     val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
                                         showTitle = show.title,
@@ -726,9 +726,7 @@ fun ContinueWatchingVerticalCard(
                     title = show.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    fontSize = 8.5.sp,
-                    sharedElementKey = "show-poster-cw-${show.id}",
-                    sharedOverlayShape = posterShape
+                    fontSize = 8.5.sp
                 )
 
                 // Bottom vignette overlay
@@ -978,9 +976,7 @@ fun RecentlyUpdatedVerticalCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     fontSize = 8.5.sp,
-                    showAcronym = true,
-                    sharedElementKey = "show-poster-ru-${show.id}",
-                    sharedOverlayShape = posterShape
+                    showAcronym = true
                 )
 
                 // Bottom vignette overlay

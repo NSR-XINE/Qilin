@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.sp
 import com.nsr.qilin.domain.model.CountdownCalculator
 import com.nsr.qilin.domain.model.Show
 import com.nsr.qilin.ui.GlassHeader
-import com.nsr.qilin.ui.SharedPosterKey
 import com.nsr.qilin.ui.Spacing
 import com.nsr.qilin.ui.common.DonghuaPoster
 import com.nsr.qilin.ui.theme.CornerRadius
@@ -263,9 +262,7 @@ fun ShowDetailScreen(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 11.sp,
-                            sharedElementKey = SharedPosterKey.current,
-                            sharedOverlayShape = thumbShape
+                            fontSize = 11.sp
                         )
                     }
 

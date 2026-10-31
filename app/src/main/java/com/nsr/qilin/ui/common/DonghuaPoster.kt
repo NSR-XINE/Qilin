@@ -1,6 +1,5 @@
 package com.nsr.qilin.ui.common
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,9 +24,6 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.delay
 
-import com.nsr.qilin.ui.LocalNavAnimatedVisibilityScope
-import com.nsr.qilin.ui.LocalSharedTransitionScope
-import com.nsr.qilin.ui.SharedBoundsSpring
 import com.nsr.qilin.ui.theme.JustSansFamily
 
 private const val POSTER_LOAD_DELAY_MS = 250L
@@ -107,7 +103,6 @@ fun getTitleInitials(title: String?): String {
     return initials.ifEmpty { title.take(2).uppercase() }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DonghuaPoster(
     posterUrl: String?,
@@ -117,26 +112,8 @@ fun DonghuaPoster(
     showAcronym: Boolean = true,
     fontSize: TextUnit = TextUnit.Unspecified,
     crossfade: Boolean = true,
-    immediate: Boolean = false,
-    sharedElementKey: String? = null,
-    sharedOverlayShape: Shape? = null
+    immediate: Boolean = false
 ) {
-    val sharedTransitionScope = LocalSharedTransitionScope.current
-    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
-    val sharedModifier = if (sharedElementKey != null && sharedTransitionScope != null && animatedVisibilityScope != null) {
-        with(sharedTransitionScope) {
-            Modifier.sharedElement(
-                sharedContentState = rememberSharedContentState(key = sharedElementKey),
-                animatedVisibilityScope = animatedVisibilityScope,
-                boundsTransform = { _, _ -> SharedBoundsSpring },
-                clipInOverlayDuringTransition = OverlayClip(
-                    sharedOverlayShape ?: RoundedCornerShape(18.dp)
-                )
-            )
-        }
-    } else {
-        Modifier
-    }
     val context = LocalContext.current
     val initials = remember(title) { getTitleInitials(title) }
 
@@ -180,7 +157,7 @@ fun DonghuaPoster(
     SubcomposeAsyncImage(
         model = imageRequest,
         contentDescription = title,
-        modifier = modifier.then(sharedModifier),
+        modifier = modifier,
         contentScale = contentScale
     ) {
         val state = painter.state

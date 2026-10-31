@@ -13,8 +13,6 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -69,10 +67,6 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.nsr.qilin.data.service.AniListService
 import com.nsr.qilin.data.service.AniListUser
-import com.nsr.qilin.ui.LocalNavAnimatedVisibilityScope
-import com.nsr.qilin.ui.LocalSharedTransitionScope
-import com.nsr.qilin.ui.SharedElementDestination
-import com.nsr.qilin.ui.scopedComposable
 import com.nsr.qilin.ui.theme.colorOSPressBounce
 import com.nsr.qilin.ui.theme.Haptics
 import com.nsr.qilin.ui.theme.hapticOnTap
@@ -101,7 +95,6 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import com.nsr.qilin.ui.DynamicShowBackground
 import com.nsr.qilin.ui.GlassBackground
 import com.nsr.qilin.ui.GlassHeader
-import com.nsr.qilin.ui.SharedPosterKey
 import com.nsr.qilin.ui.LiquidGlassNavBar
 import com.nsr.qilin.ui.LocalHazeState
 import com.nsr.qilin.ui.LocalHeaderBackdrop
@@ -136,7 +129,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalSharedTransitionApi::class)
+    @OptIn(ExperimentalHazeMaterialsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -218,15 +211,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val openDetail: (String, String?) -> Unit = { showId, posterKey ->
-                SharedPosterKey.current = posterKey
+            val openDetail: (String) -> Unit = { showId ->
                 navController.navigate("show_detail/$showId")
             }
 
             val targetShowId by remember { pendingTargetShowId }
             LaunchedEffect(targetShowId, isAppLoading) {
                 if (!isAppLoading && !targetShowId.isNullOrBlank()) {
-                    openDetail(targetShowId!!, null)
+                    openDetail(targetShowId!!)
                     pendingTargetShowId.value = null
                 }
             }
@@ -354,7 +346,7 @@ class MainActivity : ComponentActivity() {
                                             countdownShow = countdownShow,
                                             onCountdownClick = {
                                                 if (countdownShow != null) {
-                                                    openDetail(countdownShow.id, null)
+                                                    openDetail(countdownShow.id)
                                                 }
                                             },
                                             onDrawerOpen = { isDrawerOpen = true },
@@ -417,11 +409,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         .layerBackdrop(navBackdrop)
                                 ) {
-                            SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
-                                CompositionLocalProvider(
-                                    LocalSharedTransitionScope provides this
-                                ) {
-                            NavHost(
+                                    NavHost(
                                 navController = navController,
                                 startDestination = "home",
                                 modifier = Modifier.fillMaxSize(),
@@ -523,8 +511,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) {
-                        scopedComposable("home") {
-                                HomeScreen(
+                        composable("home") {
+                            HomeScreen(
                                 viewModel = homeViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
@@ -534,14 +522,12 @@ class MainActivity : ComponentActivity() {
                                 onSettingsClick = {
                                     navController.navigate("settings")
                                 },
-                                onShowClick = { showId, posterKey ->
-                                    openDetail(showId, posterKey)
-                                },
+                                onShowClick = openDetail,
                                 onWatchClick = launchWatch
                             )
                         }
-                        scopedComposable("airing") {
-                                AiringScreen(
+                        composable("airing") {
+                            AiringScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = launchWatch,
@@ -549,12 +535,12 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    openDetail(show.id, "show-poster-card-${show.id}")
+                                    openDetail(show.id)
                                 }
                             )
                         }
-                        scopedComposable("complete") {
-                                CompletedScreen(
+                        composable("complete") {
+                            CompletedScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = launchWatch,
@@ -562,12 +548,12 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    openDetail(show.id, "show-poster-card-${show.id}")
+                                    openDetail(show.id)
                                 }
                             )
                         }
-                        scopedComposable("stopped") {
-                                StoppedScreen(
+                        composable("stopped") {
+                            StoppedScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = launchWatch,
@@ -575,12 +561,12 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    openDetail(show.id, "show-poster-card-${show.id}")
+                                    openDetail(show.id)
                                 }
                             )
                         }
-                        scopedComposable("favorites") {
-                                FavoritesScreen(
+                        composable("favorites") {
+                            FavoritesScreen(
                                 viewModel = showsViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 onWatchClick = launchWatch,
@@ -588,7 +574,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("add_edit_show?showId=${show.id}")
                                 },
                                 onCardClick = { show ->
-                                    openDetail(show.id, "show-poster-card-${show.id}")
+                                    openDetail(show.id)
                                 }
                             )
                         }
@@ -609,9 +595,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        scopedComposable("show_detail/{showId}") { backStackEntry ->
-                                val showIdArg = backStackEntry.arguments?.getString("showId") ?: ""
-                                ShowDetailScreen(
+                        composable("show_detail/{showId}") { backStackEntry ->
+                            val showIdArg = backStackEntry.arguments?.getString("showId") ?: ""
+                            ShowDetailScreen(
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
@@ -645,15 +631,15 @@ class MainActivity : ComponentActivity() {
                                 showsViewModel = showsViewModel,
                                 onNavigateBack = { navController.popBackStack() },
                                 onShowClick = { show ->
-                                    openDetail(show.id, null)
+                                    openDetail(show.id)
                                 }
                             )
                         }
                         composable("history") {
-                                HistoryScreen(
+                            HistoryScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
-                                    openDetail(showId, null)
+                                    openDetail(showId)
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
@@ -662,7 +648,7 @@ class MainActivity : ComponentActivity() {
                             CollectionsScreen(
                                 showsViewModel = showsViewModel,
                                 onShowClick = { showId ->
-                                    openDetail(showId, null)
+                                    openDetail(showId)
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
@@ -673,8 +659,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                                }
-                            }
                 }
 
                 AnimatedVisibility(
@@ -714,7 +698,7 @@ class MainActivity : ComponentActivity() {
                             onWatchClick = launchWatch,
                             onShowClick = { showId ->
                                 isSearchOpen = false
-                                openDetail(showId, null)
+                                openDetail(showId)
                             },
                             onNavigateBack = {
                                 isSearchOpen = false
