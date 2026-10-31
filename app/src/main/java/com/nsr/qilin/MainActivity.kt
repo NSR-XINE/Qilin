@@ -106,6 +106,8 @@ import com.nsr.qilin.ui.screens.*
 import com.nsr.qilin.ui.common.ColorOSDialog
 import com.nsr.qilin.ui.common.AppLoadingScreen
 import com.nsr.qilin.ui.theme.QilinTheme
+import com.nsr.qilin.ui.theme.CornerRadius
+import com.nsr.qilin.ui.theme.LocalDisplayCornerRadius
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -231,7 +233,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val canPredictiveBack = !isSearchOpen && !isDrawerOpen && !isAppLoading && currentRoute != "home"
+            val canPredictiveBack = !isSearchOpen && !isDrawerOpen && !isAppLoading && !drawerNavigating && currentRoute != "home"
 
             androidx.activity.compose.BackHandler(
                 enabled = !isSearchOpen && !isAppLoading && !canPredictiveBack
@@ -392,21 +394,57 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) { innerPadding ->
+                                val progress = backProgress.value
+                                val isRightEdge = swipeEdge == BackEventCompat.EDGE_RIGHT
+                                val translationDirection = if (isRightEdge) -1f else 1f
+                                val isGesturing = progress > 0.001f
+
+                                val cornerProgress = if (isGesturing) minOf(1f, progress * 2.5f) else 0f
+                                val targetRadius = maxOf(CornerRadius.card, LocalDisplayCornerRadius.current)
+                                val currentCornerRadius = targetRadius * cornerProgress
+                                val cardShape = RoundedCornerShape(currentCornerRadius)
+                                val isLight = settingsState.themeMode.lowercase() == "light"
+                                val isAmoled = settingsState.themeMode.lowercase() == "amoled"
+
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .graphicsLayer {
-                                            val progress = backProgress.value
-                                            val isRightEdge = swipeEdge == BackEventCompat.EDGE_RIGHT
-                                            val translationDirection = if (isRightEdge) -1f else 1f
-                                            val scale = 1f - 0.06f * progress
+                                            val scale = 1f - 0.09f * progress
                                             scaleX = scale
                                             scaleY = scale
-                                            translationX = translationDirection * size.width * 0.08f * progress
-                                            val cornerRadius = 24.dp * progress
-                                            shape = RoundedCornerShape(cornerRadius)
-                                            clip = cornerRadius > 0.5.dp
+                                            translationX = translationDirection * size.width * 0.10f * progress
+                                            shadowElevation = (16.dp * progress).toPx()
+                                            shape = cardShape
+                                            clip = isGesturing
+                                            spotShadowColor = Color.Black.copy(alpha = 0.55f)
+                                            ambientShadowColor = Color.Black.copy(alpha = 0.35f)
                                         }
+                                        .then(
+                                            if (isGesturing) {
+                                                Modifier
+                                                    .background(
+                                                        color = MaterialTheme.colorScheme.background.copy(
+                                                            alpha = minOf(1f, progress * 3.5f)
+                                                        ),
+                                                        shape = cardShape
+                                                    )
+                                                    .border(
+                                                        width = 1.dp,
+                                                        brush = Brush.verticalGradient(
+                                                            listOf(
+                                                                (if (isLight) Color.Black else Color.White).copy(
+                                                                    alpha = (if (isLight) 0.18f else if (isAmoled) 0.32f else 0.25f) * minOf(1f, progress * 3f)
+                                                                ),
+                                                                Color.Transparent
+                                                            )
+                                                        ),
+                                                        shape = cardShape
+                                                    )
+                                            } else {
+                                                Modifier
+                                            }
+                                        )
                                         .layerBackdrop(navBackdrop)
                                 ) {
                                     NavHost(
