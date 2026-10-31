@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme with ColorOS 17 Unified Motion System -->
-    <style name="Theme.MyDonghua" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Qilin" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color (Vibrant Cyan & Purple). -->
         <item name="colorPrimary">#00e5ff</item>
         <item name="colorOnPrimary">#000000</item>
@@ -13,7 +13,11 @@
         <item name="android:windowAnimationStyle">@style/Animation.ColorOS.Activity</item>
     </style>
 
-    <style name="Theme.MyDonghua.NoActionBar" parent="Theme.MyDonghua" />
+    <style name="Theme.Qilin.NoActionBar" parent="Theme.Qilin" />
+
+    <!-- Legacy theme alias for backwards compatibility -->
+    <style name="Theme.MyDonghua" parent="Theme.Qilin" />
+    <style name="Theme.MyDonghua.NoActionBar" parent="Theme.Qilin.NoActionBar" />
 
     <!-- ColorOS 17 Activity Slide Transitions extracted from framework.jar -->
     <style name="Animation.ColorOS.Activity" parent="@android:style/Animation.Activity">

@@ -1,9 +1,9 @@
 # AGENTS.md
 
 ## Project
-MyDonghua — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bottom nav, shared-element poster transitions, and predictive back.
+Qilin — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bottom nav, shared-element poster transitions, and predictive back.
 - Application ID: `com.nsr.qilin`
-- Package / Namespace: `com.mydonghua.app`
+- Package / Namespace: `com.nsr.qilin`
 - Branch: `staging`
 - Remote: `https://github.com/NSR-XINE/my_donguha.git`
 
@@ -47,7 +47,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Tab switches use direction-aware fade + slide; detail uses a cross-fade + bounds spring; drawer navigation uses a fade (`drawerNavigating`). Predictive back is enabled only off Home and while search, drawer, and loading are closed.
 
 ## Liquid Glass Nav Bar
-- `LiquidGlassNavBar.kt` in `com.mydonghua.app.ui` package
+- `LiquidGlassNavBar.kt` in `com.nsr.qilin.ui` package
 - Uses `rememberLayerBackdrop()` + `Modifier.layerBackdrop(backdrop)` to capture screen content
 - `Modifier.drawBackdropCustomShape()` applies: `colorControls(brightness/contrast/saturation) + blur(1-10px adaptive) + refraction(size/8)`
 - Luminance animation: captures 5x5 thumbnail **every 2s on `Dispatchers.Default`**, calculates average luminance, animates `Animatable` — used for adaptive effect intensity; skipped while `userInteracting` (drag / capsule animation)
@@ -81,11 +81,11 @@ The app previously lagged with many cards on screen, when opening search/setting
 ## Modified Files
 - `settings.gradle` — added JitPack repository (kept for other potential JitPack deps)
 - `app/build.gradle` — Compose BOM `2026.09.00`, Kyant AAR dependency removed, Kotlin `2.3.21` + compose compiler plugin, Hilt `2.60.1`, Room `2.8.5`, Media3 `1.11.1`, Haze `1.7.3`
-- `app/src/main/java/com/mydonghua/app/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
-- `app/src/main/java/com/mydonghua/app/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
-- `app/src/main/java/com/mydonghua/app/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; `SharedTransitionLayout`/`scopedComposable` NavHost; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
-- `app/src/main/java/com/mydonghua/app/ui/SharedTransition.kt` — NEW: shared-element scope locals, bounds spring, `SharedPosterKey`, and `scopedComposable`
-- `app/src/main/java/com/mydonghua/app/ui/common/AppLoadingScreen.kt` — minimal trimmed-emblem loading screen with a standard progress indicator
+- `app/src/main/java/com/nsr/qilin/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
+- `app/src/main/java/com/nsr/qilin/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
+- `app/src/main/java/com/nsr/qilin/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; `SharedTransitionLayout`/`scopedComposable` NavHost; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
+- `app/src/main/java/com/nsr/qilin/ui/SharedTransition.kt` — NEW: shared-element scope locals, bounds spring, `SharedPosterKey`, and `scopedComposable`
+- `app/src/main/java/com/nsr/qilin/ui/common/AppLoadingScreen.kt` — minimal trimmed-emblem loading screen with a standard progress indicator
 - `app/src/main/java/com/kyant/backdrop/` — NEW: 22 vendored Kyant Backdrop source files
 
 ## Build

@@ -1,10 +1,10 @@
--keep class com.mydonghua.app.domain.model.** { *; }
--keep class com.mydonghua.app.data.service.DownloadModel { *; }
--keep class com.mydonghua.app.data.service.DownloadTask { *; }
--keep class com.mydonghua.app.data.service.AniListUser { *; }
--keep class com.mydonghua.app.data.service.AniListMedia { *; }
--keep class com.mydonghua.app.data.service.AniListMediaDetail { *; }
--keep class com.mydonghua.app.data.service.AniListEntry { *; }
+-keep class com.nsr.qilin.domain.model.** { *; }
+-keep class com.nsr.qilin.data.service.DownloadModel { *; }
+-keep class com.nsr.qilin.data.service.DownloadTask { *; }
+-keep class com.nsr.qilin.data.service.AniListUser { *; }
+-keep class com.nsr.qilin.data.service.AniListMedia { *; }
+-keep class com.nsr.qilin.data.service.AniListMediaDetail { *; }
+-keep class com.nsr.qilin.data.service.AniListEntry { *; }
 -keepclassmembers class * {
     @com.google.gson.annotations.SerializedName <fields>;
 }

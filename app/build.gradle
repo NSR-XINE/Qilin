@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace 'com.mydonghua.app'
+    namespace 'com.nsr.qilin'
     compileSdk 37
     compileSdkMinor 2
 

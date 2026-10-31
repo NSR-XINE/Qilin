@@ -49,8 +49,8 @@ my_donghua/
 │       │       └── ytdlp                     # Bundled yt-dlp core executable archive
 │       └── java/
 │           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system
-│           └── com/mydonghua/app/
-│               ├── DonghuaApp.kt             # Application class (@HiltAndroidApp), engine bootstrap
+│           └── com/nsr/qilin/
+│               ├── QilinApp.kt               # Application class (@HiltAndroidApp), engine bootstrap
 │               ├── MainActivity.kt           # Entry activity, NavHost, shared-element + predictive-back host, Haze glass layer, LiquidGlass nav
 │               ├── WatchActivity.kt          # Media3 ExoPlayer & In-App Web Player with stream sniffer
 │               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
@@ -111,7 +111,7 @@ my_donghua/
 
 ## 🗄️ Database Schema (Room v4)
 
-All records are stored locally in native SQLite (`mydonghua.db`):
+All records are stored locally in native SQLite (`qilin.db`):
 
 ### 1. `shows`
 | Column | Type | Description |
