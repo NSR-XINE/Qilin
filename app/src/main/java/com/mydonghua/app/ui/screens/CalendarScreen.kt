@@ -35,6 +35,7 @@ import java.util.*
 fun CalendarScreen(
     showsViewModel: ShowsViewModel,
     onNavigateBack: () -> Unit,
+    onShowClick: (Show) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val shows by showsViewModel.allShows.collectAsState()
@@ -190,7 +191,10 @@ fun CalendarScreen(
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(CornerRadius.sm))
                                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.45f))
-                                            .colorOSPressBounce(pressedScale = 0.97f)
+                                            .colorOSPressBounce(
+                                                pressedScale = 0.97f,
+                                                onClick = { onShowClick(show) }
+                                            )
                                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween

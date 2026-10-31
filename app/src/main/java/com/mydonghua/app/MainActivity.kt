@@ -622,9 +622,12 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("calendar") {
-                                CalendarScreen(
+                            CalendarScreen(
                                 showsViewModel = showsViewModel,
-                                onNavigateBack = { navController.popBackStack() }
+                                onNavigateBack = { navController.popBackStack() },
+                                onShowClick = { show ->
+                                    openDetail(show.id, null)
+                                }
                             )
                         }
                         composable("history") {
