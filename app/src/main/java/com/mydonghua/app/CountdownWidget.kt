@@ -59,6 +59,7 @@ class CountdownWidget : AppWidgetProvider() {
                     context, 0, mainIntent,
                     android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
                 )
+                views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
                 views.setOnClickPendingIntent(R.id.widget_show_title, pendingIntent)
                 views.setOnClickPendingIntent(R.id.widget_countdown, pendingIntent)
                 appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -104,6 +105,7 @@ class CountdownWidget : AppWidgetProvider() {
                         context, 0, mainIntent,
                         android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
                     )
+                    views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
                     views.setOnClickPendingIntent(R.id.widget_show_title, pendingIntent)
                     views.setOnClickPendingIntent(R.id.widget_countdown, pendingIntent)
                     appWidgetManager.updateAppWidget(appWidgetId, views)
