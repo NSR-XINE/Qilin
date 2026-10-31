@@ -328,6 +328,7 @@ private fun TrendingHeroCard(
     val bannerBorderBrush = rememberLiquidGlassBorder(isLight = isLight, isAmoled = isAmoled)
     val primaryAccent = if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB)
     val posterShape = RoundedCornerShape(16.dp)
+    val chipBorder = rememberLiquidGlassChipBorder(isLight)
 
     Box(
         modifier = Modifier
@@ -494,7 +495,7 @@ private fun TrendingHeroCard(
                                             if (isLight) Color.Black.copy(alpha = 0.05f)
                                             else Color.White.copy(alpha = 0.08f)
                                         )
-                                        .border(0.6.dp, rememberLiquidGlassChipBorder(isLight), RoundedCornerShape(percent = 50))
+                                        .border(0.6.dp, chipBorder, RoundedCornerShape(percent = 50))
                                         .padding(horizontal = 7.dp, vertical = 2.dp)
                                 ) {
                                     Text(
