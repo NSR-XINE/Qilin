@@ -64,7 +64,6 @@ fun ShowCard(
     highlightQuery: String? = null
 ) {
     val context = LocalContext.current
-    val hazeState = LocalHazeState.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
