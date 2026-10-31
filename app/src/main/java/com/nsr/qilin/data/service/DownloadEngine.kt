@@ -265,7 +265,11 @@ object DownloadEngine {
             action = "CANCEL_DOWNLOAD"
             putExtra("downloadId", id)
         }
-        app.startService(serviceIntent)
+        try {
+            app.startService(serviceIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send CANCEL_DOWNLOAD to service", e)
+        }
 
         activeTasks.remove(id)
         _tasksState.value = activeTasks.values.toList()
@@ -278,7 +282,11 @@ object DownloadEngine {
             action = "PAUSE_DOWNLOAD"
             putExtra("downloadId", id)
         }
-        context.startService(serviceIntent)
+        try {
+            context.startService(serviceIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send PAUSE_DOWNLOAD to service", e)
+        }
 
         val paused = current.copy(status = DownloadStatus.PAUSED, speedBps = 0L, etaSeconds = 0L)
         activeTasks[id] = paused
@@ -340,17 +348,21 @@ object DownloadEngine {
         return getLocalFileForTitle(context, title) != null
     }
 
+    private val SUPPORTED_MEDIA_EXTENSIONS = setOf("mp4", "mkv", "webm", "ts", "m4a", "mp3", "flv")
+
     fun getLocalFileForTitle(context: Context, title: String): File? {
-        val sanitized = title.replace(Regex("[^a-zA-Z0-9_]"), "_").lowercase()
+        val sanitized = title.replace(Regex("[^a-zA-Z0-9_]"), "_").trim('_').lowercase()
+        if (sanitized.isEmpty()) return null
         for (dir in getAllStorageDirs(context)) {
             val files = dir.listFiles() ?: continue
             for (file in files) {
                 if (!file.isFile) continue
-                val name = file.nameWithoutExtension.replace(Regex("[^a-zA-Z0-9_]"), "_").lowercase()
-                if (name == sanitized || name.contains(sanitized) || sanitized.contains(name)) {
-                    if (file.length() > 1024 * 1024) {
-                        return file
-                    }
+                val ext = file.extension.lowercase()
+                if (ext !in SUPPORTED_MEDIA_EXTENSIONS) continue
+                if (file.length() <= 1024 * 1024) continue
+                val name = file.nameWithoutExtension.replace(Regex("[^a-zA-Z0-9_]"), "_").trim('_').lowercase()
+                if (name == sanitized || name.startsWith("${sanitized}_") || name.startsWith("${sanitized}-")) {
+                    return file
                 }
             }
         }

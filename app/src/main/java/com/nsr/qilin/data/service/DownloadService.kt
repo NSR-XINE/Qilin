@@ -252,7 +252,7 @@ class DownloadService : Service() {
             startForeground(notificationId, notification)
         }
 
-        val job = serviceScope.launch {
+        val job = serviceScope.launch(start = kotlinx.coroutines.CoroutineStart.LAZY) {
             var lastNotifyAt = 0L
             var lastPersistAt = 0L
             var finalFilePath: String? = null
@@ -521,7 +521,9 @@ class DownloadService : Service() {
                     sendBroadcast(failedIntent)
                 }
             } finally {
-                downloadJobs.remove(id)
+                synchronized(downloadJobs) {
+                    downloadJobs.remove(id)
+                }
                 cancelledIds.remove(id)
                 pausedIds.remove(id)
                 try {
@@ -539,7 +541,19 @@ class DownloadService : Service() {
             }
         }
 
-        downloadJobs[id] = job
+        val shouldStart = synchronized(downloadJobs) {
+            if (cancelledIds.contains(id) || pausedIds.contains(id)) {
+                false
+            } else {
+                downloadJobs[id] = job
+                true
+            }
+        }
+        if (shouldStart) {
+            job.start()
+        } else {
+            job.cancel()
+        }
     }
 
     private fun buildRequest(
@@ -753,6 +767,10 @@ class DownloadService : Service() {
 
     fun pauseDownload(id: String) {
         pausedIds.add(id)
+        val job = synchronized(downloadJobs) {
+            downloadJobs[id]
+        }
+        job?.cancel()
         try {
             YoutubeDL.getInstance().destroyProcessById(id)
         } catch (e: Exception) {
@@ -763,19 +781,19 @@ class DownloadService : Service() {
         try {
             notificationManager.cancel(id.hashCode() and 0x7FFFFFFF)
         } catch (ignored: Exception) {}
-        downloadJobs[id]?.cancel()
     }
 
     fun cancelDownload(id: String) {
         cancelledIds.add(id)
+        val job = synchronized(downloadJobs) {
+            downloadJobs.remove(id)
+        }
+        job?.cancel()
         try {
             YoutubeDL.getInstance().destroyProcessById(id)
         } catch (e: Exception) {
             Log.e(TAG, "Cancel process failed", e)
         }
-
-        downloadJobs[id]?.cancel()
-        downloadJobs.remove(id)
 
         try {
             File(cacheDir, "downloads/$id").deleteRecursively()

@@ -2,8 +2,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="anilist_tracking_prefs.xml" />
+        <exclude domain="sharedpref" path="anilist_tracking_prefs" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="anilist_tracking_prefs.xml" />
+        <exclude domain="sharedpref" path="anilist_tracking_prefs" />
     </device-transfer>
 </data-extraction-rules>

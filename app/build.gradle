@@ -47,10 +47,6 @@ android {
                 storePassword System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps['storePassword']
                 keyAlias System.getenv("KEY_ALIAS") ?: keystoreProps['keyAlias']
                 keyPassword System.getenv("KEY_PASSWORD") ?: keystoreProps['keyPassword']
-            } else {
-                // Fallback for CI/local test builds if no production keystore is supplied:
-                // signs with the debug key so the resulting release APK is installable.
-                initWith(signingConfigs.debug)
             }
         }
     }
@@ -62,7 +58,9 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

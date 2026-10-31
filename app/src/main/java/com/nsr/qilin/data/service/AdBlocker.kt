@@ -94,8 +94,12 @@ object AdBlocker {
 
     fun isAdUrl(url: String?): Boolean {
         if (url.isNullOrBlank()) return false
-        val lower = url.lowercase()
-        return AD_HOSTS.any { lower.contains(it) }
+        val host = try {
+            android.net.Uri.parse(url).host?.lowercase()
+        } catch (_: Exception) {
+            null
+        } ?: return false
+        return AD_HOSTS.any { host == it || host.endsWith(".$it") || host.contains(it) }
     }
 
     fun isDisallowedScheme(url: String?): Boolean {

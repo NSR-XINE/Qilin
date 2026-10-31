@@ -124,10 +124,10 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.getStringExtra("target_show_id")?.let { targetId ->
-            if (targetId.isNotBlank()) {
-                pendingTargetShowId.value = targetId
-            }
+        val targetId = intent.getStringExtra("target_show_id")
+            ?: intent.data?.let { if (it.scheme == "qilin" && it.host == "show") it.lastPathSegment else null }
+        if (!targetId.isNullOrBlank()) {
+            pendingTargetShowId.value = targetId
         }
     }
 
@@ -136,10 +136,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        intent?.getStringExtra("target_show_id")?.let { targetId ->
-            if (targetId.isNotBlank()) {
-                pendingTargetShowId.value = targetId
-            }
+        val targetId = intent?.getStringExtra("target_show_id")
+            ?: intent?.data?.let { if (it.scheme == "qilin" && it.host == "show") it.lastPathSegment else null }
+        if (!targetId.isNullOrBlank()) {
+            pendingTargetShowId.value = targetId
         }
 
         requestPermissionsOnStart()
@@ -168,20 +168,14 @@ class MainActivity : ComponentActivity() {
             }
 
             LaunchedEffect(Unit) {
-                val startTime = System.currentTimeMillis()
                 val readyFlow = combine(
                     homeViewModel.uiState,
                     showsViewModel.isLoading
                 ) { home, sLoading ->
                     !home.isLoading && !sLoading
                 }
-                withTimeoutOrNull(8000L) {
+                withTimeoutOrNull(4000L) {
                     readyFlow.filter { it }.first()
-                }
-                val elapsed = System.currentTimeMillis() - startTime
-                val minDisplayTime = 5200L
-                if (elapsed < minDisplayTime) {
-                    delay(minDisplayTime - elapsed)
                 }
                 isAppLoading = false
             }

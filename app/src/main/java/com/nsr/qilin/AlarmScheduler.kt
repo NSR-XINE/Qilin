@@ -14,6 +14,12 @@ object AlarmScheduler {
     private val _lastScheduled = ConcurrentHashMap<String, Long>()
 
     @JvmStatic
+    fun generateRequestCode(showId: String): Int {
+        val hash = (showId.hashCode() xor (System.nanoTime().toInt())).and(0x7FFFFFFF)
+        return if (hash == 0) 1 else hash
+    }
+
+    @JvmStatic
     fun schedule(context: Context, showId: String, title: String?, releaseDay: String, releaseTime: String, alarmCode: Int) {
         schedule(context, showId, title, releaseDay, releaseTime, alarmCode, 0)
     }
@@ -29,7 +35,7 @@ object AlarmScheduler {
         if (lastTime != null && (now - lastTime) < MIN_SCHEDULE_INTERVAL_MS) return
         _lastScheduled[dedupKey] = now
 
-        val effectiveCode = if (alarmCode > 0) alarmCode else (showId.hashCode() and 0x7FFFFFFF)
+        val effectiveCode = if (alarmCode > 0) alarmCode else ((showId.hashCode() and 0x7FFFFFFF).let { if (it == 0) 1 else it })
 
         cancel(context, showId, effectiveCode)
 
@@ -89,7 +95,7 @@ object AlarmScheduler {
 
         val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 
-        val effectiveCode = if (alarmCode > 0) alarmCode else ((showId?.hashCode() ?: 0) and 0x7FFFFFFF)
+        val effectiveCode = if (alarmCode > 0) alarmCode else (((showId?.hashCode() ?: 0) and 0x7FFFFFFF).let { if (it == 0) 1 else it })
         val intent = Intent(context, NotificationReceiver::class.java)
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val pi = PendingIntent.getBroadcast(

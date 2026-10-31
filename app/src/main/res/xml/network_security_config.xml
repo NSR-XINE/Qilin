@@ -3,5 +3,6 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">donghuastream.org</domain>
         <domain includeSubdomains="true">luciferdonghua.org</domain>
+        <domain includeSubdomains="true">luciferdonghua.in</domain>
     </domain-config>
 </network-security-config>

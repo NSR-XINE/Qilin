@@ -39,8 +39,10 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val shows by showsViewModel.allShows.collectAsState()
+    val historyList by showsViewModel.history.collectAsState()
     val isLoading by showsViewModel.isLoading.collectAsState()
-    val stats = remember(shows) { StatsCalculator.computeStats(shows) }
+    val historyTimestamps = remember(historyList) { historyList.map { it.watchedAt } }
+    val stats = remember(shows, historyTimestamps) { StatsCalculator.computeStats(shows, historyTimestamps) }
     val scrollState = rememberScrollState()
 
     val now = Calendar.getInstance()

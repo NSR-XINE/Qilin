@@ -85,9 +85,9 @@ object CountdownCalculator {
         val ongoing = shows.filter { it.status == "ongoing" }
         if (ongoing.isEmpty()) return shows.firstOrNull()
 
+        val now = System.currentTimeMillis()
         val mapped = ongoing.mapNotNull { show ->
             val targetMs = getNextReleaseDateMs(show.releaseDay, show.releaseTime) ?: return@mapNotNull null
-            val now = System.currentTimeMillis()
             val timeDiff = targetMs - now
             val isAiringNow = timeDiff <= 0 && -timeDiff < 90 * 60 * 1000
             Triple(show, targetMs, isAiringNow)
@@ -97,16 +97,12 @@ object CountdownCalculator {
             return ongoing.maxByOrNull { it.lastUpdated ?: 0L } ?: ongoing.firstOrNull()
         }
 
-        val sorted = mapped.sortedWith(Comparator { a, b ->
-            if (a.third && !b.third) return@Comparator -1
-            if (!a.third && b.third) return@Comparator 1
-            if (a.third && b.third) {
-                return@Comparator b.second.compareTo(a.second)
-            }
-            val aDiff = a.second - System.currentTimeMillis()
-            val bDiff = b.second - System.currentTimeMillis()
-            aDiff.compareTo(bDiff)
-        })
+        val sorted = mapped.sortedWith(
+            compareBy<Triple<Show, Long, Boolean>> { !it.third }
+                .thenBy { if (it.third) -it.second else it.second }
+                .thenBy { it.first.title }
+                .thenBy { it.first.id }
+        )
 
         return sorted.firstOrNull()?.first
     }

@@ -149,18 +149,22 @@ class SearchViewModel @Inject constructor(
         _isSearchingOnline.value = true
         try {
             val kitsuDeferred = async {
-                try { com.nsr.qilin.data.service.PosterFetchService.searchKitsu(q) } catch (e: Exception) { emptyList() }
+                runCatching { com.nsr.qilin.data.service.PosterFetchService.searchKitsu(q) }
             }
             val aniListDeferred = async {
-                try { com.nsr.qilin.data.service.PosterFetchService.searchAniList(q) } catch (e: Exception) { emptyList() }
+                runCatching { com.nsr.qilin.data.service.PosterFetchService.searchAniList(q) }
             }
             val malDeferred = async {
-                try { com.nsr.qilin.data.service.PosterFetchService.searchMyAnimeList(q) } catch (e: Exception) { emptyList() }
+                runCatching { com.nsr.qilin.data.service.PosterFetchService.searchMyAnimeList(q) }
             }
 
-            val kitsuResults = kitsuDeferred.await()
-            val aniListResults = aniListDeferred.await()
-            val malResults = malDeferred.await()
+            val kitsuRes = kitsuDeferred.await()
+            val aniListRes = aniListDeferred.await()
+            val malRes = malDeferred.await()
+
+            val kitsuResults = kitsuRes.getOrDefault(emptyList())
+            val aniListResults = aniListRes.getOrDefault(emptyList())
+            val malResults = malRes.getOrDefault(emptyList())
 
             val combined = mutableListOf<Show>()
             val addedTitles = mutableSetOf<String>()
@@ -198,6 +202,9 @@ class SearchViewModel @Inject constructor(
             malResults.forEach { r ->
                 addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "mal")
             }
+
+            val allFailed = kitsuRes.isFailure && aniListRes.isFailure && malRes.isFailure
+            _searchError.value = allFailed && combined.isEmpty()
 
             combined
         } catch (e: Exception) {

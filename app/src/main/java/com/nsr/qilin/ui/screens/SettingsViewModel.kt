@@ -216,8 +216,17 @@ class SettingsViewModel @Inject constructor(
                 } ?: throw Exception("Unable to open backup file stream.")
 
                 val parsed = JSONObject(jsonString)
+                if (!parsed.has("shows") && !parsed.has("watchHistory")) {
+                    throw IllegalArgumentException("Invalid backup file: neither shows nor watchHistory found.")
+                }
+
                 val showsArr = parsed.optJSONArray("shows") ?: JSONArray()
                 val watchHistory = parsed.optJSONArray("watchHistory") ?: JSONArray()
+                if (showsArr.length() == 0 && watchHistory.length() == 0) {
+                    throw IllegalArgumentException("Backup file contains no shows or watch history records.")
+                }
+
+                val settingsToApply = mutableMapOf<String, String>()
                 val notifyObj = parsed.optJSONObject("notifyPrefs")
                     ?: try {
                         JSONObject(parsed.optString("notifyPrefs", "{}"))
@@ -229,16 +238,21 @@ class SettingsViewModel @Inject constructor(
                     val key = keys.next()
                     val value = notifyObj.opt(key)
                     if (value != null && value != JSONObject.NULL) {
-                        settingsRepository.putSetting(key, value.toString())
+                        settingsToApply[key] = value.toString()
                     }
                 }
 
                 val importedShowsList = mutableListOf<com.nsr.qilin.domain.model.Show>()
                 for (i in 0 until showsArr.length()) {
                     val sObj = showsArr.getJSONObject(i)
+                    val id = sObj.optString("id").takeIf { it.isNotBlank() }
+                        ?: throw IllegalArgumentException("Show at index $i is missing a valid id.")
+                    val title = sObj.optString("title").takeIf { it.isNotBlank() }
+                        ?: throw IllegalArgumentException("Show at index $i is missing a valid title.")
+
                     val show = com.nsr.qilin.domain.model.Show(
-                        id = sObj.getString("id"),
-                        title = sObj.getString("title"),
+                        id = id,
+                        title = title,
                         titleZh = sObj.optString("titleZh").takeIf { it.isNotEmpty() && it != "null" },
                         status = sObj.optString("status", "ongoing"),
                         releaseDay = sObj.optString("releaseDay").takeIf { it.isNotEmpty() && it != "null" },
@@ -266,15 +280,21 @@ class SettingsViewModel @Inject constructor(
 
                 val validShowIds = importedShowsList.map { it.id }.toSet()
                 val importedHistoryList = mutableListOf<WatchHistoryEntity>()
+                val nowTimestamp = System.currentTimeMillis()
                 for (i in 0 until watchHistory.length()) {
                     val hObj = watchHistory.getJSONObject(i)
-                    val showId = hObj.getString("showId")
-                    if (validShowIds.contains(showId)) {
+                    val showId = hObj.optString("showId")
+                    if (showId.isNotBlank() && validShowIds.contains(showId)) {
+                        val preservedTime = hObj.optLong("watchedAt", 0L).takeIf { it > 0L }
+                            ?: hObj.optLong("watchedTimestamp", 0L).takeIf { it > 0L }
+                            ?: hObj.optLong("timestamp", 0L).takeIf { it > 0L }
+                            ?: nowTimestamp
+
                         importedHistoryList.add(
                             WatchHistoryEntity(
                                 showId = showId,
                                 episodeNum = hObj.getInt("episodeNum"),
-                                watchedTimestamp = hObj.optLong("watchedAt").takeIf { it > 0L } ?: System.currentTimeMillis()
+                                watchedTimestamp = preservedTime
                             )
                         )
                     }
@@ -285,6 +305,10 @@ class SettingsViewModel @Inject constructor(
                     watchHistoryRepository.clearAllWatchHistory()
                     showRepository.bulkInsert(importedShowsList)
                     watchHistoryRepository.bulkInsertHistory(importedHistoryList)
+                }
+
+                settingsToApply.forEach { (k, v) ->
+                    settingsRepository.putSetting(k, v)
                 }
 
                 com.nsr.qilin.AlarmScheduler.rescheduleAllAfterBoot(context)

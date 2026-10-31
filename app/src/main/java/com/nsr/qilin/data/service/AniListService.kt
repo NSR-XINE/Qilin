@@ -2,6 +2,9 @@ package com.nsr.qilin.data.service
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
 import android.util.Log
 import com.nsr.qilin.domain.model.Show
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +18,12 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.security.KeyStore
 import java.util.concurrent.TimeUnit
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 
 data class AniListUser(
     val id: Int,
@@ -95,7 +103,77 @@ object AniListService {
     private const val KEY_MEAN_SCORE = "anilist_mean_score"
     private const val KEY_AUTO_SYNC = "anilist_auto_sync"
 
+    private const val KEY_ALIAS = "QilinAniListKey"
+    private const val ANDROID_KEYSTORE = "AndroidKeyStore"
+    private const val TRANSFORMATION = "AES/GCM/NoPadding"
+    private const val GCM_IV_LENGTH = 12
+    private const val GCM_TAG_LENGTH = 128
+    private const val ENC_PREFIX = "ENC:"
+
     private const val GRAPHQL_ENDPOINT = "https://graphql.anilist.co/"
+
+    private fun getOrCreateKey(): SecretKey {
+        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+        val existingKey = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+        if (existingKey != null) return existingKey
+
+        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+        val keyGenSpec = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256)
+            .setRandomizedEncryptionRequired(true)
+            .build()
+        keyGenerator.init(keyGenSpec)
+        return keyGenerator.generateKey()
+    }
+
+    private fun encryptToken(plainText: String): String {
+        return try {
+            val key = getOrCreateKey()
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.ENCRYPT_MODE, key)
+            val iv = cipher.iv
+            val cipherText = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+            val combined = ByteArray(iv.size + cipherText.size)
+            System.arraycopy(iv, 0, combined, 0, iv.size)
+            System.arraycopy(cipherText, 0, combined, iv.size, cipherText.size)
+            ENC_PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to encrypt token", e)
+            plainText
+        }
+    }
+
+    private fun decryptToken(storedToken: String?): String? {
+        if (storedToken.isNullOrBlank()) return null
+        if (!storedToken.startsWith(ENC_PREFIX)) {
+            // Legacy plaintext token
+            return storedToken
+        }
+        return try {
+            val base64Cipher = storedToken.removePrefix(ENC_PREFIX)
+            val combined = Base64.decode(base64Cipher, Base64.NO_WRAP)
+            if (combined.size <= GCM_IV_LENGTH) return null
+            val iv = ByteArray(GCM_IV_LENGTH)
+            val cipherText = ByteArray(combined.size - GCM_IV_LENGTH)
+            System.arraycopy(combined, 0, iv, 0, GCM_IV_LENGTH)
+            System.arraycopy(combined, GCM_IV_LENGTH, cipherText, 0, cipherText.size)
+
+            val key = getOrCreateKey()
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
+            cipher.init(Cipher.DECRYPT_MODE, key, spec)
+            val plainBytes = cipher.doFinal(cipherText)
+            String(plainBytes, Charsets.UTF_8)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to decrypt token", e)
+            null
+        }
+    }
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
@@ -122,7 +200,7 @@ object AniListService {
         val sp = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs = sp
 
-        val token = sp.getString(KEY_TOKEN, null)
+        val token = getToken()
         val userId = sp.getInt(KEY_USER_ID, 0)
         val username = sp.getString(KEY_USERNAME, null)
         val avatar = sp.getString(KEY_AVATAR, null)
@@ -154,7 +232,14 @@ object AniListService {
         get() = _autoSyncFlow.value
 
     fun getToken(): String? {
-        return prefs?.getString(KEY_TOKEN, null)
+        val raw = prefs?.getString(KEY_TOKEN, null) ?: return null
+        val decrypted = decryptToken(raw)
+        // If stored as legacy unencrypted, migrate to encrypted storage
+        if (decrypted != null && !raw.startsWith(ENC_PREFIX)) {
+            val encrypted = encryptToken(decrypted)
+            prefs?.edit()?.putString(KEY_TOKEN, encrypted)?.apply()
+        }
+        return decrypted
     }
 
     fun sanitizeToken(raw: String): String {
@@ -170,8 +255,9 @@ object AniListService {
 
     fun saveSession(token: String, user: AniListUser) {
         val cleanToken = sanitizeToken(token)
+        val encryptedToken = encryptToken(cleanToken)
         prefs?.edit()
-            ?.putString(KEY_TOKEN, cleanToken)
+            ?.putString(KEY_TOKEN, encryptedToken)
             ?.putInt(KEY_USER_ID, user.id)
             ?.putString(KEY_USERNAME, user.name)
             ?.putString(KEY_AVATAR, user.avatarUrl)
@@ -400,25 +486,57 @@ object AniListService {
         }
     }
 
+    private fun cleanTitleForMatch(text: String): String {
+        return text.lowercase()
+            .replace(Regex("[^a-z0-9\\p{IsHan}]"), "")
+            .trim()
+    }
+
+    private fun isCloseTitleMatch(targetClean: String, candidateClean: String): Boolean {
+        if (targetClean.isEmpty() || candidateClean.isEmpty()) return false
+        if (targetClean == candidateClean) return true
+        val minLen = minOf(targetClean.length, candidateClean.length)
+        val maxLen = maxOf(targetClean.length, candidateClean.length)
+        if (minLen >= 4 && (candidateClean.contains(targetClean) || targetClean.contains(candidateClean))) {
+            return (minLen.toDouble() / maxLen.toDouble()) >= 0.8
+        }
+        return false
+    }
+
     suspend fun findBestMatchId(title: String, titleZh: String?): Int? = withContext(Dispatchers.IO) {
-        val candidates = searchAnime(title, limit = 5)
-        if (candidates.isNotEmpty()) {
-            val normalizedTitle = title.lowercase().trim()
+        val cleanTarget = cleanTitleForMatch(title)
+        if (cleanTarget.isNotEmpty()) {
+            val candidates = searchAnime(title, limit = 5)
             for (candidate in candidates) {
-                val cTitleEng = candidate.titleEnglish?.lowercase()?.trim()
-                val cTitleRom = candidate.titleRomaji?.lowercase()?.trim()
-                val cTitleNat = candidate.titleNative?.lowercase()?.trim()
-                if (cTitleEng == normalizedTitle || cTitleRom == normalizedTitle || cTitleNat == normalizedTitle) {
+                val cTitleEng = candidate.titleEnglish?.let { cleanTitleForMatch(it) } ?: ""
+                val cTitleRom = candidate.titleRomaji?.let { cleanTitleForMatch(it) } ?: ""
+                val cTitleNat = candidate.titleNative?.let { cleanTitleForMatch(it) } ?: ""
+
+                if (isCloseTitleMatch(cleanTarget, cTitleEng) ||
+                    isCloseTitleMatch(cleanTarget, cTitleRom) ||
+                    isCloseTitleMatch(cleanTarget, cTitleNat)
+                ) {
                     return@withContext candidate.id
                 }
             }
-            return@withContext candidates[0].id
         }
 
         if (!titleZh.isNullOrBlank()) {
-            val zhCandidates = searchAnime(titleZh, limit = 5)
-            if (zhCandidates.isNotEmpty()) {
-                return@withContext zhCandidates[0].id
+            val cleanZh = cleanTitleForMatch(titleZh)
+            if (cleanZh.isNotEmpty()) {
+                val zhCandidates = searchAnime(titleZh, limit = 5)
+                for (candidate in zhCandidates) {
+                    val cTitleNat = candidate.titleNative?.let { cleanTitleForMatch(it) } ?: ""
+                    val cTitleRom = candidate.titleRomaji?.let { cleanTitleForMatch(it) } ?: ""
+                    val cTitleEng = candidate.titleEnglish?.let { cleanTitleForMatch(it) } ?: ""
+
+                    if (isCloseTitleMatch(cleanZh, cTitleNat) ||
+                        isCloseTitleMatch(cleanZh, cTitleRom) ||
+                        isCloseTitleMatch(cleanZh, cTitleEng)
+                    ) {
+                        return@withContext candidate.id
+                    }
+                }
             }
         }
 

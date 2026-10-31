@@ -14,6 +14,7 @@ class WatchHistoryRepositoryImpl @Inject constructor(
     override suspend fun getWatchHistoryLimited(limit: Int): List<WatchHistoryEntity> = watchHistoryDao.getWatchHistoryLimited(limit)
 
     override suspend fun addWatchHistory(showId: String, episodeNum: Int, timestamp: Long) {
+        watchHistoryDao.deleteHistoryEntry(showId, episodeNum)
         watchHistoryDao.insertHistory(
             WatchHistoryEntity(
                 showId = showId,
@@ -25,7 +26,13 @@ class WatchHistoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun bulkInsertHistory(historyList: List<WatchHistoryEntity>) {
-        watchHistoryDao.bulkInsertHistory(historyList)
+        val deduplicated = historyList
+            .groupBy { it.showId to it.episodeNum }
+            .map { (_, entries) -> entries.maxByOrNull { it.watchedTimestamp }!! }
+        for (entry in deduplicated) {
+            watchHistoryDao.deleteHistoryEntry(entry.showId, entry.episodeNum)
+        }
+        watchHistoryDao.bulkInsertHistory(deduplicated)
         watchHistoryDao.deleteOldHistoryEntries()
     }
 

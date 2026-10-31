@@ -18,15 +18,7 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        AppDatabase.ensureDatabaseMigrated(context)
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME
-        )
-        .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
-        .fallbackToDestructiveMigrationOnDowngrade(true)
-        .build()
+        return AppDatabase.getDatabase(context)
     }
 
     @Provides

@@ -1378,7 +1378,7 @@ class WatchActivity : ComponentActivity() {
     ) {
         @JavascriptInterface
         fun onVideoSourceFound(src: String?) {
-            if (!src.isNullOrBlank() && !src.startsWith("blob:")) {
+            if (!src.isNullOrBlank() && !src.startsWith("blob:") && (src.startsWith("http://") || src.startsWith("https://"))) {
                 Handler(Looper.getMainLooper()).post {
                     onStreamFound(src, null)
                 }
@@ -1387,9 +1387,10 @@ class WatchActivity : ComponentActivity() {
 
         @JavascriptInterface
         fun onVideoSourceFoundWithRef(src: String?, referer: String?) {
-            if (!src.isNullOrBlank() && !src.startsWith("blob:")) {
+            if (!src.isNullOrBlank() && !src.startsWith("blob:") && (src.startsWith("http://") || src.startsWith("https://"))) {
+                val validRef = if (referer?.startsWith("http://") == true || referer?.startsWith("https://") == true) referer else null
                 Handler(Looper.getMainLooper()).post {
-                    onStreamFound(src, referer)
+                    onStreamFound(src, validRef)
                 }
             }
         }
@@ -1795,10 +1796,12 @@ class WatchActivity : ComponentActivity() {
                         settings.apply {
                             javaScriptEnabled = true
                             domStorageEnabled = true
+                            allowFileAccess = false
+                            allowContentAccess = false
                             mediaPlaybackRequiresUserGesture = false
                             setSupportMultipleWindows(!adBlockActive)
                             javaScriptCanOpenWindowsAutomatically = !adBlockActive
-                            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                         }
 
                         webViewClient = object : WebViewClient() {
@@ -1933,30 +1936,28 @@ class WatchActivity : ComponentActivity() {
 
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url?.toString() ?: return false
-                                if (AdBlocker.isEnabled(context)) {
-                                    if (AdBlocker.isDisallowedScheme(url)) {
-                                        return true
+                                val scheme = request.url?.scheme?.lowercase() ?: ""
+                                if (scheme != "http" && scheme != "https") {
+                                    if (scheme == "intent" || scheme == "market") {
+                                        if (!AdBlocker.isEnabled(context)) {
+                                            try {
+                                                val parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME).apply {
+                                                    addCategory(Intent.CATEGORY_BROWSABLE)
+                                                    component = null
+                                                    selector = null
+                                                }
+                                                context.startActivity(parsedIntent)
+                                            } catch (ignored: Exception) {}
+                                        }
                                     }
+                                    return true // Block non-http/https (file:, content:, javascript:, etc.)
+                                }
+                                if (AdBlocker.isEnabled(context)) {
                                     if (AdBlocker.isAdUrl(url)) {
                                         return true
                                     }
-                                    return false
-                                } else {
-                                    if (url.startsWith("intent:") || url.startsWith("market:")) {
-                                        try {
-                                            val parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME).apply {
-                                                addCategory(Intent.CATEGORY_BROWSABLE)
-                                                component = null
-                                                selector = null
-                                            }
-                                            context.startActivity(parsedIntent)
-                                            return true
-                                        } catch (ignored: Exception) {
-                                            return true
-                                        }
-                                    }
-                                    return false
                                 }
+                                return false
                             }
 
                             override fun shouldInterceptRequest(
@@ -2035,7 +2036,11 @@ class WatchActivity : ComponentActivity() {
                                 if (AdBlocker.isEnabled(context)) {
                                     return false
                                 }
-                                val tempWebView = WebView(ctx)
+                                val tempWebView = WebView(ctx).apply {
+                                    settings.allowFileAccess = false
+                                    settings.allowContentAccess = false
+                                    settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+                                }
                                 tempWebView.webViewClient = object : WebViewClient() {
                                     override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
                                         val popupUrl = req?.url?.toString() ?: return false

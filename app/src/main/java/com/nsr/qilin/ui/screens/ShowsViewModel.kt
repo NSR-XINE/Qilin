@@ -36,8 +36,9 @@ class ShowsViewModel @Inject constructor(
         watchHistoryRepository.getWatchHistory(),
         allShows
     ) { historyList, showsList ->
+        val showsMap = showsList.associateBy { it.id }
         historyList.map { h ->
-            val show = showsList.find { it.id == h.showId }
+            val show = showsMap[h.showId]
             WatchHistoryItem(
                 showId = h.showId,
                 showTitle = show?.title ?: "Unknown Show",

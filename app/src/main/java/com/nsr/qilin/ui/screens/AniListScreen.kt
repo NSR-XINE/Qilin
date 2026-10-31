@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -642,6 +643,9 @@ fun AniListScreen(
                                 WebView(ctx).apply {
                                     settings.javaScriptEnabled = true
                                     settings.domStorageEnabled = true
+                                    settings.allowFileAccess = false
+                                    settings.allowContentAccess = false
+                                    settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                                     settings.userAgentString = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
                                     webViewClient = object : WebViewClient() {
                                         private var handled = false
@@ -665,6 +669,10 @@ fun AniListScreen(
                                         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                             val url = request?.url?.toString()
                                             checkUrl(url)
+                                            val scheme = request?.url?.scheme?.lowercase() ?: ""
+                                            if (scheme != "http" && scheme != "https") {
+                                                return true
+                                            }
                                             return super.shouldOverrideUrlLoading(view, request)
                                         }
 

@@ -17,7 +17,12 @@ object ShowActions {
         val nextEp = show.currentEp + 1
         val clampedEp = if (show.totalEp > 0) nextEp.coerceAtMost(show.totalEp) else nextEp
         if (clampedEp == show.currentEp) return
-        val updated = show.copy(currentEp = clampedEp, lastUpdated = System.currentTimeMillis())
+        val newStatus = if (show.totalEp > 0 && clampedEp >= show.totalEp) "completed" else show.status
+        val updated = show.copy(
+            currentEp = clampedEp,
+            status = newStatus,
+            lastUpdated = System.currentTimeMillis()
+        )
         showRepository.insertOrUpdateShow(updated)
         watchHistoryRepository.addWatchHistory(show.id, clampedEp)
 
@@ -34,7 +39,12 @@ object ShowActions {
         if (show.currentEp > 0) {
             val oldEp = show.currentEp
             val prevEp = show.currentEp - 1
-            val updated = show.copy(currentEp = prevEp, lastUpdated = System.currentTimeMillis())
+            val newStatus = if (show.status == "completed" && show.totalEp > 0 && prevEp < show.totalEp) "ongoing" else show.status
+            val updated = show.copy(
+                currentEp = prevEp,
+                status = newStatus,
+                lastUpdated = System.currentTimeMillis()
+            )
             showRepository.insertOrUpdateShow(updated)
             watchHistoryRepository?.removeWatchHistory(show.id, oldEp)
 
@@ -72,7 +82,7 @@ object ShowActions {
         } else {
             val canSchedule = show.status == "ongoing" && !show.releaseDay.isNullOrEmpty() && !show.releaseTime.isNullOrEmpty()
             if (canSchedule) {
-                val code = (show.id + System.currentTimeMillis()).hashCode() and 0x7FFFFFFF
+                val code = AlarmScheduler.generateRequestCode(show.id)
                 AlarmScheduler.schedule(context, show.id, show.title, show.releaseDay, show.releaseTime, code, show.currentEp)
                 Toast.makeText(context, "${show.title} Notifications: Normal", Toast.LENGTH_SHORT).show()
                 show.copy(alarmRequestCode = code, lastUpdated = System.currentTimeMillis())

@@ -480,6 +480,30 @@ fun AddEditShowScreen(
                         return@ColorOSPillButton
                     }
 
+                    val trimmedWatchUrl = watchUrl.trim()
+                    val trimmedCountdownUrl = countdownUrl.trim()
+
+                    fun isValidHttpUrl(u: String): Boolean {
+                        if (u.isEmpty()) return true
+                        return try {
+                            val uri = android.net.Uri.parse(u)
+                            val scheme = uri.scheme?.lowercase()
+                            (scheme == "http" || scheme == "https") && !uri.host.isNullOrBlank()
+                        } catch (_: Exception) {
+                            false
+                        }
+                    }
+
+                    if (trimmedWatchUrl.isNotEmpty() && !isValidHttpUrl(trimmedWatchUrl)) {
+                        Toast.makeText(context, "Watch URL must start with http:// or https:// and include a valid host", Toast.LENGTH_LONG).show()
+                        return@ColorOSPillButton
+                    }
+
+                    if (trimmedCountdownUrl.isNotEmpty() && !isValidHttpUrl(trimmedCountdownUrl)) {
+                        Toast.makeText(context, "Countdown URL must start with http:// or https:// and include a valid host", Toast.LENGTH_LONG).show()
+                        return@ColorOSPillButton
+                    }
+
                     var show = Show(
                         id = editingShow?.id ?: UUID.randomUUID().toString(),
                         title = title,
@@ -490,8 +514,8 @@ fun AddEditShowScreen(
                         currentEp = currentEp.toIntOrNull() ?: 0,
                         totalEp = totalEp.toIntOrNull() ?: 0,
                         poster = poster.takeIf { it.isNotEmpty() },
-                        watchUrl = watchUrl.takeIf { it.isNotEmpty() },
-                        countdownUrl = countdownUrl.takeIf { it.isNotEmpty() },
+                        watchUrl = trimmedWatchUrl.takeIf { it.isNotEmpty() },
+                        countdownUrl = trimmedCountdownUrl.takeIf { it.isNotEmpty() },
                         notes = notes.takeIf { it.isNotEmpty() },
                         isFavorite = editingShow?.isFavorite ?: 0,
                         rating = rating.toInt(),

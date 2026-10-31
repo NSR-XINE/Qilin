@@ -21,7 +21,7 @@ data class ShowStats(
 )
 
 object StatsCalculator {
-    fun computeStats(shows: List<Show>): ShowStats {
+    fun computeStats(shows: List<Show>, historyTimestamps: List<Long> = emptyList()): ShowStats {
         val total = shows.size
         val airing = shows.count { it.status == "ongoing" }
         val completed = shows.count { it.status == "completed" }
@@ -32,7 +32,9 @@ object StatsCalculator {
         val totalEpsPossible = shows.sumOf { it.totalEp }
 
         val hoursWatched = Math.round((totalEpisodes * 24.0) / 60.0).toInt()
-        val completionRate = if (total > 0) {
+        val completionRate = if (totalEpsPossible > 0) {
+            Math.round((totalEpisodes.toDouble() / totalEpsPossible.toDouble()) * 100.0).toInt().coerceIn(0, 100)
+        } else if (total > 0) {
             Math.round((completed.toDouble() / total.toDouble()) * 100.0).toInt().coerceIn(0, 100)
         } else {
             0
@@ -78,35 +80,50 @@ object StatsCalculator {
         val weekMs = 7L * 24 * 60 * 60 * 1000
         val monthMs = 30L * 24 * 60 * 60 * 1000
 
-        val weeklyActivity = shows.count { it.lastUpdated != null && (now - (it.lastUpdated ?: 0L)) < weekMs }
-        val monthlyActivity = shows.count { it.lastUpdated != null && (now - (it.lastUpdated ?: 0L)) < monthMs }
+        val timestamps = if (historyTimestamps.isNotEmpty()) {
+            historyTimestamps.sortedDescending()
+        } else {
+            shows.mapNotNull { it.lastUpdated }.sortedDescending()
+        }
 
-        val sortedByLastUpdated = shows.filter { it.lastUpdated != null }.sortedByDescending { it.lastUpdated ?: 0L }
+        val weeklyActivity = if (historyTimestamps.isNotEmpty()) {
+            timestamps.count { (now - it) < weekMs }
+        } else {
+            shows.count { it.lastUpdated != null && (now - (it.lastUpdated ?: 0L)) < weekMs }
+        }
+        val monthlyActivity = if (historyTimestamps.isNotEmpty()) {
+            timestamps.count { (now - it) < monthMs }
+        } else {
+            shows.count { it.lastUpdated != null && (now - (it.lastUpdated ?: 0L)) < monthMs }
+        }
+
         var streak = 0
-        if (sortedByLastUpdated.isNotEmpty()) {
-            val checkDate = java.util.Calendar.getInstance().apply {
+        if (timestamps.isNotEmpty()) {
+            val cal = java.util.Calendar.getInstance().apply {
                 set(java.util.Calendar.HOUR_OF_DAY, 0)
                 set(java.util.Calendar.MINUTE, 0)
                 set(java.util.Calendar.SECOND, 0)
                 set(java.util.Calendar.MILLISECOND, 0)
             }
 
-            // If user hasn't watched anything yet today, check starting from yesterday so streak doesn't reset at midnight
-            val todayStart = checkDate.timeInMillis
-            val todayEnd = todayStart + 86400000L
-            val hasTodayActivity = sortedByLastUpdated.any { (it.lastUpdated ?: 0L) in todayStart until todayEnd }
+            fun getDayRange(c: java.util.Calendar): Pair<Long, Long> {
+                val start = c.timeInMillis
+                val next = (c.clone() as java.util.Calendar).apply { add(java.util.Calendar.DAY_OF_MONTH, 1) }
+                return Pair(start, next.timeInMillis)
+            }
+
+            val (todayStart, todayEnd) = getDayRange(cal)
+            val hasTodayActivity = timestamps.any { it in todayStart until todayEnd }
             if (!hasTodayActivity) {
-                checkDate.add(java.util.Calendar.DAY_OF_MONTH, -1)
+                cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
             }
 
             for (i in 0 until 365) {
-                val dayStart = checkDate.timeInMillis
-                val dayEnd = dayStart + 86400000L
-
-                val hasActivity = sortedByLastUpdated.any { (it.lastUpdated ?: 0L) in dayStart until dayEnd }
+                val (dayStart, dayEnd) = getDayRange(cal)
+                val hasActivity = timestamps.any { it in dayStart until dayEnd }
                 if (hasActivity) {
                     streak++
-                    checkDate.add(java.util.Calendar.DAY_OF_MONTH, -1)
+                    cal.add(java.util.Calendar.DAY_OF_MONTH, -1)
                 } else {
                     break
                 }

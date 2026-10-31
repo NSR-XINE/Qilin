@@ -77,11 +77,13 @@ class NotificationReceiver : BroadcastReceiver() {
                 }
 
                 val activityIntent = Intent(context, MainActivity::class.java).apply {
+                    action = Intent.ACTION_VIEW
+                    data = android.net.Uri.parse("qilin://show/$showId")
                     putExtra("target_show_id", showId)
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
 
-                val requestCode = if (code > 0) code else (showId.hashCode() and 0x7FFFFFFF)
+                val requestCode = if (code != null && code > 0) code else ((showId.hashCode() and 0x7FFFFFFF).let { if (it == 0) 1 else it })
                 var flags = PendingIntent.FLAG_UPDATE_CURRENT
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -89,7 +91,11 @@ class NotificationReceiver : BroadcastReceiver() {
                 val pi = PendingIntent.getActivity(context, requestCode, activityIntent, flags)
 
                 val nextEp = currentEp + 1
-                val episodeText = "Episode $nextEp is airing now!"
+                val episodeText = if (show.totalEp > 0 && nextEp > show.totalEp) {
+                    "Broadcast airing now!"
+                } else {
+                    "Episode $nextEp is airing now!"
+                }
 
                 val builder = NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification)
@@ -113,7 +119,7 @@ class NotificationReceiver : BroadcastReceiver() {
                     nm.notify(notifyId, builder.build())
                 }
 
-                if (day != null && time != null && code > 0) {
+                if (day != null && time != null && code != null && code > 0) {
                     AlarmScheduler.schedule(context, showId, title, day, time, code, currentEp)
                 }
             } catch (e: Exception) {
