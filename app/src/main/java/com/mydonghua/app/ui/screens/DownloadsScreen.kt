@@ -45,18 +45,23 @@ import com.mydonghua.app.ui.theme.JustSansFamily
 import com.mydonghua.app.ui.theme.Spacing
 import com.mydonghua.app.ui.theme.colorOSPressBounce
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DownloadsScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val tasks by DownloadEngine.tasksState.collectAsState()
 
     var offlineFiles by remember { mutableStateOf<List<File>>(emptyList()) }
+    var storageSpace by remember { mutableStateOf(Pair(0L, 0L)) }
     var fileToDelete by remember { mutableStateOf<File?>(null) }
 
-    fun refreshOfflineFiles() {
+    suspend fun refreshOfflineFiles() = withContext(Dispatchers.IO) {
         val dirs = DownloadEngine.getAllStorageDirs(context)
         val files = mutableListOf<File>()
         for (dir in dirs) {
@@ -66,14 +71,36 @@ fun DownloadsScreen(
                     name.endsWith(".mkv", ignoreCase = true) ||
                     name.endsWith(".ts", ignoreCase = true) ||
                     name.endsWith(".mp3", ignoreCase = true) ||
-                    name.endsWith(".m4a", ignoreCase = true)
+                    name.endsWith(".m4a", ignoreCase = true) ||
+                    name.endsWith(".webm", ignoreCase = true) ||
+                    name.endsWith(".flv", ignoreCase = true)
                 }
                 if (list != null) {
                     files.addAll(list)
                 }
             }
         }
-        offlineFiles = files.distinctBy { it.name }.sortedByDescending { it.lastModified() }
+        val sortedFiles = files.distinctBy { it.name }.sortedByDescending { it.lastModified() }
+        val storage = try {
+            val primaryDir = DownloadEngine.getPrimaryStorageDir(context)
+            val stat = StatFs(primaryDir.path)
+            val free = stat.availableBlocksLong * stat.blockSizeLong
+            val total = stat.blockCountLong * stat.blockSizeLong
+            Pair(free, total)
+        } catch (e: Exception) {
+            try {
+                val stat = StatFs(Environment.getExternalStorageDirectory().path)
+                val free = stat.availableBlocksLong * stat.blockSizeLong
+                val total = stat.blockCountLong * stat.blockSizeLong
+                Pair(free, total)
+            } catch (ex: Exception) {
+                Pair(0L, 0L)
+            }
+        }
+        withContext(Dispatchers.Main) {
+            offlineFiles = sortedFiles
+            storageSpace = storage
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -98,24 +125,7 @@ fun DownloadsScreen(
         offlineFiles.sumOf { it.length() }
     }
 
-    val (freeBytes, totalDeviceBytes) = remember {
-        try {
-            val primaryDir = DownloadEngine.getPrimaryStorageDir(context)
-            val stat = StatFs(primaryDir.path)
-            val free = stat.availableBlocksLong * stat.blockSizeLong
-            val total = stat.blockCountLong * stat.blockSizeLong
-            Pair(free, total)
-        } catch (e: Exception) {
-            try {
-                val stat = StatFs(Environment.getExternalStorageDirectory().path)
-                val free = stat.availableBlocksLong * stat.blockSizeLong
-                val total = stat.blockCountLong * stat.blockSizeLong
-                Pair(free, total)
-            } catch (ex: Exception) {
-                Pair(0L, 0L)
-            }
-        }
-    }
+    val (freeBytes, totalDeviceBytes) = storageSpace
 
     // Delete Confirmation Dialog (ColorOS 17 Dialog)
     fileToDelete?.let { file ->
@@ -127,14 +137,17 @@ fun DownloadsScreen(
             dismissText = "Cancel",
             confirmButtonColor = MaterialTheme.colorScheme.error,
             onConfirm = {
-                val tmp = File(file.parentFile, "${file.name}.tmp")
-                if (tmp.exists()) tmp.delete()
-                file.delete()
-                try {
-                    android.media.MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null, null)
-                } catch (ignored: Exception) {}
+                val targetFile = file
                 fileToDelete = null
-                refreshOfflineFiles()
+                coroutineScope.launch(Dispatchers.IO) {
+                    val tmp = File(targetFile.parentFile, "${targetFile.name}.tmp")
+                    if (tmp.exists()) tmp.delete()
+                    targetFile.delete()
+                    try {
+                        android.media.MediaScannerConnection.scanFile(context, arrayOf(targetFile.absolutePath), null, null)
+                    } catch (ignored: Exception) {}
+                    refreshOfflineFiles()
+                }
             },
             onDismiss = { fileToDelete = null }
         )
@@ -337,7 +350,7 @@ fun DownloadsScreen(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.1f))
-                        .clickable { refreshOfflineFiles() },
+                        .clickable { coroutineScope.launch { refreshOfflineFiles() } },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
