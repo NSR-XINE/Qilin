@@ -178,4 +178,25 @@ class DownloaderTest {
         assertEquals("https://other.com/ext.ts", HlsPlaylistParser.resolveUrl(base, "https://other.com/ext.ts"))
         assertEquals("http://other.com/ext.ts", HlsPlaylistParser.resolveUrl(base, "http://other.com/ext.ts"))
     }
+
+    @Test
+    fun testHttpHeaderSanitizer() {
+        val dirtyHeaders = mapOf(
+            "User-Agent" to "Mozilla/5.0 (Linux; Android 14)\r\n",
+            "Cookie" to "cf_clearance=abc123\n; session=xyz\r",
+            "Referer" to "https://example.com/watch?id=123",
+            "Invalid\nKey" to "some_value",
+            "" to "empty_key"
+        )
+
+        val reqBuilder = okhttp3.Request.Builder().url("https://example.com")
+        reqBuilder.applySafeHeaders(dirtyHeaders)
+        val request = reqBuilder.build()
+
+        assertEquals("Mozilla/5.0 (Linux; Android 14)", request.header("User-Agent"))
+        assertEquals("cf_clearance=abc123; session=xyz", request.header("Cookie"))
+        assertEquals("https://example.com/watch?id=123", request.header("Referer"))
+        assertFalse(request.headers.names().contains("Invalid\nKey"))
+        assertFalse(request.headers.names().contains(""))
+    }
 }

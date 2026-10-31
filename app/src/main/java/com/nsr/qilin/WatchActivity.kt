@@ -49,6 +49,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import com.nsr.qilin.data.service.detector.CookieUtils
+import com.nsr.qilin.data.service.detector.ServiceWorkerDetectorClient
+import com.nsr.qilin.data.service.detector.WebMediaDetectionBridge
+import com.nsr.qilin.data.service.detector.WebsiteVideoDetector
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URI
@@ -293,6 +297,12 @@ class WatchActivity : ComponentActivity() {
                     },
                     onPlaybackHeightDetected = { height ->
                         currentPlaybackHeight = height
+                    },
+                    onQualitiesDetected = { qualities ->
+                        if (qualities.isNotEmpty()) {
+                            websiteSyncedQualities = qualities
+                            isSyncingWebsite = false
+                        }
                     },
                     onBack = { finish() },
                     onDownload = { streamUrl, referer ->
@@ -1413,7 +1423,8 @@ class WatchActivity : ComponentActivity() {
         onPlaybackHeightDetected: (Int) -> Unit,
         onBack: () -> Unit,
         onDownload: (String?, String?) -> Unit,
-        onOpenExternal: () -> Unit
+        onOpenExternal: () -> Unit,
+        onQualitiesDetected: ((List<DownloadQualityOption>) -> Unit)? = null
     ) {
         val context = LocalContext.current
         var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -1423,6 +1434,23 @@ class WatchActivity : ComponentActivity() {
         var isScanningStream by remember { mutableStateOf(false) }
         val isAdBlockerActive by AdBlocker.enabledFlow(context).collectAsState(initial = AdBlocker.isEnabled(context))
         val hasStream = !detectedVideoUrl.isNullOrBlank()
+
+        val videoDetector = remember {
+            WebsiteVideoDetector().apply {
+                setOnVideoDetectedListener { detected ->
+                    val ref = detected.headers["Referer"] ?: detectedReferer ?: watchUrl
+                    val options = toQualityOptions(detected, activePlaybackHeight)
+                    if (options.isNotEmpty()) {
+                        onQualitiesDetected?.invoke(options)
+                    }
+                    if (detectedVideoUrl == null || detected.contentType == com.nsr.qilin.data.service.detector.ContentType.M3U8) {
+                        detectedVideoUrl = detected.url
+                        detectedReferer = ref
+                        onStreamCaptured(detected.url, ref)
+                    }
+                }
+            }
+        }
 
         LaunchedEffect(detectedVideoUrl) {
             if (!detectedVideoUrl.isNullOrBlank()) {
@@ -1501,6 +1529,7 @@ class WatchActivity : ComponentActivity() {
 
         DisposableEffect(Unit) {
             onDispose {
+                videoDetector.reset()
                 webViewRef?.destroy()
                 if (activeWebView == webViewRef) {
                     activeWebView = null
@@ -1781,6 +1810,25 @@ class WatchActivity : ComponentActivity() {
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
 
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            try {
+                                ServiceWorkerController.getInstance().setServiceWorkerClient(
+                                    ServiceWorkerDetectorClient(videoDetector)
+                                )
+                            } catch (ignored: Exception) {}
+                        }
+
+                        addJavascriptInterface(
+                            WebMediaDetectionBridge { mediaUrl, mimeType, title ->
+                                videoDetector.inspectUrlAsync(
+                                    url = mediaUrl,
+                                    pageUrl = watchUrl,
+                                    pageTitle = title
+                                )
+                            },
+                            WebMediaDetectionBridge.BRIDGE_NAME
+                        )
+
                         addJavascriptInterface(WebStreamBridge(
                             onStreamFound = { src, ref ->
                                 handleStreamFound(src, ref)
@@ -1807,6 +1855,8 @@ class WatchActivity : ComponentActivity() {
                         webViewClient = object : WebViewClient() {
                             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                 super.onPageStarted(view, url, favicon)
+                                videoDetector.reset()
+                                view?.evaluateJavascript(WebMediaDetectionBridge.INJECT_JS, null)
                                 val defuseScript = """
                                     (function() {
                                         try {
@@ -1855,6 +1905,7 @@ class WatchActivity : ComponentActivity() {
 
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 super.onPageFinished(view, url)
+                                view?.evaluateJavascript(WebMediaDetectionBridge.INJECT_JS, null)
                                 val cleanupScript = """
                                     (function() {
                                         try {
@@ -1974,6 +2025,14 @@ class WatchActivity : ComponentActivity() {
                                             return AdBlocker.createEmptyResponse()
                                         }
                                     }
+
+                                    val headers = CookieUtils.extractHeadersFromRequest(request, view?.url ?: watchUrl)
+                                    videoDetector.inspectUrlAsync(
+                                        url = url,
+                                        requestHeaders = headers,
+                                        pageUrl = view?.url ?: watchUrl,
+                                        pageTitle = view?.title
+                                    )
                                     val accept = request.requestHeaders?.get("Accept")
                                         ?: request.requestHeaders?.get("accept")
                                         ?: ""

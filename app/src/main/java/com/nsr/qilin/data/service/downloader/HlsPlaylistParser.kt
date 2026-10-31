@@ -1,5 +1,6 @@
 package com.nsr.qilin.data.service.downloader
 
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
 
 /**
@@ -217,7 +218,8 @@ object HlsPlaylistParser {
             return cleanRel
         }
         return try {
-            URI(baseUri).resolve(cleanRel).toString()
+            baseUri.toHttpUrlOrNull()?.resolve(cleanRel)?.toString()
+                ?: URI(baseUri).resolve(cleanRel).toString()
         } catch (e: Exception) {
             val baseWithoutQuery = baseUri.substringBefore('?')
             val parent = baseWithoutQuery.substringBeforeLast('/', "")

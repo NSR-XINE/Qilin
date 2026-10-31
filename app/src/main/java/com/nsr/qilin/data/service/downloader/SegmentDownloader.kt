@@ -3,7 +3,6 @@ package com.nsr.qilin.data.service.downloader
 import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -13,8 +12,8 @@ import java.io.IOException
  * Coroutine-based segment downloader for streaming media segments (HLS/DASH).
  * Ported from super-video-downloader.
  *
- * Automatically checks for pause/cancel flags, handles network retries with backoff,
- * and skips already completed segments for instant resuming.
+ * Automatically checks for pause/cancel flags, handles network retries with exponential backoff,
+ * tolerates missing 404 ad segments without breaking the stream, and skips already completed segments.
  */
 class SegmentDownloader(
     private val client: OkHttpClient,
@@ -24,7 +23,7 @@ class SegmentDownloader(
 ) {
     companion object {
         private const val TAG = "SegmentDownloader"
-        private const val RETRY_COUNT = 3
+        private const val RETRY_COUNT = 5
         private const val BUFFER_SIZE = 64 * 1024
     }
 
@@ -45,17 +44,19 @@ class SegmentDownloader(
             }
 
             try {
-                val requestBuilder = Request.Builder().url(segmentUrl)
-                if (headers.isNotEmpty()) {
-                    requestBuilder.headers(headers.toHeaders())
-                }
+                val requestBuilder = Request.Builder().url(segmentUrl).applySafeHeaders(headers)
 
                 client.newCall(requestBuilder.build()).execute().use { response ->
+                    if (response.code == 404 || response.code == 410) {
+                        Log.w(TAG, "$logPrefix: Segment $segmentIdentifier returned HTTP ${response.code} (skipping missing or expired segment)")
+                        return 0L
+                    }
+
                     if (!response.isSuccessful) {
                         throw IOException("HTTP ${response.code} downloading segment $segmentIdentifier")
                     }
 
-                    val body = response.body ?: throw IOException("Empty body for segment $segmentIdentifier")
+                    val body = response.body
                     var bytesCopied = 0L
 
                     body.byteStream().use { input ->

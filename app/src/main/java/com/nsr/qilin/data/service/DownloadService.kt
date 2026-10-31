@@ -269,20 +269,8 @@ class DownloadService : Service() {
                 logDebug("START_DOWNLOAD: id=$id, url=$url, formatId=$formatId, isAudioOnly=$isAudioOnly, isHls=$isHls, resume=$isResume, referer=$referer")
                 ensureInitialized(this@DownloadService)
 
-                if (url.isBlank()) {
-                    throw Exception("No stream URL found. Please play the video on the website first so the stream can be captured.")
-                }
-                val cleanUrlStr = url.lowercase()
-                val isDirectStream = cleanUrlStr.contains(".m3u8") || cleanUrlStr.contains(".mp4") || cleanUrlStr.contains(".mkv") ||
-                        cleanUrlStr.contains(".webm") || cleanUrlStr.contains(".mpd") || cleanUrlStr.contains("/hls/") || cleanUrlStr.contains("/hls-")
-                val isKnownHost = cleanUrlStr.contains("youtube.com") || cleanUrlStr.contains("youtu.be") ||
-                        cleanUrlStr.contains("bilibili") || cleanUrlStr.contains("dood") ||
-                        cleanUrlStr.contains("streamtape") || cleanUrlStr.contains("swish") ||
-                        cleanUrlStr.contains("mixdrop") || cleanUrlStr.contains("mp4upload") ||
-                        cleanUrlStr.contains("vidhide")
-
-                if (!isDirectStream && !isKnownHost) {
-                    throw Exception("Cannot download directly from website webpage URL. Please start video playback in the app to capture the video stream.")
+                if (url.isBlank() || (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true))) {
+                    throw Exception("Invalid video URL. Please ensure a valid streaming link is captured.")
                 }
 
                 if (!destDir.exists()) destDir.mkdirs()
@@ -291,7 +279,13 @@ class DownloadService : Service() {
                 }
 
                 val sanitizedTitle = title.replace(Regex("[^a-zA-Z0-9._-]"), "_")
-                val hls = isHls || url.contains(".m3u8", ignoreCase = true) || url.contains("/hls/", ignoreCase = true)
+                val cleanUrlStr = url.lowercase()
+                val hls = isHls || cleanUrlStr.contains(".m3u8") || cleanUrlStr.contains("/hls/") || cleanUrlStr.contains("/hls-")
+                val isExtractorSite = cleanUrlStr.contains("youtube.com") || cleanUrlStr.contains("youtu.be") ||
+                        cleanUrlStr.contains("bilibili") || cleanUrlStr.contains("dood") ||
+                        cleanUrlStr.contains("streamtape") || cleanUrlStr.contains("swish") ||
+                        cleanUrlStr.contains("mixdrop") || cleanUrlStr.contains("mp4upload") ||
+                        cleanUrlStr.contains("vidhide")
 
                 val finalReferer = if (!referer.isNullOrEmpty()) {
                     referer
@@ -445,85 +439,145 @@ class DownloadService : Service() {
                     }
                 }
 
-                var responseExitCode = -1
-                var directCompleted = false
+                var downloadedFile: File? = null
+                var downloadSuccess = false
 
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        try {
-                            YoutubeDL.getInstance().execute(request, id, progressCallback)
-                        } catch (e: YoutubeDL.CanceledException) {
+                if (isExtractorSite) {
+                    Log.i(TAG, "Extractor site detected ($url). Executing YoutubeDL first...")
+                    var exitCode = -1
+                    try {
+                        exitCode = executeYoutubeDL(
+                            request = request,
+                            id = id,
+                            progressCallback = progressCallback,
+                            url = url,
+                            outputTemplate = outputTemplate,
+                            finalReferer = finalReferer,
+                            isAudioOnly = isAudioOnly,
+                            targetAudioExt = targetAudioExt,
+                            hls = hls,
+                            controller = controller
+                        )
+                    } catch (e: YoutubeDL.CanceledException) {
+                        throw e
+                    } catch (e: Exception) {
+                        if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) {
                             throw e
-                        } catch (primaryEx: Exception) {
-                            if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) {
-                                throw primaryEx
+                        }
+                        Log.w(TAG, "YoutubeDL engine execution failed: ${e.message}")
+                        exitCode = -1
+                    }
+
+                    if (exitCode == 0) {
+                        downloadSuccess = true
+                    } else if (!cancelledIds.contains(id) && !pausedIds.contains(id) && !controller.isInterrupted()) {
+                        Log.i(TAG, "YoutubeDL failed, attempting native downloader fallback...")
+                        try {
+                            if (hls) {
+                                downloadedFile = withContext(Dispatchers.IO) {
+                                    downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, controller) { percent, speed, down, total, eta ->
+                                        publishProgressExplicit(percent, speed, down, total, eta)
+                                    }
+                                }
+                            } else {
+                                downloadedFile = withContext(Dispatchers.IO) {
+                                    downloadDirectHttp(url, tempDir, sanitizedTitle, finalReferer, expectedSize, id, controller, isAudioOnly, targetAudioExt) { percent, speed, down, total, eta ->
+                                        publishProgressExplicit(percent, speed, down, total, eta)
+                                    }
+                                }
                             }
-                            Log.w(TAG, "Primary download attempt failed (${primaryEx.message}). Trying safe fallback...", primaryEx)
-                            val fallbackRequest = buildRequest(
+                            downloadSuccess = downloadedFile != null && downloadedFile.exists() && downloadedFile.length() > 0
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Native downloader fallback also failed: ${e.message}")
+                        }
+                    }
+                } else if (hls) {
+                    Log.i(TAG, "Engaging HlsDownloader native parallel engine for $id")
+                    try {
+                        downloadedFile = withContext(Dispatchers.IO) {
+                            downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, controller) { percent, speed, down, total, eta ->
+                                publishProgressExplicit(percent, speed, down, total, eta)
+                            }
+                        }
+                        downloadSuccess = downloadedFile != null && downloadedFile.exists() && downloadedFile.length() > 0
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) {
+                            throw e
+                        }
+                        Log.w(TAG, "Native HlsDownloader failed: ${e.message}. Falling back to YoutubeDL engine...")
+                    }
+
+                    if (!downloadSuccess && !cancelledIds.contains(id) && !pausedIds.contains(id) && !controller.isInterrupted()) {
+                        try {
+                            val exitCode = executeYoutubeDL(
+                                request = request,
+                                id = id,
+                                progressCallback = progressCallback,
                                 url = url,
-                                formatId = null,
                                 outputTemplate = outputTemplate,
-                                referer = finalReferer,
+                                finalReferer = finalReferer,
                                 isAudioOnly = isAudioOnly,
                                 targetAudioExt = targetAudioExt,
-                                isHls = hls,
-                                isResume = true,
-                                includeFormatSelector = false
+                                hls = hls,
+                                controller = controller
                             )
-                            YoutubeDL.getInstance().execute(fallbackRequest, id, progressCallback)
+                            downloadSuccess = (exitCode == 0)
+                        } catch (e: YoutubeDL.CanceledException) {
+                            throw e
+                        } catch (e: Exception) {
+                            if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) throw e
+                            Log.e(TAG, "YoutubeDL fallback also failed: ${e.message}")
                         }
                     }
-                    responseExitCode = response.exitCode
-                } catch (e: YoutubeDL.CanceledException) {
-                    throw e
-                } catch (e: Exception) {
-                    if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) {
+                } else {
+                    Log.i(TAG, "Engaging CustomFileDownloader native chunked engine for $id")
+                    try {
+                        downloadedFile = withContext(Dispatchers.IO) {
+                            downloadDirectHttp(url, tempDir, sanitizedTitle, finalReferer, expectedSize, id, controller, isAudioOnly, targetAudioExt) { percent, speed, down, total, eta ->
+                                publishProgressExplicit(percent, speed, down, total, eta)
+                            }
+                        }
+                        downloadSuccess = downloadedFile != null && downloadedFile.exists() && downloadedFile.length() > 0
+                    } catch (e: CancellationException) {
                         throw e
-                    }
-                    Log.w(TAG, "YoutubeDL engine execution failed (${e.message}). Falling back to super-video-downloader engine...", e)
-                    responseExitCode = -1
-                }
-
-                // If YoutubeDL failed or exited with an error, engage super-video-downloader engine:
-                // HlsDownloader for HLS streams, CustomFileDownloader with 16 connections for progressive media streams.
-                if (responseExitCode != 0) {
-                    if (hls) {
-                        Log.i(TAG, "Engaging HlsDownloader parallel segment engine for $id")
-                        val hlsFile = withContext(Dispatchers.IO) {
-                            downloadNativeHls(
-                                url = url,
-                                tempDir = tempDir,
-                                fileName = sanitizedTitle,
-                                referer = finalReferer,
-                                controller = controller,
-                                onProgress = { percent, speedBps, downloadedBytes, totalBytes, etaSec ->
-                                    publishProgressExplicit(percent, speedBps, downloadedBytes, totalBytes, etaSec)
-                                }
-                            )
+                    } catch (e: Exception) {
+                        if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) {
+                            throw e
                         }
-                        directCompleted = hlsFile != null && hlsFile.exists() && hlsFile.length() > 0
-                    } else if (isDirectStream || url.startsWith("http://") || url.startsWith("https://")) {
-                        Log.i(TAG, "Engaging 16-thread CustomFileDownloader chunked engine for $id")
-                        val directFile = withContext(Dispatchers.IO) {
-                            downloadDirectHttp(
-                                url = url,
-                                tempDir = tempDir,
-                                fileName = sanitizedTitle,
-                                referer = finalReferer,
-                                expectedSize = expectedSize,
+                        Log.w(TAG, "Native CustomFileDownloader failed: ${e.message}. Falling back to YoutubeDL engine...")
+                    }
+
+                    if (!downloadSuccess && !cancelledIds.contains(id) && !pausedIds.contains(id) && !controller.isInterrupted()) {
+                        try {
+                            val exitCode = executeYoutubeDL(
+                                request = request,
                                 id = id,
-                                controller = controller,
-                                onProgress = { percent, speedBps, downloadedBytes, totalBytes, etaSec ->
-                                    publishProgressExplicit(percent, speedBps, downloadedBytes, totalBytes, etaSec)
-                                }
+                                progressCallback = progressCallback,
+                                url = url,
+                                outputTemplate = outputTemplate,
+                                finalReferer = finalReferer,
+                                isAudioOnly = isAudioOnly,
+                                targetAudioExt = targetAudioExt,
+                                hls = hls,
+                                controller = controller
                             )
+                            downloadSuccess = (exitCode == 0)
+                        } catch (e: YoutubeDL.CanceledException) {
+                            throw e
+                        } catch (e: Exception) {
+                            if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) throw e
+                            Log.e(TAG, "YoutubeDL fallback also failed: ${e.message}")
                         }
-                        directCompleted = directFile != null && directFile.exists() && directFile.length() > 0
                     }
                 }
 
-                if (responseExitCode == 0 || directCompleted) {
-                    val produced = findProducedFile(tempDir, sanitizedTitle, destDir)
+                if (downloadSuccess) {
+                    val produced = downloadedFile?.takeIf { it.exists() && it.length() > 0 }
+                        ?: findProducedFile(tempDir, sanitizedTitle, destDir)
                     if (produced == null) {
                         throw Exception("Download finished but no video file was produced")
                     }
@@ -553,10 +607,10 @@ class DownloadService : Service() {
                     }
                     sendBroadcast(successIntent)
                 } else {
-                    logDebug("DOWNLOAD_FAILED_EXIT_CODE: id=$id, code=$responseExitCode, lastLine=$lastLogLine")
-                    Log.e(TAG, "YoutubeDL exit code: $responseExitCode, last line: $lastLogLine")
+                    logDebug("DOWNLOAD_FAILED: id=$id, lastLine=$lastLogLine")
+                    Log.e(TAG, "Download failed for id: $id, last line: $lastLogLine")
                     updatePrefs(id, "Failed", "")
-                    builder.setContentText("Download failed (code $responseExitCode)")
+                    builder.setContentText("Download failed")
                         .setProgress(0, 0, false)
                         .setOngoing(false)
                     try {
@@ -565,7 +619,7 @@ class DownloadService : Service() {
 
                     val failedIntent = Intent("DOWNLOAD_FAILED").apply {
                         putExtra("id", id)
-                        putExtra("error", "Exit code $responseExitCode: $lastLogLine")
+                        putExtra("error", if (lastLogLine.isNotBlank()) lastLogLine else "Download could not be completed")
                         setPackage(packageName)
                     }
                     sendBroadcast(failedIntent)
@@ -735,6 +789,44 @@ class DownloadService : Service() {
         return target
     }
 
+    private suspend fun executeYoutubeDL(
+        request: YoutubeDLRequest,
+        id: String,
+        progressCallback: (Float, Long, String) -> Unit,
+        url: String,
+        outputTemplate: String,
+        finalReferer: String?,
+        isAudioOnly: Boolean,
+        targetAudioExt: String?,
+        hls: Boolean,
+        controller: FileBasedDownloadController
+    ): Int = withContext(Dispatchers.IO) {
+        try {
+            val response = YoutubeDL.getInstance().execute(request, id, progressCallback)
+            response.exitCode
+        } catch (e: YoutubeDL.CanceledException) {
+            throw e
+        } catch (primaryEx: Exception) {
+            if (cancelledIds.contains(id) || pausedIds.contains(id) || controller.isInterrupted()) {
+                throw primaryEx
+            }
+            Log.w(TAG, "Primary YoutubeDL attempt failed (${primaryEx.message}). Trying safe fallback...", primaryEx)
+            val fallbackRequest = buildRequest(
+                url = url,
+                formatId = null,
+                outputTemplate = outputTemplate,
+                referer = finalReferer,
+                isAudioOnly = isAudioOnly,
+                targetAudioExt = targetAudioExt,
+                isHls = hls,
+                isResume = true,
+                includeFormatSelector = false
+            )
+            val response = YoutubeDL.getInstance().execute(fallbackRequest, id, progressCallback)
+            response.exitCode
+        }
+    }
+
     private fun downloadDirectHttp(
         url: String,
         tempDir: File,
@@ -743,14 +835,20 @@ class DownloadService : Service() {
         expectedSize: String,
         id: String,
         controller: FileBasedDownloadController,
+        isAudioOnly: Boolean = false,
+        targetAudioExt: String? = null,
         onProgress: (Float, Long, Long, Long, Long) -> Unit
     ): File? {
-        val extension = try {
-            val path = android.net.Uri.parse(url).lastPathSegment.orEmpty()
-            val ext = path.substringAfterLast('.', "").lowercase()
-            if (ext in setOf("mp4", "mkv", "webm", "flv", "m4a", "mp3", "aac", "ts")) ext else "mp4"
-        } catch (ignored: Exception) {
-            "mp4"
+        val extension = if (isAudioOnly) {
+            targetAudioExt ?: "m4a"
+        } else {
+            try {
+                val path = android.net.Uri.parse(url).lastPathSegment.orEmpty()
+                val ext = path.substringAfterLast('.', "").lowercase()
+                if (ext in setOf("mp4", "mkv", "webm", "flv", "m4a", "mp3", "aac", "ts")) ext else "mp4"
+            } catch (ignored: Exception) {
+                "mp4"
+            }
         }
 
         if (!tempDir.exists()) tempDir.mkdirs()
@@ -765,17 +863,18 @@ class DownloadService : Service() {
             if (!cookie.isNullOrEmpty()) headersMap["Cookie"] = cookie
         } catch (ignored: Exception) {}
 
+        var caughtFailure: Throwable? = null
         val customDownloader = CustomFileDownloader(
             url = java.net.URL(url),
             file = targetFile,
-            threadCount = 16,
+            threadCount = 6,
             headers = headersMap,
             client = httpClient,
             controller = controller,
             listener = object : DownloadListener {
                 override fun onSuccess() {}
                 override fun onFailure(e: Throwable) {
-                    throw e
+                    caughtFailure = e
                 }
                 override fun onProgressUpdate(downloadedBytes: Long, totalBytes: Long, speedBps: Long) {
                     val percent = if (totalBytes > 0) (downloadedBytes * 100f / totalBytes) else 0f
@@ -786,6 +885,18 @@ class DownloadService : Service() {
         )
 
         customDownloader.download()
+        val failure = caughtFailure
+        if (failure != null) {
+            if (controller.isInterrupted() || failure.message in setOf(
+                    CustomFileDownloader.PAUSE_ACTION,
+                    CustomFileDownloader.CANCELED_ACTION,
+                    CustomFileDownloader.STOPPED_AND_SAVE_ACTION
+                )
+            ) {
+                throw CancellationException(failure.message)
+            }
+            throw if (failure is Exception) failure else RuntimeException(failure)
+        }
         return if (targetFile.exists() && targetFile.length() > 0) targetFile else null
     }
 
@@ -809,7 +920,7 @@ class DownloadService : Service() {
         val hlsDownloader = HlsDownloader(
             httpClient = httpClient,
             headers = headersMap,
-            threadCount = 16,
+            threadCount = 6,
             controller = controller,
             onProgress = { percent, speedBps, downloadedBytes, totalBytes, etaSec ->
                 onProgress(percent, speedBps, downloadedBytes, totalBytes, etaSec)

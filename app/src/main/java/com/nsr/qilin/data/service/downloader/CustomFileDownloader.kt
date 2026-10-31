@@ -3,7 +3,6 @@ package com.nsr.qilin.data.service.downloader
 import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -28,12 +27,12 @@ import kotlin.coroutines.resumeWithException
  * Divides large files into parallel byte ranges using HTTP 'Range: bytes=start-end' requests
  * and writes directly into pre-allocated positions via NIO FileChannel.
  * Supports resume via per-chunk byte tracking files and falls back cleanly to single-connection
- * streaming when Range requests are not supported by the upstream server.
+ * streaming when Range requests are not supported or fail on the upstream server.
  */
 class CustomFileDownloader(
     private val url: URL,
     private val file: File,
-    private val threadCount: Int = 16,
+    private val threadCount: Int = 6,
     private val headers: Map<String, String> = emptyMap(),
     private val client: OkHttpClient,
     private val controller: FileBasedDownloadController? = null,
@@ -52,7 +51,7 @@ class CustomFileDownloader(
         suspend fun downloadSuspend(
             url: String,
             file: File,
-            threadCount: Int = 16,
+            threadCount: Int = 6,
             headers: Map<String, String> = emptyMap(),
             client: OkHttpClient,
             controller: FileBasedDownloadController? = null,
@@ -94,7 +93,7 @@ class CustomFileDownloader(
         }
     }
 
-    private val effectiveThreads = threadCount.coerceIn(1, 32)
+    private val effectiveThreads = threadCount.coerceIn(1, 8)
     private val executorService: ExecutorService = Executors.newFixedThreadPool(effectiveThreads)
     private val isPaused = AtomicBoolean(false)
     private val isSaved = AtomicBoolean(false)
@@ -118,6 +117,11 @@ class CustomFileDownloader(
             return sum
         }
 
+    data class ProbeResult(
+        val contentLength: Long,
+        val isRangeSupported: Boolean
+    )
+
     fun download() {
         val parentDir = file.parentFile ?: File(".")
         if (!parentDir.exists()) parentDir.mkdirs()
@@ -127,39 +131,36 @@ class CustomFileDownloader(
             return
         }
 
-        val contentSize = try {
-            getContentLength()
-        } catch (e: Throwable) {
-            this.onFailure(e)
-            return
-        }
+        controller?.start()
 
-        val randomAccessFile = try {
-            RandomAccessFile(file, "rw")
-        } catch (e: Throwable) {
-            this.onFailure(e)
-            return
-        }
-        val fileChannel = randomAccessFile.channel
+        val probe = probeStream()
+        val contentSize = probe.contentLength
+        val isRangeSupported = probe.isRangeSupported
 
         totalBytesAll.set(contentSize)
 
-        controller?.start()
-
-        val isRangeSupported = isUrlSupportingBytesRangeHeader()
+        // Preallocate file size on disk if known to prevent fragmentation and lock contention
+        if (contentSize > 0) {
+            try {
+                RandomAccessFile(file, "rw").use { raf ->
+                    raf.setLength(contentSize)
+                }
+            } catch (e: Throwable) {
+                Log.w(TAG, "Unable to preallocate file size: ${e.message}")
+            }
+        }
 
         if (!isRangeSupported || (effectiveThreads == 1 && isForceStreamDownloadMode) || contentSize <= 0L) {
             Log.d(TAG, "Range header not supported or single-thread mode, falling back to streaming download.")
             val result = executorService.submit {
-                downloadRegularStream(fileChannel)
+                RandomAccessFile(file, "rw").use { raf ->
+                    downloadRegularStream(raf.channel)
+                }
             }
             try {
                 result.get()
             } catch (e: Throwable) {
-                this.onFailure(e)
-            } finally {
-                try { fileChannel.close() } catch (ignored: Exception) {}
-                try { randomAccessFile.close() } catch (ignored: Exception) {}
+                this.onFailure(e.cause ?: e)
             }
             return
         }
@@ -176,7 +177,7 @@ class CustomFileDownloader(
 
         ranges.forEachIndexed { index, range ->
             chunkFutureMap[index] = executorService.submit {
-                downloadChunkWithRetries(range, fileChannel, index * chunkSize, index)
+                downloadChunkWithRetries(range, index * chunkSize, index)
             }
         }
 
@@ -188,14 +189,12 @@ class CustomFileDownloader(
                 future.get()
             } catch (e: Throwable) {
                 allPartsSucceeded = false
-                failureCause = e.cause ?: e
-                Log.w(TAG, "Chunk $index failed: ${failureCause?.message}")
-                listener?.onChunkFailure(failureCause!!, index)
+                val cause = e.cause ?: e
+                failureCause = cause
+                Log.w(TAG, "Chunk $index failed: ${cause.message}")
+                listener?.onChunkFailure(cause, index)
             }
         }
-
-        try { fileChannel.close() } catch (ignored: Exception) {}
-        try { randomAccessFile.close() } catch (ignored: Exception) {}
 
         val isPausedLocal = isPaused.get() || controller?.isPauseRequested() == true
         val isCanceledLocal = isCanceled.get() || controller?.isCancelRequested() == true
@@ -219,8 +218,17 @@ class CustomFileDownloader(
                 this.onFailure(Exception(CANCELED_ACTION))
             }
             else -> {
-                Log.e(TAG, "Download incomplete or failed", failureCause)
-                this.onFailure(failureCause ?: Exception("Chunked download incomplete"))
+                Log.w(TAG, "Parallel chunk download encountered an issue (${failureCause?.message}). Falling back to stream download...")
+                cleanChunkFiles()
+                try {
+                    RandomAccessFile(file, "rw").use { raf ->
+                        raf.setLength(0L)
+                        downloadRegularStream(raf.channel)
+                    }
+                } catch (fallbackEx: Throwable) {
+                    Log.e(TAG, "Stream fallback also failed", fallbackEx)
+                    this.onFailure(fallbackEx)
+                }
             }
         }
     }
@@ -244,12 +252,7 @@ class CustomFileDownloader(
             return
         }
 
-        val body = res.body ?: run {
-            res.close()
-            this.onFailure(IOException("Empty response body"))
-            return
-        }
-
+        val body = res.body
         val contentLength = body.contentLength()
         if (contentLength > 0L) {
             totalBytesAll.set(contentLength)
@@ -291,7 +294,6 @@ class CustomFileDownloader(
 
     private fun downloadChunkWithRetries(
         range: LongRange,
-        fileChannel: FileChannel,
         offset: Long,
         chunkIndex: Int
     ) {
@@ -301,7 +303,7 @@ class CustomFileDownloader(
                 return
             }
             try {
-                downloadChunk(range, fileChannel, offset, chunkIndex)
+                downloadChunk(range, offset, chunkIndex)
                 return
             } catch (e: Throwable) {
                 lastEx = e
@@ -319,7 +321,6 @@ class CustomFileDownloader(
 
     private fun downloadChunk(
         range: LongRange,
-        fileChannel: FileChannel,
         offset: Long,
         chunkIndex: Int
     ) {
@@ -351,33 +352,36 @@ class CustomFileDownloader(
                 throw IOException("HTTP ${res.code} while downloading chunk $chunkIndex")
             }
 
-            val body = res.body ?: throw IOException("Empty body for chunk $chunkIndex")
+            val body = res.body
             val inputStream = body.byteStream()
             val buffer = ByteArray(DOWNLOAD_BUFFER_SIZE)
 
             RandomAccessFile(chunkFile, "rw").use { raf ->
-                inputStream.use { stream ->
-                    while (!isSaved.get() && !isPaused.get() && !isCanceled.get() &&
-                        (controller?.isInterrupted() != true)
-                    ) {
-                        val bytesRead = stream.read(buffer)
-                        if (bytesRead < 0) break
-                        fileChannel.write(ByteBuffer.wrap(buffer, 0, bytesRead), offset + bytesCopied)
-                        bytesCopied += bytesRead
-                        raf.seek(0)
-                        raf.write("$bytesCopied".toByteArray())
-                        raf.setLength("$bytesCopied".toByteArray().size.toLong())
-                        this.onChunkProgressUpdate(bytesCopied, chunkTotalBytes, chunkIndex)
-                    }
+                RandomAccessFile(file, "rw").use { targetRaf ->
+                    val targetChannel = targetRaf.channel
+                    inputStream.use { stream ->
+                        while (!isSaved.get() && !isPaused.get() && !isCanceled.get() &&
+                            (controller?.isInterrupted() != true)
+                        ) {
+                            val bytesRead = stream.read(buffer)
+                            if (bytesRead < 0) break
+                            targetChannel.write(ByteBuffer.wrap(buffer, 0, bytesRead), offset + bytesCopied)
+                            bytesCopied += bytesRead
+                            raf.seek(0)
+                            raf.write("$bytesCopied".toByteArray())
+                            raf.setLength("$bytesCopied".toByteArray().size.toLong())
+                            this.onChunkProgressUpdate(bytesCopied, chunkTotalBytes, chunkIndex)
+                        }
 
-                    if (controller?.isPauseRequested() == true || isPaused.get()) {
-                        throw Exception(PAUSE_ACTION)
-                    }
-                    if (controller?.isStopAndSaveRequested() == true || isSaved.get()) {
-                        throw Exception(STOPPED_AND_SAVE_ACTION)
-                    }
-                    if (controller?.isCancelRequested() == true || isCanceled.get()) {
-                        throw Exception(CANCELED_ACTION)
+                        if (controller?.isPauseRequested() == true || isPaused.get()) {
+                            throw Exception(PAUSE_ACTION)
+                        }
+                        if (controller?.isStopAndSaveRequested() == true || isSaved.get()) {
+                            throw Exception(STOPPED_AND_SAVE_ACTION)
+                        }
+                        if (controller?.isCancelRequested() == true || isCanceled.get()) {
+                            throw Exception(CANCELED_ACTION)
+                        }
                     }
                 }
             }
@@ -442,41 +446,66 @@ class CustomFileDownloader(
         listener?.onChunkProgressUpdate(downloadedBytes, allBytes, chunkIndex)
     }
 
-    private fun isUrlSupportingBytesRangeHeader(): Boolean {
-        var res: Response? = null
-        return try {
-            val req = getOkRequestRange(0, 0)
-            res = client.newCall(req).execute()
-            res.code == 206
+    private fun probeStream(): ProbeResult {
+        var rangeResp: Response? = null
+        try {
+            val req = Request.Builder()
+                .url(url)
+                .applySafeHeaders(headers)
+                .header("Range", "bytes=0-0")
+                .build()
+            rangeResp = client.newCall(req).execute()
+            if (rangeResp.code == 206) {
+                val contentRange = rangeResp.header("Content-Range")
+                val totalLength = if (!contentRange.isNullOrEmpty()) {
+                    contentRange.substringAfterLast('/', "").trim().toLongOrNull() ?: -1L
+                } else -1L
+                return ProbeResult(contentLength = totalLength, isRangeSupported = true)
+            } else if (rangeResp.isSuccessful) {
+                val totalLength = rangeResp.header("Content-Length")?.toLongOrNull() ?: rangeResp.body.contentLength()
+                return ProbeResult(contentLength = totalLength, isRangeSupported = false)
+            }
         } catch (e: Throwable) {
-            false
+            Log.w(TAG, "Probe Range request failed: ${e.message}")
         } finally {
-            try { res?.close() } catch (ignored: Exception) {}
+            try { rangeResp?.close() } catch (ignored: Exception) {}
         }
+
+        var headResp: Response? = null
+        try {
+            val headReq = Request.Builder()
+                .url(url)
+                .head()
+                .applySafeHeaders(headers)
+                .build()
+            headResp = client.newCall(headReq).execute()
+            if (headResp.isSuccessful) {
+                val length = headResp.header("Content-Length")?.toLongOrNull() ?: -1L
+                val isRange = headResp.header("Accept-Ranges")?.contains("bytes", ignoreCase = true) == true
+                return ProbeResult(contentLength = length, isRangeSupported = isRange)
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Probe HEAD request failed: ${e.message}")
+        } finally {
+            try { headResp?.close() } catch (ignored: Exception) {}
+        }
+
+        return ProbeResult(contentLength = -1L, isRangeSupported = false)
     }
 
     private fun getOkRequest(): Request {
-        val builder = Request.Builder().url(url)
-        if (headers.isNotEmpty()) {
-            builder.headers(headers.toHeaders())
-        }
-        return builder.build()
+        return Request.Builder()
+            .url(url)
+            .applySafeHeaders(headers)
+            .build()
     }
 
     private fun getOkRequestRange(startByte: Long, endByte: Long?): Request {
         val rangeVal = if (endByte != null) "bytes=$startByte-$endByte" else "bytes=$startByte-"
-        val builder = Request.Builder().url(url)
-        if (headers.isNotEmpty()) {
-            builder.headers(headers.toHeaders())
-        }
-        builder.header("Range", rangeVal)
-        return builder.build()
-    }
-
-    private fun getContentLength(): Long {
-        val req = getOkRequest()
-        client.newCall(req).execute().use { res ->
-            return res.body?.contentLength() ?: -1L
-        }
+        return Request.Builder()
+            .url(url)
+            .applySafeHeaders(headers)
+            .header("Range", rangeVal)
+            .build()
     }
 }

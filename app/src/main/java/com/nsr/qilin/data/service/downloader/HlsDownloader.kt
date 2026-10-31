@@ -10,7 +10,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -29,13 +28,14 @@ import java.util.concurrent.atomic.AtomicLong
 class HlsDownloader(
     private val httpClient: OkHttpClient,
     private val headers: Map<String, String> = emptyMap(),
-    private val threadCount: Int = 16,
+    private val threadCount: Int = 6,
     private val controller: FileBasedDownloadController,
     private val onProgress: ((progress: Float, speedBps: Long, downloadedBytes: Long, totalBytes: Long, etaSeconds: Long) -> Unit)? = null
 ) {
     companion object {
         private const val TAG = "HlsDownloader"
         private const val PROGRESS_INTERVAL_MS = 500L
+        private const val MAX_PLAYLIST_REDIRECTIONS = 4
     }
 
     suspend fun download(
@@ -47,62 +47,65 @@ class HlsDownloader(
 
         controller.start()
 
-        // 1. Fetch playlist manifest
+        // 1. Fetch playlist manifest and resolve media playlist (handles nested masters)
         Log.d(TAG, "Fetching HLS manifest: $m3u8Url")
-        val manifestContent = fetchText(m3u8Url)
-        var parsed = HlsPlaylistParser.parse(manifestContent, m3u8Url)
+        var currentUrl = m3u8Url
+        var mediaPlaylist: HlsPlaylistParser.MediaPlaylist? = null
+        var iterations = 0
 
-        // If master playlist, select highest quality variant
-        val mediaPlaylist: HlsPlaylistParser.MediaPlaylist = when (parsed) {
-            is HlsPlaylistParser.ParsedHlsResult.Master -> {
-                val bestVariant = parsed.master.variants.firstOrNull()
-                    ?: throw IOException("No media variants found in master playlist")
-                Log.d(TAG, "Selected master variant bandwidth=${bestVariant.bandwidth}, res=${bestVariant.resolution}, url=${bestVariant.url}")
-                val variantContent = fetchText(bestVariant.url)
-                val subParsed = HlsPlaylistParser.parse(variantContent, bestVariant.url)
-                if (subParsed is HlsPlaylistParser.ParsedHlsResult.Media) {
-                    subParsed.media
-                } else {
-                    throw IOException("Variant playlist is not a media playlist: ${bestVariant.url}")
+        while (iterations < MAX_PLAYLIST_REDIRECTIONS) {
+            val manifestContent = fetchText(currentUrl)
+            val parsed = HlsPlaylistParser.parse(manifestContent, currentUrl)
+            when (parsed) {
+                is HlsPlaylistParser.ParsedHlsResult.Media -> {
+                    mediaPlaylist = parsed.media
+                    break
+                }
+                is HlsPlaylistParser.ParsedHlsResult.Master -> {
+                    val bestVariant = parsed.master.variants.firstOrNull()
+                        ?: throw IOException("No media variants found in master playlist: $currentUrl")
+                    Log.d(TAG, "Selected master variant bandwidth=${bestVariant.bandwidth}, res=${bestVariant.resolution}, url=${bestVariant.url}")
+                    currentUrl = bestVariant.url
+                    iterations++
                 }
             }
-            is HlsPlaylistParser.ParsedHlsResult.Media -> parsed.media
         }
 
-        val segments = mediaPlaylist.segments
+        val resolvedMediaPlaylist = mediaPlaylist
+            ?: throw IOException("Could not resolve media playlist from $m3u8Url after $iterations redirects")
+
+        val segments = resolvedMediaPlaylist.segments
         if (segments.isEmpty()) {
             throw IOException("No segments found in HLS playlist")
         }
 
-        val isFmp4 = mediaPlaylist.isFmp4
+        val isFmp4 = resolvedMediaPlaylist.isFmp4
         val segmentExt = if (isFmp4) "m4s" else "ts"
         val totalSegments = segments.size
-        Log.d(TAG, "HLS parsed successfully: totalSegments=$totalSegments, isFmp4=$isFmp4, duration=${mediaPlaylist.totalDuration}s")
+        Log.d(TAG, "HLS parsed successfully: totalSegments=$totalSegments, isFmp4=$isFmp4, duration=${resolvedMediaPlaylist.totalDuration}s")
 
         val segmentDownloader = SegmentDownloader(httpClient, headers, controller)
 
         // 2. Download fMP4 Initialization Segment if present
         var initFile: File? = null
-        if (isFmp4 && !mediaPlaylist.initSegmentUrl.isNullOrEmpty()) {
+        if (isFmp4 && !resolvedMediaPlaylist.initSegmentUrl.isNullOrEmpty()) {
             val init = downloadDir.resolve("init.mp4")
             if (!init.exists() || init.length() == 0L) {
-                Log.d(TAG, "Downloading fMP4 initialization segment: ${mediaPlaylist.initSegmentUrl}")
-                segmentDownloader.download(mediaPlaylist.initSegmentUrl, init, "HLS-Init", 0)
+                Log.d(TAG, "Downloading fMP4 initialization segment: ${resolvedMediaPlaylist.initSegmentUrl}")
+                segmentDownloader.download(resolvedMediaPlaylist.initSegmentUrl, init, "HLS-Init", 0)
             }
             initFile = init
         }
 
         // 3. Download AES-128 key if present
-        if (!mediaPlaylist.keyUrl.isNullOrEmpty()) {
+        if (!resolvedMediaPlaylist.keyUrl.isNullOrEmpty()) {
             val keyFile = downloadDir.resolve("encryption.key")
             if (!keyFile.exists() || keyFile.length() == 0L) {
-                Log.d(TAG, "Downloading HLS encryption key: ${mediaPlaylist.keyUrl}")
-                val req = Request.Builder().url(mediaPlaylist.keyUrl).apply {
-                    if (headers.isNotEmpty()) headers(headers.toHeaders())
-                }.build()
+                Log.d(TAG, "Downloading HLS encryption key: ${resolvedMediaPlaylist.keyUrl}")
+                val req = Request.Builder().url(resolvedMediaPlaylist.keyUrl).applySafeHeaders(headers).build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (!resp.isSuccessful) throw IOException("Failed to download HLS encryption key: HTTP ${resp.code}")
-                    val bytes = resp.body?.bytes() ?: throw IOException("Empty encryption key response")
+                    val bytes = resp.body.bytes()
                     keyFile.writeBytes(bytes)
                 }
             }
@@ -149,7 +152,6 @@ class HlsDownloader(
                         (completed.toFloat() / totalSegments.toFloat()) * 100f
                     } else 0f
 
-                    // Estimate total bytes from average segment size
                     val estimatedTotalBytes = if (completed > 0) {
                         (downloaded / completed) * totalSegments
                     } else 0L
@@ -173,7 +175,8 @@ class HlsDownloader(
         updateProgress(force = true)
 
         // 5. Parallel download with Semaphore
-        val semaphore = Semaphore(threadCount.coerceIn(1, 32))
+        val effectiveThreads = threadCount.coerceIn(1, 8)
+        val semaphore = Semaphore(effectiveThreads)
 
         coroutineScope {
             val jobs = segments.map { segment ->
@@ -197,7 +200,9 @@ class HlsDownloader(
                             logPrefix = "HLS",
                             segmentIdentifier = segment.index
                         )
-                        downloadedBytesCount.addAndGet(downloaded)
+                        if (downloaded > 0) {
+                            downloadedBytesCount.addAndGet(downloaded)
+                        }
                         completedSegmentsCount.incrementAndGet()
                         updateProgress()
                     }
@@ -224,7 +229,7 @@ class HlsDownloader(
             }
             segments.forEach { segment ->
                 val segFile = downloadDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
-                if (segFile.exists()) {
+                if (segFile.exists() && segFile.length() > 0) {
                     segFile.inputStream().use { it.copyTo(out, 64 * 1024) }
                 }
             }
@@ -249,12 +254,10 @@ class HlsDownloader(
     }
 
     private fun fetchText(url: String): String {
-        val req = Request.Builder().url(url).apply {
-            if (headers.isNotEmpty()) headers(headers.toHeaders())
-        }.build()
+        val req = Request.Builder().url(url).applySafeHeaders(headers).build()
         httpClient.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) throw IOException("Failed to fetch $url: HTTP ${resp.code}")
-            return resp.body?.string() ?: throw IOException("Empty response from $url")
+            return resp.body.string()
         }
     }
 }
