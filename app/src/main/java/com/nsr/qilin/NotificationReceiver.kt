@@ -49,7 +49,7 @@ class NotificationReceiver : BroadcastReceiver() {
                 val currentEp = show.currentEp
                 val day = show.releaseDay ?: releaseDay
                 val time = show.releaseTime ?: releaseTime
-                val code = show.alarmRequestCode ?: alarmCode
+                val code = show.alarmRequestCode
 
                 val dedupKey = "$showId:$currentEp"
                 val now = System.currentTimeMillis()

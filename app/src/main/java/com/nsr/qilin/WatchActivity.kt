@@ -174,7 +174,7 @@ class WatchActivity : ComponentActivity() {
                                 }
                                 .build()
                             val res = client.newCall(req).execute()
-                            val body = res.body?.string() ?: ""
+                            val body = res.body.string()
                             if (body.contains("#EXT-X-STREAM-INF")) {
                                 val parsed = parseHlsMasterPlaylist(stream, body)
                                 if (parsed.isNotEmpty()) {
