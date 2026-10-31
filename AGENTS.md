@@ -2,7 +2,8 @@
 
 ## Project
 MyDonghua — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bottom nav, shared-element poster transitions, and predictive back.
-- Package: `com.mydonghua.app`
+- Application ID: `com.nsr.qilin`
+- Package / Namespace: `com.mydonghua.app`
 - Branch: `staging`
 - Remote: `https://github.com/NSR-XINE/my_donguha.git`
 

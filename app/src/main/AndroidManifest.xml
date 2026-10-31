@@ -84,7 +84,7 @@
         <!-- FileProvider for sharing .json backup files via the share sheet -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.mydonghua.app.fileprovider"
+            android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

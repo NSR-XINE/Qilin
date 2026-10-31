@@ -36,7 +36,7 @@ class CountdownWidget : AppWidgetProvider() {
         private const val KEY_TITLE = "widget_title"
         private const val KEY_COUNTDOWN = "widget_countdown"
         private const val KEY_EPISODE = "widget_episode"
-        const val ACTION_UPDATE = "com.mydonghua.app.UPDATE_WIDGET"
+        const val ACTION_UPDATE = "com.nsr.qilin.UPDATE_WIDGET"
 
         @JvmStatic
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
