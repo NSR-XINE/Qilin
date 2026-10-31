@@ -171,16 +171,28 @@ object PosterFetchService {
                 if (!response.isSuccessful) return@withContext null
                 val html = response.body?.string() ?: return@withContext null
 
-                val ogImageRegex = Regex("""<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']""", RegexOption.IGNORE_CASE)
-                var imageUrl = ogImageRegex.find(html)?.groupValues?.get(1)
+                val ogImageRegex = Regex("""<meta[^>]+(?:property=["']og:image["'][^>]+content=["']([^"']+)["']|content=["']([^"']+)["'][^>]+property=["']og:image["'])""", RegexOption.IGNORE_CASE)
+                val ogMatch = ogImageRegex.find(html)
+                var imageUrl = ogMatch?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+                    ?: ogMatch?.groupValues?.getOrNull(2)?.takeIf { it.isNotEmpty() }
 
                 if (imageUrl == null) {
-                    val twitterImageRegex = Regex("""<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']""", RegexOption.IGNORE_CASE)
-                    imageUrl = twitterImageRegex.find(html)?.groupValues?.get(1)
+                    val twitterRegex = Regex("""<meta[^>]+(?:name=["']twitter:image["'][^>]+content=["']([^"']+)["']|content=["']([^"']+)["'][^>]+name=["']twitter:image["'])""", RegexOption.IGNORE_CASE)
+                    val twMatch = twitterRegex.find(html)
+                    imageUrl = twMatch?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+                        ?: twMatch?.groupValues?.getOrNull(2)?.takeIf { it.isNotEmpty() }
                 }
 
-                if (imageUrl != null && imageUrl.startsWith("//")) {
-                    imageUrl = "https:$imageUrl"
+                if (imageUrl == null) {
+                    val linkImageRegex = Regex("""<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']""", RegexOption.IGNORE_CASE)
+                    imageUrl = linkImageRegex.find(html)?.groupValues?.getOrNull(1)
+                }
+
+                if (imageUrl != null) {
+                    imageUrl = imageUrl.replace("&amp;", "&")
+                    if (imageUrl.startsWith("//")) {
+                        imageUrl = "https:$imageUrl"
+                    }
                 }
                 imageUrl
             }
