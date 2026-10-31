@@ -12,6 +12,8 @@ import com.mydonghua.app.domain.repository.ShowRepository
 import com.mydonghua.app.domain.voice.VoiceSearchController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -141,14 +143,24 @@ class SearchViewModel @Inject constructor(
      * Runs the online (AniList / MyAnimeList) search for [q] and updates
      * [onlineResults] / [searchError]. Shared by the debounced flow and retry.
      */
-    private suspend fun performOnlineSearch(q: String): List<Show> {
-        if (q.trim().length < 2) return emptyList()
+    private suspend fun performOnlineSearch(q: String): List<Show> = coroutineScope {
+        if (q.trim().length < 2) return@coroutineScope emptyList()
         _searchError.value = false
         _isSearchingOnline.value = true
         try {
-            val kitsuResults = com.mydonghua.app.data.service.PosterFetchService.searchKitsu(q)
-            val aniListResults = com.mydonghua.app.data.service.PosterFetchService.searchAniList(q)
-            val malResults = com.mydonghua.app.data.service.PosterFetchService.searchMyAnimeList(q)
+            val kitsuDeferred = async {
+                try { com.mydonghua.app.data.service.PosterFetchService.searchKitsu(q) } catch (e: Exception) { emptyList() }
+            }
+            val aniListDeferred = async {
+                try { com.mydonghua.app.data.service.PosterFetchService.searchAniList(q) } catch (e: Exception) { emptyList() }
+            }
+            val malDeferred = async {
+                try { com.mydonghua.app.data.service.PosterFetchService.searchMyAnimeList(q) } catch (e: Exception) { emptyList() }
+            }
+
+            val kitsuResults = kitsuDeferred.await()
+            val aniListResults = aniListDeferred.await()
+            val malResults = malDeferred.await()
 
             val combined = mutableListOf<Show>()
             val addedTitles = mutableSetOf<String>()
@@ -187,10 +199,10 @@ class SearchViewModel @Inject constructor(
                 addResult(r.title, r.titleZh, r.status, r.totalEp, r.poster, r.synopsis, "mal")
             }
 
-            return combined
+            combined
         } catch (e: Exception) {
             _searchError.value = true
-            return emptyList()
+            emptyList()
         } finally {
             _isSearchingOnline.value = false
         }
