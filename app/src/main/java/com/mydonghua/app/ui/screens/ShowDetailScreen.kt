@@ -488,11 +488,6 @@ fun ShowDetailScreen(
                 IconButton(
                     onClick = {
                         viewModel.toggleNotification(context, show)
-                        Toast.makeText(
-                            context,
-                            if (hasNotification) "Notifications turned off" else "Notifications turned on for ${show.title}",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     },
                     modifier = Modifier
                         .size(52.dp)
