@@ -626,7 +626,7 @@ fun SettingsScreen(
                 }
             }
 
-            // 6. ABOUT MY DONGHUA
+            // 6. ABOUT QILIN
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OxygenSectionHeader(
                     title = "About",

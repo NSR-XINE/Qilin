@@ -1,11 +1,11 @@
 # Credits & Acknowledgments
 
-My Donghua is built on the work of many open-source projects and community services.
+Qilin (formerly My Donghua) is built on the work of many open-source projects and community services.
 Thank you to everyone who maintains them.
 
 ## Project
 
-- **My Donghua** — created by [NSR-XINE](https://github.com/NSR-XINE) and
+- **Qilin** (formerly My Donghua) — created by [NSR-XINE](https://github.com/NSR-XINE) and
   [Koustubh Gaikwad](https://github.com/Koustubh12345).
 - **Maintainers** — NSR-XINE and Koustubh Gaikwad.
 
@@ -69,7 +69,7 @@ Thank you to everyone who maintains them.
 - Streaming providers and video hosts — links open third-party services. All video,
   artwork, and metadata remain the property of their respective owners.
 
-My Donghua is an unofficial client. It is not affiliated with AniList, MyAnimeList,
+Qilin is an unofficial client. It is not affiliated with AniList, MyAnimeList,
 OPPO, OnePlus, or any streaming provider.
 
 ## Fonts & Artwork
@@ -77,7 +77,7 @@ OPPO, OnePlus, or any streaming provider.
 - **OnePlus Sans** (Regular, Medium, SemiBold, Bold, ExtraBold) — © OnePlus,
   bundled for the app's typography.
 - **Material Icons** — © Google, Apache-2.0.
-- Dragon emblem, app icon, and other original artwork — My Donghua project assets.
+- Dragon emblem, app icon, and other original artwork — Qilin project assets.
 
 ## License Notes
 
