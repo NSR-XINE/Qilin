@@ -23,6 +23,34 @@ android {
         }
     }
 
+    signingConfigs {
+        debug {
+            storeFile file("${project.rootDir}/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+        release {
+            def keystorePropsFile = rootProject.file("keystore.properties")
+            def keystoreProps = new Properties()
+            if (keystorePropsFile.exists()) {
+                keystoreProps.load(new FileInputStream(keystorePropsFile))
+            }
+
+            def storeFilePath = System.getenv("KEYSTORE_FILE") ?: keystoreProps['storeFile']
+            if (storeFilePath && file(storeFilePath).exists()) {
+                storeFile file(storeFilePath)
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps['storePassword']
+                keyAlias System.getenv("KEY_ALIAS") ?: keystoreProps['keyAlias']
+                keyPassword System.getenv("KEY_PASSWORD") ?: keystoreProps['keyPassword']
+            } else {
+                // Fallback for CI/local test builds if no production keystore is supplied:
+                // signs with the debug key so the resulting release APK is installable.
+                initWith(signingConfigs.debug)
+            }
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -30,14 +58,10 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // NOTE: Do NOT add signingConfig here. Sign release APKs/AABs outside of
-            // version control using a private keystore, e.g. via CI environment variables
-            // or Android Studio's "Generate Signed Bundle / APK" wizard.
-            //
-            // Example (never commit real credentials or the keystore file):
-            // signingConfig signingConfigs.release
+            signingConfig signingConfigs.release
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
@@ -61,15 +85,6 @@ android {
         jniLibs {
             useLegacyPackaging = true
             pickFirsts += '**/libc++_shared.so'
-        }
-    }
-
-    signingConfigs {
-        debug {
-            storeFile file("${project.rootDir}/debug.keystore")
-            storePassword "android"
-            keyAlias "androiddebugkey"
-            keyPassword "android"
         }
     }
 }

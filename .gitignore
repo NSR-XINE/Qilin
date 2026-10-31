@@ -16,6 +16,11 @@ out/
 Thumbs.db
 *.log
 
+# Keystores & signing secrets (debug.keystore is tracked for dev/fallback)
+*.jks
+release.keystore
+keystore.properties
+
 # Keep the compiled release APK for direct downloads
 # (we do not ignore the root donghua-tracker.apk)
 
