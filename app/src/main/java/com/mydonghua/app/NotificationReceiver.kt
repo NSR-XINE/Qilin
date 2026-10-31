@@ -102,16 +102,16 @@ class NotificationReceiver : BroadcastReceiver() {
                     .setContentIntent(pi)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (PackageManager.PERMISSION_GRANTED !=
-                        context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-                    ) {
-                        return@launch
-                    }
+                val canPostNotification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                } else {
+                    true
                 }
 
-                val notifyId = dedupKey.hashCode() and 0x7FFFFFFF
-                nm.notify(notifyId, builder.build())
+                if (canPostNotification) {
+                    val notifyId = dedupKey.hashCode() and 0x7FFFFFFF
+                    nm.notify(notifyId, builder.build())
+                }
 
                 if (day != null && time != null && code > 0) {
                     AlarmScheduler.schedule(context, showId, title, day, time, code, currentEp)
