@@ -1,6 +1,5 @@
 package com.nsr.qilin.ui
 
-import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -30,10 +29,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
@@ -88,8 +84,16 @@ fun LiquidGlassNavBar(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val layer = rememberGraphicsLayer()
-    val luminanceAnimation = remember { Animatable(0f) }
+    val targetLuminance = if (isDark) 0.18f else 0.72f
+    val luminanceAnimation = remember { Animatable(targetLuminance) }
+
+    LaunchedEffect(isDark) {
+        luminanceAnimation.animateTo(
+            targetValue = if (isDark) 0.18f else 0.72f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)
+        )
+    }
+
     val currentOnNavigate by rememberUpdatedState(onNavigate)
 
     val capsuleAlpha by animateFloatAsState(
@@ -99,39 +103,6 @@ fun LiquidGlassNavBar(
 
     var userInteracting by remember { mutableStateOf(false) }
 
-    LaunchedEffect(layer) {
-        val thumbnail = Bitmap.createBitmap(5, 5, Bitmap.Config.ARGB_8888)
-        val buffer = IntBuffer.allocate(25)
-        val scaleRect = android.graphics.Rect(0, 0, 5, 5)
-        while (isActive) {
-            try {
-                if (!userInteracting && layer.size.width > 0 && layer.size.height > 0) {
-                    val avg = withContext(Dispatchers.Default) {
-                        val imageBitmap = layer.toImageBitmap()
-                        android.graphics.Canvas(thumbnail).drawBitmap(
-                            imageBitmap.asAndroidBitmap(), null, scaleRect, null
-                        )
-                        buffer.rewind()
-                        thumbnail.copyPixelsToBuffer(buffer)
-                        (0 until 25).sumOf { i ->
-                            val c = buffer.get(i)
-                            val r = (c shr 16 and 0xFF) / 255.0
-                            val g = (c shr 8 and 0xFF) / 255.0
-                            val b = (c and 0xFF) / 255.0
-                            0.2126 * r + 0.7152 * g + 0.0722 * b
-                        } / 25.0
-                    }
-                    luminanceAnimation.animateTo(
-                        avg.toFloat().coerceAtMost(0.8f),
-                        spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)
-                    )
-                }
-            } catch (_: Throwable) { }
-            delay(2.seconds)
-        }
-    }
-
-    val searchLayer = rememberGraphicsLayer()
     val searchInteraction = rememberGlassInteraction()
     val density = LocalDensity.current
     var barWidthPx by remember { mutableIntStateOf(0) }
@@ -234,7 +205,6 @@ fun LiquidGlassNavBar(
                         .matchParentSize()
                         .drawBackdropCustomShape(
                             backdrop = backdrop,
-                            layer = layer,
                             luminanceAnimation = luminanceAnimation.value,
                             shape = BarShape,
                             pressProgress = unifiedPressProgress,
@@ -363,7 +333,6 @@ fun LiquidGlassNavBar(
             .clip(CircleShape)
             .drawBackdropCustomShape(
                 backdrop = backdrop,
-                layer = searchLayer,
                 luminanceAnimation = luminanceAnimation.value,
                 shape = CircleShape,
                 pressProgress = searchInteraction.pressProgress,
@@ -459,7 +428,6 @@ private fun NavBarIcon(
 
 private fun Modifier.drawBackdropCustomShape(
     backdrop: Backdrop,
-    layer: GraphicsLayer,
     luminanceAnimation: Float,
     shape: Shape,
     pressProgress: Float = 0f,
@@ -489,7 +457,6 @@ private fun Modifier.drawBackdropCustomShape(
         },
         onDrawBackdrop = { drawBackdrop ->
             drawBackdrop()
-            layer.record { drawBackdrop() }
         },
         onDrawSurface = {
             val darken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))

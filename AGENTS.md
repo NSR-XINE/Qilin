@@ -26,7 +26,7 @@ Qilin — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bot
 ## Performance Rules (IMPORTANT)
 The app previously lagged with many cards on screen, when opening search/settings, and during tab switches. Preserve these mitigations:
 - **Glass background orbs are STATIC.** `GlassBackground` in `ui/GlassEffect.kt` used to run an `infiniteTransition` with 11 animators that re-rasterized 5 full-screen gradient layers every frame. It now uses fixed orb positions/scales. Do NOT reintroduce per-frame animation here.
-- **Navbar luminance readback runs off the main thread every 2s.** In `ui/LiquidGlassNavBar.kt` the whole `layer.toImageBitmap()` + 5x5 thumbnail average runs inside `withContext(Dispatchers.Default)`, skipped while the user is dragging or the capsule is animating (`userInteracting`). Keep it off the UI thread and slow (>= 1s).
+- **Navbar luminance is reactively animated via theme without software readbacks.** In `ui/LiquidGlassNavBar.kt`, luminance adapts smoothly with spring physics on theme/route changes without calling `layer.toImageBitmap()`, completely eliminating GPU-to-CPU pipeline stalls and micro-stutters.
 - **Keep navigation motion short and small.** Tab switches use direction-aware fades + tiny horizontal slides (`TabFade*`/`TabSlide*`, 140–280ms); detail/settings use 200ms cross-fades; drawer selections use a fade. Predictive back scales the Scaffold to 0.94 with a 10% x-translation. Keep full-screen scale/slide subtle and never animate the glass/blur surfaces — larger motion previously made two screens diverge around the seam during tab switches.
 - **Liquid glass blur intensity MUST stay low.** Tab-switch lag was traced to per-frame shader cost: the capsule's blur had a 20dp constant floor (~22-36dp total, ~66-108px @3x) plus 10/14dp dispersion, re-run every frame during the slide. Fixed by cutting capsule blur to 7-14dp (adaptive 1-8dp + 6dp constant), halving dispersion to 5/7dp, and reducing search-button blur to 1-10dp with refraction halved to size/8 & size/4. Do NOT bump these values back up without re-measuring NavLag `maxFrameGapMs`.
 - **First-time poster loads are deferred past the capsule slide.** A burst of full-width Coil decodes during a tab switch stalled the slide (141-166ms frame gap). `PosterStagger` in `ui/common/DonghuaPoster.kt` defers first-time loads that start within 800ms of a tab switch by ~250ms (staggered 30ms each), so decodes happen after the slide; scroll reveals and cached repeats load immediately. Do NOT remove the deferral or drop the switch-burst window.
@@ -50,7 +50,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `LiquidGlassNavBar.kt` in `com.nsr.qilin.ui` package
 - Uses `rememberLayerBackdrop()` + `Modifier.layerBackdrop(backdrop)` to capture screen content
 - `Modifier.drawBackdropCustomShape()` applies: `colorControls(brightness/contrast/saturation) + blur(1-10px adaptive) + refraction(size/8)`
-- Luminance animation: captures 5x5 thumbnail **every 2s on `Dispatchers.Default`**, calculates average luminance, animates `Animatable` — used for adaptive effect intensity; skipped while `userInteracting` (drag / capsule animation)
+- Luminance animation: smoothly animates `Animatable` via spring physics on theme changes for adaptive effect intensity; zero frame drops or GPU readbacks
 - 5 items: Home, Airing, Search (center circle), Complete, Stopped
 - Applied as `Modifier` on the Row containing all nav items
 

@@ -41,7 +41,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nsr.qilin.domain.model.Show
-import com.nsr.qilin.ui.LocalHazeState
 import com.nsr.qilin.ui.Spacing
 import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.rememberLiquidGlassChipBorder
@@ -49,7 +48,6 @@ import com.nsr.qilin.ui.theme.ColorOSMotion
 import com.nsr.qilin.ui.theme.CornerRadius
 import com.nsr.qilin.ui.theme.JustSansFamily
 import com.nsr.qilin.ui.theme.colorOSPressBounce
-import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun ShowCard(
@@ -94,20 +92,22 @@ fun ShowCard(
     val cardBorderBrush = rememberLiquidGlassBorder(isLight)
 
     // Official ColorOS 17 Translucent Liquid Frosted Glass (Matches Reference Screenshots)
-    val cardBgBrush = if (isLight) {
-        Brush.verticalGradient(
-            listOf(
-                Color.White.copy(alpha = 0.70f),
-                Color(0xFFF0F4FA).copy(alpha = 0.60f)
+    val cardBgBrush = remember(isLight) {
+        if (isLight) {
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.70f),
+                    Color(0xFFF0F4FA).copy(alpha = 0.60f)
+                )
             )
-        )
-    } else {
-        Brush.verticalGradient(
-            listOf(
-                Color(0xFF1E2638).copy(alpha = 0.48f),
-                Color(0xFF121622).copy(alpha = 0.58f)
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    Color(0xFF1E2638).copy(alpha = 0.48f),
+                    Color(0xFF121622).copy(alpha = 0.58f)
+                )
             )
-        )
+        }
     }
 
     // Multi-stop liquid gradient overlay for cinematic poster readability
@@ -163,9 +163,6 @@ fun ShowCard(
                 scaleY = cardScale
             }
             .clip(cardShape)
-            .hazeEffect(state = hazeState) {
-                blurredEdgeTreatment = BlurredEdgeTreatment(cardShape)
-            }
             .background(
                 brush = cardBgBrush,
                 shape = cardShape

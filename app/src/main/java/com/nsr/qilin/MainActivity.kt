@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -132,6 +133,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         intent?.getStringExtra("target_show_id")?.let { targetId ->
@@ -300,6 +302,7 @@ class MainActivity : ComponentActivity() {
                             }
                             Scaffold(
                                 containerColor = Color.Transparent,
+                                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                                 modifier = Modifier.fillMaxSize(),
                                 topBar = {
                                     if (!isSearchOpen && showGlobalHeader) {
