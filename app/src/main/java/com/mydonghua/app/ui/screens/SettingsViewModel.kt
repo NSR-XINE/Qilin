@@ -218,13 +218,19 @@ class SettingsViewModel @Inject constructor(
                 val parsed = JSONObject(jsonString)
                 val showsArr = parsed.optJSONArray("shows") ?: JSONArray()
                 val watchHistory = parsed.optJSONArray("watchHistory") ?: JSONArray()
-                val notifyPrefsStr = parsed.optString("notifyPrefs", "{}")
-                val notifyObj = JSONObject(notifyPrefsStr)
+                val notifyObj = parsed.optJSONObject("notifyPrefs")
+                    ?: try {
+                        JSONObject(parsed.optString("notifyPrefs", "{}"))
+                    } catch (_: Exception) {
+                        JSONObject()
+                    }
                 val keys = notifyObj.keys()
                 while (keys.hasNext()) {
                     val key = keys.next()
-                    val value = notifyObj.get(key)
-                    settingsRepository.putSetting(key, value.toString())
+                    val value = notifyObj.opt(key)
+                    if (value != null && value != JSONObject.NULL) {
+                        settingsRepository.putSetting(key, value.toString())
+                    }
                 }
 
                 val importedShowsList = mutableListOf<com.mydonghua.app.domain.model.Show>()
@@ -258,16 +264,20 @@ class SettingsViewModel @Inject constructor(
                     importedShowsList.add(show)
                 }
 
+                val validShowIds = importedShowsList.map { it.id }.toSet()
                 val importedHistoryList = mutableListOf<WatchHistoryEntity>()
                 for (i in 0 until watchHistory.length()) {
                     val hObj = watchHistory.getJSONObject(i)
-                    importedHistoryList.add(
-                        WatchHistoryEntity(
-                            showId = hObj.getString("showId"),
-                            episodeNum = hObj.getInt("episodeNum"),
-                            watchedTimestamp = hObj.optLong("watchedAt").takeIf { it > 0L } ?: System.currentTimeMillis()
+                    val showId = hObj.getString("showId")
+                    if (validShowIds.contains(showId)) {
+                        importedHistoryList.add(
+                            WatchHistoryEntity(
+                                showId = showId,
+                                episodeNum = hObj.getInt("episodeNum"),
+                                watchedTimestamp = hObj.optLong("watchedAt").takeIf { it > 0L } ?: System.currentTimeMillis()
+                            )
                         )
-                    )
+                    }
                 }
 
                 appDatabase.withTransaction {
@@ -279,7 +289,7 @@ class SettingsViewModel @Inject constructor(
 
                 com.mydonghua.app.AlarmScheduler.rescheduleAllAfterBoot(context)
 
-                onSuccess("${importedShowsList.size} shows and ${watchHistory.length()} history logs imported successfully!")
+                onSuccess("${importedShowsList.size} shows and ${importedHistoryList.size} history logs imported successfully!")
             } catch (e: Exception) {
                 e.printStackTrace()
                 onFailure(e.localizedMessage ?: "Failed to parse backup JSON")
