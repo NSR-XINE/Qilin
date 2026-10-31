@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
@@ -22,10 +23,13 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import com.nsr.qilin.ui.theme.ColorOSMotion
+import kotlinx.coroutines.CancellationException
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -157,13 +161,9 @@ class MainActivity : ComponentActivity() {
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
             var isAppLoading by remember { mutableStateOf(true) }
-            var backProgress by remember { mutableFloatStateOf(0f) }
+            val backProgress = remember { Animatable(0f) }
+            var swipeEdge by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
             var drawerNavigating by remember { mutableStateOf(false) }
-            val backPreview = animateFloatAsState(
-                targetValue = backProgress,
-                animationSpec = tween(durationMillis = 120, easing = ColorOSMotion.FastOutSlowIn),
-                label = "backPreview"
-            )
 
             LaunchedEffect(currentRoute) {
                 if (drawerNavigating) {
@@ -251,12 +251,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            PredictiveBackHandler(enabled = canPredictiveBack) { progress ->
+            PredictiveBackHandler(enabled = canPredictiveBack) { progressFlow ->
                 try {
-                    progress.collect { backProgress = it.progress }
+                    progressFlow.collect { event ->
+                        swipeEdge = event.swipeEdge
+                        backProgress.snapTo(event.progress)
+                    }
                     navController.popBackStack()
+                    backProgress.snapTo(0f)
+                } catch (e: CancellationException) {
+                    backProgress.animateTo(
+                        targetValue = 0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    )
+                    throw e
                 } finally {
-                    backProgress = 0f
+                    backProgress.snapTo(0f)
                 }
             }
 
@@ -321,17 +334,7 @@ class MainActivity : ComponentActivity() {
                             Scaffold(
                                 containerColor = Color.Transparent,
                                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        val progress = backPreview.value
-                                        val scale = 1f - 0.06f * progress
-                                        scaleX = scale
-                                        scaleY = scale
-                                        translationX = size.width * 0.10f * progress
-                                        shape = RoundedCornerShape(28.dp)
-                                        clip = progress > 0.001f
-                                    },
+                                modifier = Modifier.fillMaxSize(),
                                 topBar = {
                                     if (!isSearchOpen && showGlobalHeader) {
                                         val headerTitle = when (currentRoute) {
@@ -400,6 +403,18 @@ class MainActivity : ComponentActivity() {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
+                                        .graphicsLayer {
+                                            val progress = backProgress.value
+                                            val isRightEdge = swipeEdge == BackEventCompat.EDGE_RIGHT
+                                            val translationDirection = if (isRightEdge) -1f else 1f
+                                            val scale = 1f - 0.06f * progress
+                                            scaleX = scale
+                                            scaleY = scale
+                                            translationX = translationDirection * size.width * 0.08f * progress
+                                            val cornerRadius = 24.dp * progress
+                                            shape = RoundedCornerShape(cornerRadius)
+                                            clip = cornerRadius > 0.5.dp
+                                        }
                                         .layerBackdrop(navBackdrop)
                                 ) {
                             SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
