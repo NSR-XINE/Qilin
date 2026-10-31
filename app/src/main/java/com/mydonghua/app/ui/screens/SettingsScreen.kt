@@ -2,7 +2,6 @@ package com.mydonghua.app.ui.screens
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -35,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -86,12 +84,6 @@ fun SettingsScreen(
         }
     }
 
-    var storageGranted by remember { mutableStateOf(hasStoragePermission(context)) }
-    val storagePermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        storageGranted = granted
-    }
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
@@ -572,48 +564,6 @@ fun SettingsScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        if (!storageGranted) {
-                            val errorBg = MaterialTheme.colorScheme.errorContainer.copy(alpha = if (isDark) 0.20f else 0.35f)
-                            val errorShape = RoundedCornerShape(14.dp)
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(errorShape)
-                                    .background(errorBg, errorShape)
-                                    .border(
-                                        0.75.dp,
-                                        MaterialTheme.colorScheme.error.copy(alpha = 0.40f),
-                                        errorShape
-                                    )
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(14.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Storage Permission Required",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                    Text(
-                                        text = "Grant storage permission to allow exporting or importing backup files.",
-                                        fontSize = 11.5.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    ColorOSPillButton(
-                                        text = "Grant Permission",
-                                        onClick = {
-                                            storagePermissionLauncher.launch(currentStoragePermission())
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        height = 42.dp,
-                                        containerColor = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-                        }
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1323,13 +1273,3 @@ private fun DeveloperRow(
         )
     }
 }
-
-private fun currentStoragePermission(): String =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        android.Manifest.permission.READ_MEDIA_IMAGES
-    } else {
-        android.Manifest.permission.READ_EXTERNAL_STORAGE
-    }
-
-private fun hasStoragePermission(context: Context): Boolean =
-    ContextCompat.checkSelfPermission(context, currentStoragePermission()) == PackageManager.PERMISSION_GRANTED
