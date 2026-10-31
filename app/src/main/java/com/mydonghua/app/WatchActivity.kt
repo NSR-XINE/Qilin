@@ -22,6 +22,7 @@ import android.view.WindowManager
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.Toast
+import java.io.File
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import kotlin.OptIn
@@ -113,11 +114,21 @@ class WatchActivity : ComponentActivity() {
             return
         }
 
-        val isDirectVideo = watchUrl.endsWith(".mp4", ignoreCase = true) ||
+        val isLocalFile = watchUrl.startsWith("/") || watchUrl.startsWith("file://") || watchUrl.startsWith("content://")
+        val isDirectVideo = isLocalFile ||
+                watchUrl.endsWith(".mp4", ignoreCase = true) ||
                 watchUrl.endsWith(".m3u8", ignoreCase = true) ||
                 watchUrl.endsWith(".mkv", ignoreCase = true) ||
+                watchUrl.endsWith(".ts", ignoreCase = true) ||
+                watchUrl.endsWith(".mp3", ignoreCase = true) ||
+                watchUrl.endsWith(".m4a", ignoreCase = true) ||
+                watchUrl.endsWith(".webm", ignoreCase = true) ||
+                watchUrl.endsWith(".flv", ignoreCase = true) ||
                 watchUrl.contains(".mp4?", ignoreCase = true) ||
-                watchUrl.contains(".m3u8?", ignoreCase = true)
+                watchUrl.contains(".m3u8?", ignoreCase = true) ||
+                watchUrl.contains(".mkv?", ignoreCase = true) ||
+                watchUrl.contains(".webm?", ignoreCase = true) ||
+                watchUrl.contains(".ts?", ignoreCase = true)
 
         setContent {
             Box(
@@ -138,7 +149,9 @@ class WatchActivity : ComponentActivity() {
 
             // Dynamic HLS Master Playlist & YoutubeDL Stream Probing directly from website playback
             LaunchedEffect(capturedStreamUrl, currentPlaybackHeight) {
-                val stream = capturedStreamUrl?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
+                val stream = capturedStreamUrl?.takeIf {
+                    it.isNotBlank() && !it.startsWith("/") && !it.startsWith("file://") && !it.startsWith("content://")
+                } ?: return@LaunchedEffect
                 isSyncingWebsite = true
                 withContext(Dispatchers.IO) {
                     val detectedList = mutableListOf<DownloadQualityOption>()
@@ -258,6 +271,7 @@ class WatchActivity : ComponentActivity() {
                     watchUrl = watchUrl,
                     showTitle = showTitle,
                     isInPip = isInPip,
+                    isLocalFile = isLocalFile,
                     onBack = { finish() },
                     onDownload = {
                         capturedStreamUrl = watchUrl
@@ -445,6 +459,7 @@ class WatchActivity : ComponentActivity() {
         watchUrl: String,
         showTitle: String,
         isInPip: Boolean,
+        isLocalFile: Boolean = false,
         onBack: () -> Unit,
         onDownload: () -> Unit,
         onEnterPip: () -> Unit,
@@ -481,7 +496,16 @@ class WatchActivity : ComponentActivity() {
         // Setup ExoPlayer
         DisposableEffect(context, watchUrl) {
             val playerInstance = ExoPlayer.Builder(context).build().apply {
-                val mediaItem = MediaItem.fromUri(Uri.parse(watchUrl))
+                val mediaUri = if (watchUrl.startsWith("/") || watchUrl.startsWith("file://")) {
+                    if (watchUrl.startsWith("file://")) {
+                        Uri.parse(watchUrl)
+                    } else {
+                        Uri.fromFile(File(watchUrl))
+                    }
+                } else {
+                    Uri.parse(watchUrl)
+                }
+                val mediaItem = MediaItem.fromUri(mediaUri)
                 setMediaItem(mediaItem)
                 prepare()
                 playWhenReady = true
@@ -711,13 +735,15 @@ class WatchActivity : ComponentActivity() {
                                 modifier = Modifier.weight(1f),
                                 height = 44.dp
                             )
-                            ColorOSPillButton(
-                                text = "Web Player",
-                                onClick = onSwitchToWeb,
-                                modifier = Modifier.weight(1f),
-                                height = 44.dp,
-                                containerColor = Color(0xFF0082FB)
-                            )
+                            if (!isLocalFile) {
+                                ColorOSPillButton(
+                                    text = "Web Player",
+                                    onClick = onSwitchToWeb,
+                                    modifier = Modifier.weight(1f),
+                                    height = 44.dp,
+                                    containerColor = Color(0xFF0082FB)
+                                )
+                            }
                         }
                     }
                 }
@@ -1005,20 +1031,22 @@ class WatchActivity : ComponentActivity() {
                                 .padding(horizontal = 6.dp, vertical = 6.dp)
                         ) {
                             // Switch to Web Player Button
-                            IconButton(
-                                onClick = onSwitchToWeb,
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.White.copy(alpha = 0.08f))
-                                    .colorOSPressBounce(pressedScale = 0.92f)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Language,
-                                    contentDescription = "Web Player",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(19.dp)
-                                )
+                            if (!isLocalFile) {
+                                IconButton(
+                                    onClick = onSwitchToWeb,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.White.copy(alpha = 0.08f))
+                                        .colorOSPressBounce(pressedScale = 0.92f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Language,
+                                        contentDescription = "Web Player",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
                             }
 
                             // Aspect Ratio Toggle
@@ -1067,20 +1095,22 @@ class WatchActivity : ComponentActivity() {
                             }
 
                             // Download Button
-                            IconButton(
-                                onClick = onDownload,
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFF0082FB).copy(alpha = 0.15f))
-                                    .colorOSPressBounce(pressedScale = 0.92f)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.FileDownload,
-                                    contentDescription = "Download Episode",
-                                    tint = Color(0xFF0082FB),
-                                    modifier = Modifier.size(19.dp)
-                                )
+                            if (!isLocalFile) {
+                                IconButton(
+                                    onClick = onDownload,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF0082FB).copy(alpha = 0.15f))
+                                        .colorOSPressBounce(pressedScale = 0.92f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.FileDownload,
+                                        contentDescription = "Download Episode",
+                                        tint = Color(0xFF0082FB),
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
                             }
                         }
                     }
