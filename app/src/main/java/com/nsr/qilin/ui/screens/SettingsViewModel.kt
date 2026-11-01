@@ -17,6 +17,9 @@ import com.nsr.qilin.domain.repository.SettingsRepository
 import com.nsr.qilin.domain.repository.ShowRepository
 import com.nsr.qilin.domain.repository.WatchHistoryRepository
 import com.nsr.qilin.ui.theme.Haptics
+import com.nsr.qilin.data.service.AppUpdateService
+import com.nsr.qilin.data.service.AppUpdateInfo
+import com.nsr.qilin.data.service.UpdateState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,6 +104,61 @@ class SettingsViewModel @Inject constructor(
             hapticsEnabled = haptics
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
+
+    private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
+
+    fun checkForUpdates(manual: Boolean = true) {
+        viewModelScope.launch {
+            _updateState.value = UpdateState.Checking
+            val currentVersion = com.nsr.qilin.BuildConfig.VERSION_NAME
+            val result = AppUpdateService.checkForUpdate(currentVersion)
+            result.onSuccess { info ->
+                if (info != null && info.isNewer) {
+                    _updateState.value = UpdateState.UpdateAvailable(info)
+                } else {
+                    if (manual) {
+                        _updateState.value = UpdateState.UpToDate(currentVersion)
+                    } else {
+                        _updateState.value = UpdateState.Idle
+                    }
+                }
+            }.onFailure { err ->
+                if (manual) {
+                    _updateState.value = UpdateState.Error(err.message ?: "Failed to check for updates")
+                } else {
+                    _updateState.value = UpdateState.Idle
+                }
+            }
+        }
+    }
+
+    fun downloadAndInstall(info: AppUpdateInfo, context: Context) {
+        viewModelScope.launch {
+            _updateState.value = UpdateState.Downloading(0f, 0L, info.asset.size)
+            val result = AppUpdateService.downloadApk(
+                context = context,
+                asset = info.asset,
+                onProgress = { progress, downloaded, total ->
+                    _updateState.value = UpdateState.Downloading(progress, downloaded, total)
+                }
+            )
+            result.onSuccess { apkFile ->
+                _updateState.value = UpdateState.ReadyToInstall(apkFile, info)
+                AppUpdateService.promptInstall(context, apkFile)
+            }.onFailure { err ->
+                _updateState.value = UpdateState.Error("Download failed: ${err.message}")
+            }
+        }
+    }
+
+    fun installApk(apkFile: File, context: Context) {
+        AppUpdateService.promptInstall(context, apkFile)
+    }
+
+    fun dismissUpdateDialog() {
+        _updateState.value = UpdateState.Idle
+    }
 
     fun setThemeMode(mode: String) {
         viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.THEME_MODE, mode) }

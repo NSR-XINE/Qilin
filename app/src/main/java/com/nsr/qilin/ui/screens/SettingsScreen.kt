@@ -50,6 +50,7 @@ import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.common.ColorOSSwitch
 import com.nsr.qilin.ui.common.ColorOSPillButton
 import com.nsr.qilin.ui.common.ColorOSOutlinedButton
+import com.nsr.qilin.ui.common.AppUpdateDialog
 import com.nsr.qilin.ui.theme.Haptics
 import kotlinx.coroutines.launch
 
@@ -62,6 +63,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val updateState by viewModel.updateState.collectAsState()
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
@@ -748,10 +750,24 @@ fun SettingsScreen(
                         )
 
                         OxygenSettingsActionItem(
-                            title = "GitHub Repository",
-                            subtitle = "github.com/NSR-XINE/my_donguha",
+                            title = "Check for Updates",
+                            subtitle = "Current version: v${com.nsr.qilin.BuildConfig.VERSION_NAME}",
+                            icon = Icons.Rounded.SystemUpdate,
                             onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE/my_donguha"))
+                                viewModel.checkForUpdates(manual = true)
+                            }
+                        )
+
+                        HorizontalDivider(
+                            color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f),
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                        )
+
+                        OxygenSettingsActionItem(
+                            title = "GitHub Repository",
+                            subtitle = "github.com/NSR-XINE/Qilin",
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/NSR-XINE/Qilin"))
                                 try {
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
@@ -813,6 +829,14 @@ fun SettingsScreen(
             backdrop = screenBackdrop,
             isDark = isDark,
             onBackClick = onNavigateBack
+        )
+
+        AppUpdateDialog(
+            updateState = updateState,
+            onDismiss = { viewModel.dismissUpdateDialog() },
+            onDownloadAndInstall = { info -> viewModel.downloadAndInstall(info, context) },
+            onInstallNow = { file, _ -> viewModel.installApk(file, context) },
+            onRetry = { viewModel.checkForUpdates(manual = true) }
         )
 
     }
@@ -994,6 +1018,7 @@ private fun OxygenTogglePreferenceItem(
 private fun OxygenSettingsActionItem(
     title: String,
     subtitle: String? = null,
+    icon: ImageVector? = null,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -1022,9 +1047,26 @@ private fun OxygenSettingsActionItem(
                 onClick = onClick
             )
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(CornerRadius.sm))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+        }
+
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
