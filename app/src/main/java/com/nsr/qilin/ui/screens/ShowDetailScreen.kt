@@ -435,7 +435,7 @@ fun ShowDetailScreen(
                 }
             }
 
-            // 2. ColorOS 17 Quick Action Dock (Watch Now Hero Pill + Favorite + Notify + Edit + Share)
+            // 2. ColorOS 17 Quick Action Dock (Watch Now Hero Pill + Favorite + Notify)
             val providerLabel = when (defaultStreamProvider.lowercase()) {
                 "luciferdonghua" -> "LuciferDonghua ⚡"
                 "donghuastream" -> "DonghuaStream 🎬"
@@ -446,34 +446,26 @@ fun ShowDetailScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                val watchShimmer = rememberInfiniteTransition(label = "watchShimmerSweep")
+                val watchShimmer = rememberInfiniteTransition(label = "watchNowShimmer")
                     .animateFloat(
                         initialValue = 0f,
                         targetValue = 1f,
                         animationSpec = infiniteRepeatable(
-                            animation = tween(durationMillis = 2400, easing = LinearEasing),
+                            animation = tween(durationMillis = 2600, easing = LinearEasing),
                             repeatMode = RepeatMode.Restart
                         ),
-                        label = "watchSweepProgress"
+                        label = "watchNowShimmerSweep"
                     )
 
-                val nextEpToWatch = if (show.currentEp > 0) show.currentEp + 1 else 1
-                val isFullyWatched = show.totalEp > 0 && show.currentEp >= show.totalEp
-                val watchButtonLabel = if (isFullyWatched) "REWATCH SHOW" else "WATCH EP $nextEpToWatch"
-
-                // Primary Watch Action Capsule Button
+                // Primary Watch Action Capsule Button (ColorOS 17 50% Capsule Action Pill)
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(52.dp)
                         .clip(RoundedCornerShape(percent = 50))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFF0072FF), Color(0xFF00A2FF))
-                            )
-                        )
+                        .background(Color(0xFF0082FB))
                         .colorOSPressBounce(
                             pressedScale = 0.96f,
                             onClick = {
@@ -499,7 +491,7 @@ fun ShowDetailScreen(
                                     brush = Brush.linearGradient(
                                         colors = listOf(
                                             Color.Transparent,
-                                            Color.White.copy(alpha = 0.28f),
+                                            Color.White.copy(alpha = 0.24f),
                                             Color.Transparent
                                         ),
                                         start = Offset(x - size.width * 0.22f, 0f),
@@ -509,40 +501,49 @@ fun ShowDetailScreen(
                             }
                     )
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.24f)),
+                                .background(Color.White.copy(alpha = 0.22f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = "Play",
                                 tint = Color.White,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
 
-                        Column {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.Center
+                        ) {
                             Text(
-                                text = watchButtonLabel,
+                                text = "WATCH NOW",
                                 color = Color.White,
-                                fontSize = 13.sp,
+                                fontSize = 13.5.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.4.sp
+                                letterSpacing = 0.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = providerLabel,
-                                color = Color.White.copy(alpha = 0.88f),
-                                fontSize = 10.5.sp,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 11.sp,
                                 fontFamily = JustSansFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -604,68 +605,6 @@ fun ShowDetailScreen(
                         contentDescription = "Toggle Notifications",
                         tint = if (hasNotification) Color(0xFF0082FB) else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                // Edit Show Button (Frosted Circle)
-                IconButton(
-                    onClick = {
-                        Haptics.tick()
-                        onEditClick(show)
-                    },
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
-                        .border(
-                            width = 1.dp,
-                            brush = glassBorder,
-                            shape = CircleShape
-                        )
-                        .colorOSPressBounce(pressedScale = 0.90f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Edit,
-                        contentDescription = "Edit Show",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Share Button (Frosted Circle)
-                IconButton(
-                    onClick = {
-                        Haptics.tick()
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            val epText = if (show.totalEp > 0) "${show.currentEp}/${show.totalEp}" else "${show.currentEp}"
-                            val shareBody = buildString {
-                                append("Watching ${show.title} (Episode $epText) on Qilin!")
-                                if (!show.watchUrl.isNullOrBlank()) {
-                                    append("\nWatch: ${show.watchUrl}")
-                                }
-                            }
-                            putExtra(Intent.EXTRA_TEXT, shareBody)
-                            type = "text/plain"
-                        }
-                        context.startActivity(Intent.createChooser(sendIntent, "Share ${show.title}"))
-                    },
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
-                        .border(
-                            width = 1.dp,
-                            brush = glassBorder,
-                            shape = CircleShape
-                        )
-                        .colorOSPressBounce(pressedScale = 0.90f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Share,
-                        contentDescription = "Share Show",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -1281,7 +1220,45 @@ fun ShowDetailScreen(
             backdrop = screenBackdrop,
             isDark = !isLight,
             onBackClick = onNavigateBack,
-            onEditClick = { onEditClick(show) }
+            onEditClick = { onEditClick(show) },
+            actions = {
+                val shareBtnBg = if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.12f)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(shareBtnBg)
+                        .border(
+                            width = 0.75.dp,
+                            brush = rememberLiquidGlassBorder(isLight),
+                            shape = CircleShape
+                        )
+                        .colorOSPressBounce(pressedScale = 0.90f, onClick = {
+                            Haptics.tick()
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                val epText = if (show.totalEp > 0) "${show.currentEp}/${show.totalEp}" else "${show.currentEp}"
+                                val shareBody = buildString {
+                                    append("Watching ${show.title} (Episode $epText) on Qilin!\n")
+                                    if (!show.watchUrl.isNullOrBlank()) {
+                                        append(show.watchUrl)
+                                    }
+                                }
+                                putExtra(Intent.EXTRA_TEXT, shareBody)
+                                type = "text/plain"
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Share ${show.title}"))
+                        }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = "Share",
+                        tint = if (isLight) Color(0xFF1E1E1E) else Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         )
 
         // AniList Options Dialog
