@@ -86,15 +86,7 @@ jobs:
 
           echo "Publishing release with tag: $TAG"
 
-          RELEASE_NOTES="### Qilin $TAG
-
-#### Architecture Downloads:
-* **64-bit (\`arm64-v8a\`)**: Recommended for all modern Android devices
-* **32-bit (\`armeabi-v7a\`)**: For older 32-bit devices
-* **Universal**: Runs on all supported Android architectures
-
----
-*Built from commit \`$GITHUB_SHA\` on branch \`${GITHUB_REF_NAME}\`.*"
+          printf "### Architecture Downloads:\n- **64-bit (arm64-v8a)**: Recommended for all modern Android devices\n- **32-bit (armeabi-v7a)**: For older 32-bit devices\n- **Universal**: Runs on all supported Android architectures\n" > release_notes.md
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG exists. Updating APK assets..."
@@ -103,6 +95,6 @@ jobs:
             echo "Creating new release $TAG..."
             gh release create "$TAG" app/build/outputs/apk/release/*.apk \
               --title "Qilin $TAG" \
-              --notes "$RELEASE_NOTES" \
+              --notes-file release_notes.md \
               --generate-notes
           fi
