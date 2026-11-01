@@ -218,10 +218,9 @@ To sign release builds with your own private key without committing credentials 
 
 ### 🚀 Automated GitHub Release Publishing
 
-The GitHub Actions workflow [`.github/workflows/build.yml`](.github/workflows/build.yml) automatically builds and publishes release posts with APKs attached:
+The GitHub Actions workflow [`.github/workflows/build.yml`](.github/workflows/build.yml) builds and publishes release posts with APKs attached strictly on demand (never automatically on push):
 
-1. **Manual Trigger**: Under the **Actions** tab → **Build Android APK** → **Run workflow**, check *Publish as GitHub Release post*.
-2. **Git Tag Trigger**: Pushing a version tag (`git tag v6.8-beta && git push origin v6.8-beta`) automatically compiles, packages, and creates the GitHub Release with all three APK architectures attached and changelogs generated.
+* **Manual Trigger**: Under the **Actions** tab → **Build Android APK** → **Run workflow**, choose your branch and click **Run workflow** (with *Publish as GitHub Release post* checked). The workflow will build, sign, attach the split APKs, and generate the changelog.
 
 ---
 

@@ -1,12 +1,6 @@
 name: Build Android APK
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    tags:
-      - 'v*'
   pull_request:
     branches:
       - main
@@ -76,10 +70,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Publish GitHub Release
-        if: |
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true') ||
-          startsWith(github.ref, 'refs/tags/v') ||
-          (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_INPUT: ${{ github.event.inputs.tag_name }}

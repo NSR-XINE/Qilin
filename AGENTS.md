@@ -59,7 +59,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - **Timestamped Filenames**: Handled via `androidComponents.onVariants`, generating `Qilin-v<version>-<abi>-<buildType>-<timestamp>.apk`.
 - **Release Signing**: Configured in `app/build.gradle` to check `KEYSTORE_FILE`, `keystore.properties`, and `KEYSTORE_BASE64`, with automatic fallback to `debug.keystore` for test/CI builds without secrets (preventing unsigned uninstallable APKs).
 - **Private Keystore Setup**: `scripts/setup_private_keystore.sh` generates local keystore with `chmod 600` and verifies gitignore isolation.
-- **Automated GitHub Release Publishing**: `.github/workflows/build.yml` compiles 32-bit, 64-bit, and Universal APKs and automatically creates or updates GitHub Release posts with changelogs on workflow dispatch or tag pushes.
+- **Automated GitHub Release Publishing**: `.github/workflows/build.yml` compiles 32-bit, 64-bit, and Universal APKs and creates/updates GitHub Release posts on manual `workflow_dispatch` (never triggers on `push`).
 
 ## Liquid Glass Nav Bar
 - `LiquidGlassNavBar.kt` in `com.nsr.qilin.ui` package
