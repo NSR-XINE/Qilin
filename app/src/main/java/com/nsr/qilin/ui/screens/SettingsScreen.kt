@@ -50,9 +50,7 @@ import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.common.ColorOSSwitch
 import com.nsr.qilin.ui.common.ColorOSPillButton
 import com.nsr.qilin.ui.common.ColorOSOutlinedButton
-import com.nsr.qilin.ui.theme.JustSansFamily
 import com.nsr.qilin.ui.theme.Haptics
-import com.nsr.qilin.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

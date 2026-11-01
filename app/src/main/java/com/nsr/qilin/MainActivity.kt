@@ -46,7 +46,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
@@ -62,7 +61,6 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.nsr.qilin.data.service.AniListService
 import com.nsr.qilin.data.service.AniListUser
-import com.nsr.qilin.ui.theme.colorOSPressBounce
 import com.nsr.qilin.ui.theme.Haptics
 import com.nsr.qilin.ui.theme.RevealOnEnter
 import androidx.core.app.ActivityCompat
@@ -101,7 +99,6 @@ import com.nsr.qilin.ui.common.ColorOSDialog
 import com.nsr.qilin.ui.common.AppLoadingScreen
 import com.nsr.qilin.ui.theme.QilinTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

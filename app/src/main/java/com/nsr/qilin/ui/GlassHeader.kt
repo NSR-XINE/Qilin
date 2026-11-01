@@ -16,7 +16,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.nsr.qilin.ui.theme.OnePlusSansFamily
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -25,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -36,7 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nsr.qilin.ui.LocalHeaderBackdrop
 import com.nsr.qilin.ui.LocalLayerBackdrop
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +54,6 @@ import com.nsr.qilin.ui.theme.Spacing
 import com.nsr.qilin.ui.theme.ColorOSMotion
 import com.nsr.qilin.ui.theme.colorOSPressBounce
 import com.nsr.qilin.ui.theme.IconSize
-import com.nsr.qilin.ui.theme.NavBarHeight
 import com.nsr.qilin.ui.theme.Haptics
 import kotlinx.coroutines.launch
 

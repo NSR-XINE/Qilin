@@ -44,7 +44,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Navigation drawer menu pins the header with an elevated scaffold, and the drawer scroll state resets on open.
 
 ## Haptic Feedback Strategy
-- **NEVER attach `.hapticOnTap()` to root or full-screen layouts.** Root-level interception caused the device to vibrate on every screen touch.
+- **Global elimination of `.hapticOnTap()`.** Removed to eliminate any risk of accidental full-screen touch vibrations.
 - **`Modifier.colorOSPressBounce` defaults to `hapticFeedback = false`.** General UI tapping, card bouncing, and list flings must remain silent and smooth.
 - **Haptic vibrations are reserved exclusively for intentional tactile events**:
   - Settings switches (`ColorOSSwitch` / `Haptics.toggle`)
@@ -98,13 +98,14 @@ The app previously lagged with many cards on screen, when opening search/setting
 - `app/build.gradle` — Compose BOM `2026.09.00`, Kyant AAR dependency removed, Kotlin `2.3.21` + compose compiler plugin, Hilt `2.60.1`, Room `2.8.5`, Media3 `1.11.1`, Haze `1.7.3`, ABI splits (`arm64-v8a`, `armeabi-v7a`), release signing & timestamped naming
 - `.github/workflows/build.yml` — Automated CI build and GitHub Release publisher with APK asset uploads
 - `scripts/setup_private_keystore.sh` — Interactive zero-knowledge private release keystore generator
-- `app/src/main/java/com/nsr/qilin/ui/LiquidGlassNavBar.kt` — liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
+- `app/src/main/java/com/nsr/qilin/ui/LiquidGlassNavBar.kt` — liquid glass nav bar composable, `drawBackdropCustomShape` extension, and co-located `GlassInteraction` (replaced legacy `LiquidGlassButton.kt`)
 - `app/src/main/java/com/nsr/qilin/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
 - `app/src/main/java/com/nsr/qilin/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; parallax horizontal slide sub-page transitions; elevated drawer header
 - `app/src/main/java/com/nsr/qilin/ui/common/AppLoadingScreen.kt` — minimal ColorOS 17 loading screen with monotonic progress indicator
 - `app/src/main/java/com/nsr/qilin/ui/screens/SettingsScreen.kt` & `SettingsViewModel.kt` — Haptics & Vibration toggle switch, custom stream URLs
 - `app/src/main/java/com/nsr/qilin/ui/screens/AniListScreen.kt` — Redesigned ColorOS 17 liquid glass bento layout
 - `app/src/main/java/com/kyant/backdrop/` — 22 vendored Kyant Backdrop source files
+- Removed unused blobs and dead code: `app/src/main/res/raw/ytdlp` (3.17 MB binary blob), `Configure` (0-byte file), `activity_main.xml` (legacy layout), 5 unused drawables (`ic_bell`, `ic_circle_play`, `ic_seasonal`, `ic_stop_circle`, `ic_trash`), `LiquidGlassButton.kt`, and unused imports across all Kotlin source files.
 
 ## Build
 - JDK 21 required. AndroidIDE bundles it; for terminal builds, set `JAVA_HOME` to a Java 21 JDK before `./gradlew`.

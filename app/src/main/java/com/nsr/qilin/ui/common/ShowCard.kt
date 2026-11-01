@@ -24,7 +24,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -43,7 +42,6 @@ import androidx.compose.ui.unit.sp
 import com.nsr.qilin.domain.model.Show
 import com.nsr.qilin.ui.Spacing
 import com.nsr.qilin.ui.rememberLiquidGlassBorder
-import com.nsr.qilin.ui.rememberLiquidGlassChipBorder
 import com.nsr.qilin.ui.theme.ColorOSMotion
 import com.nsr.qilin.ui.theme.CornerRadius
 import com.nsr.qilin.ui.theme.JustSansFamily

@@ -43,9 +43,7 @@ my_donghua/
 │   └── src/main/
 │       ├── AndroidManifest.xml               # Foreground service dataSync, receivers, activities, widget providers
 │       ├── res/
-│       │   ├── drawable/                     # Vector assets, ic_download, liquid glass graphics
-│       │   └── raw/
-│       │       └── ytdlp                     # Bundled yt-dlp core executable archive
+│       │   └── drawable/                     # Vector assets, ic_download, liquid glass graphics
 │       └── java/
 │           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system
 │           └── com/nsr/qilin/

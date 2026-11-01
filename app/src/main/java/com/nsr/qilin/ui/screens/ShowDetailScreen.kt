@@ -30,12 +30,9 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.nsr.qilin.R
@@ -47,7 +44,6 @@ import com.nsr.qilin.ui.common.ColorOSPillButton
 import com.nsr.qilin.ui.common.EmptyState
 import androidx.compose.ui.text.font.FontWeight
 import com.nsr.qilin.ui.rememberLiquidGlassBorder
-import com.nsr.qilin.ui.rememberLiquidGlassChipBorder
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp

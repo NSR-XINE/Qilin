@@ -1,7 +1,6 @@
 package com.nsr.qilin.di
 
 import android.content.Context
-import androidx.room.Room
 import com.nsr.qilin.data.db.AppDatabase
 import com.nsr.qilin.data.db.ShowDao
 import dagger.Module

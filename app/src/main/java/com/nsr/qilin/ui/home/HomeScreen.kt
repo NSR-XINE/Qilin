@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -21,7 +20,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,7 +33,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nsr.qilin.R
-import com.nsr.qilin.domain.model.CountdownCalculator
 import com.nsr.qilin.domain.model.Show
 import com.nsr.qilin.ui.LocalHazeState
 import com.nsr.qilin.ui.Spacing
@@ -46,7 +43,6 @@ import com.nsr.qilin.ui.common.shimmerEffect
 import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.rememberLiquidGlassChipBorder
 import com.nsr.qilin.ui.screens.HomeViewModel
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -59,7 +55,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.ui.graphics.graphicsLayer
-import coil.compose.SubcomposeAsyncImage
 import com.nsr.qilin.data.service.AniListMedia
 import com.nsr.qilin.ui.theme.ColorOSMotion
 import com.nsr.qilin.ui.theme.CornerRadius
@@ -68,7 +63,6 @@ import com.nsr.qilin.ui.theme.colorOSPressBounce
 import com.nsr.qilin.ui.theme.RevealOnEnter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 @Composable
 fun HomeScreen(

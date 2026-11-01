@@ -1,7 +1,6 @@
 package com.nsr.qilin
 
 import android.app.Application
-import android.util.Log
 import com.nsr.qilin.data.pref.LegacySettingsMigrator
 import com.nsr.qilin.domain.repository.SettingsKeys
 import com.nsr.qilin.domain.repository.SettingsRepository

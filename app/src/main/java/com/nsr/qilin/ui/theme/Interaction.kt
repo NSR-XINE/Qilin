@@ -11,8 +11,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,10 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -80,29 +75,6 @@ object Haptics {
     fun reject() = play("reject", 120L, 28L, 240)
 
     fun success() = play("success", 160L, 22L, 230)
-}
-
-fun Modifier.hapticOnTap(enabled: Boolean = true): Modifier = composed {
-    if (!enabled) return@composed this
-    pointerInput(Unit) {
-        val touchSlop = viewConfiguration.touchSlop
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-            val downPosition = down.position
-            var moved = false
-            var released = false
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if ((change.position - downPosition).getDistance() > touchSlop) moved = true
-                if (!change.pressed) {
-                    released = true
-                    break
-                }
-            }
-            if (released && !moved) Haptics.tick()
-        }
-    }
 }
 
 object RevealMemory {
