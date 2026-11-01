@@ -33,6 +33,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.platform.LocalDensity
+import com.nsr.qilin.ui.theme.Haptics
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -41,6 +44,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.VolumeDown
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
@@ -105,6 +109,7 @@ class WatchActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Haptics.init(this)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             hideSystemUI()
@@ -315,16 +320,19 @@ class WatchActivity : ComponentActivity() {
                 }
             }
 
+            var activeStreamUrl by remember(watchUrl) { mutableStateOf(watchUrl) }
+            var activeStreamReferer by remember { mutableStateOf<String?>(null) }
+
             if (!useWebPlayer) {
                 DirectVideoPlayerScreen(
-                    watchUrl = watchUrl,
+                    watchUrl = activeStreamUrl,
                     showTitle = showTitle,
                     isInPip = isInPip,
                     isLocalFile = isLocalFile,
                     onBack = { finish() },
                     onDownload = {
-                        capturedStreamUrl = watchUrl
-                        capturedReferer = null
+                        capturedStreamUrl = activeStreamUrl
+                        capturedReferer = activeStreamReferer
                         showQualitySheet = true
                     },
                     onEnterPip = { enterPipMode() },
@@ -339,6 +347,8 @@ class WatchActivity : ComponentActivity() {
                     onStreamCaptured = { streamUrl, referer ->
                         capturedStreamUrl = streamUrl
                         capturedReferer = referer
+                        activeStreamUrl = streamUrl
+                        activeStreamReferer = referer
                     },
                     onPlaybackHeightDetected = { height ->
                         currentPlaybackHeight = height
@@ -376,6 +386,10 @@ class WatchActivity : ComponentActivity() {
                         capturedStreamUrl = streamUrl
                         capturedReferer = referer
                         showQualitySheet = true
+                    },
+                    onSwitchToNative = { streamUrl ->
+                        activeStreamUrl = streamUrl
+                        useWebPlayer = false
                     },
                     onOpenExternal = {
                         try {
@@ -544,6 +558,116 @@ class WatchActivity : ComponentActivity() {
     }
 
     @Composable
+    private fun ColorOSPlayerScrubber(
+        currentPosMs: Long,
+        durationMs: Long,
+        bufferedPosMs: Long,
+        isScrubbing: Boolean,
+        scrubPositionMs: Long,
+        onSeek: (Long) -> Unit,
+        onScrubbing: (Boolean, Long) -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        val totalD = if (durationMs > 0) durationMs else 1L
+        val activeVal = if (isScrubbing) scrubPositionMs else currentPosMs
+        val progressFrac = (activeVal.toFloat() / totalD.toFloat()).coerceIn(0f, 1f)
+        val bufferedFrac = (bufferedPosMs.toFloat() / totalD.toFloat()).coerceIn(0f, 1f)
+        val density = LocalDensity.current
+
+        BoxWithConstraints(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(34.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            val widthPx = constraints.maxWidth.toFloat()
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(totalD) {
+                        detectTapGestures(
+                            onTap = { offset ->
+                                val frac = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                val target = (frac * totalD).toLong()
+                                onSeek(target)
+                            }
+                        )
+                    }
+                    .pointerInput(totalD) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { offset ->
+                                val frac = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                val target = (frac * totalD).toLong()
+                                onScrubbing(true, target)
+                            },
+                            onDragEnd = {
+                                onSeek(scrubPositionMs)
+                                onScrubbing(false, scrubPositionMs)
+                            },
+                            onDragCancel = {
+                                onScrubbing(false, activeVal)
+                            },
+                            onHorizontalDrag = { change, _ ->
+                                change.consume()
+                                val frac = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                val target = (frac * totalD).toLong()
+                                onScrubbing(true, target)
+                            }
+                        )
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                // Inactive Background Track
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(if (isScrubbing) 6.dp else 4.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.18f))
+                )
+
+                // Buffered Network Cache Track
+                if (bufferedFrac > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(bufferedFrac)
+                            .height(if (isScrubbing) 6.dp else 4.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.38f))
+                    )
+                }
+
+                // Active Track Gradient
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progressFrac)
+                        .height(if (isScrubbing) 6.dp else 4.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
+                            )
+                        )
+                )
+
+                // Scrubber Thumb Handle with Glow
+                val thumbSize = if (isScrubbing) 15.dp else 11.dp
+                val thumbOffsetDp = with(density) { ((widthPx * progressFrac) - (thumbSize.toPx() / 2)).coerceAtLeast(0f).toDp() }
+
+                Box(
+                    modifier = Modifier
+                        .offset(x = thumbOffsetDp)
+                        .size(thumbSize)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .border(1.5.dp, Color(0xFF0082FB), CircleShape)
+                )
+            }
+        }
+    }
+
+    @Composable
     private fun DirectVideoPlayerScreen(
         watchUrl: String,
         showTitle: String,
@@ -578,7 +702,22 @@ class WatchActivity : ComponentActivity() {
 
         var brightnessHud by remember { mutableStateOf<Float?>(null) }
         var volumeHud by remember { mutableStateOf<Float?>(null) }
-        var doubleTapSeekBadge by remember { mutableStateOf<String?>(null) }
+        var doubleTapSeekSide by remember { mutableStateOf<Int?>(null) } // -1: left, 1: right
+        var accumulatedSeekSec by remember { mutableIntStateOf(0) }
+
+        var isHolding2x by remember { mutableStateOf(false) }
+        var isScreenLocked by remember { mutableStateOf(false) }
+        var showUnlockPill by remember { mutableStateOf(false) }
+        var lastUnlockPillTime by remember { mutableLongStateOf(0L) }
+
+        var aspectRatioToast by remember { mutableStateOf<String?>(null) }
+        var showSpeedDialog by remember { mutableStateOf(false) }
+        var showRemainingTime by remember { mutableStateOf(false) }
+
+        var isHorizontalDragging by remember { mutableStateOf(false) }
+        var dragSeekTargetMs by remember { mutableLongStateOf(0L) }
+        var dragSeekDeltaSec by remember { mutableLongStateOf(0L) }
+        var dragSeekStartMs by remember { mutableLongStateOf(0L) }
 
         var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
@@ -629,8 +768,8 @@ class WatchActivity : ComponentActivity() {
         }
 
         // Auto-hide controls
-        LaunchedEffect(showControls, lastInteractionTime, isPlaying) {
-            if (showControls && isPlaying) {
+        LaunchedEffect(showControls, lastInteractionTime, isPlaying, isScreenLocked) {
+            if (showControls && isPlaying && !isScreenLocked) {
                 delay(4000)
                 showControls = false
             }
@@ -649,10 +788,23 @@ class WatchActivity : ComponentActivity() {
                 volumeHud = null
             }
         }
-        LaunchedEffect(doubleTapSeekBadge) {
-            if (doubleTapSeekBadge != null) {
-                delay(700)
-                doubleTapSeekBadge = null
+        LaunchedEffect(doubleTapSeekSide, accumulatedSeekSec) {
+            if (doubleTapSeekSide != null) {
+                delay(750)
+                doubleTapSeekSide = null
+                accumulatedSeekSec = 0
+            }
+        }
+        LaunchedEffect(aspectRatioToast) {
+            if (aspectRatioToast != null) {
+                delay(1400)
+                aspectRatioToast = null
+            }
+        }
+        LaunchedEffect(showUnlockPill, lastUnlockPillTime) {
+            if (showUnlockPill) {
+                delay(3000)
+                showUnlockPill = false
             }
         }
 
@@ -680,84 +832,169 @@ class WatchActivity : ComponentActivity() {
                 }
             )
 
-            // Gesture Detector Layer (Tap & Double Tap across screen)
+            // Gesture Detector Layer (Tap, Long Press 2x, Double Tap & Swipe Seek)
             if (!isInPip) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(exoPlayerState, durationMs) {
-                            detectTapGestures(
-                                onTap = {
-                                    showControls = !showControls
-                                    if (showControls) lastInteractionTime = System.currentTimeMillis()
-                                },
-                                onDoubleTap = { offset ->
-                                    val p = exoPlayerState ?: return@detectTapGestures
-                                    if (offset.x < size.width / 2f) {
-                                        val target = (p.currentPosition - 10000L).coerceAtLeast(0L)
-                                        p.seekTo(target)
-                                        currentPosMs = target
-                                        doubleTapSeekBadge = "-10s"
-                                    } else {
-                                        val maxD = if (p.duration > 0) p.duration else Long.MAX_VALUE
-                                        val target = (p.currentPosition + 10000L).coerceAtMost(maxD)
-                                        p.seekTo(target)
-                                        currentPosMs = target
-                                        doubleTapSeekBadge = "+10s"
-                                    }
-                                    lastInteractionTime = System.currentTimeMillis()
+                if (isScreenLocked) {
+                    // When screen is locked, any tap shows the unlock pill
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                showUnlockPill = true
+                                lastUnlockPillTime = System.currentTimeMillis()
+                                Haptics.tick()
+                            }
+                    )
+                } else {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        // Left 22% Zone: Brightness Drag & Left Double-Tap Rewind 10s
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(0.22f)
+                                .pointerInput(exoPlayerState) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            showControls = !showControls
+                                            if (showControls) lastInteractionTime = System.currentTimeMillis()
+                                        },
+                                        onDoubleTap = {
+                                            val p = exoPlayerState ?: return@detectTapGestures
+                                            accumulatedSeekSec = if (doubleTapSeekSide == -1) accumulatedSeekSec + 10 else 10
+                                            doubleTapSeekSide = -1
+                                            val target = (p.currentPosition - 10000L).coerceAtLeast(0L)
+                                            p.seekTo(target)
+                                            currentPosMs = target
+                                            Haptics.tick()
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        }
+                                    )
                                 }
-                            )
-                        }
-                )
+                                .pointerInput(Unit) {
+                                    detectVerticalDragGestures(
+                                        onDragStart = { lastInteractionTime = System.currentTimeMillis() },
+                                        onDragEnd = { lastInteractionTime = System.currentTimeMillis() },
+                                        onDragCancel = { lastInteractionTime = System.currentTimeMillis() },
+                                        onVerticalDrag = { _, dragAmount ->
+                                            val deltaRatio = -dragAmount / 500f
+                                            val lp = activity?.window?.attributes
+                                            val currentB = if (lp != null && lp.screenBrightness >= 0f) lp.screenBrightness else 0.5f
+                                            val newB = (currentB + deltaRatio).coerceIn(0.02f, 1.0f)
+                                            lp?.screenBrightness = newB
+                                            activity?.window?.attributes = lp
+                                            brightnessHud = newB
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        }
+                                    )
+                                }
+                        )
 
-                // Left 25% Edge Strip for Brightness Drag
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.25f)
-                        .align(Alignment.CenterStart)
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragStart = { lastInteractionTime = System.currentTimeMillis() },
-                                onDragEnd = { lastInteractionTime = System.currentTimeMillis() },
-                                onDragCancel = { lastInteractionTime = System.currentTimeMillis() },
-                                onVerticalDrag = { _, dragAmount ->
-                                    val deltaRatio = -dragAmount / 500f
-                                    val lp = activity?.window?.attributes
-                                    val currentB = if (lp != null && lp.screenBrightness >= 0f) lp.screenBrightness else 0.5f
-                                    val newB = (currentB + deltaRatio).coerceIn(0.02f, 1.0f)
-                                    lp?.screenBrightness = newB
-                                    activity?.window?.attributes = lp
-                                    brightnessHud = newB
-                                    lastInteractionTime = System.currentTimeMillis()
+                        // Center 56% Zone: Tap Controls, Long-press 2x Speed, Horizontal Drag to Seek, Double-tap Play/Pause
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(0.56f)
+                                .pointerInput(playbackSpeed) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            showControls = !showControls
+                                            if (showControls) lastInteractionTime = System.currentTimeMillis()
+                                        },
+                                        onDoubleTap = {
+                                            val p = exoPlayerState ?: return@detectTapGestures
+                                            if (p.isPlaying) p.pause() else p.play()
+                                            isPlaying = p.isPlaying
+                                            Haptics.confirm()
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        },
+                                        onLongPress = {
+                                            isHolding2x = true
+                                            exoPlayerState?.playbackParameters = PlaybackParameters(2.0f)
+                                            Haptics.soft()
+                                        },
+                                        onPress = {
+                                            tryAwaitRelease()
+                                            if (isHolding2x) {
+                                                isHolding2x = false
+                                                exoPlayerState?.playbackParameters = PlaybackParameters(playbackSpeed)
+                                                Haptics.soft()
+                                            }
+                                        }
+                                    )
                                 }
-                            )
-                        }
-                )
+                                .pointerInput(durationMs) {
+                                    detectHorizontalDragGestures(
+                                        onDragStart = {
+                                            isHorizontalDragging = true
+                                            dragSeekStartMs = currentPosMs
+                                            dragSeekTargetMs = currentPosMs
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        },
+                                        onDragEnd = {
+                                            exoPlayerState?.seekTo(dragSeekTargetMs)
+                                            currentPosMs = dragSeekTargetMs
+                                            isHorizontalDragging = false
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        },
+                                        onDragCancel = {
+                                            isHorizontalDragging = false
+                                        },
+                                        onHorizontalDrag = { _, dragAmount ->
+                                            val deltaMs = (dragAmount * 150).toLong()
+                                            val maxD = if (durationMs > 0) durationMs else Long.MAX_VALUE
+                                            dragSeekTargetMs = (dragSeekTargetMs + deltaMs).coerceIn(0L, maxD)
+                                            dragSeekDeltaSec = (dragSeekTargetMs - dragSeekStartMs) / 1000L
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        }
+                                    )
+                                }
+                        )
 
-                // Right 25% Edge Strip for Volume Drag
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.25f)
-                        .align(Alignment.CenterEnd)
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragStart = { lastInteractionTime = System.currentTimeMillis() },
-                                onDragEnd = { lastInteractionTime = System.currentTimeMillis() },
-                                onDragCancel = { lastInteractionTime = System.currentTimeMillis() },
-                                onVerticalDrag = { _, dragAmount ->
-                                    val deltaRatio = -dragAmount / 500f
-                                    val currentV = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
-                                    val newV = (currentV + deltaRatio * maxVolume).coerceIn(0f, maxVolume)
-                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newV.toInt(), 0)
-                                    volumeHud = newV / maxVolume
-                                    lastInteractionTime = System.currentTimeMillis()
+                        // Right 22% Zone: Volume Drag & Right Double-Tap Forward 10s
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(0.22f)
+                                .pointerInput(exoPlayerState) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            showControls = !showControls
+                                            if (showControls) lastInteractionTime = System.currentTimeMillis()
+                                        },
+                                        onDoubleTap = {
+                                            val p = exoPlayerState ?: return@detectTapGestures
+                                            accumulatedSeekSec = if (doubleTapSeekSide == 1) accumulatedSeekSec + 10 else 10
+                                            doubleTapSeekSide = 1
+                                            val maxD = if (p.duration > 0) p.duration else Long.MAX_VALUE
+                                            val target = (p.currentPosition + 10000L).coerceAtMost(maxD)
+                                            p.seekTo(target)
+                                            currentPosMs = target
+                                            Haptics.tick()
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        }
+                                    )
                                 }
-                            )
-                        }
-                )
+                                .pointerInput(Unit) {
+                                    detectVerticalDragGestures(
+                                        onDragStart = { lastInteractionTime = System.currentTimeMillis() },
+                                        onDragEnd = { lastInteractionTime = System.currentTimeMillis() },
+                                        onDragCancel = { lastInteractionTime = System.currentTimeMillis() },
+                                        onVerticalDrag = { _, dragAmount ->
+                                            val deltaRatio = -dragAmount / 500f
+                                            val currentV = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+                                            val newV = (currentV + deltaRatio * maxVolume).coerceIn(0f, maxVolume)
+                                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newV.toInt(), 0)
+                                            volumeHud = newV / maxVolume
+                                            lastInteractionTime = System.currentTimeMillis()
+                                        }
+                                    )
+                                }
+                        )
+                    }
+                }
             }
 
             // Buffering Spinner
@@ -838,42 +1075,210 @@ class WatchActivity : ComponentActivity() {
                 }
             }
 
-            // Double Tap Seek Ripple Badge
+            // Floating 2.0x Fast-Forwarding Pill
             AnimatedVisibility(
-                visible = doubleTapSeekBadge != null && !isInPip,
-                enter = fadeIn(ColorOSMotion.NavFadeInSpec) + scaleIn(ColorOSMotion.ScaleInFloat, initialScale = 0.88f),
-                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
+                visible = isHolding2x && !isInPip,
+                enter = fadeIn(ColorOSMotion.FastEffectSpring) + slideInVertically { -it },
+                exit = fadeOut(ColorOSMotion.FastEffectSpring) + slideOutVertically { -it },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 18.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(CornerRadius.pill))
+                        .background(Color(0xFF0B0E18).copy(alpha = 0.90f))
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(listOf(Color(0xFF0082FB), Color(0xFF52A9FF))),
+                            shape = RoundedCornerShape(CornerRadius.pill)
+                        )
+                        .padding(horizontal = 18.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.FastForward,
+                        contentDescription = null,
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "2.0x Fast-Forwarding",
+                        color = Color.White,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.3.sp
+                    )
+                }
+            }
+
+            // Screen Locked / Tap to Unlock Pill
+            AnimatedVisibility(
+                visible = isScreenLocked && showUnlockPill && !isInPip,
+                enter = fadeIn(ColorOSMotion.FastEffectSpring) + scaleIn(ColorOSMotion.ExpressiveFastSpatialSpring, initialScale = 0.88f),
+                exit = fadeOut(ColorOSMotion.FastEffectSpring) + scaleOut(targetScale = 0.88f),
                 modifier = Modifier.align(Alignment.Center)
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color(0xFF0F1424).copy(alpha = 0.85f))
+                        .clip(RoundedCornerShape(CornerRadius.surface))
+                        .background(Color(0xFF0F121C).copy(alpha = 0.92f))
                         .border(
-                            width = 0.75.dp,
-                            brush = Brush.linearGradient(
-                                listOf(Color(0xFF0082FB).copy(alpha = 0.6f), Color(0xFF52A9FF).copy(alpha = 0.3f))
-                            ),
-                            shape = RoundedCornerShape(18.dp)
+                            width = 1.dp,
+                            brush = Brush.linearGradient(listOf(Color(0xFF0082FB), Color(0xFF52A9FF))),
+                            shape = RoundedCornerShape(CornerRadius.surface)
                         )
-                        .padding(horizontal = 24.dp, vertical = 14.dp),
-                    contentAlignment = Alignment.Center
+                        .clickable {
+                            isScreenLocked = false
+                            showControls = true
+                            showUnlockPill = false
+                            Haptics.toggle(false)
+                        }
+                        .colorOSPressBounce(pressedScale = 0.95f)
+                        .padding(horizontal = 22.dp, vertical = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (doubleTapSeekBadge?.startsWith("-") == true) Icons.Rounded.Replay10 else Icons.Rounded.Forward10,
-                            contentDescription = null,
-                            tint = Color(0xFF0082FB),
-                            modifier = Modifier.size(28.dp)
+                    Icon(
+                        imageVector = Icons.Rounded.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = "Screen Locked • Tap to Unlock",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Double Tap Seek Arc Overlays
+            // Left Seek Arc Overlay
+            AnimatedVisibility(
+                visible = doubleTapSeekSide == -1 && !isInPip,
+                enter = fadeIn(ColorOSMotion.NavFadeInSpec) + scaleIn(ColorOSMotion.ExpressiveFastSpatialSpring, initialScale = 0.85f),
+                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 36.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Color(0xFF0B0E18).copy(alpha = 0.88f))
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(listOf(Color(0xFF0082FB).copy(alpha = 0.8f), Color(0xFF52A9FF).copy(alpha = 0.3f))),
+                            shape = RoundedCornerShape(22.dp)
                         )
-                        Text(
-                            text = doubleTapSeekBadge ?: "",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                        .padding(horizontal = 22.dp, vertical = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.FastRewind,
+                        contentDescription = null,
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "-${accumulatedSeekSec}s",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Right Seek Arc Overlay
+            AnimatedVisibility(
+                visible = doubleTapSeekSide == 1 && !isInPip,
+                enter = fadeIn(ColorOSMotion.NavFadeInSpec) + scaleIn(ColorOSMotion.ExpressiveFastSpatialSpring, initialScale = 0.85f),
+                exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 36.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Color(0xFF0B0E18).copy(alpha = 0.88f))
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(listOf(Color(0xFF0082FB).copy(alpha = 0.8f), Color(0xFF52A9FF).copy(alpha = 0.3f))),
+                            shape = RoundedCornerShape(22.dp)
+                        )
+                        .padding(horizontal = 22.dp, vertical = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.FastForward,
+                        contentDescription = null,
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "+${accumulatedSeekSec}s",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Horizontal Swipe Scrubbing Capsule
+            AnimatedVisibility(
+                visible = isHorizontalDragging && !isInPip,
+                enter = fadeIn(ColorOSMotion.FastEffectSpring) + scaleIn(ColorOSMotion.ExpressiveFastSpatialSpring, initialScale = 0.90f),
+                exit = fadeOut(ColorOSMotion.FastEffectSpring),
+                modifier = Modifier.align(Alignment.Center)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(CornerRadius.card))
+                        .background(Color(0xFF0B0E18).copy(alpha = 0.92f))
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(listOf(Color(0xFF0082FB), Color(0xFF52A9FF))),
+                            shape = RoundedCornerShape(CornerRadius.card)
+                        )
+                        .padding(horizontal = 26.dp, vertical = 18.dp)
+                ) {
+                    val sign = if (dragSeekDeltaSec >= 0) "+" else ""
+                    Text(
+                        text = formatTime(dragSeekTargetMs),
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "[$sign${dragSeekDeltaSec}s]",
+                        color = if (dragSeekDeltaSec >= 0) Color(0xFF0082FB) else Color(0xFFFF5252),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(140.dp)
+                            .height(4.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.2f))
+                    ) {
+                        val progressFrac = if (durationMs > 0) (dragSeekTargetMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progressFrac)
+                                .clip(CircleShape)
+                                .background(Color(0xFF0082FB))
                         )
                     }
                 }
@@ -889,12 +1294,17 @@ class WatchActivity : ComponentActivity() {
                     .padding(start = 24.dp)
             ) {
                 val bVal = brightnessHud ?: 0.5f
+                val bIcon = when {
+                    bVal < 0.33f -> Icons.Rounded.BrightnessLow
+                    bVal < 0.66f -> Icons.Rounded.BrightnessMedium
+                    else -> Icons.Rounded.BrightnessHigh
+                }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .width(44.dp)
                         .clip(RoundedCornerShape(22.dp))
-                        .background(Color(0xFF0E111C).copy(alpha = 0.85f))
+                        .background(Color(0xFF0E111C).copy(alpha = 0.88f))
                         .border(
                             width = 0.6.dp,
                             color = Color.White.copy(alpha = 0.18f),
@@ -903,7 +1313,7 @@ class WatchActivity : ComponentActivity() {
                         .padding(vertical = 14.dp, horizontal = 8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.BrightnessMedium,
+                        imageVector = bIcon,
                         contentDescription = "Brightness",
                         tint = Color(0xFF0082FB),
                         modifier = Modifier.size(20.dp)
@@ -949,12 +1359,17 @@ class WatchActivity : ComponentActivity() {
                     .padding(end = 24.dp)
             ) {
                 val vVal = volumeHud ?: 0.5f
+                val vIcon = when {
+                    vVal <= 0.01f -> Icons.AutoMirrored.Rounded.VolumeOff
+                    vVal < 0.5f -> Icons.AutoMirrored.Rounded.VolumeDown
+                    else -> Icons.AutoMirrored.Rounded.VolumeUp
+                }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .width(44.dp)
                         .clip(RoundedCornerShape(22.dp))
-                        .background(Color(0xFF0E111C).copy(alpha = 0.85f))
+                        .background(Color(0xFF0E111C).copy(alpha = 0.88f))
                         .border(
                             width = 0.6.dp,
                             color = Color.White.copy(alpha = 0.18f),
@@ -963,7 +1378,7 @@ class WatchActivity : ComponentActivity() {
                         .padding(vertical = 14.dp, horizontal = 8.dp)
                 ) {
                     Icon(
-                        imageVector = if (vVal > 0f) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff,
+                        imageVector = vIcon,
                         contentDescription = "Volume",
                         tint = Color(0xFF0082FB),
                         modifier = Modifier.size(20.dp)
@@ -999,9 +1414,47 @@ class WatchActivity : ComponentActivity() {
                 }
             }
 
+            // Aspect Ratio Toast Pill
+            AnimatedVisibility(
+                visible = aspectRatioToast != null && !isInPip,
+                enter = fadeIn(ColorOSMotion.FastEffectSpring) + slideInVertically { -it },
+                exit = fadeOut(ColorOSMotion.FastEffectSpring),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 18.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(CornerRadius.pill))
+                        .background(Color(0xFF0B0E18).copy(alpha = 0.90f))
+                        .border(
+                            width = 0.75.dp,
+                            color = Color.White.copy(alpha = 0.22f),
+                            shape = RoundedCornerShape(CornerRadius.pill)
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AspectRatio,
+                        contentDescription = null,
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = aspectRatioToast ?: "",
+                        color = Color.White,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
             // Complete ColorOS 17 Liquid Glass Controls Overlay
             AnimatedVisibility(
-                visible = showControls && !isInPip,
+                visible = showControls && !isScreenLocked && !isInPip,
                 enter = fadeIn(ColorOSMotion.NavFadeInSpec),
                 exit = fadeOut(ColorOSMotion.NavFadeOutSpec),
                 modifier = Modifier.fillMaxSize()
@@ -1012,10 +1465,10 @@ class WatchActivity : ComponentActivity() {
                         .background(
                             Brush.verticalGradient(
                                 listOf(
-                                    Color.Black.copy(alpha = 0.65f),
+                                    Color.Black.copy(alpha = 0.70f),
                                     Color.Transparent,
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.75f)
+                                    Color.Black.copy(alpha = 0.80f)
                                 )
                             )
                         )
@@ -1026,6 +1479,36 @@ class WatchActivity : ComponentActivity() {
                             showControls = false
                         }
                 ) {
+                    // Floating Screen Lock Button (Middle-Left)
+                    IconButton(
+                        onClick = {
+                            isScreenLocked = true
+                            showControls = false
+                            showUnlockPill = true
+                            lastUnlockPillTime = System.currentTimeMillis()
+                            Haptics.toggle(true)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 16.dp)
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF0F121C).copy(alpha = 0.85f))
+                            .border(
+                                width = 0.75.dp,
+                                color = Color.White.copy(alpha = 0.20f),
+                                shape = CircleShape
+                            )
+                            .colorOSPressBounce(pressedScale = 0.90f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.LockOpen,
+                            contentDescription = "Lock Screen",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     // Top Liquid Glass Capsule Bar
                     Row(
                         modifier = Modifier
@@ -1040,14 +1523,14 @@ class WatchActivity : ComponentActivity() {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Left Capsule: Back + Title
+                        // Left Capsule: Back + Title + Quality Badge
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier
                                 .weight(1f, fill = false)
                                 .clip(RoundedCornerShape(CornerRadius.surface))
-                                .background(Color(0xFF0F121C).copy(alpha = 0.85f))
+                                .background(Color(0xFF0F121C).copy(alpha = 0.88f))
                                 .border(
                                     width = 0.65.dp,
                                     brush = Brush.linearGradient(
@@ -1092,7 +1575,7 @@ class WatchActivity : ComponentActivity() {
                                             .background(Color(0xFF0082FB))
                                     )
                                     Text(
-                                        text = "DIRECT HD STREAM",
+                                        text = if (isLocalFile) "LOCAL OFFLINE FILE" else "DIRECT HD STREAM",
                                         color = Color(0xFF0082FB),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold
@@ -1109,7 +1592,7 @@ class WatchActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(CornerRadius.surface))
-                                .background(Color(0xFF0F121C).copy(alpha = 0.85f))
+                                .background(Color(0xFF0F121C).copy(alpha = 0.88f))
                                 .border(
                                     width = 0.65.dp,
                                     brush = Brush.linearGradient(
@@ -1138,22 +1621,29 @@ class WatchActivity : ComponentActivity() {
                                 }
                             }
 
-                            // Aspect Ratio Toggle
+                            // Aspect Ratio Toggle Button (Cycles FIT -> ZOOM -> FILL)
                             IconButton(
                                 onClick = {
-                                    resizeMode = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_FIT) {
-                                        AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                    } else {
-                                        AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                    val nextMode = when (resizeMode) {
+                                        AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                        AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                                        else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
                                     }
+                                    resizeMode = nextMode
+                                    aspectRatioToast = when (nextMode) {
+                                        AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Crop to Fill Screen"
+                                        AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch to Fill"
+                                        else -> "Fit to Screen (16:9)"
+                                    }
+                                    Haptics.tick()
                                     lastInteractionTime = System.currentTimeMillis()
                                 },
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(
-                                        if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
-                                            Color(0xFF0082FB).copy(alpha = 0.20f)
+                                        if (resizeMode != AspectRatioFrameLayout.RESIZE_MODE_FIT)
+                                            Color(0xFF0082FB).copy(alpha = 0.22f)
                                         else Color.White.copy(alpha = 0.08f)
                                     )
                                     .colorOSPressBounce(pressedScale = 0.92f)
@@ -1161,7 +1651,7 @@ class WatchActivity : ComponentActivity() {
                                 Icon(
                                     imageVector = Icons.Rounded.AspectRatio,
                                     contentDescription = "Aspect Ratio",
-                                    tint = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) Color(0xFF0082FB) else Color.White,
+                                    tint = if (resizeMode != AspectRatioFrameLayout.RESIZE_MODE_FIT) Color(0xFF0082FB) else Color.White,
                                     modifier = Modifier.size(19.dp)
                                 )
                             }
@@ -1190,7 +1680,7 @@ class WatchActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF0082FB).copy(alpha = 0.15f))
+                                        .background(Color(0xFF0082FB).copy(alpha = 0.18f))
                                         .colorOSPressBounce(pressedScale = 0.92f)
                                 ) {
                                     Icon(
@@ -1204,7 +1694,7 @@ class WatchActivity : ComponentActivity() {
                         }
                     }
 
-                    // Center Control Buttons (Rewind 10, Play/Pause Hero, Fast Forward 10)
+                    // Center Control Buttons (Rewind 10, Hero Play/Pause, Fast Forward 10)
                     Row(
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -1214,7 +1704,7 @@ class WatchActivity : ComponentActivity() {
                                 onClick = {} // Consume click
                             ),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(28.dp)
+                        horizontalArrangement = Arrangement.spacedBy(36.dp)
                     ) {
                         // Rewind 10s
                         IconButton(
@@ -1223,18 +1713,21 @@ class WatchActivity : ComponentActivity() {
                                 val target = (p.currentPosition - 10000L).coerceAtLeast(0L)
                                 p.seekTo(target)
                                 currentPosMs = target
+                                Haptics.tick()
                                 lastInteractionTime = System.currentTimeMillis()
                             },
                             modifier = Modifier
-                                .size(52.dp)
+                                .size(54.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF101320).copy(alpha = 0.70f))
+                                .background(Color(0xFF0F121C).copy(alpha = 0.78f))
                                 .border(
-                                    width = 0.65.dp,
-                                    color = Color.White.copy(alpha = 0.18f),
+                                    width = 0.75.dp,
+                                    brush = Brush.linearGradient(
+                                        listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.05f))
+                                    ),
                                     shape = CircleShape
                                 )
-                                .colorOSPressBounce(pressedScale = 0.90f)
+                                .colorOSPressBounce(pressedScale = 0.88f)
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Replay10,
@@ -1254,34 +1747,35 @@ class WatchActivity : ComponentActivity() {
                                     p.play()
                                 }
                                 isPlaying = p.isPlaying
+                                Haptics.confirm()
                                 lastInteractionTime = System.currentTimeMillis()
                             },
                             modifier = Modifier
-                                .size(72.dp)
+                                .size(76.dp)
                                 .clip(CircleShape)
                                 .background(
                                     Brush.radialGradient(
                                         listOf(
-                                            Color(0xFF0082FB).copy(alpha = 0.28f),
-                                            Color(0xFF52A9FF).copy(alpha = 0.15f),
-                                            Color(0xFF0C0E16).copy(alpha = 0.85f)
+                                            Color(0xFF0082FB).copy(alpha = 0.35f),
+                                            Color(0xFF52A9FF).copy(alpha = 0.18f),
+                                            Color(0xFF0C0E16).copy(alpha = 0.90f)
                                         )
                                     )
                                 )
                                 .border(
-                                    width = 1.dp,
+                                    width = 1.25.dp,
                                     brush = Brush.linearGradient(
                                         listOf(Color(0xFF0082FB), Color(0xFF52A9FF))
                                     ),
                                     shape = CircleShape
                                 )
-                                .colorOSPressBounce(pressedScale = 0.90f)
+                                .colorOSPressBounce(pressedScale = 0.88f)
                         ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                 contentDescription = if (isPlaying) "Pause" else "Play",
                                 tint = Color.White,
-                                modifier = Modifier.size(38.dp)
+                                modifier = Modifier.size(42.dp)
                             )
                         }
 
@@ -1293,18 +1787,21 @@ class WatchActivity : ComponentActivity() {
                                 val target = (p.currentPosition + 10000L).coerceAtMost(maxD)
                                 p.seekTo(target)
                                 currentPosMs = target
+                                Haptics.tick()
                                 lastInteractionTime = System.currentTimeMillis()
                             },
                             modifier = Modifier
-                                .size(52.dp)
+                                .size(54.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF101320).copy(alpha = 0.70f))
+                                .background(Color(0xFF0F121C).copy(alpha = 0.78f))
                                 .border(
-                                    width = 0.65.dp,
-                                    color = Color.White.copy(alpha = 0.18f),
+                                    width = 0.75.dp,
+                                    brush = Brush.linearGradient(
+                                        listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.05f))
+                                    ),
                                     shape = CircleShape
                                 )
-                                .colorOSPressBounce(pressedScale = 0.90f)
+                                .colorOSPressBounce(pressedScale = 0.88f)
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Forward10,
@@ -1323,7 +1820,7 @@ class WatchActivity : ComponentActivity() {
                             .navigationBarsPadding()
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                             .clip(RoundedCornerShape(CornerRadius.surface))
-                            .background(Color(0xFF0F121C).copy(alpha = 0.85f))
+                            .background(Color(0xFF0F121C).copy(alpha = 0.88f))
                             .border(
                                 width = 0.65.dp,
                                 brush = Brush.linearGradient(
@@ -1344,16 +1841,30 @@ class WatchActivity : ComponentActivity() {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // Timestamps
+                            // Timestamps (tap to toggle between total and remaining time)
                             val displayPos = if (isScrubbing) scrubPositionMs else currentPosMs
+                            val timeText = formatTime(displayPos)
+                            val durationOrRemaining = if (showRemainingTime && durationMs > 0) {
+                                "-${formatTime((durationMs - displayPos).coerceAtLeast(0L))}"
+                            } else {
+                                formatTime(durationMs)
+                            }
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        showRemainingTime = !showRemainingTime
+                                        Haptics.tick()
+                                    }
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = formatTime(displayPos),
+                                    text = timeText,
                                     color = Color(0xFF0082FB),
-                                    fontSize = 13.sp,
+                                    fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
@@ -1362,9 +1873,9 @@ class WatchActivity : ComponentActivity() {
                                     fontSize = 12.sp
                                 )
                                 Text(
-                                    text = formatTime(durationMs),
-                                    color = Color.White.copy(alpha = 0.7f),
-                                    fontSize = 13.sp,
+                                    text = durationOrRemaining,
+                                    color = Color.White.copy(alpha = 0.75f),
+                                    fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -1374,20 +1885,17 @@ class WatchActivity : ComponentActivity() {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // Speed Selector Pill
+                                // Speed Selector Pill (Click opens speed selection sheet)
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(Color.White.copy(alpha = 0.10f))
                                         .clickable {
-                                            val speeds = listOf(1.0f, 1.25f, 1.5f, 2.0f)
-                                            val nextIndex = (speeds.indexOf(playbackSpeed) + 1) % speeds.size
-                                            val nextSpeed = speeds[nextIndex]
-                                            playbackSpeed = nextSpeed
-                                            exoPlayerState?.playbackParameters = PlaybackParameters(nextSpeed)
-                                            lastInteractionTime = System.currentTimeMillis()
+                                            showSpeedDialog = true
+                                            Haptics.soft()
                                         }
-                                        .padding(horizontal = 9.dp, vertical = 4.dp)
+                                        .colorOSPressBounce(pressedScale = 0.92f)
+                                        .padding(horizontal = 10.dp, vertical = 5.dp)
                                 ) {
                                     Text(
                                         text = "${playbackSpeed}x",
@@ -1397,7 +1905,7 @@ class WatchActivity : ComponentActivity() {
                                     )
                                 }
 
-                                // Orientation Lock Toggle
+                                // Orientation Lock / Sensor Toggle
                                 IconButton(
                                     onClick = {
                                         if (activity != null) {
@@ -1407,10 +1915,11 @@ class WatchActivity : ComponentActivity() {
                                                 ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                                             }
                                         }
+                                        Haptics.tick()
                                         lastInteractionTime = System.currentTimeMillis()
                                     },
                                     modifier = Modifier
-                                        .size(30.dp)
+                                        .size(32.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(Color.White.copy(alpha = 0.10f))
                                         .colorOSPressBounce(pressedScale = 0.90f)
@@ -1419,42 +1928,121 @@ class WatchActivity : ComponentActivity() {
                                         imageVector = Icons.Rounded.ScreenRotation,
                                         contentDescription = "Rotate Screen",
                                         tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(17.dp)
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                        // ColorOS 17 Fluid Scrubber Slider
-                        val progressFraction = if (durationMs > 0) {
-                            val activeVal = if (isScrubbing) scrubPositionMs else currentPosMs
-                            (activeVal.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
-                        } else 0f
-
-                        Slider(
-                            value = progressFraction,
-                            onValueChange = { frac ->
-                                isScrubbing = true
-                                scrubPositionMs = (frac * durationMs).toLong()
-                                lastInteractionTime = System.currentTimeMillis()
-                            },
-                            onValueChangeFinished = {
-                                exoPlayerState?.seekTo(scrubPositionMs)
-                                currentPosMs = scrubPositionMs
+                        // ColorOS 17 Custom Scrubber with Buffered Cache Track
+                        ColorOSPlayerScrubber(
+                            currentPosMs = currentPosMs,
+                            durationMs = durationMs,
+                            bufferedPosMs = bufferedPosMs,
+                            isScrubbing = isScrubbing,
+                            scrubPositionMs = scrubPositionMs,
+                            onSeek = { target ->
+                                exoPlayerState?.seekTo(target)
+                                currentPosMs = target
                                 isScrubbing = false
                                 lastInteractionTime = System.currentTimeMillis()
                             },
-                            colors = SliderDefaults.colors(
-                                thumbColor = Color.White,
-                                activeTrackColor = Color(0xFF0082FB),
-                                inactiveTrackColor = Color.White.copy(alpha = 0.20f)
-                            ),
+                            onScrubbing = { scrubbing, target ->
+                                isScrubbing = scrubbing
+                                scrubPositionMs = target
+                                lastInteractionTime = System.currentTimeMillis()
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Playback Speed Selection ModalBottomSheet
+            if (showSpeedDialog) {
+                ModalBottomSheet(
+                    onDismissRequest = { showSpeedDialog = false },
+                    sheetState = rememberModalBottomSheetState(),
+                    containerColor = Color(0xFF0F121C),
+                    scrimColor = Color.Black.copy(alpha = 0.65f),
+                    shape = RoundedCornerShape(topStart = CornerRadius.sheet, topEnd = CornerRadius.sheet)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .navigationBarsPadding()
+                            .padding(bottom = 20.dp)
+                    ) {
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(28.dp)
-                        )
+                                .padding(bottom = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Playback Speed",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            IconButton(
+                                onClick = { showSpeedDialog = false },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.08f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "Close",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+                        speeds.forEach { spd ->
+                            val isSelected = playbackSpeed == spd
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(CornerRadius.card))
+                                    .background(if (isSelected) Color(0xFF0082FB).copy(alpha = 0.16f) else Color.Transparent)
+                                    .border(
+                                        width = if (isSelected) 1.dp else 0.5.dp,
+                                        color = if (isSelected) Color(0xFF0082FB).copy(alpha = 0.6f) else Color.White.copy(alpha = 0.08f),
+                                        shape = RoundedCornerShape(CornerRadius.card)
+                                    )
+                                    .clickable {
+                                        playbackSpeed = spd
+                                        exoPlayerState?.playbackParameters = PlaybackParameters(spd)
+                                        showSpeedDialog = false
+                                        Haptics.tick()
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = if (spd == 1.0f) "Normal (1.0x)" else "${spd}x",
+                                    color = if (isSelected) Color(0xFF0082FB) else Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0082FB),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             }
@@ -1502,6 +2090,7 @@ class WatchActivity : ComponentActivity() {
         onPlaybackHeightDetected: (Int) -> Unit,
         onBack: () -> Unit,
         onDownload: (String?, String?) -> Unit,
+        onSwitchToNative: ((String) -> Unit)? = null,
         onOpenExternal: () -> Unit,
         onQualitiesDetected: ((List<DownloadQualityOption>) -> Unit)? = null
     ) {
@@ -1629,11 +2218,12 @@ class WatchActivity : ComponentActivity() {
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF07080D))
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF07080D))
+            ) {
             // Liquid Glass Top Capsule Bar
             Box(
                 modifier = Modifier
@@ -1835,6 +2425,34 @@ class WatchActivity : ComponentActivity() {
                                     contentDescription = if (hasStream) "Stream Ready - Tap to Download" else "Download Episode",
                                     tint = if (hasStream) Color(0xFF0082FB) else Color.White.copy(alpha = 0.60f),
                                     modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        if (hasStream) {
+                            IconButton(
+                                onClick = {
+                                    val currentStream = detectedVideoUrl
+                                    if (!currentStream.isNullOrBlank()) {
+                                        onSwitchToNative?.invoke(currentStream)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF0082FB).copy(alpha = 0.22f))
+                                    .border(
+                                        width = 1.dp,
+                                        color = Color(0xFF0082FB),
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .colorOSPressBounce(pressedScale = 0.90f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.PlayArrow,
+                                    contentDescription = "Watch in Native Player",
+                                    tint = Color(0xFF0082FB),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
@@ -2259,7 +2877,59 @@ class WatchActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize()
             )
         }
+
+        // Floating CTA Pill to switch to Native Player
+        AnimatedVisibility(
+            visible = hasStream,
+            enter = fadeIn(ColorOSMotion.NavFadeInSpec) + slideInVertically { it },
+            exit = fadeOut(ColorOSMotion.NavFadeOutSpec) + slideOutVertically { it },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 20.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(CornerRadius.surface))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color(0xFF0082FB), Color(0xFF0066CC))
+                        )
+                    )
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            listOf(Color.White.copy(alpha = 0.40f), Color.Transparent)
+                        ),
+                        shape = RoundedCornerShape(CornerRadius.surface)
+                    )
+                    .clickable {
+                        detectedVideoUrl?.let { url ->
+                            onSwitchToNative?.invoke(url)
+                        }
+                    }
+                    .colorOSPressBounce(pressedScale = 0.94f)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PlayCircle,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    text = "Stream Ready • Watch in Native Player",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.2.sp
+                )
+            }
+        }
     }
+}
 
     private fun hideSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
