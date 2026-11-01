@@ -12,7 +12,7 @@ A sleek, high-aesthetic, themeable native Android application designed for Chine
 - **UI Framework**: Jetpack Compose (BOM `2026.09.00`), Material 3, Navigation-Compose
 - **Visual Design & Motion**:
   - **ColorOS 17 Fluid Motion** — Natural spring physics, fluid press bounce responses (`colorOSPressBounce`), and smooth easing curves across all interactive cards and controls
-  - **Predictive Back** — Back gestures shrink and round the current screen in real time before the navigation commits
+  - **Fluid Edge-to-Edge Transitions** — Smooth ColorOS 17 parallax horizontal slide transitions for screens and sub-pages with zero screen clipping or floating artifacts
   - **Haze 1.7.3** — Real-time backdrop blur & glassmorphism
   - **Kyant Liquid Glass** — Custom vendored AGSL shader-based liquid glass bottom navigation bar
   - **Performance-tuned**: Static glass background (zero per-frame gradient overhead), off-main-thread GPU luminance sampling, short direction-aware tab transitions, and cross-fade detail transitions
