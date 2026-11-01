@@ -16,7 +16,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +60,6 @@ import kotlinx.coroutines.delay
  * - Floating breathing dragon crest with micro-bob physical motion
  * - Metallic specular shimmer sweep across "QILIN" brand typography
  * - Dynamic fluid capsule progress beam with glowing leading point
- * - Bottom flagship engine anchor badge
  */
 @Composable
 fun AppLoadingScreen(
@@ -482,46 +480,6 @@ fun AppLoadingScreen(
                         color = accent
                     )
                 }
-            }
-        }
-
-        // Layer 3: Bottom Flagship Engine Badge
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 28.dp)
-                .graphicsLayer { alpha = enter * 0.85f }
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .background(
-                        color = if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.03f),
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                    .border(
-                        width = 0.8.dp,
-                        color = if (isDark) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(Color(0xFF00E676), CircleShape)
-                )
-                Spacer(modifier = Modifier.width(7.dp))
-                Text(
-                    text = "TIDAL & AURORA ENGINE • COLOROS 17",
-                    fontFamily = OnePlusSansFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 9.5.sp,
-                    letterSpacing = 1.2.sp,
-                    color = textColor.copy(alpha = 0.45f)
-                )
             }
         }
     }
