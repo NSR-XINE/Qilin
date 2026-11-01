@@ -1,45 +1,49 @@
 package com.nsr.qilin.ui.screens
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nsr.qilin.AlarmScheduler
 import com.nsr.qilin.data.service.AniListMedia
 import com.nsr.qilin.data.service.AniListService
 import com.nsr.qilin.data.service.PosterFetchService
 import com.nsr.qilin.domain.model.Show
 import com.nsr.qilin.ui.GlassHeader
-import com.nsr.qilin.ui.GlassSection
 import com.nsr.qilin.ui.Spacing
 import com.nsr.qilin.ui.common.ColorOSDialog
+import com.nsr.qilin.ui.common.ColorOSOutlinedButton
 import com.nsr.qilin.ui.common.ColorOSPillButton
 import com.nsr.qilin.ui.common.DonghuaPoster
+import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.theme.CornerRadius
+import com.nsr.qilin.ui.theme.Haptics
 import com.nsr.qilin.ui.theme.IconSize
+import com.nsr.qilin.ui.theme.JustSansFamily
 import com.nsr.qilin.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -59,6 +63,8 @@ fun AddEditShowScreen(
         if (!showId.isNullOrEmpty()) allShows.find { it.id == showId } else null
     }
 
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
     var title by remember { mutableStateOf("") }
     var titleZh by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("ongoing") }
@@ -77,32 +83,35 @@ fun AddEditShowScreen(
     var language by remember { mutableStateOf("") }
     var collectionId by remember { mutableStateOf("") }
     var aniListId by remember { mutableStateOf("") }
-    var isAutoFilling by remember { mutableStateOf(false) }
+
     var showAniListSearchDialog by remember { mutableStateOf(false) }
     var aniListSearchQuery by remember { mutableStateOf("") }
     var isSearchingAniList by remember { mutableStateOf(false) }
     var aniListSearchResults by remember { mutableStateOf<List<AniListMedia>>(emptyList()) }
 
+    var hasInitialized by remember(showId) { mutableStateOf(false) }
+
     LaunchedEffect(editingShow) {
-        editingShow?.let { show ->
-            title = show.title
-            titleZh = show.titleZh ?: ""
-            status = show.status
-            releaseDay = show.releaseDay ?: "Sunday"
-            releaseTime = show.releaseTime ?: ""
-            currentEp = show.currentEp.toString()
-            totalEp = show.totalEp.toString()
-            poster = show.poster ?: ""
-            watchUrl = show.watchUrl ?: ""
-            countdownUrl = show.countdownUrl ?: ""
-            notes = show.notes ?: ""
-            rating = show.rating.toFloat()
-            genres = show.genres ?: ""
-            studio = show.studio ?: ""
-            releaseYear = if (show.releaseYear > 0) show.releaseYear.toString() else ""
-            language = show.language ?: ""
-            collectionId = show.collectionId ?: ""
-            aniListId = show.aniListId?.toString() ?: ""
+        if (!hasInitialized && editingShow != null) {
+            hasInitialized = true
+            title = editingShow.title
+            titleZh = editingShow.titleZh ?: ""
+            status = editingShow.status
+            releaseDay = editingShow.releaseDay ?: "Sunday"
+            releaseTime = editingShow.releaseTime ?: ""
+            currentEp = editingShow.currentEp.toString()
+            totalEp = editingShow.totalEp.toString()
+            poster = editingShow.poster ?: ""
+            watchUrl = editingShow.watchUrl ?: ""
+            countdownUrl = editingShow.countdownUrl ?: ""
+            notes = editingShow.notes ?: ""
+            rating = editingShow.rating.toFloat()
+            genres = editingShow.genres ?: ""
+            studio = editingShow.studio ?: ""
+            releaseYear = if (editingShow.releaseYear > 0) editingShow.releaseYear.toString() else ""
+            language = editingShow.language ?: ""
+            collectionId = editingShow.collectionId ?: ""
+            aniListId = editingShow.aniListId?.toString() ?: ""
         }
     }
 
@@ -113,368 +122,468 @@ fun AddEditShowScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Transparent)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .layerBackdrop(screenBackdrop)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.lg)
-                .padding(top = headerTopPadding, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+                .padding(horizontal = Spacing.md)
+                .padding(top = headerTopPadding, bottom = 108.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Spacer(modifier = Modifier.height(Spacing.sm))
-
-            GlassSection {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    AddEditSectionTitle("Basic Info")
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
-                        OutlinedTextField(
-                            value = title,
-                            onValueChange = { title = it },
-                            label = { Text("English Title *") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
-                        )
-
-                        FilledTonalButton(
-                            onClick = {
-                                aniListSearchQuery = title.trim()
-                                showAniListSearchDialog = true
-                                if (aniListSearchQuery.isNotBlank()) {
-                                    isSearchingAniList = true
-                                    coroutineScope.launch {
-                                        aniListSearchResults = AniListService.searchAnime(aniListSearchQuery, limit = 12)
-                                        isSearchingAniList = false
-                                    }
-                                }
-                            },
-                            shape = RoundedCornerShape(CornerRadius.md),
-                            modifier = Modifier
-                                .height(56.dp)
-                                .colorOSPressBounce(pressedScale = 0.92f),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = Color(0xFF02A9FF),
-                                contentColor = Color.White
-                            ),
-                            contentPadding = PaddingValues(horizontal = 14.dp)
-                        ) {
-                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("AniList", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = titleZh,
-                        onValueChange = { titleZh = it },
-                        label = { Text("Chinese / Alternate Title") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.md)
+            // Top AniList Auto-fill Hero Card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(CornerRadius.surface))
+                    .background(Color(0xFF02A9FF).copy(alpha = 0.12f))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF02A9FF).copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(CornerRadius.surface)
                     )
-
-                    var statusExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = statusExpanded,
-                        onExpandedChange = { statusExpanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = status.replaceFirstChar { it.uppercase() },
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Status") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                            shape = RoundedCornerShape(CornerRadius.md)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = statusExpanded,
-                            onDismissRequest = { statusExpanded = false }
-                        ) {
-                            listOf("ongoing", "completed", "stopped").forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option.replaceFirstChar { it.uppercase() }) },
-                                    onClick = { status = option; statusExpanded = false }
-                                )
+                    .colorOSPressBounce(
+                        pressedScale = 0.98f,
+                        onClick = {
+                            Haptics.tick()
+                            aniListSearchQuery = title.trim()
+                            showAniListSearchDialog = true
+                            if (aniListSearchQuery.isNotBlank()) {
+                                isSearchingAniList = true
+                                coroutineScope.launch {
+                                    aniListSearchResults = AniListService.searchAnime(aniListSearchQuery, limit = 12)
+                                    isSearchingAniList = false
+                                }
                             }
                         }
+                    )
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF02A9FF).copy(alpha = 0.22f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.AutoAwesome,
+                                contentDescription = null,
+                                tint = Color(0xFF02A9FF),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Column {
+                            Text(
+                                text = "Auto-fill with AniList",
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.5.sp,
+                                color = Color(0xFF02A9FF)
+                            )
+                            Text(
+                                text = "Search to fill titles, poster, episodes, studio & synopsis",
+                                fontFamily = JustSansFamily,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
+
+                    Icon(
+                        imageVector = Icons.Rounded.Search,
+                        contentDescription = "Search",
+                        tint = Color(0xFF02A9FF),
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
 
-            if (status == "ongoing") {
-                GlassSection {
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                        AddEditSectionTitle("Schedule")
+            // 1. Basic Information Section
+            ColorOSFormSection(title = "Basic Info", icon = Icons.Rounded.Info) {
+                ColorOSFormField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = "English Title *",
+                    placeholder = "e.g. Battle Through the Heavens"
+                )
 
-                        var dayExpanded by remember { mutableStateOf(false) }
-                        val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-                        ExposedDropdownMenuBox(
-                            expanded = dayExpanded,
-                            onExpandedChange = { dayExpanded = it }
-                        ) {
-                            OutlinedTextField(
-                                value = releaseDay,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Broadcast Day") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
+                ColorOSFormField(
+                    value = titleZh,
+                    onValueChange = { titleZh = it },
+                    label = "Chinese / Alternate Title",
+                    placeholder = "e.g. 斗破苍穹"
+                )
+
+                // ColorOS 3-Pill Status Selector
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "STATUS",
+                        fontFamily = JustSansFamily,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0082FB),
+                        letterSpacing = 0.5.sp
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            Triple("ongoing", "Airing", Color(0xFF0082FB)),
+                            Triple("completed", "Completed", Color(0xFF10B981)),
+                            Triple("stopped", "Hiatus", Color(0xFFFFA726))
+                        ).forEach { (optStatus, optLabel, optColor) ->
+                            val isSelected = status == optStatus
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                                shape = RoundedCornerShape(CornerRadius.md)
-                            )
-                            ExposedDropdownMenu(
-                                expanded = dayExpanded,
-                                onDismissRequest = { dayExpanded = false }
+                                    .weight(1f)
+                                    .height(42.dp)
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(
+                                        if (isSelected) optColor.copy(alpha = 0.20f)
+                                        else if (isLight) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.06f)
+                                    )
+                                    .border(
+                                        width = if (isSelected) 1.dp else 0.65.dp,
+                                        color = if (isSelected) optColor.copy(alpha = 0.60f) else Color.Transparent,
+                                        shape = RoundedCornerShape(percent = 50)
+                                    )
+                                    .clickable {
+                                        Haptics.tick()
+                                        status = optStatus
+                                    },
+                                contentAlignment = Alignment.Center
                             ) {
-                                days.forEach { day ->
-                                    DropdownMenuItem(
-                                        text = { Text(day) },
-                                        onClick = { releaseDay = day; dayExpanded = false }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(if (isSelected) optColor else Color.Gray.copy(alpha = 0.5f))
+                                    )
+                                    Text(
+                                        text = optLabel,
+                                        fontFamily = JustSansFamily,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) optColor else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                         }
+                    }
+                }
+            }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+            // 2. Schedule Section (for ongoing shows)
+            if (status == "ongoing") {
+                ColorOSFormSection(title = "Release Schedule", icon = Icons.Rounded.Schedule) {
+                    var dayExpanded by remember { mutableStateOf(false) }
+                    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+                    ExposedDropdownMenuBox(
+                        expanded = dayExpanded,
+                        onExpandedChange = { dayExpanded = it }
+                    ) {
+                        ColorOSFormField(
+                            value = releaseDay,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = "Broadcast Day",
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
+                            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = dayExpanded,
+                            onDismissRequest = { dayExpanded = false }
                         ) {
-                            OutlinedTextField(
-                                value = releaseTime,
-                                onValueChange = { releaseTime = it },
-                                label = { Text("Time (HH:MM)") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(CornerRadius.md)
-                            )
-                            OutlinedTextField(
-                                value = releaseYear,
-                                onValueChange = { releaseYear = it },
-                                label = { Text("Year") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(CornerRadius.md)
-                            )
+                            days.forEach { day ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = day,
+                                            fontFamily = JustSansFamily,
+                                            fontSize = 13.5.sp
+                                        )
+                                    },
+                                    onClick = {
+                                        Haptics.tick()
+                                        releaseDay = day
+                                        dayExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
-                }
-            }
-
-            GlassSection {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    AddEditSectionTitle("Episodes")
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        OutlinedTextField(
-                            value = currentEp,
-                            onValueChange = { currentEp = it },
-                            label = { Text("Current") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
+                        ColorOSFormField(
+                            value = releaseTime,
+                            onValueChange = { releaseTime = it },
+                            label = "Time (HH:MM)",
+                            placeholder = "10:00",
+                            modifier = Modifier.weight(1f)
                         )
-                        OutlinedTextField(
-                            value = totalEp,
-                            onValueChange = { totalEp = it },
-                            label = { Text("Total") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
+                        ColorOSFormField(
+                            value = releaseYear,
+                            onValueChange = { releaseYear = it.filter { ch -> ch.isDigit() } },
+                            label = "Year",
+                            placeholder = "2024",
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
             }
 
-            GlassSection {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    AddEditSectionTitle("Media & Links")
+            // 3. Episode Progress Section
+            ColorOSFormSection(title = "Episodes", icon = Icons.Rounded.VideoLibrary) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ColorOSFormField(
+                        value = currentEp,
+                        onValueChange = { currentEp = it.filter { ch -> ch.isDigit() } },
+                        label = "Current Episode",
+                        placeholder = "0",
+                        modifier = Modifier.weight(1f)
+                    )
+                    ColorOSFormField(
+                        value = totalEp,
+                        onValueChange = { totalEp = it.filter { ch -> ch.isDigit() } },
+                        label = "Total Episodes",
+                        placeholder = "0 (ongoing)",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            // 4. Media & Streaming Links Section
+            ColorOSFormSection(title = "Media & Links", icon = Icons.Rounded.Link) {
+                // Integrated Poster Preview Card & URL input
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val thumbShape = RoundedCornerShape(14.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(width = 68.dp, height = 96.dp)
+                            .clip(thumbShape)
+                            .border(
+                                width = 1.dp,
+                                brush = rememberLiquidGlassBorder(isLight),
+                                shape = thumbShape
+                            )
                     ) {
-                        OutlinedTextField(
+                        DonghuaPoster(
+                            posterUrl = poster,
+                            title = title.ifBlank { "New Show" },
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            fontSize = 12.sp,
+                            immediate = true
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ColorOSFormField(
                             value = poster,
                             onValueChange = { poster = it },
-                            label = { Text("Poster URL") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
+                            label = "Poster Image URL",
+                            placeholder = "https://..."
                         )
 
-                        FilledTonalButton(
+                        ColorOSOutlinedButton(
+                            text = "Scrape Poster Art",
                             onClick = {
                                 val sourceUrl = watchUrl.takeIf { it.isNotEmpty() } ?: countdownUrl
                                 if (sourceUrl.isBlank()) {
                                     Toast.makeText(context, "Enter watch or countdown URL first", Toast.LENGTH_SHORT).show()
-                                    return@FilledTonalButton
+                                    return@ColorOSOutlinedButton
                                 }
                                 coroutineScope.launch {
                                     val scraped = PosterFetchService.scrapePoster(sourceUrl)
                                     if (scraped != null) {
                                         poster = scraped
-                                        Toast.makeText(context, "Poster extracted!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Poster extracted successfully!", Toast.LENGTH_SHORT).show()
                                     } else {
-                                        Toast.makeText(context, "Could not scrape image", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Could not scrape poster image", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
-                            shape = RoundedCornerShape(CornerRadius.md),
-                            modifier = Modifier
-                                .height(56.dp)
-                                .colorOSPressBounce(pressedScale = 0.92f),
-                            contentPadding = PaddingValues(horizontal = 14.dp)
-                        ) {
-                            Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Scrape", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        }
-
-                        com.nsr.qilin.ui.common.DonghuaPoster(
-                            posterUrl = poster,
-                            title = title.ifBlank { "New Show" },
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(CornerRadius.md)),
-                            contentScale = ContentScale.Crop,
-                            fontSize = 16.sp
+                            height = 38.dp,
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Image,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
+                }
 
-                    OutlinedTextField(
-                        value = watchUrl,
-                        onValueChange = { watchUrl = it },
-                        label = { Text("Watch URL") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.md)
-                    )
+                // Watch URL Input & Provider Quick Presets
+                ColorOSFormField(
+                    value = watchUrl,
+                    onValueChange = { watchUrl = it },
+                    label = "Watch URL",
+                    placeholder = "https://donghuastream.org/..."
+                )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val chipBg = if (isLight) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.08f)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(chipBg)
+                            .border(0.75.dp, rememberLiquidGlassBorder(isLight), RoundedCornerShape(percent = 50))
+                            .clickable {
+                                Haptics.tick()
+                                val t = title.ifBlank { "donghua" }
+                                watchUrl = PosterFetchService.getDonghuaStreamUrl(t)
+                            }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        AssistChip(
-                            onClick = {
-                                val t = title.ifBlank { "donghua" }
-                                watchUrl = com.nsr.qilin.data.service.PosterFetchService.getDonghuaStreamUrl(t)
-                            },
-                            shape = RoundedCornerShape(CornerRadius.pill),
-                            label = { Text("Set DonghuaStream", fontSize = 11.sp) }
-                        )
-                        AssistChip(
-                            onClick = {
-                                val t = title.ifBlank { "donghua" }
-                                watchUrl = com.nsr.qilin.data.service.PosterFetchService.getLuciferDonghuaUrl(t)
-                            },
-                            shape = RoundedCornerShape(CornerRadius.pill),
-                            label = { Text("Set LuciferDonghua", fontSize = 11.sp) }
+                        Text(
+                            text = "DonghuaStream 🎬",
+                            fontSize = 11.5.sp,
+                            fontFamily = JustSansFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    OutlinedTextField(
-                        value = countdownUrl,
-                        onValueChange = { countdownUrl = it },
-                        label = { Text("Countdown / Calendar URL") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.md)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(chipBg)
+                            .border(0.75.dp, rememberLiquidGlassBorder(isLight), RoundedCornerShape(percent = 50))
+                            .clickable {
+                                Haptics.tick()
+                                val t = title.ifBlank { "donghua" }
+                                watchUrl = PosterFetchService.getLuciferDonghuaUrl(t)
+                            }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "LuciferDonghua ⚡",
+                            fontSize = 11.5.sp,
+                            fontFamily = JustSansFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
 
-                    OutlinedTextField(
-                        value = collectionId,
-                        onValueChange = { collectionId = it },
-                        label = { Text("Collection ID") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CornerRadius.md)
+                ColorOSFormField(
+                    value = countdownUrl,
+                    onValueChange = { countdownUrl = it },
+                    label = "Countdown / Calendar URL",
+                    placeholder = "Optional schedule link"
+                )
+
+                ColorOSFormField(
+                    value = collectionId,
+                    onValueChange = { collectionId = it },
+                    label = "Collection ID",
+                    placeholder = "Optional series group ID"
+                )
+            }
+
+            // 5. Details & Metadata Section
+            ColorOSFormSection(title = "Details & Metadata", icon = Icons.Rounded.Description) {
+                ColorOSFormField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = "Synopsis / Notes",
+                    placeholder = "Enter story synopsis or personal notes...",
+                    singleLine = false,
+                    maxLines = 4
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ColorOSFormField(
+                        value = genres,
+                        onValueChange = { genres = it },
+                        label = "Genres",
+                        placeholder = "Action, Fantasy",
+                        modifier = Modifier.weight(1f)
+                    )
+                    ColorOSFormField(
+                        value = studio,
+                        onValueChange = { studio = it },
+                        label = "Studio",
+                        placeholder = "e.g. Sparkly Key",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ColorOSFormField(
+                        value = language,
+                        onValueChange = { language = it },
+                        label = "Language",
+                        placeholder = "Chinese",
+                        modifier = Modifier.weight(1f)
+                    )
+                    ColorOSFormField(
+                        value = aniListId,
+                        onValueChange = { aniListId = it.filter { ch -> ch.isDigit() } },
+                        label = "AniList ID",
+                        placeholder = "e.g. 101920",
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            GlassSection {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    AddEditSectionTitle("Details")
+            Spacer(modifier = Modifier.height(4.dp))
 
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = { Text("Synopsis / Notes") },
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 4,
-                        shape = RoundedCornerShape(CornerRadius.md)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                    ) {
-                        OutlinedTextField(
-                            value = genres,
-                            onValueChange = { genres = it },
-                            label = { Text("Genres") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
-                        )
-                        OutlinedTextField(
-                            value = studio,
-                            onValueChange = { studio = it },
-                            label = { Text("Studio") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                    ) {
-                        OutlinedTextField(
-                            value = language,
-                            onValueChange = { language = it },
-                            label = { Text("Language") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
-                        )
-                        OutlinedTextField(
-                            value = aniListId,
-                            onValueChange = { aniListId = it },
-                            label = { Text("AniList ID") },
-                            placeholder = { Text("e.g. 101920") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(CornerRadius.md)
-                        )
-                    }
-                }
-            }
-
-
-
-            Spacer(modifier = Modifier.height(Spacing.sm))
-
+            // Primary Bottom Action Button
             ColorOSPillButton(
                 text = if (editingShow != null) "Update Donghua" else "Save Show",
                 onClick = {
+                    Haptics.impact()
                     if (title.isBlank()) {
                         Toast.makeText(context, "English title is required", Toast.LENGTH_SHORT).show()
                         return@ColorOSPillButton
@@ -486,7 +595,7 @@ fun AddEditShowScreen(
                     fun isValidHttpUrl(u: String): Boolean {
                         if (u.isEmpty()) return true
                         return try {
-                            val uri = android.net.Uri.parse(u)
+                            val uri = Uri.parse(u)
                             val scheme = uri.scheme?.lowercase()
                             (scheme == "http" || scheme == "https") && !uri.host.isNullOrBlank()
                         } catch (_: Exception) {
@@ -506,27 +615,27 @@ fun AddEditShowScreen(
 
                     var show = Show(
                         id = editingShow?.id ?: UUID.randomUUID().toString(),
-                        title = title,
-                        titleZh = titleZh.takeIf { it.isNotEmpty() },
+                        title = title.trim(),
+                        titleZh = titleZh.trim().takeIf { it.isNotEmpty() },
                         status = status,
                         releaseDay = releaseDay,
-                        releaseTime = releaseTime.takeIf { it.isNotEmpty() },
+                        releaseTime = releaseTime.trim().takeIf { it.isNotEmpty() },
                         currentEp = currentEp.toIntOrNull() ?: 0,
                         totalEp = totalEp.toIntOrNull() ?: 0,
-                        poster = poster.takeIf { it.isNotEmpty() },
+                        poster = poster.trim().takeIf { it.isNotEmpty() },
                         watchUrl = trimmedWatchUrl.takeIf { it.isNotEmpty() },
                         countdownUrl = trimmedCountdownUrl.takeIf { it.isNotEmpty() },
-                        notes = notes.takeIf { it.isNotEmpty() },
+                        notes = notes.trim().takeIf { it.isNotEmpty() },
                         isFavorite = editingShow?.isFavorite ?: 0,
                         rating = rating.toInt(),
                         lastUpdated = System.currentTimeMillis(),
                         dateAdded = editingShow?.dateAdded ?: System.currentTimeMillis(),
                         alarmRequestCode = editingShow?.alarmRequestCode,
-                        genres = genres.takeIf { it.isNotEmpty() },
-                        studio = studio.takeIf { it.isNotEmpty() },
+                        genres = genres.trim().takeIf { it.isNotEmpty() },
+                        studio = studio.trim().takeIf { it.isNotEmpty() },
                         releaseYear = releaseYear.toIntOrNull() ?: 0,
-                        language = language.takeIf { it.isNotEmpty() },
-                        collectionId = collectionId.takeIf { it.isNotEmpty() },
+                        language = language.trim().takeIf { it.isNotEmpty() } ?: "Chinese",
+                        collectionId = collectionId.trim().takeIf { it.isNotEmpty() },
                         aniListId = aniListId.toIntOrNull()
                     )
 
@@ -569,10 +678,9 @@ fun AddEditShowScreen(
                     )
                 }
             )
-
-            Spacer(modifier = Modifier.height(Spacing.xxxl))
         }
 
+        // AniList Media Search Modal Dialog
         if (showAniListSearchDialog) {
             ColorOSDialog(
                 onDismissRequest = { showAniListSearchDialog = false },
@@ -595,7 +703,17 @@ fun AddEditShowScreen(
                             OutlinedTextField(
                                 value = aniListSearchQuery,
                                 onValueChange = { aniListSearchQuery = it },
-                                placeholder = { Text("Search donghua title...") },
+                                placeholder = {
+                                    Text(
+                                        text = "Search donghua title...",
+                                        fontFamily = JustSansFamily,
+                                        fontSize = 13.sp
+                                    )
+                                },
+                                textStyle = LocalTextStyle.current.copy(
+                                    fontFamily = JustSansFamily,
+                                    fontSize = 14.sp
+                                ),
                                 singleLine = true,
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp)
@@ -636,6 +754,7 @@ fun AddEditShowScreen(
                                 Text(
                                     text = if (aniListSearchQuery.isBlank()) "Type a title and tap Search" else "No matching anime found",
                                     fontSize = 13.sp,
+                                    fontFamily = JustSansFamily,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -656,12 +775,13 @@ fun AddEditShowScreen(
                                                 title = media.preferredTitle
                                                 if (!media.titleNative.isNullOrBlank()) titleZh = media.titleNative
                                                 if (!media.coverImage.isNullOrBlank()) poster = media.coverImage
-                                                if (!media.description.isNullOrBlank()) notes = media.description
+                                                if (!media.description.isNullOrBlank()) {
+                                                    notes = media.description.replace(Regex("<[^>]*>"), "").trim()
+                                                }
                                                 if (media.episodes > 0) totalEp = media.episodes.toString()
                                                 if (!media.status.isNullOrBlank()) {
                                                     status = when (media.status.lowercase()) {
-                                                        "completed" -> "completed"
-                                                        "releasing" -> "ongoing"
+                                                        "completed", "finished" -> "completed"
                                                         else -> "ongoing"
                                                     }
                                                 }
@@ -671,7 +791,7 @@ fun AddEditShowScreen(
                                                 aniListId = media.id.toString()
 
                                                 showAniListSearchDialog = false
-                                                Toast.makeText(context, "Filled from ${media.preferredTitle}!", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Filled details from ${media.preferredTitle}!", Toast.LENGTH_SHORT).show()
                                             }
                                             .padding(8.dp),
                                         verticalAlignment = Alignment.CenterVertically,
@@ -689,6 +809,7 @@ fun AddEditShowScreen(
                                             Text(
                                                 text = media.preferredTitle,
                                                 fontWeight = FontWeight.SemiBold,
+                                                fontFamily = JustSansFamily,
                                                 fontSize = 13.5.sp,
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 maxLines = 1,
@@ -699,6 +820,7 @@ fun AddEditShowScreen(
                                                 Text(
                                                     text = media.titleNative,
                                                     fontSize = 11.5.sp,
+                                                    fontFamily = JustSansFamily,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
@@ -720,6 +842,7 @@ fun AddEditShowScreen(
                                                     }
                                                 },
                                                 fontSize = 10.5.sp,
+                                                fontFamily = JustSansFamily,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
                                         }
@@ -732,40 +855,128 @@ fun AddEditShowScreen(
             )
         }
 
+        // Top Floating Glass Header
         GlassHeader(
             title = if (editingShow != null) "Edit Show" else "Add New Show",
             backdrop = screenBackdrop,
+            isDark = !isLight,
             onBackClick = onNavigateBack
         )
     }
 }
 
 @Composable
-private fun AddEditSectionTitle(title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(bottom = Spacing.xs)
+private fun ColorOSFormSection(
+    title: String,
+    icon: ImageVector? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val cardBg = if (isLight) Color.White.copy(alpha = 0.88f) else Color(0xFF1E2638).copy(alpha = 0.45f)
+    val glassBorder = rememberLiquidGlassBorder(isLight)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(CornerRadius.card))
+            .background(cardBg)
+            .border(
+                width = 0.75.dp,
+                brush = glassBorder,
+                shape = RoundedCornerShape(CornerRadius.card)
+            )
+            .padding(Spacing.lg)
     ) {
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .height(14.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary
-                        )
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(16.dp)
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .width(3.5.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Color(0xFF0082FB))
+                    )
+                }
+                Text(
+                    text = title.uppercase(),
+                    fontFamily = JustSansFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = Color(0xFF0082FB),
+                    letterSpacing = 0.5.sp
                 )
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.primary
-        )
+            }
+
+            content()
+        }
     }
+}
+
+@Composable
+private fun ColorOSFormField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    singleLine: Boolean = true,
+    maxLines: Int = 1,
+    readOnly: Boolean = false,
+    trailingIcon: (@Composable () -> Unit)? = null,
+    leadingIcon: (@Composable () -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = {
+            Text(
+                text = label,
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp
+            )
+        },
+        placeholder = if (placeholder != null) {
+            {
+                Text(
+                    text = placeholder,
+                    fontFamily = JustSansFamily,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        } else null,
+        textStyle = LocalTextStyle.current.copy(
+            fontFamily = JustSansFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        singleLine = singleLine,
+        maxLines = maxLines,
+        readOnly = readOnly,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color(0xFF0082FB),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.30f),
+            focusedLabelColor = Color(0xFF0082FB),
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.20f)
+        )
+    )
 }
