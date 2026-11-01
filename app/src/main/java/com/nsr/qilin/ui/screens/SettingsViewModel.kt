@@ -16,6 +16,7 @@ import com.nsr.qilin.domain.repository.SettingsKeys
 import com.nsr.qilin.domain.repository.SettingsRepository
 import com.nsr.qilin.domain.repository.ShowRepository
 import com.nsr.qilin.domain.repository.WatchHistoryRepository
+import com.nsr.qilin.ui.theme.Haptics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +41,8 @@ data class SettingsUiState(
     val autoOpenKeyboard: Boolean = true,
     val defaultStreamProvider: String = "donghuastream",
     val customStreamUrl: String = "",
-    val adBlockerEnabled: Boolean = true
+    val adBlockerEnabled: Boolean = true,
+    val hapticsEnabled: Boolean = true
 )
 
 data class DashboardPrefs(
@@ -68,6 +70,7 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.getSettingFlow(SettingsKeys.THEME_MODE, "dark"),
         settingsRepository.getSettingFlow(SettingsKeys.ACCENT_COLOR, "default"),
+        settingsRepository.getBoolFlow(SettingsKeys.HAPTICS_ENABLED, true),
         combine(
             settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true),
             settingsRepository.getSettingFlow(SettingsKeys.DEFAULT_STREAM_PROVIDER, "donghuastream"),
@@ -83,7 +86,8 @@ class SettingsViewModel @Inject constructor(
         ) { banner, cont, recent ->
             DashboardPrefs(banner, cont, recent)
         }
-    ) { theme, accent, streamPrefs, prefs ->
+    ) { theme, accent, haptics, streamPrefs, prefs ->
+        Haptics.enabled = haptics
         SettingsUiState(
             themeMode = theme,
             accentColor = accent,
@@ -93,7 +97,8 @@ class SettingsViewModel @Inject constructor(
             autoOpenKeyboard = streamPrefs.autoOpenKeyboard,
             defaultStreamProvider = streamPrefs.defaultStreamProvider,
             customStreamUrl = streamPrefs.customStreamUrl,
-            adBlockerEnabled = streamPrefs.adBlockerEnabled
+            adBlockerEnabled = streamPrefs.adBlockerEnabled,
+            hapticsEnabled = haptics
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -103,6 +108,11 @@ class SettingsViewModel @Inject constructor(
 
     fun setAccentColor(accent: String) {
         viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.ACCENT_COLOR, accent) }
+    }
+
+    fun setHapticsEnabled(enabled: Boolean) {
+        Haptics.enabled = enabled
+        viewModelScope.launch { settingsRepository.putBool(SettingsKeys.HAPTICS_ENABLED, enabled) }
     }
 
     fun setShowBanner(show: Boolean) {

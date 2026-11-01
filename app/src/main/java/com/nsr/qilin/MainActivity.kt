@@ -139,6 +139,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val state by homeViewModel.uiState.collectAsState()
             val settingsState by settingsViewModel.uiState.collectAsState()
+            LaunchedEffect(settingsState.hapticsEnabled) {
+                Haptics.enabled = settingsState.hapticsEnabled
+            }
             val allShows by showsViewModel.allShows.collectAsState()
             val showsLoading by showsViewModel.isLoading.collectAsState()
             val navController = rememberNavController()

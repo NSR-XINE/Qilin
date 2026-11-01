@@ -3,6 +3,7 @@ package com.nsr.qilin.domain.repository
 object SettingsKeys {
     const val THEME_MODE = "app_theme"
     const val ACCENT_COLOR = "pref_accent_color"
+    const val HAPTICS_ENABLED = "haptics_enabled"
     const val SHOW_BANNER = "show_banner"
     const val SHOW_CONTINUE = "show_continue"
     const val SHOW_RECENT = "show_recent"

@@ -469,7 +469,27 @@ fun SettingsScreen(
                 }
             }
 
-            // 4. STREAMING & SEARCH
+            // 4. HAPTICS & VIBRATION
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OxygenSectionHeader(
+                    title = "Haptics & Vibration",
+                    subtitle = "Tactile feedback for gestures and controls"
+                )
+                OxygenGlassGroup(isDark = isDark) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OxygenTogglePreferenceItem(
+                            title = "Haptic Feedback",
+                            subtitle = "Vibrate on player controls, switches, and key gestures",
+                            iconVector = Icons.Rounded.Vibration,
+                            iconGradient = listOf(Color(0xFFFF9800), Color(0xFFFFB74D)),
+                            checked = uiState.hapticsEnabled,
+                            onCheckedChange = { viewModel.setHapticsEnabled(it) }
+                        )
+                    }
+                }
+            }
+
+            // 5. STREAMING & SEARCH
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OxygenSectionHeader(
                     title = "Streaming & Search",

@@ -3,6 +3,8 @@ package com.nsr.qilin
 import android.app.Application
 import android.util.Log
 import com.nsr.qilin.data.pref.LegacySettingsMigrator
+import com.nsr.qilin.domain.repository.SettingsKeys
+import com.nsr.qilin.domain.repository.SettingsRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +15,7 @@ import javax.inject.Inject
 @HiltAndroidApp
 class QilinApp : Application() {
     @Inject lateinit var settingsMigrator: LegacySettingsMigrator
+    @Inject lateinit var settingsRepository: SettingsRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -42,6 +45,9 @@ class QilinApp : Application() {
         com.nsr.qilin.data.service.AniListService.init(this)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             settingsMigrator.migrate()
+            settingsRepository.getBoolFlow(SettingsKeys.HAPTICS_ENABLED, true).collect { enabled ->
+                com.nsr.qilin.ui.theme.Haptics.enabled = enabled
+            }
         }
     }
 }
