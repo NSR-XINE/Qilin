@@ -12,7 +12,7 @@ import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,8 +30,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.AwaitPointerEventScope
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
@@ -44,7 +42,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.util.fastCoerceIn
-import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.*
 import com.nsr.qilin.R
@@ -123,17 +120,16 @@ fun LiquidGlassNavBar(
             .padding(horizontal = Spacing.sm),
     ) {
         val searchButtonSize = NavBarHeight.bar * 0.95f
-        val configuration = LocalConfiguration.current
-        val screenWidth = configuration.screenWidthDp.dp
-        val horizontalPadding = Spacing.sm * 2
-        val maxCapsuleWidth = minOf((screenWidth - horizontalPadding - searchButtonSize - Spacing.sm) * 0.9f, 262.dp)
-        val targetLeftMargin = 48.dp // doubled margin from display edge
-        val initialSearchCenterX = (screenWidth / 2f) + (maxCapsuleWidth / 2f) + Spacing.sm + (searchButtonSize / 2f)
-        val targetSearchCenterX = targetLeftMargin + (searchButtonSize / 2f)
-        val searchSlideDistance = (initialSearchCenterX - targetSearchCenterX).coerceAtLeast(0.dp)
+        val maxCapsuleWidth = minOf((maxWidth - searchButtonSize - Spacing.sm) * 0.9f, 262.dp)
+        val totalContentWidth = maxCapsuleWidth + Spacing.sm + searchButtonSize
+        val contentStartX = (maxWidth - totalContentWidth).coerceAtLeast(0.dp) / 2f
+        val searchButtonLeft = contentStartX + maxCapsuleWidth + Spacing.sm
+        val targetLeftMargin = Spacing.md
+        val searchSlideDistance = (searchButtonLeft - targetLeftMargin).coerceAtLeast(0.dp)
         val searchButtonOffset by animateDpAsState(
             targetValue = if (isSearchOpen) -searchSlideDistance else 0.dp,
-            animationSpec = ColorOSMotion.FluidDp
+            animationSpec = ColorOSMotion.FluidDp,
+            label = "search_btn_slide"
         )
 
         var activeTouchPosition by remember { mutableStateOf(Offset.Zero) }
@@ -285,7 +281,9 @@ fun LiquidGlassNavBar(
             }
 
             Box(
-                modifier = Modifier.matchParentSize().then(dampedDrag.modifier),
+                modifier = Modifier
+                    .matchParentSize()
+                    .then(if (!isSearchOpen) dampedDrag.modifier else Modifier),
             ) {
                 navRoutes.forEachIndexed { position, route ->
                     val iconCenterPx = (position + 0.5f) * slotWidthPx
@@ -334,11 +332,11 @@ fun LiquidGlassNavBar(
             .graphicsLayer {
                 val press = searchInteraction.pressProgress
                 val pressScale = 1f - press * 0.12f
-                val capsulePushScale = 1f - unifiedPressProgress * 0.15f
+                val capsulePushScale = if (!isSearchOpen) 1f - unifiedPressProgress * 0.15f else 1f
                 val combinedScale = pressScale * capsulePushScale
                 scaleX = combinedScale
                 scaleY = combinedScale
-                translationX = unifiedPressProgress * 12.dp.toPx()
+                translationX = if (!isSearchOpen) unifiedPressProgress * 12.dp.toPx() else 0f
             }
             .size(searchButtonSize)
             .clip(CircleShape)
@@ -350,15 +348,20 @@ fun LiquidGlassNavBar(
                 touchPosition = { searchInteraction.touchPosition },
                 activeHighlight = isSearchOpen,
             )
-            .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
-            .clickable(
-                interactionSource = null,
-                indication = null,
-                onClick = {
-                    Haptics.tick()
-                    onSearchClick()
-                },
-            ),
+            .pointerInput(isSearchOpen) {
+                detectTapGestures(
+                    onPress = { offset ->
+                        searchInteraction.touchPosition = offset
+                        searchInteraction.press()
+                        val released = tryAwaitRelease()
+                        searchInteraction.release()
+                    },
+                    onTap = {
+                        Haptics.tick()
+                        onSearchClick()
+                    }
+                )
+            },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -694,102 +697,28 @@ class DampedDragAnimation(
 class GlassInteraction(
     private val animationScope: CoroutineScope,
 ) {
-    private val pressSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 220f, visibilityThreshold = 0.001f)
+    private val pressSpec = spring<Float>(dampingRatio = 0.65f, stiffness = 420f, visibilityThreshold = 0.001f)
     private val pressAnimation = Animatable(0f, 0.001f)
 
     val pressProgress: Float get() = pressAnimation.value
 
     var touchPosition by mutableStateOf(Offset.Zero)
-        private set
 
-    suspend fun detectPress(pointer: PointerInputScope) =
-        with(pointer) {
-            inspectDragGestures(
-                onDragStart = { down ->
-                    touchPosition = down.position
-                    animationScope.launch { pressAnimation.animateTo(1f, pressSpec) }
-                },
-                onDragEnd = {
-                    animationScope.launch { pressAnimation.animateTo(0f, pressSpec) }
-                },
-                onDragCancel = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },
-            ) { change, _ ->
-                touchPosition = change.position
-            }
+    fun press() {
+        animationScope.launch {
+            pressAnimation.animateTo(1f, pressSpec)
         }
+    }
+
+    fun release() {
+        animationScope.launch {
+            pressAnimation.animateTo(0f, pressSpec)
+        }
+    }
 }
 
 @Composable
 fun rememberGlassInteraction(): GlassInteraction {
     val scope = rememberCoroutineScope()
     return remember(scope) { GlassInteraction(scope) }
-}
-
-internal suspend fun PointerInputScope.inspectDragGestures(
-    onDragStart: (down: PointerInputChange) -> Unit = {},
-    onDragEnd: (change: PointerInputChange) -> Unit = {},
-    onDragCancel: () -> Unit = {},
-    onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit,
-) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-
-        onDragStart(down)
-        onDrag(down, Offset.Zero)
-        val upEvent =
-            drag(
-                pointerId = down.id,
-                onDrag = { onDrag(it, it.positionChange()) },
-            )
-        if (upEvent == null) {
-            onDragCancel()
-        } else {
-            onDragEnd(upEvent)
-        }
-    }
-}
-
-private suspend inline fun AwaitPointerEventScope.drag(
-    pointerId: PointerId,
-    onDrag: (PointerInputChange) -> Unit,
-): PointerInputChange? {
-    val isPointerUp = currentEvent.changes.fastFirstOrNull { it.id == pointerId }?.pressed != true
-    if (isPointerUp) {
-        return null
-    }
-    var pointer = pointerId
-    while (true) {
-        val change = awaitDragOrUp(pointer) ?: return null
-        if (change.isConsumed) {
-            return null
-        }
-        if (change.changedToUpIgnoreConsumed()) {
-            return change
-        }
-        onDrag(change)
-        pointer = change.id
-    }
-}
-
-private suspend inline fun AwaitPointerEventScope.awaitDragOrUp(
-    pointerId: PointerId,
-): PointerInputChange? {
-    var pointer = pointerId
-    while (true) {
-        val event = awaitPointerEvent()
-        val dragEvent = event.changes.fastFirstOrNull { it.id == pointer } ?: return null
-        if (dragEvent.changedToUpIgnoreConsumed()) {
-            val otherDown = event.changes.fastFirstOrNull { it.pressed }
-            if (otherDown == null) {
-                return dragEvent
-            } else {
-                pointer = otherDown.id
-            }
-        } else {
-            val hasDragged = dragEvent.previousPosition != dragEvent.position
-            if (hasDragged) {
-                return dragEvent
-            }
-        }
-    }
 }

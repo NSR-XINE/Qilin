@@ -325,44 +325,6 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 },
-                                bottomBar = {
-                                    if (showGlobalHeader) {
-                                        LiquidGlassNavBar(
-                                            currentRoute = currentRoute,
-                                            isDark = settingsState.themeMode.lowercase() != "light",
-                                            backdrop = headerBackdrop,
-                                            isSearchOpen = isSearchOpen,
-                                            onSearchClick = {
-                                                isSearchOpen = !isSearchOpen
-                                            },
-                                            onNavigate = { route ->
-                                                val currentDest = navController.currentBackStackEntry?.destination?.route
-                                                if (route == currentDest) {
-                                                    // Already on this tab - ignore re-tap
-                                                    return@LiquidGlassNavBar
-                                                }
-                                                when (route) {
-                                                    "home" -> {
-                                                        if (currentDest != "home") {
-                                                            navController.popBackStack("home", inclusive = false)
-                                                        }
-                                                    }
-                                                    "add_edit_show" -> navController.navigate("add_edit_show")
-                                                    else -> navController.navigate(route) {
-                                                        popUpTo("home") {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
-                                                }
-                                            },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm)
-                                        )
-                                    }
-                                }
                             ) { innerPadding ->
                                 Box(
                                     modifier = Modifier
@@ -664,6 +626,44 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                }
+
+                if (showGlobalHeader) {
+                    LiquidGlassNavBar(
+                        currentRoute = currentRoute,
+                        isDark = settingsState.themeMode.lowercase() != "light",
+                        backdrop = headerBackdrop,
+                        isSearchOpen = isSearchOpen,
+                        onSearchClick = {
+                            isSearchOpen = !isSearchOpen
+                        },
+                        onNavigate = { route ->
+                            val currentDest = navController.currentBackStackEntry?.destination?.route
+                            if (route == currentDest) {
+                                // Already on this tab - ignore re-tap
+                                return@LiquidGlassNavBar
+                            }
+                            when (route) {
+                                "home" -> {
+                                    if (currentDest != "home") {
+                                        navController.popBackStack("home", inclusive = false)
+                                    }
+                                }
+                                "add_edit_show" -> navController.navigate("add_edit_show")
+                                else -> navController.navigate(route) {
+                                    popUpTo("home") {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .padding(bottom = Spacing.sm, start = Spacing.sm, end = Spacing.sm)
+                    )
                 }
 
             val menuShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
