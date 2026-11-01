@@ -28,6 +28,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import com.nsr.qilin.ui.theme.ColorOSMotion
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -252,21 +256,42 @@ class MainActivity : ComponentActivity() {
             }
 
             PredictiveBackHandler(enabled = canPredictiveBack) { progressFlow ->
+                var hasTriggeredThreshold = false
                 try {
+                    Haptics.tick()
                     progressFlow.collect { event ->
                         swipeEdge = event.swipeEdge
                         backProgress.snapTo(event.progress)
+                        if (!hasTriggeredThreshold && event.progress >= 0.20f) {
+                            hasTriggeredThreshold = true
+                            Haptics.soft()
+                        } else if (hasTriggeredThreshold && event.progress < 0.15f) {
+                            hasTriggeredThreshold = false
+                        }
                     }
-                    navController.popBackStack()
-                    backProgress.snapTo(0f)
-                } catch (e: CancellationException) {
-                    backProgress.animateTo(
-                        targetValue = 0f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioLowBouncy,
-                            stiffness = Spring.StiffnessMediumLow
+                    Haptics.confirm()
+                    withContext(NonCancellable) {
+                        backProgress.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(
+                                durationMillis = ColorOSMotion.DurationFast,
+                                easing = ColorOSMotion.EmphasizedAccelerate
+                            )
                         )
-                    )
+                        navController.popBackStack()
+                        backProgress.snapTo(0f)
+                    }
+                } catch (e: CancellationException) {
+                    Haptics.soft()
+                    withContext(NonCancellable) {
+                        backProgress.animateTo(
+                            targetValue = 0f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            )
+                        )
+                    }
                     throw e
                 } finally {
                     backProgress.snapTo(0f)
@@ -400,15 +425,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) { innerPadding ->
-                                val progress = backProgress.value
-                                val isRightEdge = swipeEdge == BackEventCompat.EDGE_RIGHT
-                                val translationDirection = if (isRightEdge) -1f else 1f
-                                val isGesturing = progress > 0.001f
-
-                                val cornerProgress = if (isGesturing) minOf(1f, progress * 2.5f) else 0f
                                 val targetRadius = maxOf(CornerRadius.card, LocalDisplayCornerRadius.current)
-                                val currentCornerRadius = targetRadius * cornerProgress
-                                val cardShape = RoundedCornerShape(currentCornerRadius)
                                 val isLight = settingsState.themeMode.lowercase() == "light"
                                 val isAmoled = settingsState.themeMode.lowercase() == "amoled"
 
@@ -416,41 +433,43 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .graphicsLayer {
+                                            val progress = backProgress.value
+                                            val isRightEdge = swipeEdge == BackEventCompat.EDGE_RIGHT
+                                            val translationDirection = if (isRightEdge) -1f else 1f
+                                            val isGesturing = progress > 0.001f
+
                                             val scale = 1f - 0.09f * progress
                                             scaleX = scale
                                             scaleY = scale
                                             translationX = translationDirection * size.width * 0.10f * progress
                                             shadowElevation = (16.dp * progress).toPx()
-                                            shape = cardShape
+
+                                            val cornerProgress = if (isGesturing) minOf(1f, progress * 2.5f) else 0f
+                                            val currentCornerRadius = targetRadius * cornerProgress
+                                            shape = RoundedCornerShape(currentCornerRadius)
                                             clip = isGesturing
                                             spotShadowColor = Color.Black.copy(alpha = 0.55f)
                                             ambientShadowColor = Color.Black.copy(alpha = 0.35f)
                                         }
-                                        .then(
-                                            if (isGesturing) {
-                                                Modifier
-                                                    .background(
-                                                        color = MaterialTheme.colorScheme.background.copy(
-                                                            alpha = minOf(1f, progress * 3.5f)
-                                                        ),
-                                                        shape = cardShape
-                                                    )
-                                                    .border(
-                                                        width = 1.dp,
-                                                        brush = Brush.verticalGradient(
-                                                            listOf(
-                                                                (if (isLight) Color.Black else Color.White).copy(
-                                                                    alpha = (if (isLight) 0.18f else if (isAmoled) 0.32f else 0.25f) * minOf(1f, progress * 3f)
-                                                                ),
-                                                                Color.Transparent
-                                                            )
-                                                        ),
-                                                        shape = cardShape
-                                                    )
-                                            } else {
-                                                Modifier
+                                        .drawWithContent {
+                                            drawContent()
+                                            val progress = backProgress.value
+                                            if (progress > 0.001f) {
+                                                val cornerProgress = minOf(1f, progress * 2.5f)
+                                                val currentCornerRadius = targetRadius * cornerProgress
+                                                val borderAlpha = (if (isLight) 0.18f else if (isAmoled) 0.32f else 0.25f) * minOf(1f, progress * 3f)
+                                                drawRoundRect(
+                                                    brush = Brush.verticalGradient(
+                                                        listOf(
+                                                            (if (isLight) Color.Black else Color.White).copy(alpha = borderAlpha),
+                                                            Color.Transparent
+                                                        )
+                                                    ),
+                                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(currentCornerRadius.toPx()),
+                                                    style = Stroke(width = 1.dp.toPx())
+                                                )
                                             }
-                                        )
+                                        }
                                         .layerBackdrop(navBackdrop)
                                 ) {
                                     NavHost(
