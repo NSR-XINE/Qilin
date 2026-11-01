@@ -42,11 +42,29 @@ android {
             }
 
             def storeFilePath = System.getenv("KEYSTORE_FILE") ?: keystoreProps['storeFile']
-            if (storeFilePath && file(storeFilePath).exists()) {
-                storeFile file(storeFilePath)
+            def resolvedStoreFile = storeFilePath ? (file(storeFilePath).exists() ? file(storeFilePath) : rootProject.file(storeFilePath)) : null
+
+            def base64Keystore = System.getenv("KEYSTORE_BASE64")
+            if (base64Keystore && (!resolvedStoreFile || !resolvedStoreFile.exists())) {
+                def decodedKeystore = rootProject.file(".ci_release.keystore")
+                try {
+                    decodedKeystore.bytes = base64Keystore.decodeBase64()
+                    resolvedStoreFile = decodedKeystore
+                } catch (Exception e) {
+                    println "Warning: Failed to decode KEYSTORE_BASE64: ${e.message}"
+                }
+            }
+
+            if (resolvedStoreFile && resolvedStoreFile.exists()) {
+                storeFile resolvedStoreFile
                 storePassword System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps['storePassword']
                 keyAlias System.getenv("KEY_ALIAS") ?: keystoreProps['keyAlias']
                 keyPassword System.getenv("KEY_PASSWORD") ?: keystoreProps['keyPassword']
+                v1SigningEnabled true
+                v2SigningEnabled true
+            } else {
+                // Fallback to debug keystore for CI/local test builds so release APK is properly signed and installable
+                initWith(signingConfigs.debug)
             }
         }
     }
@@ -58,9 +76,7 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (signingConfigs.release.storeFile != null) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
         }
     }
 

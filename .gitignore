@@ -18,6 +18,9 @@ Thumbs.db
 
 # Keystores & signing secrets (debug.keystore is tracked for dev/fallback)
 *.jks
+*.keystore
+!debug.keystore
+.ci_release.keystore
 release.keystore
 keystore.properties
 
