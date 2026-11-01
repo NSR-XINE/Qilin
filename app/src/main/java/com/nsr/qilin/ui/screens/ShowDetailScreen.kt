@@ -3,10 +3,17 @@ package com.nsr.qilin.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.*
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,42 +26,40 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.nsr.qilin.R
-import com.nsr.qilin.data.service.AniListMedia
-import com.nsr.qilin.data.service.AniListService
-import com.nsr.qilin.ui.common.ColorOSDialog
-import com.nsr.qilin.ui.common.ColorOSOutlinedButton
-import com.nsr.qilin.ui.common.ColorOSPillButton
-import com.nsr.qilin.ui.common.EmptyState
 import androidx.compose.ui.text.font.FontWeight
-import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.nsr.qilin.R
+import com.nsr.qilin.data.service.AniListMedia
+import com.nsr.qilin.data.service.AniListMediaDetail
+import com.nsr.qilin.data.service.AniListService
+import com.nsr.qilin.data.service.PosterFetchService
 import com.nsr.qilin.domain.model.CountdownCalculator
 import com.nsr.qilin.domain.model.Show
 import com.nsr.qilin.ui.GlassHeader
 import com.nsr.qilin.ui.Spacing
+import com.nsr.qilin.ui.common.ColorOSDialog
+import com.nsr.qilin.ui.common.ColorOSOutlinedButton
+import com.nsr.qilin.ui.common.ColorOSPillButton
 import com.nsr.qilin.ui.common.DonghuaPoster
+import com.nsr.qilin.ui.common.EmptyState
+import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.theme.CornerRadius
+import com.nsr.qilin.ui.theme.Haptics
 import com.nsr.qilin.ui.theme.JustSansFamily
 import com.nsr.qilin.ui.theme.colorOSPressBounce
 import kotlinx.coroutines.delay
@@ -78,6 +83,10 @@ fun ShowDetailScreen(
     val show = remember(showId, allShows) { allShows.find { it.id == showId } }
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
+    LaunchedEffect(Unit) {
+        Haptics.init(context)
+    }
+
     var showAniListMenu by remember { mutableStateOf(false) }
     var showLinkAniListDialog by remember { mutableStateOf(false) }
     var showScoreRateDialog by remember { mutableStateOf(false) }
@@ -85,7 +94,8 @@ fun ShowDetailScreen(
     var linkSearchQuery by remember { mutableStateOf("") }
     var isSearchingAniList by remember { mutableStateOf(false) }
     var aniListSearchResults by remember { mutableStateOf<List<AniListMedia>>(emptyList()) }
-    var aniListDetail by remember { mutableStateOf<com.nsr.qilin.data.service.AniListMediaDetail?>(null) }
+    var aniListDetail by remember { mutableStateOf<AniListMediaDetail?>(null) }
+    var isQuickSyncing by remember { mutableStateOf(false) }
 
     LaunchedEffect(show?.aniListId) {
         val targetId = show?.aniListId
@@ -168,6 +178,17 @@ fun ShowDetailScreen(
     val cardBgColor = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
     val chipBgColor = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
 
+    val infiniteTransition = rememberInfiniteTransition(label = "pulseTransition")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1100, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlphaAnim"
+    )
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -189,68 +210,68 @@ fun ShowDetailScreen(
                 .layerBackdrop(screenBackdrop)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.md)
-                .padding(top = headerTopPadding, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(top = headerTopPadding, bottom = 108.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Hero Backdrop Banner
+            // 1. Cinematic Hero Header Card (Backdrop + Floating Poster + Title Badges)
             val bannerShape = RoundedCornerShape(CornerRadius.banner)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(230.dp)
+                    .height(268.dp)
                     .clip(bannerShape)
-                    .background(Color(0xFF0F121C))
+                    .background(Color(0xFF0C101B))
                     .border(
                         width = 0.75.dp,
                         brush = glassBorder,
                         shape = bannerShape
                     )
             ) {
-                // Background Poster Art with Blur Gradient
+                // Background Backdrop Art with Fluid Blur Gradient
+                val heroBackdropUrl = aniListDetail?.bannerImage ?: show.poster
                 DonghuaPoster(
-                    posterUrl = show.poster,
+                    posterUrl = heroBackdropUrl,
                     title = show.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     showAcronym = false,
-                    crossfade = true
+                    crossfade = true,
+                    immediate = true
                 )
 
-                // Dark Liquid Glass Gradient overlay
+                // Dark Aquamorphic Gradient Vignette
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
                                 listOf(
-                                    Color.Black.copy(alpha = 0.35f),
-                                    Color.Black.copy(alpha = 0.15f),
-                                    Color.Black.copy(alpha = 0.85f)
+                                    Color.Black.copy(alpha = 0.28f),
+                                    Color.Black.copy(alpha = 0.45f),
+                                    Color(0xFF090D16).copy(alpha = 0.94f)
                                 )
                             )
                         )
                 )
 
-                // Content inside Hero (Poster Thumbnail + Title details)
+                // Hero Content Row (Floating Squircle Poster + Right Details)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomStart)
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Floating Poster Thumbnail Card
-                    val thumbShape = RoundedCornerShape(CornerRadius.md)
+                    // Elevated Floating Squircle Poster Card
+                    val thumbShape = RoundedCornerShape(18.dp)
                     Box(
                         modifier = Modifier
-                            .size(width = 86.dp, height = 120.dp)
+                            .size(width = 98.dp, height = 142.dp)
                             .clip(thumbShape)
                             .border(
                                 width = 1.dp,
-                                brush = Brush.linearGradient(
-                                    listOf(Color.White.copy(alpha = 0.45f), Color.White.copy(alpha = 0.10f))
-                                ),
+                                brush = rememberLiquidGlassBorder(isLight = false),
                                 shape = thumbShape
                             )
                     ) {
@@ -259,37 +280,45 @@ fun ShowDetailScreen(
                             title = show.title,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            fontSize = 11.sp
+                            fontSize = 11.sp,
+                            immediate = true
                         )
                     }
 
-                    // Title & Badges
-                    Column(modifier = Modifier.weight(1f)) {
+                    // Title & Badges Column
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         val statusColor = when (show.status) {
                             "ongoing" -> Color(0xFF0082FB)
-                            "completed" -> Color(0xFF4ADE80)
+                            "completed" -> Color(0xFF10B981)
                             else -> Color(0xFFFFA726)
                         }
 
-                        // Status & AniList Score Row
+                        // Status & AniList Badges Row
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
+                            // Status Pill
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                                 modifier = Modifier
                                     .clip(CircleShape)
-                                    .background(statusColor.copy(alpha = 0.20f))
-                                    .border(0.6.dp, statusColor.copy(alpha = 0.40f), CircleShape)
+                                    .background(statusColor.copy(alpha = 0.22f))
+                                    .border(0.6.dp, statusColor.copy(alpha = 0.45f), CircleShape)
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
                                         .clip(CircleShape)
-                                        .background(statusColor)
+                                        .background(
+                                            if (show.status == "ongoing") statusColor.copy(alpha = pulseAlpha)
+                                            else statusColor
+                                        )
                                 )
                                 Text(
                                     text = when (show.status) {
@@ -298,12 +327,15 @@ fun ShowDetailScreen(
                                         else -> "Hiatus"
                                     },
                                     fontSize = 10.5.sp,
+                                    fontFamily = JustSansFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = statusColor
                                 )
                             }
 
-                            if (aniListDetail?.averageScore != null) {
+                            // AniList Rating Badge (if available)
+                            val avgScore = aniListDetail?.averageScore
+                            if (avgScore != null) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -311,12 +343,16 @@ fun ShowDetailScreen(
                                         .clip(CircleShape)
                                         .background(Color(0xFF02A9FF).copy(alpha = 0.22f))
                                         .border(0.6.dp, Color(0xFF02A9FF).copy(alpha = 0.50f), CircleShape)
-                                        .clickable { showAniListMenu = true }
+                                        .clickable {
+                                            Haptics.tick()
+                                            showAniListMenu = true
+                                        }
                                         .padding(horizontal = 8.dp, vertical = 3.dp)
                                 ) {
                                     Text(
-                                        text = "★ ${aniListDetail?.averageScore}% AL",
+                                        text = "★ $avgScore% AL",
                                         fontSize = 10.5.sp,
+                                        fontFamily = JustSansFamily,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF02A9FF)
                                     )
@@ -324,37 +360,87 @@ fun ShowDetailScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
+                        // Main Title
                         Text(
                             text = show.title,
-                            fontSize = 18.sp,
+                            fontSize = 18.5.sp,
+                            fontFamily = JustSansFamily,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 23.sp
                         )
 
+                        // Chinese Native Title
                         if (!show.titleZh.isNullOrEmpty()) {
                             Text(
                                 text = show.titleZh,
                                 fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.70f),
+                                fontFamily = JustSansFamily,
+                                color = Color.White.copy(alpha = 0.72f),
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(top = 2.dp)
+                                overflow = TextOverflow.Ellipsis
                             )
+                        }
+
+                        // Quick Metadata Badges Row
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            if (show.totalEp > 0) {
+                                Text(
+                                    text = "${show.totalEp} Eps",
+                                    fontSize = 11.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                            if (show.releaseYear > 0) {
+                                if (show.totalEp > 0) {
+                                    Text(
+                                        text = "•",
+                                        fontSize = 11.sp,
+                                        color = Color.White.copy(alpha = 0.45f)
+                                    )
+                                }
+                                Text(
+                                    text = "${show.releaseYear}",
+                                    fontSize = 11.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                            val format = aniListDetail?.format
+                            if (!format.isNullOrBlank()) {
+                                Text(
+                                    text = "•",
+                                    fontSize = 11.sp,
+                                    color = Color.White.copy(alpha = 0.45f)
+                                )
+                                Text(
+                                    text = format,
+                                    fontSize = 11.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF02A9FF)
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Quick Actions Bar (Watch Online Hero Button + Favorite + Notify + Edit)
+            // 2. ColorOS 17 Quick Action Dock (Watch Now Hero Pill + Favorite + Notify + Edit + Share)
             val providerLabel = when (defaultStreamProvider.lowercase()) {
                 "luciferdonghua" -> "LuciferDonghua ⚡"
                 "donghuastream" -> "DonghuaStream 🎬"
-                "direct", "custom" -> if (!show?.watchUrl.isNullOrBlank()) "Direct Link 🔗" else "Custom Stream 🌐"
-                else -> if (!show?.watchUrl.isNullOrBlank()) "Direct Link 🔗" else "Watch Stream 🎬"
+                "direct", "custom" -> if (!show.watchUrl.isNullOrBlank()) "Direct Link 🔗" else "Custom Stream 🌐"
+                else -> if (!show.watchUrl.isNullOrBlank()) "Direct Link 🔗" else "Watch Stream 🎬"
             }
 
             Row(
@@ -362,7 +448,7 @@ fun ShowDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val watchShimmer = rememberInfiniteTransition(label = "watchNowShimmer")
+                val watchShimmer = rememberInfiniteTransition(label = "watchShimmerSweep")
                     .animateFloat(
                         initialValue = 0f,
                         targetValue = 1f,
@@ -370,19 +456,29 @@ fun ShowDetailScreen(
                             animation = tween(durationMillis = 2400, easing = LinearEasing),
                             repeatMode = RepeatMode.Restart
                         ),
-                        label = "watchNowShimmerSweep"
+                        label = "watchSweepProgress"
                     )
-                // Main "Watch Online" Hero Button (ColorOS 17 50% Capsule Action Pill)
+
+                val nextEpToWatch = if (show.currentEp > 0) show.currentEp + 1 else 1
+                val isFullyWatched = show.totalEp > 0 && show.currentEp >= show.totalEp
+                val watchButtonLabel = if (isFullyWatched) "REWATCH SHOW" else "WATCH EP $nextEpToWatch"
+
+                // Primary Watch Action Capsule Button
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(52.dp)
                         .clip(RoundedCornerShape(percent = 50))
-                        .background(Color(0xFF0082FB))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF0072FF), Color(0xFF00A2FF))
+                            )
+                        )
                         .colorOSPressBounce(
                             pressedScale = 0.96f,
                             onClick = {
-                                val targetUrl = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
+                                Haptics.impact()
+                                val targetUrl = PosterFetchService.resolveWatchUrl(
                                     showTitle = show.title,
                                     customWatchUrl = show.watchUrl,
                                     providerPreference = defaultStreamProvider,
@@ -403,7 +499,7 @@ fun ShowDetailScreen(
                                     brush = Brush.linearGradient(
                                         colors = listOf(
                                             Color.Transparent,
-                                            Color.White.copy(alpha = 0.26f),
+                                            Color.White.copy(alpha = 0.28f),
                                             Color.Transparent
                                         ),
                                         start = Offset(x - size.width * 0.22f, 0f),
@@ -413,38 +509,38 @@ fun ShowDetailScreen(
                             }
                     )
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.22f)),
+                                .background(Color.White.copy(alpha = 0.24f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.PlayArrow,
                                 contentDescription = "Play",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
 
                         Column {
                             Text(
-                                text = "WATCH NOW",
+                                text = watchButtonLabel,
                                 color = Color.White,
-                                fontSize = 13.5.sp,
+                                fontSize = 13.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                                letterSpacing = 0.4.sp
                             )
                             Text(
                                 text = providerLabel,
-                                color = Color.White.copy(alpha = 0.85f),
-                                fontSize = 11.sp,
+                                color = Color.White.copy(alpha = 0.88f),
+                                fontSize = 10.5.sp,
                                 fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Medium
                             )
@@ -457,7 +553,10 @@ fun ShowDetailScreen(
 
                 // Favorite Toggle Button (Frosted Circle)
                 IconButton(
-                    onClick = { viewModel.toggleFavorite(show) },
+                    onClick = {
+                        Haptics.toggle(!isFavorite)
+                        viewModel.toggleFavorite(show)
+                    },
                     modifier = Modifier
                         .size(52.dp)
                         .clip(CircleShape)
@@ -483,6 +582,7 @@ fun ShowDetailScreen(
                 // Notification Bell Button (Frosted Circle)
                 IconButton(
                     onClick = {
+                        Haptics.toggle(!hasNotification)
                         viewModel.toggleNotification(context, show)
                     },
                     modifier = Modifier
@@ -506,118 +606,241 @@ fun ShowDetailScreen(
                         modifier = Modifier.size(22.dp)
                     )
                 }
+
+                // Edit Show Button (Frosted Circle)
+                IconButton(
+                    onClick = {
+                        Haptics.tick()
+                        onEditClick(show)
+                    },
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                        .border(
+                            width = 1.dp,
+                            brush = glassBorder,
+                            shape = CircleShape
+                        )
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Edit Show",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Share Button (Frosted Circle)
+                IconButton(
+                    onClick = {
+                        Haptics.tick()
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            val epText = if (show.totalEp > 0) "${show.currentEp}/${show.totalEp}" else "${show.currentEp}"
+                            val shareBody = buildString {
+                                append("Watching ${show.title} (Episode $epText) on Qilin!")
+                                if (!show.watchUrl.isNullOrBlank()) {
+                                    append("\nWatch: ${show.watchUrl}")
+                                }
+                            }
+                            putExtra(Intent.EXTRA_TEXT, shareBody)
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(sendIntent, "Share ${show.title}"))
+                    },
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                        .border(
+                            width = 1.dp,
+                            brush = glassBorder,
+                            shape = CircleShape
+                        )
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = "Share Show",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
-            // Episode Progress Card
+            // 3. Episode Progress Bento Card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(CornerRadius.card))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f))
+                    .background(cardBgColor)
                     .border(
-                        width = 0.65.dp,
+                        width = 0.75.dp,
                         brush = glassBorder,
                         shape = RoundedCornerShape(CornerRadius.card)
                     )
-                    .padding(Spacing.md)
+                    .padding(Spacing.lg)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    // Header Row: Watch Progress Title & AniList Integration Pill
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.VideoLibrary,
+                                contentDescription = null,
+                                tint = Color(0xFF0082FB),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "WATCH PROGRESS",
+                                fontSize = 11.sp,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0082FB),
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+
+                        // AniList Pill
+                        if (show.aniListId != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF02A9FF).copy(alpha = 0.15f))
+                                    .border(0.6.dp, Color(0xFF02A9FF).copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        Haptics.tick()
+                                        showAniListMenu = true
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.CloudSync,
+                                    contentDescription = null,
+                                    tint = Color(0xFF02A9FF),
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "AniList #${show.aniListId}",
+                                    fontSize = 10.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF02A9FF)
+                                )
+                            }
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                    .border(0.6.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        Haptics.tick()
+                                        linkSearchQuery = show.title
+                                        isSearchingAniList = true
+                                        coroutineScope.launch {
+                                            aniListSearchResults = AniListService.searchAnime(show.title, limit = 8)
+                                            isSearchingAniList = false
+                                        }
+                                        showLinkAniListDialog = true
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "Link AniList",
+                                    fontSize = 10.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    // Large Episode Typography & Steppers Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text(
-                                    text = "WATCH PROGRESS",
-                                    fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF0082FB),
-                                    letterSpacing = 0.5.sp
-                                )
-
-                                if (show.aniListId != null) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(Color(0xFF02A9FF).copy(alpha = 0.15f))
-                                            .clickable { showAniListMenu = true }
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "AniList #${show.aniListId}",
-                                            fontSize = 9.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF02A9FF)
-                                        )
-                                    }
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                                            .clickable {
-                                                linkSearchQuery = show.title
-                                                isSearchingAniList = true
-                                                coroutineScope.launch {
-                                                    aniListSearchResults = AniListService.searchAnime(show.title, limit = 8)
-                                                    isSearchingAniList = false
-                                                }
-                                                showLinkAniListDialog = true
-                                            }
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "+ Link AniList",
-                                            fontSize = 9.5.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                            val totalStr = if (show.totalEp > 0) " / ${show.totalEp}" else ""
+                            val totalStr = if (show.totalEp > 0) "of ${show.totalEp} Episodes" else "Ongoing Series"
                             Text(
-                                text = "Episode ${show.currentEp}$totalStr",
-                                fontSize = 17.sp,
+                                text = "Episode ${show.currentEp}",
+                                fontSize = 21.sp,
+                                fontFamily = JustSansFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            Text(
+                                text = totalStr,
+                                fontSize = 12.5.sp,
+                                fontFamily = JustSansFamily,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
 
-                        // Tactile Stepper Buttons (+ / -) in ColorOS 17 style
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Tactile Stepper Controls (- / +)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             IconButton(
-                                onClick = { viewModel.decrementEpisode(show) },
+                                onClick = {
+                                    Haptics.tick()
+                                    viewModel.decrementEpisode(show)
+                                },
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
                                     .border(
                                         width = 0.75.dp,
-                                        brush = rememberLiquidGlassBorder(),
+                                        brush = rememberLiquidGlassBorder(isLight),
                                         shape = CircleShape
                                     )
                                     .colorOSPressBounce(pressedScale = 0.88f)
                             ) {
                                 Text(
-                                    text = "-",
-                                    fontSize = 22.sp,
+                                    text = "−",
+                                    fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
 
                             IconButton(
-                                onClick = { viewModel.incrementEpisode(show) },
+                                onClick = {
+                                    Haptics.tick()
+                                    viewModel.incrementEpisode(show)
+                                },
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF0082FB))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color(0xFF0072FF), Color(0xFF00A2FF))
+                                        )
+                                    )
                                     .colorOSPressBounce(pressedScale = 0.88f)
                             ) {
                                 Text(
@@ -630,47 +853,114 @@ fun ShowDetailScreen(
                         }
                     }
 
-                    // Fluid Progress Bar
+                    // Fluid Progress Bar (if totalEp > 0)
                     if (show.totalEp > 0) {
                         val progressFraction = (show.currentEp.toFloat() / show.totalEp.toFloat()).coerceIn(0f, 1f)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                        ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(progressFraction)
-                                    .fillMaxHeight()
+                                    .fillMaxWidth()
+                                    .height(7.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF0082FB))
-                            )
-                        }
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(progressFraction)
+                                        .fillMaxHeight()
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(Color(0xFF0082FB), Color(0xFF00D2FF))
+                                            )
+                                        )
+                                )
+                            }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "${(progressFraction * 100).toInt()}% completed",
-                                fontSize = 11.5.sp,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            val remaining = (show.totalEp - show.currentEp).coerceAtLeast(0)
-                            Text(
-                                text = "$remaining episodes left",
-                                fontSize = 11.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "${(progressFraction * 100).toInt()}% completed",
+                                    fontSize = 11.5.sp,
+                                    fontFamily = JustSansFamily,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                val remaining = (show.totalEp - show.currentEp).coerceAtLeast(0)
+                                Text(
+                                    text = "$remaining episodes left",
+                                    fontSize = 11.5.sp,
+                                    fontFamily = JustSansFamily,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    // Direct 1-Tap Cloud Sync Pill (if AniList is linked and token exists)
+                    if (show.aniListId != null) {
+                        val token = remember { AniListService.getToken() }
+                        if (!token.isNullOrBlank()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF02A9FF).copy(alpha = 0.10f))
+                                    .border(0.6.dp, Color(0xFF02A9FF).copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                                    .clickable(enabled = !isQuickSyncing) {
+                                        isQuickSyncing = true
+                                        Haptics.tick()
+                                        coroutineScope.launch {
+                                            val res = AniListService.updateProgress(
+                                                token = token,
+                                                mediaId = show.aniListId,
+                                                progress = show.currentEp,
+                                                totalEpisodes = show.totalEp
+                                            )
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, "Synced EP ${show.currentEp} to AniList ☁️", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Sync failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                            isQuickSyncing = false
+                                        }
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (isQuickSyncing) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(14.dp),
+                                        strokeWidth = 2.dp,
+                                        color = Color(0xFF02A9FF)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Rounded.CloudSync,
+                                        contentDescription = null,
+                                        tint = Color(0xFF02A9FF),
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                Text(
+                                    text = if (isQuickSyncing) "Syncing with AniList..." else "Tap to sync Episode ${show.currentEp} to AniList",
+                                    fontSize = 11.5.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF02A9FF)
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Airing Countdown Widget (if status == ongoing)
+            // 4. Live Airing Countdown Bento Card (for ongoing shows)
             if (show.status == "ongoing") {
                 Box(
                     modifier = Modifier
@@ -678,39 +968,80 @@ fun ShowDetailScreen(
                         .clip(RoundedCornerShape(CornerRadius.card))
                         .background(cardBgColor)
                         .border(
-                            width = 0.85.dp,
+                            width = 0.75.dp,
                             brush = glassBorder,
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
-                        .padding(Spacing.md)
+                        .padding(Spacing.lg)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(
-                                    text = "NEXT AIRING EPISODE",
-                                    fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF0082FB),
-                                    letterSpacing = 0.5.sp
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Schedule,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0082FB),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "NEXT AIRING EPISODE",
+                                        fontSize = 11.sp,
+                                        fontFamily = JustSansFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF0082FB),
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = if (countdownTime.airingNow) "New Episode Releasing Now!"
-                                    else "Episode ${show.currentEp + 1} • Every ${show.releaseDay} ${show.releaseTime ?: ""}",
+                                    else "Episode ${show.currentEp + 1} • Every ${show.releaseDay ?: "TBA"} ${show.releaseTime ?: ""}".trim(),
                                     fontSize = 13.5.sp,
+                                    fontFamily = JustSansFamily,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Medium
                                 )
+                            }
+
+                            if (countdownTime.airingNow) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF10B981).copy(alpha = 0.20f))
+                                        .border(0.6.dp, Color(0xFF10B981).copy(alpha = 0.45f), CircleShape)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF10B981).copy(alpha = pulseAlpha))
+                                    )
+                                    Text(
+                                        text = "LIVE NOW",
+                                        fontSize = 10.sp,
+                                        fontFamily = JustSansFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF10B981)
+                                    )
+                                }
                             }
                         }
 
                         if (!countdownTime.airingNow && !countdownTime.elapsed) {
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 DetailCountdownBox(value = countdownTime.days, label = "days", isLight = isLight)
@@ -723,44 +1054,118 @@ fun ShowDetailScreen(
                 }
             }
 
-            // Quick Info Chips Row
+            // 5. Specifications Bento Grid (2 columns x 3 rows)
             val formattedLanguage = when (show.language?.trim()?.lowercase()) {
                 "cn", "zh", "chinese", "mandarin" -> "🇨🇳 Chinese"
                 "en", "english" -> "🇬🇧 English"
                 "jp", "ja", "japanese" -> "🇯🇵 Japanese"
                 null, "" -> "🇨🇳 Chinese"
-                else -> show.language!!
+                else -> show.language
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                DetailGlassChip(label = "Language", value = formattedLanguage, isLight = isLight, modifier = Modifier.weight(1.2f))
-                if (show.totalEp > 0) {
-                    DetailGlassChip(label = "Episodes", value = "${show.totalEp}", isLight = isLight, modifier = Modifier.weight(0.9f))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "SPECIFICATIONS & DETAILS",
+                    fontSize = 11.sp,
+                    fontFamily = JustSansFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0082FB),
+                    letterSpacing = 0.5.sp
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DetailSpecCard(
+                        icon = Icons.Rounded.Language,
+                        label = "AUDIO",
+                        value = formattedLanguage,
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DetailSpecCard(
+                        icon = Icons.Rounded.VideoLibrary,
+                        label = "EPISODES",
+                        value = if (show.totalEp > 0) "${show.totalEp} Episodes" else "Ongoing ONA",
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-                if (show.releaseYear > 0) {
-                    DetailGlassChip(label = "Year", value = "${show.releaseYear}", isLight = isLight, modifier = Modifier.weight(0.9f))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val scheduleVal = "${show.releaseDay ?: "TBA"} ${show.releaseTime ?: ""}".trim().ifEmpty { "TBA" }
+                    DetailSpecCard(
+                        icon = Icons.Rounded.Schedule,
+                        label = "SCHEDULE",
+                        value = scheduleVal,
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DetailSpecCard(
+                        icon = Icons.Rounded.CalendarToday,
+                        label = "YEAR",
+                        value = if (show.releaseYear > 0) "${show.releaseYear}" else "TBA",
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val studioVal = show.studio?.takeIf { it.isNotBlank() } ?: "Original Animation"
+                    DetailSpecCard(
+                        icon = Icons.Rounded.Movie,
+                        label = "STUDIO",
+                        value = studioVal,
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    val ratingVal = if (aniListDetail?.averageScore != null) {
+                        "${aniListDetail?.averageScore}% (AniList)"
+                    } else if (show.rating > 0) {
+                        "${show.rating}/10 ★"
+                    } else {
+                        "Unrated"
+                    }
+                    DetailSpecCard(
+                        icon = Icons.Rounded.Star,
+                        label = "SCORE",
+                        value = ratingVal,
+                        isLight = isLight,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
-            // Genres Chips
-            if (!show.genres.isNullOrEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // 6. Genres Tag Cloud
+            val genresList = remember(show.genres) {
+                show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
+            }
+            if (genresList.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = "GENRES",
-                        fontSize = 10.5.sp,
+                        fontSize = 11.sp,
+                        fontFamily = JustSansFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0082FB),
                         letterSpacing = 0.5.sp
                     )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        show.genres?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.forEach { genre ->
+                        genresList.forEach { genre ->
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(percent = 50))
@@ -770,11 +1175,12 @@ fun ShowDetailScreen(
                                         brush = rememberLiquidGlassBorder(isLight),
                                         shape = RoundedCornerShape(percent = 50)
                                     )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    .padding(horizontal = 14.dp, vertical = 7.dp)
                             ) {
                                 Text(
                                     text = genre,
-                                    fontSize = 11.5.sp,
+                                    fontSize = 12.sp,
+                                    fontFamily = JustSansFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -784,55 +1190,91 @@ fun ShowDetailScreen(
                 }
             }
 
-            // Synopsis Section
-            if (!show.notes.isNullOrEmpty()) {
+            // 7. Synopsis & Storyline Card
+            val synopsisContent = remember(show.notes, aniListDetail?.description) {
+                show.notes?.takeIf { it.isNotBlank() }
+                    ?: aniListDetail?.description?.replace(Regex("<[^>]*>"), "")?.trim()
+            }
+            if (!synopsisContent.isNullOrBlank()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(CornerRadius.card))
                         .background(cardBgColor)
                         .border(
-                            width = 0.85.dp,
+                            width = 0.75.dp,
                             brush = glassBorder,
                             shape = RoundedCornerShape(CornerRadius.card)
                         )
-                        .padding(Spacing.md)
+                        .padding(Spacing.lg)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = "SYNOPSIS",
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0082FB),
-                            letterSpacing = 0.5.sp
-                        )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.animateContentSize()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Description,
+                                contentDescription = null,
+                                tint = Color(0xFF0082FB),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "SYNOPSIS & STORYLINE",
+                                fontSize = 11.sp,
+                                fontFamily = JustSansFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0082FB),
+                                letterSpacing = 0.5.sp
+                            )
+                        }
 
                         Text(
-                            text = show.notes!!,
+                            text = synopsisContent,
                             fontSize = 13.5.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f),
-                            lineHeight = 20.sp,
+                            lineHeight = 21.sp,
                             fontFamily = JustSansFamily,
                             maxLines = if (isSynopsisExpanded) Int.MAX_VALUE else 4,
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        if (show.notes!!.length > 150) {
-                            Text(
-                                text = if (isSynopsisExpanded) "Show Less" else "Read More",
-                                color = Color(0xFF0082FB),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
+                        if (synopsisContent.length > 150) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 modifier = Modifier
-                                    .clickable { isSynopsisExpanded = !isSynopsisExpanded }
-                                    .padding(top = 2.dp)
-                            )
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        Haptics.tick()
+                                        isSynopsisExpanded = !isSynopsisExpanded
+                                    }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = if (isSynopsisExpanded) "Show Less" else "Read More",
+                                    color = Color(0xFF0082FB),
+                                    fontSize = 12.5.sp,
+                                    fontFamily = JustSansFamily,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Icon(
+                                    imageVector = if (isSynopsisExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = Color(0xFF0082FB),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
+        // Top Floating Glass Header
         GlassHeader(
             title = show.title,
             subtitle = detailSubtitle,
@@ -842,6 +1284,7 @@ fun ShowDetailScreen(
             onEditClick = { onEditClick(show) }
         )
 
+        // AniList Options Dialog
         if (showAniListMenu) {
             ColorOSDialog(
                 onDismissRequest = { showAniListMenu = false },
@@ -855,6 +1298,7 @@ fun ShowDetailScreen(
                             text = "Linked to AniList #${show.aniListId}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
+                            fontFamily = JustSansFamily,
                             color = Color(0xFF02A9FF)
                         )
 
@@ -862,11 +1306,12 @@ fun ShowDetailScreen(
                             text = "Sync Current Progress (EP ${show.currentEp})",
                             onClick = {
                                 val token = AniListService.getToken()
+                                val targetId = show.aniListId
                                 if (token.isNullOrBlank()) {
                                     Toast.makeText(context, "AniList not connected. Log in from Settings.", Toast.LENGTH_SHORT).show()
-                                } else {
+                                } else if (targetId != null) {
                                     coroutineScope.launch {
-                                        val res = AniListService.updateProgress(token, show.aniListId!!, show.currentEp, show.totalEp)
+                                        val res = AniListService.updateProgress(token, targetId, show.currentEp, show.totalEp)
                                         if (res.isSuccess) {
                                             Toast.makeText(context, "Synced Episode ${show.currentEp} to AniList!", Toast.LENGTH_SHORT).show()
                                         } else {
@@ -877,23 +1322,30 @@ fun ShowDetailScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 42.dp,
+                            height = 44.dp,
                             containerColor = Color(0xFF02A9FF)
                         )
 
+                        val userScore = aniListDetail?.userScore
+                        val scoreLabel = if (userScore != null && userScore > 0.0) {
+                            "Your Score: $userScore ★ (Change)"
+                        } else {
+                            "Rate Show on AniList"
+                        }
+
                         ColorOSOutlinedButton(
-                            text = if (aniListDetail?.userScore != null && aniListDetail!!.userScore!! > 0.0) "Your Score: ${aniListDetail!!.userScore} ★ (Change)" else "Rate Show on AniList",
+                            text = scoreLabel,
                             onClick = {
-                                userScoreInput = aniListDetail?.userScore?.toInt()?.toString() ?: ""
+                                userScoreInput = userScore?.toInt()?.toString() ?: ""
                                 showScoreRateDialog = true
                                 showAniListMenu = false
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 42.dp
+                            height = 44.dp
                         )
 
                         ColorOSOutlinedButton(
-                            text = "Open on AniList",
+                            text = "Open on AniList ↗",
                             onClick = {
                                 val url = "https://anilist.co/anime/${show.aniListId}"
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -901,7 +1353,7 @@ fun ShowDetailScreen(
                                 showAniListMenu = false
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 42.dp
+                            height = 44.dp
                         )
 
                         ColorOSOutlinedButton(
@@ -917,7 +1369,7 @@ fun ShowDetailScreen(
                                 showLinkAniListDialog = true
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 42.dp
+                            height = 44.dp
                         )
 
                         ColorOSOutlinedButton(
@@ -928,7 +1380,7 @@ fun ShowDetailScreen(
                                 Toast.makeText(context, "Unlinked from AniList", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            height = 42.dp,
+                            height = 44.dp,
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     }
@@ -936,6 +1388,7 @@ fun ShowDetailScreen(
             )
         }
 
+        // AniList Score Submission Dialog
         if (showScoreRateDialog) {
             ColorOSDialog(
                 onDismissRequest = { showScoreRateDialog = false },
@@ -946,15 +1399,16 @@ fun ShowDetailScreen(
                 onConfirm = {
                     val score = userScoreInput.toDoubleOrNull()
                     val token = AniListService.getToken()
+                    val targetId = show.aniListId
                     if (token.isNullOrBlank()) {
                         Toast.makeText(context, "AniList not connected", Toast.LENGTH_SHORT).show()
-                    } else if (score != null && show.aniListId != null) {
+                    } else if (score != null && targetId != null) {
                         coroutineScope.launch {
-                            val res = AniListService.updateMediaScoreAndStatus(token, show.aniListId!!, score, null)
+                            val res = AniListService.updateMediaScoreAndStatus(token, targetId, score, null)
                             if (res.isSuccess) {
                                 viewModel.insertOrUpdateShow(show.copy(rating = score.toInt()))
                                 Toast.makeText(context, "Score submitted to AniList: $score ★", Toast.LENGTH_SHORT).show()
-                                val ref = AniListService.fetchMediaDetails(show.aniListId!!)
+                                val ref = AniListService.fetchMediaDetails(targetId)
                                 if (ref.isSuccess) aniListDetail = ref.getOrNull()
                             } else {
                                 Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
@@ -968,6 +1422,7 @@ fun ShowDetailScreen(
                         Text(
                             text = "Enter your score for ${show.title} (1 to 10 or 100):",
                             fontSize = 13.sp,
+                            fontFamily = JustSansFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
@@ -985,6 +1440,7 @@ fun ShowDetailScreen(
             )
         }
 
+        // AniList Search and Link Dialog
         if (showLinkAniListDialog) {
             ColorOSDialog(
                 onDismissRequest = { showLinkAniListDialog = false },
@@ -1048,6 +1504,7 @@ fun ShowDetailScreen(
                                 Text(
                                     text = "No results found on AniList",
                                     fontSize = 13.sp,
+                                    fontFamily = JustSansFamily,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1092,6 +1549,7 @@ fun ShowDetailScreen(
                                             Text(
                                                 text = media.preferredTitle,
                                                 fontWeight = FontWeight.SemiBold,
+                                                fontFamily = JustSansFamily,
                                                 fontSize = 13.5.sp,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
@@ -1100,6 +1558,7 @@ fun ShowDetailScreen(
                                             Text(
                                                 text = "AniList #${media.id} • ${if (media.episodes > 0) "${media.episodes} eps" else "Episodes TBA"}",
                                                 fontSize = 11.sp,
+                                                fontFamily = JustSansFamily,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
@@ -1116,13 +1575,13 @@ fun ShowDetailScreen(
 
 @Composable
 private fun DetailCountdownBox(value: Long, label: String, isLight: Boolean = false) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(18.dp)
     val boxBg = if (isLight) Color(0xFFE8EEF5).copy(alpha = 0.90f) else Color(0xFF1E2638).copy(alpha = 0.45f)
     val numColor = if (isLight) Color.Black else Color.White
     Box(
         modifier = Modifier
-            .width(56.dp)
-            .height(50.dp)
+            .width(62.dp)
+            .height(56.dp)
             .clip(shape)
             .background(boxBg)
             .border(
@@ -1138,7 +1597,8 @@ private fun DetailCountdownBox(value: Long, label: String, isLight: Boolean = fa
         ) {
             Text(
                 text = String.format("%02d", value),
-                fontSize = 15.sp,
+                fontSize = 16.5.sp,
+                fontFamily = JustSansFamily,
                 fontWeight = FontWeight.Bold,
                 color = numColor,
                 textAlign = TextAlign.Center
@@ -1146,6 +1606,7 @@ private fun DetailCountdownBox(value: Long, label: String, isLight: Boolean = fa
             Text(
                 text = label.uppercase(),
                 fontSize = 8.5.sp,
+                fontFamily = JustSansFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF0082FB),
                 textAlign = TextAlign.Center,
@@ -1156,38 +1617,65 @@ private fun DetailCountdownBox(value: Long, label: String, isLight: Boolean = fa
 }
 
 @Composable
-private fun DetailGlassChip(label: String, value: String, isLight: Boolean = false, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(18.dp)
-    val chipBg = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
+private fun DetailSpecCard(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    isLight: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(20.dp)
+    val cardBg = if (isLight) Color.White.copy(alpha = 0.85f) else Color(0xFF1E2638).copy(alpha = 0.45f)
     Box(
         modifier = modifier
             .clip(shape)
-            .background(chipBg)
+            .background(cardBg)
             .border(
                 width = 0.75.dp,
                 brush = rememberLiquidGlassBorder(isLight),
                 shape = shape
             )
-            .padding(horizontal = Spacing.md, vertical = 9.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = label.uppercase(),
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF0082FB),
-                letterSpacing = 0.5.sp
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                fontSize = 12.5.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF0082FB).copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color(0xFF0082FB),
+                    modifier = Modifier.size(17.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label.uppercase(),
+                    fontSize = 8.5.sp,
+                    fontFamily = JustSansFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0082FB),
+                    letterSpacing = 0.5.sp
+                )
+                Spacer(modifier = Modifier.height(1.dp))
+                Text(
+                    text = value,
+                    fontSize = 12.5.sp,
+                    fontFamily = JustSansFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
