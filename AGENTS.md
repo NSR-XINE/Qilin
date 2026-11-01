@@ -5,7 +5,7 @@ Qilin — Anime tracking app with Haze glass backgrounds, Kyant liquid glass bot
 - Application ID: `com.nsr.qilin`
 - Package / Namespace: `com.nsr.qilin`
 - Branch: `staging`
-- Remote: `https://github.com/NSR-XINE/my_donguha.git`
+- Remote: `https://github.com/NSR-XINE/Qilin.git`
 
 ## Workflow
 - Before pushing: `git pull --rebase origin staging`, then `git push origin staging`.
