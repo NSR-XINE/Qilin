@@ -23,18 +23,27 @@ object HlsPlaylistParser {
         val byteRangeLength: Long? = null
     )
 
+    data class AudioTrack(
+        val groupId: String?,
+        val name: String?,
+        val url: String,
+        val isDefault: Boolean = false
+    )
+
     data class Variant(
         val url: String,
         val bandwidth: Long,
         val resolution: String?,
         val codecs: String?,
-        val audioGroupId: String? = null
+        val audioGroupId: String? = null,
+        val audioUrl: String? = null
     )
 
     data class MasterPlaylist(
         val baseUri: String,
         val variants: List<Variant>,
-        val audioUris: List<String>
+        val audioUris: List<String>,
+        val audioTracks: List<AudioTrack> = emptyList()
     )
 
     data class MediaPlaylist(
@@ -69,7 +78,8 @@ object HlsPlaylistParser {
     }
 
     private fun parseMasterPlaylist(lines: List<String>, baseUri: String): MasterPlaylist {
-        val variants = mutableListOf<Variant>()
+        val rawVariants = mutableListOf<Variant>()
+        val audioTracks = mutableListOf<AudioTrack>()
         val audioUris = mutableListOf<String>()
 
         var i = 0
@@ -89,7 +99,7 @@ object HlsPlaylistParser {
                 }
                 if (j < lines.size) {
                     val variantUrl = resolveUrl(baseUri, lines[j])
-                    variants.add(
+                    rawVariants.add(
                         Variant(
                             url = variantUrl,
                             bandwidth = bandwidth,
@@ -104,16 +114,37 @@ object HlsPlaylistParser {
                 val attrs = parseAttributes(line.substringAfter(':'))
                 val uri = attrs["URI"]
                 if (!uri.isNullOrEmpty()) {
-                    audioUris.add(resolveUrl(baseUri, uri))
+                    val resolvedAudioUrl = resolveUrl(baseUri, uri)
+                    audioUris.add(resolvedAudioUrl)
+                    audioTracks.add(
+                        AudioTrack(
+                            groupId = attrs["GROUP-ID"],
+                            name = attrs["NAME"],
+                            url = resolvedAudioUrl,
+                            isDefault = attrs["DEFAULT"]?.equals("YES", ignoreCase = true) == true
+                        )
+                    )
                 }
             }
             i++
         }
 
+        // Link audio track to variants by matching audioGroupId or default
+        val variants = rawVariants.map { v ->
+            val matchedAudio = if (!v.audioGroupId.isNullOrEmpty()) {
+                audioTracks.firstOrNull { it.groupId == v.audioGroupId }
+            } else null
+            val effectiveAudio = matchedAudio?.url
+                ?: audioTracks.firstOrNull { it.isDefault }?.url
+                ?: audioTracks.firstOrNull()?.url
+            v.copy(audioUrl = effectiveAudio)
+        }
+
         return MasterPlaylist(
             baseUri = baseUri,
             variants = variants.sortedByDescending { it.bandwidth },
-            audioUris = audioUris
+            audioUris = audioUris,
+            audioTracks = audioTracks
         )
     }
 

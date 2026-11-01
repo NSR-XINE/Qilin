@@ -164,10 +164,12 @@ class DownloadService : Service() {
                 val isResume = intent.getBooleanExtra("resume", false)
                 val format = intent.getStringExtra("format") ?: if (isAudioOnly) "m4a" else "mp4"
                 val resolution = intent.getStringExtra("resolution") ?: "HD"
+                val audioUrl = intent.getStringExtra("audioUrl")
+                val masterUrl = intent.getStringExtra("masterUrl")
 
                 pausedIds.remove(downloadId)
                 cancelledIds.remove(downloadId)
-                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly, isHls, isResume, format, resolution)
+                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly, isHls, isResume, format, resolution, audioUrl, masterUrl)
             }
             "PAUSE_DOWNLOAD" -> {
                 val downloadId = intent.getStringExtra("downloadId")
@@ -219,7 +221,9 @@ class DownloadService : Service() {
         isHls: Boolean = false,
         isResume: Boolean = false,
         format: String = "mp4",
-        resolution: String = "HD"
+        resolution: String = "HD",
+        audioUrl: String? = null,
+        masterUrl: String? = null
     ) {
         try {
             if (wakeLock?.isHeld == false) {
@@ -479,7 +483,7 @@ class DownloadService : Service() {
                         try {
                             if (hls) {
                                 downloadedFile = withContext(Dispatchers.IO) {
-                                    downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, format, controller) { percent, speed, down, total, eta ->
+                                    downloadNativeHls(url, audioUrl, masterUrl, tempDir, sanitizedTitle, finalReferer, format, controller) { percent, speed, down, total, eta ->
                                         publishProgressExplicit(percent, speed, down, total, eta)
                                     }
                                 }
@@ -501,7 +505,7 @@ class DownloadService : Service() {
                     Log.i(TAG, "Engaging HlsDownloader native parallel engine for $id")
                     try {
                         downloadedFile = withContext(Dispatchers.IO) {
-                            downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, format, controller) { percent, speed, down, total, eta ->
+                            downloadNativeHls(url, audioUrl, masterUrl, tempDir, sanitizedTitle, finalReferer, format, controller) { percent, speed, down, total, eta ->
                                 publishProgressExplicit(percent, speed, down, total, eta)
                             }
                         }
@@ -517,11 +521,12 @@ class DownloadService : Service() {
 
                     if (!downloadSuccess && !cancelledIds.contains(id) && !pausedIds.contains(id) && !controller.isInterrupted()) {
                         try {
+                            val ytdlTargetUrl = if (!masterUrl.isNullOrEmpty()) masterUrl else url
                             val exitCode = executeYoutubeDL(
                                 request = request,
                                 id = id,
                                 progressCallback = progressCallback,
-                                url = url,
+                                url = ytdlTargetUrl,
                                 outputTemplate = outputTemplate,
                                 finalReferer = finalReferer,
                                 isAudioOnly = isAudioOnly,
@@ -924,6 +929,8 @@ class DownloadService : Service() {
 
     private suspend fun downloadNativeHls(
         url: String,
+        audioUrl: String?,
+        masterUrl: String?,
         tempDir: File,
         fileName: String,
         referer: String?,
@@ -952,9 +959,11 @@ class DownloadService : Service() {
 
         return hlsDownloader.download(
             m3u8Url = url,
+            audioM3u8Url = audioUrl,
             downloadDir = tempDir,
             outputFileName = fileName,
-            outputFormat = format
+            outputFormat = format,
+            context = this@DownloadService
         )
     }
 

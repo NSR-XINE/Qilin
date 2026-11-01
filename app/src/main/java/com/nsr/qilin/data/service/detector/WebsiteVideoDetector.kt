@@ -200,6 +200,10 @@ class WebsiteVideoDetector(
                     } catch (ignored: Throwable) {}
                 }
 
+                val defaultAudio = parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+                    ?: parsed.master.audioTracks.firstOrNull()?.url
+                    ?: parsed.master.audioUris.firstOrNull()
+
                 parsed.master.variants.forEach { v ->
                     val h = v.resolution?.substringAfter('x')?.toIntOrNull()
                     val badge = if (h != null && h > 0) "${h}p" else {
@@ -216,7 +220,8 @@ class WebsiteVideoDetector(
                             quality = badge,
                             bandwidth = v.bandwidth,
                             resolution = v.resolution ?: (if (h != null && h > 0) "${(h * 16) / 9}x$h" else null),
-                            codecs = v.codecs
+                            codecs = v.codecs,
+                            audioUrl = v.audioUrl ?: defaultAudio
                         )
                     )
                 }
@@ -261,6 +266,12 @@ class WebsiteVideoDetector(
         }
 
         val primaryQuality = variants.firstOrNull()?.quality ?: "HLS"
+        val defaultAudio = if (parsed is HlsPlaylistParser.ParsedHlsResult.Master) {
+            parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+                ?: parsed.master.audioTracks.firstOrNull()?.url
+                ?: parsed.master.audioUris.firstOrNull()
+        } else null
+
         return DetectedVideo(
             url = url,
             title = pageTitle ?: "HLS Video",
@@ -268,7 +279,8 @@ class WebsiteVideoDetector(
             quality = primaryQuality,
             durationSec = durationSec,
             headers = headers,
-            variants = variants.sortedByDescending { it.bandwidth }
+            variants = variants.sortedByDescending { it.bandwidth },
+            defaultAudioUrl = defaultAudio
         )
     }
 
@@ -387,7 +399,9 @@ class WebsiteVideoDetector(
                     isPlayingNow = isCurrentHeight,
                     durationFormatted = durationFormatted,
                     resolution = resStr,
-                    containerFormat = containerFormat
+                    containerFormat = containerFormat,
+                    audioUrl = variant.audioUrl ?: detected.defaultAudioUrl,
+                    masterUrl = detected.url
                 )
             }.distinctBy { it.badge }.sortedByDescending { it.badge.removeSuffix("p").toIntOrNull() ?: 0 }
         } else {
@@ -408,7 +422,9 @@ class WebsiteVideoDetector(
                     isSyncedFromWebsite = true,
                     isPlayingNow = true,
                     durationFormatted = durationFormatted,
-                    containerFormat = if (detected.contentType == ContentType.AUDIO) "M4A" else containerFormat
+                    containerFormat = if (detected.contentType == ContentType.AUDIO) "M4A" else containerFormat,
+                    audioUrl = detected.defaultAudioUrl,
+                    masterUrl = detected.url
                 )
             )
         }

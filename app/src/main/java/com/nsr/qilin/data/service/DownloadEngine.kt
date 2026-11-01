@@ -52,7 +52,9 @@ data class DownloadTask(
     val referer: String? = null,
     val isAudioOnly: Boolean = false,
     val format: String? = null,
-    val resolution: String? = null
+    val resolution: String? = null,
+    val audioUrl: String? = null,
+    val masterUrl: String? = null
 )
 
 /**
@@ -196,7 +198,9 @@ object DownloadEngine {
         resolution: String? = null,
         resumeId: String? = null,
         resumeProgress: Float = 0f,
-        isResume: Boolean = false
+        isResume: Boolean = false,
+        audioUrl: String? = null,
+        masterUrl: String? = null
     ) {
         val app = context.applicationContext
         val cleanTitle = title.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
@@ -205,7 +209,7 @@ object DownloadEngine {
         val isDirectUrlFormat = formatId?.startsWith("http://") == true || formatId?.startsWith("https://") == true
         val effectiveUrl = if (isDirectUrlFormat) formatId else url
         val effectiveFormatId = if (isDirectUrlFormat) null else formatId
-        val isHls = effectiveUrl.contains(".m3u8", ignoreCase = true)
+        val isHls = effectiveUrl.contains(".m3u8", ignoreCase = true) || (masterUrl?.contains(".m3u8", ignoreCase = true) == true)
 
         val task = DownloadTask(
             id = taskId,
@@ -219,7 +223,9 @@ object DownloadEngine {
             referer = referer,
             isAudioOnly = isAudioOnly,
             format = format,
-            resolution = resolution
+            resolution = resolution,
+            audioUrl = audioUrl,
+            masterUrl = masterUrl
         )
         activeTasks[taskId] = task
         _tasksState.value = activeTasks.values.toList()
@@ -245,6 +251,12 @@ object DownloadEngine {
             putExtra("isAudioOnly", isAudioOnly)
             putExtra("format", format)
             putExtra("resolution", resolution)
+            if (!audioUrl.isNullOrEmpty()) {
+                putExtra("audioUrl", audioUrl)
+            }
+            if (!masterUrl.isNullOrEmpty()) {
+                putExtra("masterUrl", masterUrl)
+            }
         }
 
         try {

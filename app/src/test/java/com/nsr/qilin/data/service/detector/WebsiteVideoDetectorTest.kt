@@ -183,4 +183,42 @@ class WebsiteVideoDetectorTest {
         // Ensure detector.detectedVideos has only 1 entry (not duplicated)
         assertEquals(1, detector.detectedVideos.value.size)
     }
+
+    @Test
+    fun testWebsiteVideoDetector_hlsMasterWithAudioTrack() {
+        val masterManifest = """
+            #EXTM3U
+            #EXT-X-VERSION:7
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="0_aac_q2",NAME="Main",DEFAULT=YES,URI="audio/manifest.m3u8"
+            #EXT-X-STREAM-INF:BANDWIDTH=4500000,RESOLUTION=1920x1080,CODECS="avc1.640028",AUDIO="0_aac_q2"
+            1080p.m3u8
+        """.trimIndent()
+
+        val mockClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                Response.Builder()
+                    .request(chain.request())
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(200)
+                    .message("OK")
+                    .header("Content-Type", "application/vnd.apple.mpegurl")
+                    .body(masterManifest.toResponseBody("application/vnd.apple.mpegurl".toMediaTypeOrNull()))
+                    .build()
+            }
+            .build()
+
+        val masterUrl = "https://example.com/master.m3u8"
+        val detector = WebsiteVideoDetector(mockClient)
+        val captured = detector.inspectUrl(masterUrl, pageTitle = "Test Donghua")
+
+        assertNotNull(captured)
+        assertEquals("https://example.com/audio/manifest.m3u8", captured?.defaultAudioUrl)
+        assertEquals(1, captured?.variants?.size)
+        assertEquals("https://example.com/audio/manifest.m3u8", captured?.variants?.get(0)?.audioUrl)
+
+        val options = detector.toQualityOptions(captured!!)
+        assertEquals(1, options.size)
+        assertEquals("https://example.com/audio/manifest.m3u8", options[0].audioUrl)
+        assertEquals(masterUrl, options[0].masterUrl)
+    }
 }

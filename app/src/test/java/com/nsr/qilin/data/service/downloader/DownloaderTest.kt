@@ -234,4 +234,41 @@ class DownloaderTest {
         assertEquals(450000L, seg1.byteRangeLength)
         assertEquals(500000L, seg1.byteRangeOffset)
     }
+
+    @Test
+    fun testHlsPlaylistParser_masterPlaylistWithDemuxedAudio() {
+        val m3u8 = """
+            #EXTM3U
+            #EXT-X-VERSION:7
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio_default",NAME="English",DEFAULT=YES,AUTOSELECT=YES,URI="audio/aac_q2/manifest.m3u8"
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio_commentary",NAME="Commentary",DEFAULT=NO,AUTOSELECT=NO,URI="audio/commentary/manifest.m3u8"
+            #EXT-X-STREAM-INF:BANDWIDTH=4500000,RESOLUTION=1920x1080,CODECS="avc1.640028",AUDIO="audio_default"
+            video/1080p/manifest.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=2200000,RESOLUTION=1280x720,CODECS="avc1.4d401f",AUDIO="audio_default"
+            video/720p/manifest.m3u8
+        """.trimIndent()
+
+        val baseUri = "https://example.com/stream/master.m3u8"
+        val result = HlsPlaylistParser.parse(m3u8, baseUri)
+
+        assertTrue(result is HlsPlaylistParser.ParsedHlsResult.Master)
+        val master = (result as HlsPlaylistParser.ParsedHlsResult.Master).master
+
+        assertEquals(2, master.variants.size)
+        assertEquals(2, master.audioTracks.size)
+
+        val defaultAudio = master.audioTracks.first { it.isDefault }
+        assertEquals("audio_default", defaultAudio.groupId)
+        assertEquals("English", defaultAudio.name)
+        assertEquals("https://example.com/stream/audio/aac_q2/manifest.m3u8", defaultAudio.url)
+
+        val var1080 = master.variants[0]
+        assertEquals("1920x1080", var1080.resolution)
+        assertEquals("audio_default", var1080.audioGroupId)
+        assertEquals("https://example.com/stream/audio/aac_q2/manifest.m3u8", var1080.audioUrl)
+
+        val var720 = master.variants[1]
+        assertEquals("1280x720", var720.resolution)
+        assertEquals("https://example.com/stream/audio/aac_q2/manifest.m3u8", var720.audioUrl)
+    }
 }

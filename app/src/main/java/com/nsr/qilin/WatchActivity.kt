@@ -383,7 +383,7 @@ class WatchActivity : ComponentActivity() {
                         }
 
                         val effectiveUrl = if (option.isAudio) {
-                            capturedStreamUrl
+                            option.audioUrl ?: capturedStreamUrl
                         } else if (option.formatId.startsWith("http://") || option.formatId.startsWith("https://")) {
                             option.formatId
                         } else {
@@ -419,7 +419,9 @@ class WatchActivity : ComponentActivity() {
                             referer = capturedReferer,
                             isAudioOnly = option.isAudio,
                             format = formatExt,
-                            resolution = if (option.isAudio) "AUDIO" else resBadge
+                            resolution = if (option.isAudio) "AUDIO" else resBadge,
+                            audioUrl = option.audioUrl,
+                            masterUrl = option.masterUrl ?: capturedStreamUrl
                         )
                     }
                 )
@@ -2268,7 +2270,9 @@ class WatchActivity : ComponentActivity() {
         referer: String? = null,
         isAudioOnly: Boolean = false,
         format: String? = null,
-        resolution: String? = null
+        resolution: String? = null,
+        audioUrl: String? = null,
+        masterUrl: String? = null
     ) {
         try {
             com.nsr.qilin.data.service.DownloadEngine.startDownload(
@@ -2279,7 +2283,9 @@ class WatchActivity : ComponentActivity() {
                 referer = referer,
                 isAudioOnly = isAudioOnly,
                 format = format,
-                resolution = resolution
+                resolution = resolution,
+                audioUrl = audioUrl,
+                masterUrl = masterUrl
             )
             val msg = if (isAudioOnly) "Starting audio extraction: $title" else "Starting download: $title"
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -2374,7 +2380,8 @@ class WatchActivity : ComponentActivity() {
                         isPlayingNow = isPlaying,
                         durationFormatted = detectedDuration,
                         resolution = res,
-                        containerFormat = selectedVideoFormat
+                        containerFormat = selectedVideoFormat,
+                        masterUrl = streamUrl
                     )
                 }
             } else {
@@ -2393,7 +2400,8 @@ class WatchActivity : ComponentActivity() {
         }
 
         // Audio options extracted from the website stream!
-        val audioOptions = remember(streamUrl, isWebsiteStreamCaptured, selectedAudioFormat) {
+        val audioOptions = remember(streamUrl, isWebsiteStreamCaptured, selectedAudioFormat, syncedWebsiteOptions) {
+            val detectedAudioUrl = syncedWebsiteOptions.firstOrNull { !it.audioUrl.isNullOrEmpty() }?.audioUrl
             listOf(
                 DownloadQualityOption(
                     id = "audio_m4a",
@@ -2405,7 +2413,9 @@ class WatchActivity : ComponentActivity() {
                     fileSizeFormatted = "~28 MB",
                     durationFormatted = detectedDuration,
                     containerFormat = selectedAudioFormat,
-                    isSyncedFromWebsite = isWebsiteStreamCaptured
+                    isSyncedFromWebsite = isWebsiteStreamCaptured,
+                    audioUrl = detectedAudioUrl,
+                    masterUrl = streamUrl
                 ),
                 DownloadQualityOption(
                     id = "audio_mp3",
@@ -2417,7 +2427,9 @@ class WatchActivity : ComponentActivity() {
                     fileSizeFormatted = "~45 MB",
                     durationFormatted = detectedDuration,
                     containerFormat = selectedAudioFormat,
-                    isSyncedFromWebsite = isWebsiteStreamCaptured
+                    isSyncedFromWebsite = isWebsiteStreamCaptured,
+                    audioUrl = detectedAudioUrl,
+                    masterUrl = streamUrl
                 ),
                 DownloadQualityOption(
                     id = "audio_aac",
@@ -2429,7 +2441,9 @@ class WatchActivity : ComponentActivity() {
                     fileSizeFormatted = "~18 MB",
                     durationFormatted = detectedDuration,
                     containerFormat = selectedAudioFormat,
-                    isSyncedFromWebsite = isWebsiteStreamCaptured
+                    isSyncedFromWebsite = isWebsiteStreamCaptured,
+                    audioUrl = detectedAudioUrl,
+                    masterUrl = streamUrl
                 )
             )
         }
@@ -2940,7 +2954,10 @@ class WatchActivity : ComponentActivity() {
                             text = option.title,
                             color = Color.White,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                         if (option.isPlayingNow) {
                             Box(
@@ -2953,7 +2970,9 @@ class WatchActivity : ComponentActivity() {
                                     text = "PLAYING NOW",
                                     color = Color(0xFF0082FB),
                                     fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         } else if (option.isSyncedFromWebsite) {
@@ -2967,7 +2986,9 @@ class WatchActivity : ComponentActivity() {
                                     text = "WEBSITE",
                                     color = Color.White.copy(alpha = 0.6f),
                                     fontSize = 9.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
@@ -3066,58 +3087,24 @@ class WatchActivity : ComponentActivity() {
 
     companion object {
         fun parseHlsMasterPlaylist(masterUrl: String, content: String): List<DownloadQualityOption> {
-            val lines = content.lines()
-            val options = mutableListOf<DownloadQualityOption>()
-            var currentBandwidth = 0L
-            var currentResolution = ""
-            var currentWidth = 0
-            var currentHeight = 0
-            val uriBase = try { URI(masterUrl) } catch (e: Exception) { null }
+            val parsed = try {
+                com.nsr.qilin.data.service.downloader.HlsPlaylistParser.parse(content, masterUrl)
+            } catch (e: Exception) { null }
 
-            for (line in lines) {
-                val trimmed = line.trim()
-                if (trimmed.startsWith("#EXT-X-STREAM-INF:")) {
-                    val attrs = trimmed.removePrefix("#EXT-X-STREAM-INF:")
-                    val bwMatch = Regex("BANDWIDTH=(\\d+)").find(attrs)
-                    currentBandwidth = bwMatch?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
+            if (parsed is com.nsr.qilin.data.service.downloader.HlsPlaylistParser.ParsedHlsResult.Master) {
+                val defaultAudio = parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+                    ?: parsed.master.audioTracks.firstOrNull()?.url
+                    ?: parsed.master.audioUris.firstOrNull()
 
-                    val resMatch = Regex("RESOLUTION=(\\d+)x(\\d+)").find(attrs)
-                    if (resMatch != null) {
-                        currentWidth = resMatch.groupValues[1].toIntOrNull() ?: 0
-                        currentHeight = resMatch.groupValues[2].toIntOrNull() ?: 0
-                        currentResolution = "${currentHeight}p"
-                    } else {
-                        currentWidth = 0
-                        currentHeight = 0
-                        currentResolution = ""
+                return parsed.master.variants.mapIndexed { idx, v ->
+                    val h = v.resolution?.substringAfter('x') ?: ""
+                    val badge = if (h.isNotEmpty()) "${h}p" else when {
+                        v.bandwidth >= 3500000 -> "1080p"
+                        v.bandwidth >= 1800000 -> "720p"
+                        v.bandwidth >= 900000 -> "480p"
+                        v.bandwidth > 0 -> "360p"
+                        else -> "HD"
                     }
-                } else if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
-                    val absoluteVariantUrl = if (uriBase != null) {
-                        try {
-                            val resolved = uriBase.resolve(trimmed)
-                            if (resolved.query.isNullOrEmpty() && !uriBase.query.isNullOrEmpty()) {
-                                val sep = if (resolved.toString().contains("?")) "&" else "?"
-                                resolved.toString() + sep + uriBase.rawQuery
-                            } else {
-                                resolved.toString()
-                            }
-                        } catch (e: Exception) {
-                            trimmed
-                        }
-                    } else {
-                        trimmed
-                    }
-
-                    val badge = if (currentResolution.isNotEmpty()) currentResolution else {
-                        when {
-                            currentBandwidth >= 3500000 -> "1080p"
-                            currentBandwidth >= 1800000 -> "720p"
-                            currentBandwidth >= 900000 -> "480p"
-                            currentBandwidth > 0 -> "360p"
-                            else -> "HD"
-                        }
-                    }
-
                     val title = when (badge) {
                         "2160p" -> "4K Ultra HD"
                         "1440p" -> "2K Quad HD"
@@ -3127,46 +3114,26 @@ class WatchActivity : ComponentActivity() {
                         "360p" -> "360p Data Saver"
                         else -> "$badge Stream"
                     }
-
-                    val bwFormatted = if (currentBandwidth > 0) {
-                        val mbps = currentBandwidth / 1_000_000.0
-                        String.format(java.util.Locale.US, "%.1f Mbps", mbps)
-                    } else null
-
-                    val resString = if (currentWidth > 0 && currentHeight > 0) "${currentWidth}x${currentHeight}" else null
-                    val estimatedSizeStr = if (currentBandwidth > 0) {
-                        val estBytes = (currentBandwidth / 8.0 * 1440.0).toLong()
-                        com.nsr.qilin.data.service.detector.WebsiteVideoDetector.formatBytes(estBytes)
-                    } else bwFormatted
-
-                    val subtitle = if (bwFormatted != null) "Bitrate: $bwFormatted • Synced from website"
-                                   else "Synced from website playback"
-
-                    options.add(
-                        DownloadQualityOption(
-                            id = "synced_${badge}_${options.size}",
-                            title = title,
-                            subtitle = subtitle,
-                            badge = badge,
-                            formatId = absoluteVariantUrl,
-                            isAudio = false,
-                            fileSizeFormatted = estimatedSizeStr,
-                            isSyncedFromWebsite = true,
-                            resolution = resString,
-                            durationFormatted = "24:00"
-                        )
+                    val estBytes = if (v.bandwidth > 0) ((v.bandwidth / 8.0) * 1440.0).toLong() else 0L
+                    val sizeStr = if (estBytes > 0) com.nsr.qilin.data.service.detector.WebsiteVideoDetector.formatBytes(estBytes) else null
+                    DownloadQualityOption(
+                        id = "synced_${badge}_$idx",
+                        title = title,
+                        subtitle = "${v.resolution ?: badge} • ${sizeStr ?: "Synced"}",
+                        badge = badge,
+                        formatId = v.url,
+                        isAudio = false,
+                        fileSizeFormatted = sizeStr,
+                        isSyncedFromWebsite = true,
+                        resolution = v.resolution,
+                        durationFormatted = "24:00",
+                        audioUrl = v.audioUrl ?: defaultAudio,
+                        masterUrl = masterUrl
                     )
-
-                    currentBandwidth = 0L
-                    currentResolution = ""
-                    currentWidth = 0
-                    currentHeight = 0
-                }
+                }.sortedByDescending { it.badge.removeSuffix("p").toIntOrNull() ?: 0 }
             }
 
-            return options.sortedByDescending { opt ->
-                opt.badge.removeSuffix("p").toIntOrNull() ?: 0
-            }
+            return emptyList()
         }
 
         fun formatTime(ms: Long): String {
@@ -3209,5 +3176,7 @@ data class DownloadQualityOption(
     val isPlayingNow: Boolean = false,
     val durationFormatted: String? = null,
     val resolution: String? = null,
-    val containerFormat: String = "MP4"
+    val containerFormat: String = "MP4",
+    val audioUrl: String? = null,
+    val masterUrl: String? = null
 )

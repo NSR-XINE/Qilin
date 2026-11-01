@@ -19,7 +19,8 @@ data class VideoQualityVariant(
     val quality: String, // e.g. "1080p", "720p", "480p", "360p"
     val bandwidth: Long = 0L,
     val resolution: String? = null, // e.g. "1920x1080"
-    val codecs: String? = null
+    val codecs: String? = null,
+    val audioUrl: String? = null
 )
 
 /**
@@ -34,5 +35,6 @@ data class DetectedVideo(
     val durationSec: Double = 0.0,
     val headers: Map<String, String> = emptyMap(),
     val variants: List<VideoQualityVariant> = emptyList(),
+    val defaultAudioUrl: String? = null,
     val detectedAt: Long = System.currentTimeMillis()
 )
