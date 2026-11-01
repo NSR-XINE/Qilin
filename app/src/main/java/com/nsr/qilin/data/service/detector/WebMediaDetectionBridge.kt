@@ -18,9 +18,17 @@ class WebMediaDetectionBridge(
                 if (window.__qilin_detector_injected__) return;
                 window.__qilin_detector_injected__ = true;
 
+                function isSegment(u) {
+                    if (!u || typeof u !== 'string') return false;
+                    const clean = u.split('?')[0].toLowerCase();
+                    return clean.endsWith('.ts') || clean.endsWith('.m4s') || clean.endsWith('.key') ||
+                           clean.endsWith('.vtt') || clean.endsWith('.srt') || clean.includes('/segment');
+                }
+
                 function notifyMedia(url, mimeType, title) {
                     if (!url || typeof url !== 'string') return;
                     if (url.startsWith('blob:') && !url.includes('http')) return;
+                    if (isSegment(url)) return;
                     try {
                         if (window.QilinVideoDetector && window.QilinVideoDetector.onMediaDetected) {
                             window.QilinVideoDetector.onMediaDetected(url, mimeType || '', title || document.title || '');
@@ -72,9 +80,9 @@ class WebMediaDetectionBridge(
                 try {
                     const origXhrOpen = XMLHttpRequest.prototype.open;
                     XMLHttpRequest.prototype.open = function(method, url) {
-                        if (typeof url === 'string') {
+                        if (typeof url === 'string' && !isSegment(url)) {
                             const lower = url.toLowerCase();
-                            if (lower.includes('.m3u8') || lower.includes('.mpd') || lower.includes('.mp4') || lower.includes('/hls/')) {
+                            if (lower.includes('.m3u8') || lower.includes('.mpd') || lower.includes('.mp4') || lower.includes('manifest')) {
                                 notifyMedia(url, '', document.title);
                             }
                         }
@@ -87,9 +95,9 @@ class WebMediaDetectionBridge(
                     const origFetch = window.fetch;
                     window.fetch = function(input, init) {
                         const url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-                        if (url) {
+                        if (url && !isSegment(url)) {
                             const lower = url.toLowerCase();
-                            if (lower.includes('.m3u8') || lower.includes('.mpd') || lower.includes('.mp4') || lower.includes('/hls/')) {
+                            if (lower.includes('.m3u8') || lower.includes('.mpd') || lower.includes('.mp4') || lower.includes('manifest')) {
                                 notifyMedia(url, '', document.title);
                             }
                         }

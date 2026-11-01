@@ -25,6 +25,26 @@ class WebsiteVideoDetectorTest {
         assertFalse(VideoUtils.isStaticOrNonMediaUrl("https://example.com/stream/index.m3u8"))
         assertFalse(VideoUtils.isStaticOrNonMediaUrl("https://example.com/video/movie.mp4"))
         assertFalse(VideoUtils.isStaticOrNonMediaUrl("https://example.com/dynamic_stream?id=123"))
+
+        // Segments should be classified as static/non-media so they are not captured as independent streams
+        assertTrue(VideoUtils.isStaticOrNonMediaUrl("https://example.com/stream/seg-1.ts"))
+        assertTrue(VideoUtils.isStaticOrNonMediaUrl("https://example.com/stream/chunk_001.m4s"))
+    }
+
+    @Test
+    fun testVideoUtils_segmentDetection() {
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/hls/segment-001.ts?token=123"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/dash/video_chunk_001.m4s"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/enc.key"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/subtitles/sub.vtt"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/subtitles/sub.srt"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/hls/segment/42"))
+
+        assertFalse(VideoUtils.isSegmentUrl("https://example.com/stream/playlist.m3u8"))
+        assertFalse(VideoUtils.isSegmentUrl("https://example.com/dash/manifest.mpd"))
+        assertFalse(VideoUtils.isSegmentUrl("https://example.com/video.mp4"))
+        assertFalse(VideoUtils.isSegmentUrl("https://example.com/video.mkv"))
+        assertFalse(VideoUtils.isSegmentUrl("https://example.com/audio.m4a"))
     }
 
     @Test
@@ -36,6 +56,9 @@ class WebsiteVideoDetectorTest {
         assertEquals(ContentType.VIDEO, VideoUtils.quickDetectContentType("https://example.com/file.mkv"))
         assertEquals(ContentType.AUDIO, VideoUtils.quickDetectContentType("https://example.com/track.m4a"))
         assertEquals(ContentType.OTHER, VideoUtils.quickDetectContentType("https://example.com/page.html"))
+        // Segments within HLS paths must not be recognized as M3U8 playlists
+        assertEquals(ContentType.OTHER, VideoUtils.quickDetectContentType("https://example.com/hls/live/segment-001.ts"))
+        assertEquals(ContentType.OTHER, VideoUtils.quickDetectContentType("https://example.com/hls/live/segment_001.m4s"))
     }
 
     @Test

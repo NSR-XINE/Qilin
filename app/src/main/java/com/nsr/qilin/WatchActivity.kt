@@ -331,7 +331,7 @@ class WatchActivity : ComponentActivity() {
                     isWebsiteStreamCaptured = !capturedStreamUrl.isNullOrBlank(),
                     isSyncingWebsite = isSyncingWebsite,
                     onDismiss = { showQualitySheet = false },
-                    onOptionSelected = { option ->
+                    onOptionSelected = { option, chosenTitle ->
                         showQualitySheet = false
                         if (option.id == "waiting_stream" || capturedStreamUrl.isNullOrBlank()) {
                             Toast.makeText(context, "Please start video playback first so the stream can be detected", Toast.LENGTH_SHORT).show()
@@ -359,13 +359,23 @@ class WatchActivity : ComponentActivity() {
                             option.formatId
                         }
 
+                        val resBadge = option.badge
+                        val formatExt = if (option.isAudio) (if (option.badge.contains("MP3")) "MP3" else "M4A") else "MP4"
+                        val finalTitle = if (chosenTitle.contains(resBadge, ignoreCase = true)) {
+                            chosenTitle
+                        } else {
+                            "${chosenTitle}_$resBadge"
+                        }
+
                         downloadVideo(
                             context = context,
                             videoUrl = effectiveUrl,
-                            title = "${showTitle}_${option.badge}",
+                            title = finalTitle,
                             formatId = effectiveFormatId,
                             referer = capturedReferer,
-                            isAudioOnly = option.isAudio
+                            isAudioOnly = option.isAudio,
+                            format = formatExt,
+                            resolution = if (option.isAudio) "AUDIO" else resBadge
                         )
                     }
                 )
@@ -1497,7 +1507,7 @@ class WatchActivity : ComponentActivity() {
         }
 
         fun isVideoUrl(url: String): Boolean {
-            if (isStaticAsset(url)) return false
+            if (isStaticAsset(url) || com.nsr.qilin.data.service.detector.VideoUtils.isSegmentUrl(url)) return false
             val clean = url.lowercase()
             if (clean.contains("google-analytics") || clean.contains("/telemetry") ||
                 clean.contains("doubleclick.net") || clean.contains("googlesyndication") ||
@@ -1510,8 +1520,6 @@ class WatchActivity : ComponentActivity() {
                     clean.contains(".mkv") ||
                     clean.contains(".webm") ||
                     clean.contains(".mpd") ||
-                    clean.contains("/hls/") ||
-                    clean.contains("/hls-") ||
                     clean.contains("mime=video") ||
                     clean.contains("video/") ||
                     clean.contains("mime=application%2fvnd.apple.mpegurl") ||
@@ -1521,11 +1529,11 @@ class WatchActivity : ComponentActivity() {
         }
 
         fun handleStreamFound(stream: String, referer: String?) {
-            if (!isVideoUrl(stream)) return
+            if (!isVideoUrl(stream) || com.nsr.qilin.data.service.detector.VideoUtils.isSegmentUrl(stream)) return
             val clean = stream.lowercase()
-            val isM3u8 = clean.contains(".m3u8") || clean.contains("/hls") || clean.contains("manifest")
+            val isM3u8 = clean.contains(".m3u8") || clean.contains("manifest")
             val isMaster = clean.contains("master") || clean.contains("playlist") || clean.contains("index")
-            val ref = referer ?: detectedReferer ?: watchUrl
+            val ref = referer ?: detectedReferer ?: currentPageUrlRef.get()
 
             if (detectedVideoUrl == null || (isM3u8 && (detectedVideoUrl?.contains(".m3u8") != true || isMaster))) {
                 detectedVideoUrl = stream
@@ -2043,6 +2051,23 @@ class WatchActivity : ComponentActivity() {
                                         }
                                     }
 
+                                    val cleanUrl = url.lowercase()
+                                    val isSegment = com.nsr.qilin.data.service.detector.VideoUtils.isSegmentUrl(url)
+
+                                    if (isSegment) {
+                                        val detectedH = when {
+                                            cleanUrl.contains("1080") -> 1080
+                                            cleanUrl.contains("720") -> 720
+                                            cleanUrl.contains("480") -> 480
+                                            cleanUrl.contains("360") -> 360
+                                            else -> 0
+                                        }
+                                        if (detectedH > 0) {
+                                            mainHandler.post { onPlaybackHeightDetected(detectedH) }
+                                        }
+                                        return super.shouldInterceptRequest(view, request)
+                                    }
+
                                     val pageUrl = currentPageUrlRef.get()
                                     val pageTitle = currentPageTitleRef.get()
                                     val headers = CookieUtils.extractHeadersFromRequest(request, pageUrl)
@@ -2056,26 +2081,6 @@ class WatchActivity : ComponentActivity() {
                                         ?: request.requestHeaders?.get("accept")
                                         ?: ""
                                     val isMediaAccept = accept.contains("video/") || accept.contains("mpegurl")
-
-                                    val cleanUrl = url.lowercase()
-                                    if (cleanUrl.endsWith(".ts") || cleanUrl.contains(".ts?") || cleanUrl.contains(".m4s")) {
-                                        val detectedH = when {
-                                            cleanUrl.contains("1080") -> 1080
-                                            cleanUrl.contains("720") -> 720
-                                            cleanUrl.contains("480") -> 480
-                                            cleanUrl.contains("360") -> 360
-                                            else -> 0
-                                        }
-                                        if (detectedH > 0) {
-                                            mainHandler.post { onPlaybackHeightDetected(detectedH) }
-                                        }
-                                        if (detectedVideoUrl == null) {
-                                            val parent = url.substringBeforeLast("/")
-                                            val derived = if (parent.endsWith(".m3u8")) parent else "$parent.m3u8"
-                                            val ref = request.requestHeaders?.get("Referer") ?: pageUrl
-                                            mainHandler.post { handleStreamFound(derived, ref) }
-                                        }
-                                    }
 
                                     if (isVideoUrl(url) || (isMediaAccept && !isStaticAsset(url))) {
                                         val ref = request.requestHeaders?.get("Referer")
@@ -2217,7 +2222,9 @@ class WatchActivity : ComponentActivity() {
         title: String,
         formatId: String? = null,
         referer: String? = null,
-        isAudioOnly: Boolean = false
+        isAudioOnly: Boolean = false,
+        format: String? = null,
+        resolution: String? = null
     ) {
         try {
             com.nsr.qilin.data.service.DownloadEngine.startDownload(
@@ -2226,7 +2233,9 @@ class WatchActivity : ComponentActivity() {
                 title = title,
                 formatId = formatId,
                 referer = referer,
-                isAudioOnly = isAudioOnly
+                isAudioOnly = isAudioOnly,
+                format = format,
+                resolution = resolution
             )
             val msg = if (isAudioOnly) "Starting audio extraction: $title" else "Starting download: $title"
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -2269,10 +2278,12 @@ class WatchActivity : ComponentActivity() {
         isWebsiteStreamCaptured: Boolean,
         isSyncingWebsite: Boolean,
         onDismiss: () -> Unit,
-        onOptionSelected: (DownloadQualityOption) -> Unit
+        onOptionSelected: (DownloadQualityOption, String) -> Unit
     ) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var selectedTab by remember { mutableIntStateOf(0) } // 0: Video, 1: Audio
+        var customTitle by remember(title) { mutableStateOf(title) }
+        var isEditingTitle by remember { mutableStateOf(false) }
 
         val hasWebsiteSyncedStreams = syncedWebsiteOptions.isNotEmpty()
 
@@ -2437,6 +2448,74 @@ class WatchActivity : ComponentActivity() {
                             tint = Color.White.copy(alpha = 0.7f),
                             modifier = Modifier.size(18.dp)
                         )
+                    }
+                }
+
+                // Pre-Download Rename Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
+                        .clip(RoundedCornerShape(CornerRadius.chip))
+                        .background(Color(0xFF131726))
+                        .border(0.75.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(CornerRadius.chip))
+                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Edit,
+                            contentDescription = "Rename Episode",
+                            tint = Color(0xFF0082FB),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        if (isEditingTitle) {
+                            androidx.compose.foundation.text.BasicTextField(
+                                value = customTitle,
+                                onValueChange = { customTitle = it },
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF0082FB)),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "Save",
+                                color = Color(0xFF0082FB),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFF0082FB).copy(alpha = 0.15f))
+                                    .clickable { isEditingTitle = false }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        } else {
+                            Text(
+                                text = customTitle,
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { isEditingTitle = true }
+                            )
+                            Text(
+                                text = "Rename",
+                                color = Color(0xFF0082FB),
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable { isEditingTitle = true }
+                            )
+                        }
                     }
                 }
 
@@ -2620,7 +2699,7 @@ class WatchActivity : ComponentActivity() {
                     currentOptions.forEach { option ->
                         QualityOptionCard(
                             option = option,
-                            onClick = { onOptionSelected(option) }
+                            onClick = { onOptionSelected(option, customTitle) }
                         )
                     }
                 }

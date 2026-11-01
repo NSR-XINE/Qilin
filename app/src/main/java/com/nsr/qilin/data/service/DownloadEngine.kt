@@ -50,7 +50,9 @@ data class DownloadTask(
     val isHls: Boolean = false,
     val formatId: String? = null,
     val referer: String? = null,
-    val isAudioOnly: Boolean = false
+    val isAudioOnly: Boolean = false,
+    val format: String? = null,
+    val resolution: String? = null
 )
 
 /**
@@ -190,6 +192,8 @@ object DownloadEngine {
         formatId: String? = null,
         referer: String? = null,
         isAudioOnly: Boolean = false,
+        format: String? = null,
+        resolution: String? = null,
         resumeId: String? = null,
         resumeProgress: Float = 0f,
         isResume: Boolean = false
@@ -199,9 +203,9 @@ object DownloadEngine {
         val taskId = resumeId ?: UUID.randomUUID().toString()
 
         val isDirectUrlFormat = formatId?.startsWith("http://") == true || formatId?.startsWith("https://") == true
-        val effectiveUrl = if (isDirectUrlFormat) formatId!! else url
+        val effectiveUrl = if (isDirectUrlFormat) formatId else url
         val effectiveFormatId = if (isDirectUrlFormat) null else formatId
-        val isHls = effectiveUrl.contains(".m3u8", ignoreCase = true) || effectiveUrl.contains("/hls/", ignoreCase = true)
+        val isHls = effectiveUrl.contains(".m3u8", ignoreCase = true)
 
         val task = DownloadTask(
             id = taskId,
@@ -213,7 +217,9 @@ object DownloadEngine {
             isHls = isHls,
             formatId = effectiveFormatId,
             referer = referer,
-            isAudioOnly = isAudioOnly
+            isAudioOnly = isAudioOnly,
+            format = format,
+            resolution = resolution
         )
         activeTasks[taskId] = task
         _tasksState.value = activeTasks.values.toList()
@@ -423,6 +429,16 @@ object DownloadEngine {
         }
     }
 
+    fun renameTask(context: Context, taskId: String, newTitle: String) {
+        val clean = newTitle.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
+        if (clean.isBlank()) return
+        val existing = activeTasks[taskId] ?: return
+        val updated = existing.copy(title = clean)
+        activeTasks[taskId] = updated
+        _tasksState.value = activeTasks.values.toList()
+        persistTask(context, updated, updated.status.name)
+    }
+
     private fun persistTask(context: Context, task: DownloadTask, status: String) {
         try {
             val list = readModels(context)
@@ -444,6 +460,8 @@ object DownloadEngine {
                     referer = task.referer.orEmpty(),
                     isAudioOnly = task.isAudioOnly,
                     isHls = task.isHls,
+                    formatName = task.format.orEmpty(),
+                    resolution = task.resolution.orEmpty(),
                     downloadedBytes = task.downloadedBytes,
                     totalBytes = task.totalBytes,
                     errorMessage = task.errorMessage.orEmpty()
@@ -493,7 +511,9 @@ object DownloadEngine {
                         isHls = model.isHls,
                         formatId = model.formatId.orEmpty().takeIf { it.isNotEmpty() },
                         referer = model.referer.orEmpty().takeIf { it.isNotEmpty() },
-                        isAudioOnly = model.isAudioOnly
+                        isAudioOnly = model.isAudioOnly,
+                        format = model.formatName.takeIf { it.isNotBlank() },
+                        resolution = model.resolution.takeIf { it.isNotBlank() }
                     )
                     activeTasks[model.id] = task
                 }

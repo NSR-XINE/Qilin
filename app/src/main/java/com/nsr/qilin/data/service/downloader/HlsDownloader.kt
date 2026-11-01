@@ -85,11 +85,12 @@ class HlsDownloader(
         Log.d(TAG, "HLS parsed successfully: totalSegments=$totalSegments, isFmp4=$isFmp4, duration=${resolvedMediaPlaylist.totalDuration}s")
 
         val segmentDownloader = SegmentDownloader(httpClient, headers, controller)
+        val segmentsDir = File(downloadDir, ".hls_segments").apply { if (!exists()) mkdirs() }
 
         // 2. Download fMP4 Initialization Segment if present
         var initFile: File? = null
         if (isFmp4 && !resolvedMediaPlaylist.initSegmentUrl.isNullOrEmpty()) {
-            val init = downloadDir.resolve("init.mp4")
+            val init = segmentsDir.resolve("init.mp4")
             if (!init.exists() || init.length() == 0L) {
                 Log.d(TAG, "Downloading fMP4 initialization segment: ${resolvedMediaPlaylist.initSegmentUrl}")
                 segmentDownloader.download(resolvedMediaPlaylist.initSegmentUrl, init, "HLS-Init", 0)
@@ -98,8 +99,9 @@ class HlsDownloader(
         }
 
         // 3. Download AES-128 key if present
+        var keyBytes: ByteArray? = null
         if (!resolvedMediaPlaylist.keyUrl.isNullOrEmpty()) {
-            val keyFile = downloadDir.resolve("encryption.key")
+            val keyFile = segmentsDir.resolve("encryption.key")
             if (!keyFile.exists() || keyFile.length() == 0L) {
                 Log.d(TAG, "Downloading HLS encryption key: ${resolvedMediaPlaylist.keyUrl}")
                 val req = Request.Builder().url(resolvedMediaPlaylist.keyUrl).applySafeHeaders(headers).build()
@@ -109,6 +111,9 @@ class HlsDownloader(
                     keyFile.writeBytes(bytes)
                 }
             }
+            if (keyFile.exists() && keyFile.length() >= 16L) {
+                keyBytes = keyFile.readBytes().copyOf(16)
+            }
         }
 
         // 4. Calculate initial resume state
@@ -116,7 +121,7 @@ class HlsDownloader(
         val completedSegmentsCount = AtomicInteger(0)
 
         segments.forEach { segment ->
-            val segFile = downloadDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
+            val segFile = segmentsDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
             if (segFile.exists() && segFile.length() > 0) {
                 completedSegmentsCount.incrementAndGet()
                 downloadedBytesCount.addAndGet(segFile.length())
@@ -181,7 +186,7 @@ class HlsDownloader(
         coroutineScope {
             val jobs = segments.map { segment ->
                 async {
-                    val segFile = downloadDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
+                    val segFile = segmentsDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
                     if (segFile.exists() && segFile.length() > 0) {
                         return@async
                     }
@@ -227,10 +232,33 @@ class HlsDownloader(
             if (isFmp4 && initFile != null && initFile.exists()) {
                 initFile.inputStream().use { it.copyTo(out, 64 * 1024) }
             }
+            val key = keyBytes
             segments.forEach { segment ->
-                val segFile = downloadDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
+                val segFile = segmentsDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt")
                 if (segFile.exists() && segFile.length() > 0) {
-                    segFile.inputStream().use { it.copyTo(out, 64 * 1024) }
+                    if (key != null) {
+                        try {
+                            val iv = if (!segment.keyIv.isNullOrEmpty()) {
+                                parseHexIv(segment.keyIv)
+                            } else {
+                                val buf = java.nio.ByteBuffer.allocate(16)
+                                buf.putLong(8, segment.index.toLong())
+                                buf.array()
+                            }
+                            val secretKey = javax.crypto.spec.SecretKeySpec(key, "AES")
+                            val ivSpec = javax.crypto.spec.IvParameterSpec(iv)
+                            val cipher = javax.crypto.Cipher.getInstance("AES/CBC/PKCS7Padding")
+                            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey, ivSpec)
+                            val rawBytes = segFile.readBytes()
+                            val decrypted = cipher.doFinal(rawBytes)
+                            out.write(decrypted)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "AES-128 decrypt failed for segment ${segment.index}, copying raw: ${e.message}")
+                            segFile.inputStream().use { it.copyTo(out, 64 * 1024) }
+                        }
+                    } else {
+                        segFile.inputStream().use { it.copyTo(out, 64 * 1024) }
+                    }
                 }
             }
             out.flush()
@@ -242,15 +270,22 @@ class HlsDownloader(
 
         // 7. Clean up intermediate segment files
         try {
-            segments.forEach { segment ->
-                downloadDir.resolve("segment_${"%05d".format(segment.index)}.$segmentExt").delete()
-            }
-            initFile?.delete()
-            downloadDir.resolve("encryption.key").delete()
+            segmentsDir.deleteRecursively()
         } catch (ignored: Exception) {}
 
         Log.d(TAG, "HLS download and merge complete: ${finalFile.absolutePath} (${finalFile.length()} bytes)")
         finalFile
+    }
+
+    private fun parseHexIv(hex: String): ByteArray {
+        val clean = hex.removePrefix("0x").removePrefix("0X")
+        val data = ByteArray(16)
+        var i = 0
+        while (i < clean.length - 1 && i / 2 < 16) {
+            data[i / 2] = ((Character.digit(clean[i], 16) shl 4) + Character.digit(clean[i + 1], 16)).toByte()
+            i += 2
+        }
+        return data
     }
 
     private fun fetchText(url: String): String {

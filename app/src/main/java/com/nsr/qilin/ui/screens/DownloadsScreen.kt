@@ -60,6 +60,8 @@ fun DownloadsScreen(
     var offlineFiles by remember { mutableStateOf<List<File>>(emptyList()) }
     var storageSpace by remember { mutableStateOf(Pair(0L, 0L)) }
     var fileToDelete by remember { mutableStateOf<File?>(null) }
+    var fileToRename by remember { mutableStateOf<File?>(null) }
+    var newFileNameText by remember { mutableStateOf("") }
 
     suspend fun refreshOfflineFiles() = withContext(Dispatchers.IO) {
         val dirs = DownloadEngine.getAllStorageDirs(context)
@@ -126,6 +128,7 @@ fun DownloadsScreen(
     }
 
     val (freeBytes, totalDeviceBytes) = storageSpace
+    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
 
     // Delete Confirmation Dialog (ColorOS 17 Dialog)
     fileToDelete?.let { file ->
@@ -153,7 +156,86 @@ fun DownloadsScreen(
         )
     }
 
-    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    // Rename Video Dialog
+    fileToRename?.let { file ->
+        AlertDialog(
+            onDismissRequest = { fileToRename = null },
+            containerColor = if (isLight) Color(0xFFF7F9FC) else Color(0xFF1E2638),
+            shape = RoundedCornerShape(CornerRadius.dialog),
+            title = {
+                Text(
+                    text = "Rename Video",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = JustSansFamily,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Enter a new name for this offline episode:",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = newFileNameText,
+                        onValueChange = { newFileNameText = it },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF0082FB),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val target = file
+                        val clean = newFileNameText.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
+                        fileToRename = null
+                        if (clean.isNotBlank() && clean != target.nameWithoutExtension) {
+                            coroutineScope.launch(Dispatchers.IO) {
+                                val ext = target.extension
+                                val newFile = File(target.parentFile, if (ext.isNotEmpty()) "$clean.$ext" else clean)
+                                if (!newFile.exists()) {
+                                    if (target.renameTo(newFile)) {
+                                        try {
+                                            android.media.MediaScannerConnection.scanFile(
+                                                context,
+                                                arrayOf(target.absolutePath, newFile.absolutePath),
+                                                null,
+                                                null
+                                            )
+                                        } catch (ignored: Exception) {}
+                                        refreshOfflineFiles()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "Rename",
+                        color = Color(0xFF0082FB),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { fileToRename = null }) {
+                    Text(
+                        text = "Cancel",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        )
+    }
+
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val headerTopPadding = statusBarTop + 84.dp
     val screenBackdrop = rememberLayerBackdrop()
@@ -325,6 +407,10 @@ fun DownloadsScreen(
                                     )
                                 }
                             }
+                        },
+                        onRename = {
+                            fileToRename = file
+                            newFileNameText = file.nameWithoutExtension
                         },
                         onDelete = {
                             fileToDelete = file
@@ -545,15 +631,59 @@ private fun ActiveDownloadCard(
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(top = 2.dp)
                     ) {
+                        val res = task.resolution ?: when {
+                            task.title.contains("1080", ignoreCase = true) -> "1080p"
+                            task.title.contains("720", ignoreCase = true) -> "720p"
+                            task.title.contains("480", ignoreCase = true) -> "480p"
+                            task.title.contains("360", ignoreCase = true) -> "360p"
+                            task.isAudioOnly -> "AUDIO"
+                            else -> null
+                        }
+                        if (!res.isNullOrBlank()) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFF0082FB).copy(alpha = 0.16f))
+                                    .border(0.6.dp, Color(0xFF0082FB).copy(alpha = 0.40f), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = res,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = JustSansFamily,
+                                    color = Color(0xFF0082FB)
+                                )
+                            }
+                        }
+
+                        val fmt = task.format ?: if (task.isAudioOnly) "M4A" else "MP4"
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f))
+                                .border(0.6.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = fmt,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = JustSansFamily,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
                         val badgeText = if (task.isHls) "HLS Stream" else if (task.numThreads > 1) "${task.numThreads} Threads" else "Direct Stream"
                         Text(
                             text = badgeText,
                             fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             fontFamily = JustSansFamily,
-                            color = Color(0xFF0082FB)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (task.status == DownloadStatus.PAUSED) {
                             Text(
@@ -693,6 +823,7 @@ private fun ActiveDownloadCard(
 private fun OfflineFileCard(
     file: File,
     onPlay: () -> Unit,
+    onRename: () -> Unit,
     onDelete: () -> Unit
 ) {
     val sizeMb = String.format("%.1f MB", file.length().toFloat() / (1024 * 1024))
@@ -756,6 +887,50 @@ private fun OfflineFileCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    val nameLower = file.nameWithoutExtension.lowercase()
+                    val res = when {
+                        nameLower.contains("1080") -> "1080p"
+                        nameLower.contains("720") -> "720p"
+                        nameLower.contains("480") -> "480p"
+                        nameLower.contains("360") -> "360p"
+                        nameLower.contains("2160") || nameLower.contains("4k") -> "4K"
+                        file.extension in setOf("m4a", "mp3", "aac") -> "AUDIO"
+                        else -> null
+                    }
+                    if (res != null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color(0xFF0082FB).copy(alpha = 0.16f))
+                                .border(0.6.dp, Color(0xFF0082FB).copy(alpha = 0.40f), RoundedCornerShape(5.dp))
+                                .padding(horizontal = 5.dp, vertical = 1.5.dp)
+                        ) {
+                            Text(
+                                text = res,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = JustSansFamily,
+                                color = Color(0xFF0082FB)
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(if (isLight) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f))
+                            .border(0.6.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(5.dp))
+                            .padding(horizontal = 5.dp, vertical = 1.5.dp)
+                    ) {
+                        Text(
+                            text = file.extension.uppercase(),
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = JustSansFamily,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
                     Text(
                         text = sizeMb,
                         fontSize = 12.sp,
@@ -770,27 +945,49 @@ private fun OfflineFileCard(
                     )
                     Text(
                         text = "Ready Offline",
-                        fontSize = 12.sp,
+                        fontSize = 11.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
-                    .border(0.75.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f), CircleShape)
-                    .colorOSPressBounce(pressedScale = 0.90f)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.DeleteOutline,
-                    contentDescription = "Delete File",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp)
-                )
+                IconButton(
+                    onClick = onRename,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF0082FB).copy(alpha = 0.10f))
+                        .border(0.75.dp, Color(0xFF0082FB).copy(alpha = 0.25f), CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Rename Video",
+                        tint = Color(0xFF0082FB),
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
+                        .border(0.75.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f), CircleShape)
+                        .colorOSPressBounce(pressedScale = 0.90f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.DeleteOutline,
+                        contentDescription = "Delete File",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }

@@ -758,13 +758,31 @@ class DownloadService : Service() {
     private fun findProducedFile(tempDir: File, sanitizedTitle: String, destDir: File): File? {
         val mediaExtensions = setOf("mp4", "mkv", "webm", "ts", "mp3", "m4a", "aac", "flv")
         val candidates = tempDir.walkTopDown()
-            .filter { it.isFile && it.extension.lowercase() in mediaExtensions && !it.name.contains(".part") }
+            .filter {
+                it.isFile &&
+                it.extension.lowercase() in mediaExtensions &&
+                !it.name.contains(".part") &&
+                !it.name.startsWith("segment_") &&
+                !it.name.startsWith("audio_segment_") &&
+                !it.name.startsWith("init") &&
+                !it.path.contains(".hls_segments") &&
+                it.length() > 64 * 1024
+            }
             .toList()
 
         return candidates.filter { it.name.startsWith(sanitizedTitle) }.maxByOrNull { it.lastModified() }
             ?: candidates.maxByOrNull { it.lastModified() }
             ?: destDir.listFiles()
-                ?.filter { it.isFile && it.name.startsWith(sanitizedTitle) && !it.name.contains(".part") }
+                ?.filter {
+                    it.isFile &&
+                    it.name.startsWith(sanitizedTitle) &&
+                    !it.name.contains(".part") &&
+                    !it.name.startsWith("segment_") &&
+                    !it.name.startsWith("audio_segment_") &&
+                    !it.name.startsWith("init") &&
+                    !it.path.contains(".hls_segments") &&
+                    it.length() > 64 * 1024
+                }
                 ?.maxByOrNull { it.lastModified() }
     }
 
