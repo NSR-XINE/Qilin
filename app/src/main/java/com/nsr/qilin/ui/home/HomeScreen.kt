@@ -39,7 +39,9 @@ import com.nsr.qilin.ui.Spacing
 import com.nsr.qilin.ui.common.DonghuaPoster
 import com.nsr.qilin.ui.common.EmptyState
 import com.nsr.qilin.ui.common.ScrollPerfMonitor
+import com.nsr.qilin.ui.common.ShowPreviewSheet
 import com.nsr.qilin.ui.common.shimmerEffect
+import com.nsr.qilin.ui.common.toShow
 import com.nsr.qilin.ui.rememberLiquidGlassBorder
 import com.nsr.qilin.ui.rememberLiquidGlassChipBorder
 import com.nsr.qilin.ui.screens.HomeViewModel
@@ -77,6 +79,7 @@ fun HomeScreen(
     customStreamUrl: String = "",
 ) {
     val state by viewModel.uiState.collectAsState()
+    var previewShow by remember { mutableStateOf<Show?>(null) }
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val effectiveTopPadding = if (topPadding.value > 0f) topPadding + Spacing.md else statusBarTop + 84.dp
 
@@ -106,19 +109,36 @@ fun HomeScreen(
                             themeMode = state.themeMode,
                             onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                             onTrendingClick = { media ->
-                                viewModel.addTrendingShow(media) { targetId ->
-                                    onShowClick(targetId)
+                                val existing = state.allShows.find { s ->
+                                    s.aniListId == media.id ||
+                                    s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                                    (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                                    (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+                                }
+                                if (existing != null) {
+                                    onShowClick(existing.id)
+                                } else {
+                                    previewShow = media.toShow()
                                 }
                             },
                             onWatchClick = { media ->
-                                viewModel.addTrendingShow(media) { targetId ->
-                                    val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
-                                        showTitle = media.preferredTitle,
-                                        customWatchUrl = null,
-                                        providerPreference = defaultStreamProvider,
-                                        customProviderUrl = customStreamUrl
-                                    )
+                                val existing = state.allShows.find { s ->
+                                    s.aniListId == media.id ||
+                                    s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                                    (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                                    (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+                                }
+                                if (existing != null) {
+                                    val url = existing.watchUrl.takeIf { !it.isNullOrBlank() }
+                                        ?: com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
+                                            showTitle = existing.title,
+                                            customWatchUrl = null,
+                                            providerPreference = defaultStreamProvider,
+                                            customProviderUrl = customStreamUrl
+                                        )
                                     onWatchClick(url)
+                                } else {
+                                    previewShow = media.toShow()
                                 }
                             }
                         )
@@ -144,19 +164,36 @@ fun HomeScreen(
                                     themeMode = state.themeMode,
                                     onPageChanged = { page -> viewModel.setActiveTrendingIndex(page) },
                                     onTrendingClick = { media ->
-                                        viewModel.addTrendingShow(media) { targetId ->
-                                            onShowClick(targetId)
+                                        val existing = state.allShows.find { s ->
+                                            s.aniListId == media.id ||
+                                            s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                                            (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                                            (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+                                        }
+                                        if (existing != null) {
+                                            onShowClick(existing.id)
+                                        } else {
+                                            previewShow = media.toShow()
                                         }
                                     },
                                     onWatchClick = { media ->
-                                        viewModel.addTrendingShow(media) { targetId ->
-                                            val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
-                                                showTitle = media.preferredTitle,
-                                                customWatchUrl = null,
-                                                providerPreference = defaultStreamProvider,
-                                                customProviderUrl = customStreamUrl
-                                            )
+                                        val existing = state.allShows.find { s ->
+                                            s.aniListId == media.id ||
+                                            s.title.equals(media.preferredTitle, ignoreCase = true) ||
+                                            (media.titleEnglish != null && s.title.equals(media.titleEnglish, ignoreCase = true)) ||
+                                            (media.titleRomaji != null && s.title.equals(media.titleRomaji, ignoreCase = true))
+                                        }
+                                        if (existing != null) {
+                                            val url = existing.watchUrl.takeIf { !it.isNullOrBlank() }
+                                                ?: com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
+                                                    showTitle = existing.title,
+                                                    customWatchUrl = null,
+                                                    providerPreference = defaultStreamProvider,
+                                                    customProviderUrl = customStreamUrl
+                                                )
                                             onWatchClick(url)
+                                        } else {
+                                            previewShow = media.toShow()
                                         }
                                     }
                                 )
@@ -211,7 +248,28 @@ fun HomeScreen(
                 }
             }
         }
+
+    if (previewShow != null) {
+        ShowPreviewSheet(
+            show = previewShow!!,
+            allShows = state.allShows,
+            onDismiss = { previewShow = null },
+            onAddToLibrary = { newShow ->
+                viewModel.insertOrUpdateShow(newShow)
+            },
+            onWatchClick = { target ->
+                val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
+                    showTitle = target,
+                    customWatchUrl = null,
+                    providerPreference = defaultStreamProvider,
+                    customProviderUrl = customStreamUrl
+                )
+                onWatchClick(url)
+            },
+            onShowClick = onShowClick
+        )
     }
+}
 
 @Composable
 fun TrendingHeroCarousel(

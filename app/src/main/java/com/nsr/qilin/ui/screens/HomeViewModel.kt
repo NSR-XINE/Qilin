@@ -211,4 +211,11 @@ class HomeViewModel @Inject constructor(
             onComplete(id)
         }
     }
+
+    fun insertOrUpdateShow(show: Show, onComplete: ((String) -> Unit)? = null) {
+        viewModelScope.launch {
+            showRepository.insertOrUpdateShow(show)
+            onComplete?.invoke(show.id)
+        }
+    }
 }
