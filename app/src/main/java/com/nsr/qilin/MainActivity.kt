@@ -696,6 +696,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
 
                 AnimatedVisibility(
                     visible = isSearchOpen,
@@ -926,13 +927,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
+                            HorizontalDivider(
+                                color = if (isLightMode) Color.Black.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.08f),
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+
                             // Scrollable Drawer Body
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f, fill = false)
                                     .verticalScroll(menuScrollState)
-                                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                                    .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 20.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 // AniList drawer card (opens AniList screen)
@@ -1114,7 +1120,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 }
 }
 }
