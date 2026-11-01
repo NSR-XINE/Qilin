@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -321,13 +322,22 @@ fun LiquidGlassNavBar(
 
     Spacer(modifier = Modifier.width(Spacing.sm))
 
+    val searchRotation by animateFloatAsState(
+        targetValue = if (isSearchOpen) 90f else 0f,
+        animationSpec = ColorOSMotion.TouchBounceSpring,
+        label = "search_btn_rotate"
+    )
+
     Box(
         modifier = Modifier
             .offset(x = searchButtonOffset)
             .graphicsLayer {
-                val scale = 1f - unifiedPressProgress * 0.15f
-                scaleX = scale
-                scaleY = scale
+                val press = searchInteraction.pressProgress
+                val pressScale = 1f - press * 0.12f
+                val capsulePushScale = 1f - unifiedPressProgress * 0.15f
+                val combinedScale = pressScale * capsulePushScale
+                scaleX = combinedScale
+                scaleY = combinedScale
                 translationX = unifiedPressProgress * 12.dp.toPx()
             }
             .size(searchButtonSize)
@@ -338,20 +348,28 @@ fun LiquidGlassNavBar(
                 shape = CircleShape,
                 pressProgress = searchInteraction.pressProgress,
                 touchPosition = { searchInteraction.touchPosition },
+                activeHighlight = isSearchOpen,
             )
             .pointerInput(searchInteraction) { searchInteraction.detectPress(this) }
             .clickable(
                 interactionSource = null,
                 indication = null,
-                onClick = onSearchClick,
+                onClick = {
+                    Haptics.tick()
+                    onSearchClick()
+                },
             ),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Rounded.Search,
-            contentDescription = "Search",
-            modifier = Modifier.size(IconSize.xl),
-            tint = MaterialTheme.colorScheme.primary,
+            imageVector = if (isSearchOpen) Icons.Rounded.Close else Icons.Rounded.Search,
+            contentDescription = if (isSearchOpen) "Close Search" else "Search",
+            modifier = Modifier
+                .size(IconSize.xl)
+                .graphicsLayer {
+                    rotationZ = searchRotation
+                },
+            tint = if (isSearchOpen) Color(0xFF0082FB) else MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -434,6 +452,7 @@ private fun Modifier.drawBackdropCustomShape(
     pressProgress: Float = 0f,
     touchPosition: () -> Offset = { Offset.Zero },
     pressedScale: Float = 1.12f,
+    activeHighlight: Boolean = false,
 ): Modifier =
     this.drawBackdrop(
         backdrop = backdrop,
@@ -466,6 +485,17 @@ private fun Modifier.drawBackdropCustomShape(
                 color = Color.Black.copy(alpha = darken),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
             )
+            if (activeHighlight) {
+                drawRoundRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0082FB).copy(alpha = 0.22f),
+                            Color(0xFF005AC2).copy(alpha = 0.12f),
+                        )
+                    ),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
+                )
+            }
             val press = pressProgress
             if (press > 0f) {
                 drawRect(
@@ -702,8 +732,6 @@ internal suspend fun PointerInputScope.inspectDragGestures(
     onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit,
 ) {
     awaitEachGesture {
-        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-
         val down = awaitFirstDown(requireUnconsumed = false)
 
         onDragStart(down)
