@@ -5,11 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
@@ -21,17 +19,10 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import com.nsr.qilin.ui.theme.ColorOSMotion
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.withContext
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -110,8 +101,6 @@ import com.nsr.qilin.ui.screens.*
 import com.nsr.qilin.ui.common.ColorOSDialog
 import com.nsr.qilin.ui.common.AppLoadingScreen
 import com.nsr.qilin.ui.theme.QilinTheme
-import com.nsr.qilin.ui.theme.CornerRadius
-import com.nsr.qilin.ui.theme.LocalDisplayCornerRadius
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -160,8 +149,6 @@ class MainActivity : ComponentActivity() {
             var isDrawerOpen by remember { mutableStateOf(false) }
             var isSearchOpen by remember { mutableStateOf(false) }
             var isAppLoading by remember { mutableStateOf(true) }
-            val backProgress = remember { Animatable(0f) }
-            var swipeEdge by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
             var drawerNavigating by remember { mutableStateOf(false) }
 
             LaunchedEffect(currentRoute) {
@@ -243,58 +230,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val canPredictiveBack = !isSearchOpen && !isDrawerOpen && !isAppLoading && !drawerNavigating && currentRoute != "home"
-
             androidx.activity.compose.BackHandler(
-                enabled = !isSearchOpen && !isAppLoading && !canPredictiveBack
+                enabled = !isSearchOpen && !isAppLoading && (isDrawerOpen || currentRoute == "home")
             ) {
-                when {
-                    isDrawerOpen -> isDrawerOpen = false
-                    currentRoute != "home" -> navController.popBackStack("home", inclusive = false)
-                    else -> showExitDialog = true
-                }
-            }
-
-            PredictiveBackHandler(enabled = canPredictiveBack) { progressFlow ->
-                var hasTriggeredThreshold = false
-                try {
-                    Haptics.tick()
-                    progressFlow.collect { event ->
-                        swipeEdge = event.swipeEdge
-                        backProgress.snapTo(event.progress)
-                        if (!hasTriggeredThreshold && event.progress >= 0.20f) {
-                            hasTriggeredThreshold = true
-                            Haptics.soft()
-                        } else if (hasTriggeredThreshold && event.progress < 0.15f) {
-                            hasTriggeredThreshold = false
-                        }
-                    }
-                    Haptics.confirm()
-                    withContext(NonCancellable) {
-                        backProgress.animateTo(
-                            targetValue = 1f,
-                            animationSpec = tween(
-                                durationMillis = ColorOSMotion.DurationFast,
-                                easing = ColorOSMotion.EmphasizedAccelerate
-                            )
-                        )
-                        navController.popBackStack()
-                        backProgress.snapTo(0f)
-                    }
-                } catch (e: CancellationException) {
-                    Haptics.soft()
-                    withContext(NonCancellable) {
-                        backProgress.animateTo(
-                            targetValue = 0f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessMediumLow
-                            )
-                        )
-                    }
-                    throw e
-                } finally {
-                    backProgress.snapTo(0f)
+                if (isDrawerOpen) {
+                    isDrawerOpen = false
+                } else {
+                    showExitDialog = true
                 }
             }
 
@@ -425,51 +367,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) { innerPadding ->
-                                val targetRadius = maxOf(CornerRadius.card, LocalDisplayCornerRadius.current)
-                                val isLight = settingsState.themeMode.lowercase() == "light"
-                                val isAmoled = settingsState.themeMode.lowercase() == "amoled"
-
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .graphicsLayer {
-                                            val progress = backProgress.value
-                                            val isRightEdge = swipeEdge == BackEventCompat.EDGE_RIGHT
-                                            val translationDirection = if (isRightEdge) -1f else 1f
-                                            val isGesturing = progress > 0.001f
-
-                                            val scale = 1f - 0.09f * progress
-                                            scaleX = scale
-                                            scaleY = scale
-                                            translationX = translationDirection * size.width * 0.10f * progress
-                                            shadowElevation = (16.dp * progress).toPx()
-
-                                            val cornerProgress = if (isGesturing) minOf(1f, progress * 2.5f) else 0f
-                                            val currentCornerRadius = targetRadius * cornerProgress
-                                            shape = RoundedCornerShape(currentCornerRadius)
-                                            clip = isGesturing
-                                            spotShadowColor = Color.Black.copy(alpha = 0.55f)
-                                            ambientShadowColor = Color.Black.copy(alpha = 0.35f)
-                                        }
-                                        .drawWithContent {
-                                            drawContent()
-                                            val progress = backProgress.value
-                                            if (progress > 0.001f) {
-                                                val cornerProgress = minOf(1f, progress * 2.5f)
-                                                val currentCornerRadius = targetRadius * cornerProgress
-                                                val borderAlpha = (if (isLight) 0.18f else if (isAmoled) 0.32f else 0.25f) * minOf(1f, progress * 3f)
-                                                drawRoundRect(
-                                                    brush = Brush.verticalGradient(
-                                                        listOf(
-                                                            (if (isLight) Color.Black else Color.White).copy(alpha = borderAlpha),
-                                                            Color.Transparent
-                                                        )
-                                                    ),
-                                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(currentCornerRadius.toPx()),
-                                                    style = Stroke(width = 1.dp.toPx())
-                                                )
-                                            }
-                                        }
                                         .layerBackdrop(navBackdrop)
                                 ) {
                                     NavHost(
@@ -479,10 +379,9 @@ class MainActivity : ComponentActivity() {
                                 enterTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
-                                    val toDetail = to?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         EnterTransition.None
-                                    } else if (drawerNavigating || toDetail) {
+                                    } else if (drawerNavigating) {
                                         fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
@@ -503,10 +402,9 @@ class MainActivity : ComponentActivity() {
                                 exitTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
-                                    val toDetail = to?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         ExitTransition.None
-                                    } else if (drawerNavigating || toDetail) {
+                                    } else if (drawerNavigating) {
                                         fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
@@ -528,10 +426,9 @@ class MainActivity : ComponentActivity() {
                                 popEnterTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
-                                    val fromDetail = from?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         EnterTransition.None
-                                    } else if (fromDetail) {
+                                    } else if (drawerNavigating) {
                                         fadeIn(animationSpec = ColorOSMotion.TabFadeInSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
@@ -552,10 +449,9 @@ class MainActivity : ComponentActivity() {
                                 popExitTransition = {
                                     val from = initialState.destination.route
                                     val to = targetState.destination.route
-                                    val fromDetail = from?.startsWith("show_detail/") == true
                                     if (from == to) {
                                         ExitTransition.None
-                                    } else if (fromDetail) {
+                                    } else if (drawerNavigating) {
                                         fadeOut(animationSpec = ColorOSMotion.NavFadeOutSpec)
                                     } else if (from in TAB_ROUTES && to in TAB_ROUTES) {
                                         val direction = if (TAB_ROUTES.indexOf(to) >= TAB_ROUTES.indexOf(from)) 1 else -1
