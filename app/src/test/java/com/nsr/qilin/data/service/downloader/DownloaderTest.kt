@@ -271,4 +271,13 @@ class DownloaderTest {
         assertEquals("1280x720", var720.resolution)
         assertEquals("https://example.com/stream/audio/aac_q2/manifest.m3u8", var720.audioUrl)
     }
+
+    @Test
+    fun testMediaMuxerHelper_handlesEmptyOrMissingFileGracefully() {
+        val nonExistent = File(tempFolder.root, "non_existent.mp4")
+        val out = File(tempFolder.root, "out.mp4")
+        val result = MediaMuxerHelper.mux(nonExistent, null, out)
+        assertFalse(result)
+        assertFalse(out.exists())
+    }
 }

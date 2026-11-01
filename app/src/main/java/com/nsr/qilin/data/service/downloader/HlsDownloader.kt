@@ -218,13 +218,14 @@ class HlsDownloader(
 
         var muxSucceeded = false
 
-        if (finalExt == "mp4") {
-            // Use MediaMuxerHelper to produce standard, seekable MP4 with both video and audio tracks
+        if (finalExt == "mp4" || finalExt == "mkv" || finalExt == "m4a" || finalExt == "mp3") {
+            // Use MediaMuxerHelper to produce standard, seekable file with both video and audio tracks
             muxSucceeded = MediaMuxerHelper.mux(
                 videoFile = rawVideoFile,
                 audioFile = rawAudioFile,
                 outputFile = finalFile,
-                context = context
+                context = context,
+                format = finalExt
             )
         }
 
