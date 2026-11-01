@@ -34,7 +34,6 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.refraction
 import com.kyant.backdrop.effects.vibrancy
-import com.nsr.qilin.ui.theme.Haptics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.sign
@@ -58,7 +57,6 @@ class GlassInteraction(
                     animationScope.launch { pressAnimation.animateTo(1f, pressSpec) }
                 },
                 onDragEnd = {
-                    Haptics.tick()
                     animationScope.launch { pressAnimation.animateTo(0f, pressSpec) }
                 },
                 onDragCancel = { animationScope.launch { pressAnimation.animateTo(0f, pressSpec) } },

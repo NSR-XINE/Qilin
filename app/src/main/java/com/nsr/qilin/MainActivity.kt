@@ -64,7 +64,6 @@ import com.nsr.qilin.data.service.AniListService
 import com.nsr.qilin.data.service.AniListUser
 import com.nsr.qilin.ui.theme.colorOSPressBounce
 import com.nsr.qilin.ui.theme.Haptics
-import com.nsr.qilin.ui.theme.hapticOnTap
 import com.nsr.qilin.ui.theme.RevealOnEnter
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -261,9 +260,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .hapticOnTap()
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         Box(
                             modifier = Modifier

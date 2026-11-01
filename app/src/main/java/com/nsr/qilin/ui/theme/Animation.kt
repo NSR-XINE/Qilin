@@ -236,6 +236,7 @@ fun Modifier.colorOSPressBounce(
     pressedScale: Float = 0.95f,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
+    hapticFeedback: Boolean = false,
     onClick: (() -> Unit)? = null
 ): Modifier = composed {
     if (!enabled) return@composed this
@@ -261,9 +262,11 @@ fun Modifier.colorOSPressBounce(
         label = "colorOSScale"
     )
 
-    LaunchedEffect(localInteractionSource) {
-        localInteractionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Release) Haptics.tick()
+    if (hapticFeedback) {
+        LaunchedEffect(localInteractionSource) {
+            localInteractionSource.interactions.collect { interaction ->
+                if (interaction is PressInteraction.Release) Haptics.tick()
+            }
         }
     }
 
@@ -296,7 +299,7 @@ fun Modifier.colorOSPressBounce(
                         if (change.changedToUpIgnoreConsumed()) {
                             pointerDown = false
                             if (!slopExceeded) {
-                                Haptics.tick()
+                                if (hapticFeedback) Haptics.tick()
                                 coroutineScope.launch {
                                     manualPressed = true
                                     delay(60L)

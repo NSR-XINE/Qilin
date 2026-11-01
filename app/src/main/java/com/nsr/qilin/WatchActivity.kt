@@ -92,7 +92,6 @@ import com.nsr.qilin.data.service.AdBlocker
 import com.nsr.qilin.ui.theme.CornerRadius
 import com.nsr.qilin.ui.theme.ColorOSMotion
 import com.nsr.qilin.ui.theme.colorOSPressBounce
-import com.nsr.qilin.ui.theme.hapticOnTap
 import com.nsr.qilin.ui.common.ColorOSPillButton
 import com.nsr.qilin.ui.common.ColorOSOutlinedButton
 import kotlinx.coroutines.delay
@@ -154,9 +153,7 @@ class WatchActivity : ComponentActivity() {
 
         setContent {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .hapticOnTap()
+                modifier = Modifier.fillMaxSize()
             ) {
             val context = LocalContext.current
             val isInPip by remember { isInPipModeState }
