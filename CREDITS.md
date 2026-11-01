@@ -88,4 +88,4 @@ does not relicense any dependency. Components licensed under GPL-3.0 or GPL-2.0
 copyleft terms.
 
 If something is missing or misattributed, please open an issue at
-https://github.com/NSR-XINE/my_donguha/issues.
+https://github.com/NSR-XINE/Qilin/issues.

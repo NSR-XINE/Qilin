@@ -38,7 +38,7 @@ A sleek, high-aesthetic, themeable native Android application designed for Chine
 ```
 my_donghua/
 ├── app/
-│   ├── build.gradle                          # Dependencies, NDK abiFilters (arm64-v8a), packaging options
+│   ├── build.gradle                          # Dependencies, NDK (arm64-v8a, armeabi-v7a), ABI splits, timestamped naming
 │   ├── proguard-rules.pro
 │   └── src/main/
 │       ├── AndroidManifest.xml               # Foreground service dataSync, receivers, activities, widget providers
@@ -50,7 +50,7 @@ my_donghua/
 │           ├── com/kyant/backdrop/           # Vendored Kyant Liquid Glass shader system
 │           └── com/nsr/qilin/
 │               ├── QilinApp.kt               # Application class (@HiltAndroidApp), engine bootstrap
-│               ├── MainActivity.kt           # Entry activity, NavHost, predictive-back host, Haze glass layer, LiquidGlass nav
+│               ├── MainActivity.kt           # Entry activity, NavHost, Haze glass layer, LiquidGlass nav
 │               ├── WatchActivity.kt          # Media3 ExoPlayer & In-App Web Player with stream sniffer
 │               ├── AlarmScheduler.kt         # DST-aware exact alarm scheduler
 │               ├── BootReceiver.kt           # Re-schedules alarms on boot or app update (WakeLock)
@@ -75,10 +75,12 @@ my_donghua/
 │               │   ├── model/                # Show, CountdownCalculator (DST-safe), StatsCalculator
 │               │   └── repository/           # Domain repository interfaces
 │               └── ui/
-│                   ├── theme/                # Color palettes, Material 3, ColorOS 17 motion specs
+│                   ├── theme/                # Color palettes, Material 3, ColorOS 17 motion specs, Haptics
 │                   ├── common/               # ShowCard, DonghuaPoster, loading screen, shimmer, scroll perf
 │                   ├── home/                 # HomeScreen, hero banner, continue watching, recently updated
 │                   └── screens/              # Airing, Completed, Downloads, Favorites, Detail, Search, Settings, AniList, Calendar, History, Stats, Collections
+├── scripts/
+│   └── setup_private_keystore.sh             # Interactive zero-knowledge private release keystore generator
 ├── AGENTS.md
 ├── CREDITS.md
 └── README.md
@@ -90,13 +92,15 @@ my_donghua/
 
 - ⚡ **16-Stream Accelerated Downloads**: Download episodes with Aria2c multi-connection parallel acceleration. Full support for direct streams (`.mp4`, `.mkv`), HLS multi-fragment streams (`.m3u8`), and popular video hosting extractors with pause, resume, and real-time progress notifications.
 - 🛡️ **Intelligent Ad Blocker**: Blocks intrusive popups, banners, redirects, and defuses anti-adblock probes (P21/Anti-Adblocker trap evasion) with an on/off switch in Settings.
+- 📦 **Dual 32-bit & 64-bit Split APKs**: Generates optimized APKs for both 64-bit (`arm64-v8a`) and 32-bit (`armeabi-v7a`) Android devices, plus a universal fallback APK, all labeled with dynamic build timestamps.
+- 🔐 **Zero-Knowledge Release Signing**: Private keystore setup script (`scripts/setup_private_keystore.sh`) with strict gitignore isolation and GitHub Actions CI secret integration, safely falling back to debug signing when building without secrets.
+- 📳 **Global Haptic Feedback Toggle**: Toggleable tactile feedback in Settings (`SettingsKeys.HAPTICS_ENABLED`) strictly confined to purposeful interactions (switches, seek scrubbing, player gestures, drawer selections).
 - 📺 **Watchlist Tracking**: Categorize shows into Airing (`ongoing`), Completed (`completed`), and Stopped/Hiatus (`stopped`).
 - ⏱️ **Live Countdown Clocks**: Ticking coroutine timers (Days, Hours, Minutes, Seconds) on every show card and hero banner.
 - 📱 **Home Screen Widget**: App Widget support (`CountdownWidget.kt`) to keep track of upcoming episode countdowns directly from your Android home screen.
-- 🎨 **ColorOS 17 Fluid Motion & Liquid Glass**: Bouncy physics-driven tap interactions, fluid card press effects, and Kyant liquid glass shader navigation bar.
-- 🔙 **Predictive Back Gesture**: Swipe back to scale the current screen into a rounded card as a live preview before navigation completes.
+- 🎨 **ColorOS 17 Fluid Motion & Liquid Glass**: Bouncy physics-driven tap interactions, fluid card press effects, elevated pinned drawer header, and Kyant liquid glass shader navigation bar.
 - 🔍 **Smart Search**: Auto-focus search bar, recent search history with individual delete or clear-all, and debounced online search across AniList and MyAnimeList.
-- ☁️ **Dedicated AniList Screen**: Account login, auto-sync toggle, 2-way sync, cloud import/push, profile stats, and disconnect — accessible directly from the navigation drawer.
+- ☁️ **Redesigned AniList Bento Screen**: Account login, auto-sync toggle, 2-way sync, cloud import/push, profile stats, and disconnect — accessible directly from the navigation drawer.
 - 📅 **Weekly Release Calendar & Monthly Grid**: View release schedules grouped by day of the week or browse full monthly calendars with episode release indicators.
 - 🔔 **Native Push Notifications**: Automatic DST-aware heads-up notifications when a new episode releases.
 - 📊 **Statistics Dashboard**: Analytics panel tracking episode counts, total watch hours, day streaks, completion rates, top genres, and favorite studios.
@@ -160,20 +164,66 @@ All records are stored locally in native SQLite (`qilin.db`):
 - **Android SDK**: `compileSdk 37`, `targetSdk 37`, `minSdk 30`
 - **Gradle**: 9.8.2 with AGP 9.5.0 and Kotlin 2.3.21
 
-### Build Commands
+### Local Build Commands
 
-Run these Gradle tasks from AndroidIDE (which bundles a Java 21 JDK) or from a terminal where `JAVA_HOME` points to a Java 21 JDK.
+Run these Gradle tasks from AndroidIDE or a terminal where `JAVA_HOME` points to Java 21:
 
 ```bash
-# Build Debug APK
+# Build Debug APKs (arm64, armv7a, and universal)
 ./gradlew assembleDebug
 
-# Build Release APK
+# Build Signed Release APKs (arm64, armv7a, and universal)
 ./gradlew assembleRelease
 
-# Run Unit Tests
-./gradlew test
+# Run Domain Unit Tests
+./gradlew testDebugUnitTest
 ```
+
+### Output APK Architecture & Naming
+Builds output separate optimized APKs into `app/build/outputs/apk/release/` with dynamic timestamped filenames:
+
+| Target | Architecture | Filename Format |
+|---|---|---|
+| **64-bit ARM** | `arm64-v8a` | `Qilin-v<version>-arm64-64bit-<variant>-<timestamp>.apk` |
+| **32-bit ARM** | `armeabi-v7a` | `Qilin-v<version>-armv7a-32bit-<variant>-<timestamp>.apk` |
+| **Universal** | All supported | `Qilin-v<version>-universal-<variant>-<timestamp>.apk` |
+
+---
+
+### 🔑 Private Release Signing
+
+To sign release builds with your own private key without committing credentials to git:
+
+1. **Generate your private keystore** on your device:
+   ```bash
+   bash scripts/setup_private_keystore.sh
+   ```
+   * Prompts silently for your password (hidden input, nothing printed to screen or shell history).
+   * Generates `release.keystore` and `keystore.properties` locally with `chmod 600`.
+   * Both files are protected by `.gitignore` and can never be committed.
+
+2. **Automated Cloud Builds (GitHub Actions)**:
+   * To build and sign on GitHub Actions, encode your local keystore:
+     ```bash
+     base64 -w 0 release.keystore
+     ```
+   * Add the repository secrets in GitHub (**Settings → Secrets and variables → Actions**):
+     * `KEYSTORE_BASE64`
+     * `KEYSTORE_PASSWORD`
+     * `KEY_ALIAS`
+     * `KEY_PASSWORD`
+   * *Fallback*: If no secrets or local properties are configured, Gradle safely falls back to `debug.keystore`, ensuring output APKs are always properly signed and installable.
+
+---
+
+### 🚀 Automated GitHub Release Publishing
+
+The GitHub Actions workflow [`.github/workflows/build.yml`](.github/workflows/build.yml) automatically builds and publishes release posts with APKs attached:
+
+1. **Manual Trigger**: Under the **Actions** tab → **Build Android APK** → **Run workflow**, check *Publish as GitHub Release post*.
+2. **Git Tag Trigger**: Pushing a version tag (`git tag v6.8-beta && git push origin v6.8-beta`) automatically compiles, packages, and creates the GitHub Release with all three APK architectures attached and changelogs generated.
+
+---
 
 > `RoomMigrationTest` requires the Robolectric native runtime, which supports Linux `x86_64` only. On Termux/`aarch64`, run the full test suite on CI or an x86_64 machine; the non-Robolectric domain tests pass locally.
 

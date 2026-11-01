@@ -39,8 +39,27 @@ The app previously lagged with many cards on screen, when opening search/setting
 - Kyant Liquid Glass: **none (vendored)**
 
 ## Motion & Navigation
-- Tab switches use direction-aware fade + slide; detail uses a cross-fade; drawer navigation uses a fade (`drawerNavigating`).
-- Predictive back is enabled off Home while search, drawer, and loading are closed, scaling the content container to 0.94 with edge-aware translation, Animatable progress tracking, and smooth corner curvature while keeping header and liquid glass navbar chrome stable.
+- Tab switches use direction-aware fade + slide; detail/sub-pages use native edge-to-edge parallax horizontal slide transitions (`slideInHorizontally` + `slideOutHorizontally`); drawer navigation uses a fade (`drawerNavigating`).
+- Predictive back feedback is disabled system-wide (`android:enableOnBackInvokedCallback="false"` in `AndroidManifest.xml`). Avoid custom `PredictiveBackHandler` scale wrappers around `NavHost` as they cause floating truncated cards and expose incomplete background screens on Android 14+.
+- Navigation drawer menu pins the header with an elevated scaffold, and the drawer scroll state resets on open.
+
+## Haptic Feedback Strategy
+- **NEVER attach `.hapticOnTap()` to root or full-screen layouts.** Root-level interception caused the device to vibrate on every screen touch.
+- **`Modifier.colorOSPressBounce` defaults to `hapticFeedback = false`.** General UI tapping, card bouncing, and list flings must remain silent and smooth.
+- **Haptic vibrations are reserved exclusively for intentional tactile events**:
+  - Settings switches (`ColorOSSwitch` / `Haptics.toggle`)
+  - Video player scrubbing & double-tap 10s seek (`Haptics.tick` / `Haptics.confirm`)
+  - Screen lock/unlock toggle (`Haptics.toggle`)
+  - Bottom navigation bar tab drag transitions (`Haptics.soft`)
+  - Explicit cloud actions (AniList login, 2-way sync)
+- **Process-wide mute**: `Haptics.enabled` is backed by `SettingsKeys.HAPTICS_ENABLED` in Room and controlled via a user toggle in `SettingsScreen.kt`.
+
+## Build, Splits & Release Signing
+- **Architectures**: ABI splits configured for `arm64-v8a` (64-bit) and `armeabi-v7a` (32-bit) with `universalApk true`.
+- **Timestamped Filenames**: Handled via `androidComponents.onVariants`, generating `Qilin-v<version>-<abi>-<buildType>-<timestamp>.apk`.
+- **Release Signing**: Configured in `app/build.gradle` to check `KEYSTORE_FILE`, `keystore.properties`, and `KEYSTORE_BASE64`, with automatic fallback to `debug.keystore` for test/CI builds without secrets (preventing unsigned uninstallable APKs).
+- **Private Keystore Setup**: `scripts/setup_private_keystore.sh` generates local keystore with `chmod 600` and verifies gitignore isolation.
+- **Automated GitHub Release Publishing**: `.github/workflows/build.yml` compiles 32-bit, 64-bit, and Universal APKs and automatically creates or updates GitHub Release posts with changelogs on workflow dispatch or tag pushes.
 
 ## Liquid Glass Nav Bar
 - `LiquidGlassNavBar.kt` in `com.nsr.qilin.ui` package
@@ -58,7 +77,7 @@ The app previously lagged with many cards on screen, when opening search/setting
 
 ## Settings Storage
 - **Single source of truth for app settings: the Room `settings` table** (`SettingsDao` / `SettingsRepositoryImpl`), accessed through `SettingsRepository` + typed helpers (`getBoolFlow`/`putBool`) and key constants in `domain/repository/SettingsKeys.kt`.
-- Keys include theme/accent/UI preferences, stream provider, ad blocker, recent searches, search frequency, migration state, storage permission state, and AniList account metadata.
+- Keys include theme/accent/UI preferences, haptics_enabled, stream provider, ad blocker, recent searches, search frequency, migration state, storage permission state, and AniList account metadata.
 - Legacy stores are retained only for one-time migration or dedicated subsystems: `LegacySettingsMigrator` reads the old DataStore/notification preferences; `AniListService` persists its session in `anilist_tracking_prefs`; downloads use the `DownloadService` preference store; widgets and the ad blocker have their own small preference stores.
 - Do NOT reintroduce DataStore/SharedPreferences for ordinary app settings; add new keys to `SettingsKeys`.
 
@@ -76,12 +95,16 @@ The app previously lagged with many cards on screen, when opening search/setting
 
 ## Modified Files
 - `settings.gradle` — added JitPack repository (kept for other potential JitPack deps)
-- `app/build.gradle` — Compose BOM `2026.09.00`, Kyant AAR dependency removed, Kotlin `2.3.21` + compose compiler plugin, Hilt `2.60.1`, Room `2.8.5`, Media3 `1.11.1`, Haze `1.7.3`
-- `app/src/main/java/com/nsr/qilin/ui/LiquidGlassNavBar.kt` — NEW: liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
+- `app/build.gradle` — Compose BOM `2026.09.00`, Kyant AAR dependency removed, Kotlin `2.3.21` + compose compiler plugin, Hilt `2.60.1`, Room `2.8.5`, Media3 `1.11.1`, Haze `1.7.3`, ABI splits (`arm64-v8a`, `armeabi-v7a`), release signing & timestamped naming
+- `.github/workflows/build.yml` — Automated CI build and GitHub Release publisher with APK asset uploads
+- `scripts/setup_private_keystore.sh` — Interactive zero-knowledge private release keystore generator
+- `app/src/main/java/com/nsr/qilin/ui/LiquidGlassNavBar.kt` — liquid glass nav bar composable + `drawBackdropCustomShape` extension; off-main 2s luminance sampling
 - `app/src/main/java/com/nsr/qilin/ui/GlassEffect.kt` — static glass background (no infinite animation); `GlassBackground`/`GlassSection` glass components
-- `app/src/main/java/com/nsr/qilin/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; direction-aware tab transitions; drawer scrim/panel split; predictive back; synchronous settings seed for first-frame theme; search bar keyboard focus handling
-- `app/src/main/java/com/nsr/qilin/ui/common/AppLoadingScreen.kt` — minimal trimmed-emblem loading screen with a standard progress indicator
-- `app/src/main/java/com/kyant/backdrop/` — NEW: 22 vendored Kyant Backdrop source files
+- `app/src/main/java/com/nsr/qilin/MainActivity.kt` — `rememberLayerBackdrop()` + `layerBackdrop(backdrop)`; `LiquidGlassNavBar`; parallax horizontal slide sub-page transitions; elevated drawer header
+- `app/src/main/java/com/nsr/qilin/ui/common/AppLoadingScreen.kt` — minimal ColorOS 17 loading screen with monotonic progress indicator
+- `app/src/main/java/com/nsr/qilin/ui/screens/SettingsScreen.kt` & `SettingsViewModel.kt` — Haptics & Vibration toggle switch, custom stream URLs
+- `app/src/main/java/com/nsr/qilin/ui/screens/AniListScreen.kt` — Redesigned ColorOS 17 liquid glass bento layout
+- `app/src/main/java/com/kyant/backdrop/` — 22 vendored Kyant Backdrop source files
 
 ## Build
 - JDK 21 required. AndroidIDE bundles it; for terminal builds, set `JAVA_HOME` to a Java 21 JDK before `./gradlew`.
