@@ -845,43 +845,19 @@ class MainActivity : ComponentActivity() {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(11.dp))
-                                            .background(
-                                                Brush.linearGradient(
-                                                    listOf(Color(0xFF0082FB), Color(0xFF00D2FF))
-                                                )
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_dragon_emblem),
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-
-                                    Column {
-                                        Text(
-                                            text = "Navigation",
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            letterSpacing = (-0.3).sp
-                                        )
-                                        Text(
-                                            text = "Quick access & library",
-                                            fontSize = 11.5.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                                        )
-                                    }
+                                Column {
+                                    Text(
+                                        text = "Navigation",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        letterSpacing = (-0.3).sp
+                                    )
+                                    Text(
+                                        text = "Quick access & library",
+                                        fontSize = 11.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    )
                                 }
 
                                 // Frosted Liquid Close Button with ColorOS 17 elastic bounce
