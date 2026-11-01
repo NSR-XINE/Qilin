@@ -345,7 +345,29 @@ class WatchActivity : ComponentActivity() {
                     },
                     onQualitiesDetected = { qualities ->
                         if (qualities.isNotEmpty()) {
-                            websiteSyncedQualities = qualities
+                            val existing = websiteSyncedQualities
+                            val existingAudioUrl = existing.firstOrNull { !it.audioUrl.isNullOrEmpty() }?.audioUrl
+                            val existingMasterUrl = existing.firstOrNull { !it.masterUrl.isNullOrEmpty() }?.masterUrl
+
+                            val mergedQualities = if (existing.size > qualities.size && qualities.size == 1) {
+                                val playingBadge = qualities.first().badge
+                                existing.map { opt ->
+                                    val isPlaying = opt.badge == playingBadge || opt.isPlayingNow
+                                    opt.copy(
+                                        isPlayingNow = isPlaying,
+                                        audioUrl = opt.audioUrl ?: existingAudioUrl,
+                                        masterUrl = opt.masterUrl ?: existingMasterUrl
+                                    )
+                                }
+                            } else {
+                                qualities.map { opt ->
+                                    opt.copy(
+                                        audioUrl = opt.audioUrl ?: existingAudioUrl,
+                                        masterUrl = opt.masterUrl ?: existingMasterUrl
+                                    )
+                                }
+                            }
+                            websiteSyncedQualities = mergedQualities
                             isSyncingWebsite = false
                         }
                     },
@@ -1505,7 +1527,8 @@ class WatchActivity : ComponentActivity() {
                         if (options.isNotEmpty()) {
                             onQualitiesDetected?.invoke(options)
                         }
-                        if (detectedVideoUrl == null || detected.contentType == com.nsr.qilin.data.service.detector.ContentType.M3U8) {
+                        val isBetterStream = detectedVideoUrl == null || detected.variants.size > 1 || !detected.defaultAudioUrl.isNullOrEmpty()
+                        if (isBetterStream || detectedVideoUrl.isNullOrBlank()) {
                             detectedVideoUrl = detected.url
                             detectedReferer = ref
                             onStreamCaptured(detected.url, ref)
@@ -2341,13 +2364,21 @@ class WatchActivity : ComponentActivity() {
         val detectedDuration = syncedWebsiteOptions.firstOrNull { !it.durationFormatted.isNullOrEmpty() }?.durationFormatted
             ?: "24:00"
 
+        val detectedAudio = syncedWebsiteOptions.firstOrNull { !it.audioUrl.isNullOrEmpty() }?.audioUrl
+        val detectedMaster = syncedWebsiteOptions.firstOrNull { !it.masterUrl.isNullOrEmpty() }?.masterUrl ?: streamUrl
+
         // Video options prioritized by actual website streams!
         val videoOptions = remember(syncedWebsiteOptions, currentPlaybackHeight, streamUrl, isWebsiteStreamCaptured, selectedVideoFormat) {
             if (hasWebsiteSyncedStreams) {
                 syncedWebsiteOptions.map { opt ->
                     val h = opt.badge.removeSuffix("p").toIntOrNull() ?: 0
                     val isPlaying = (currentPlaybackHeight > 0 && h == currentPlaybackHeight) || opt.isPlayingNow
-                    opt.copy(isPlayingNow = isPlaying, containerFormat = selectedVideoFormat)
+                    opt.copy(
+                        isPlayingNow = isPlaying,
+                        containerFormat = selectedVideoFormat,
+                        audioUrl = opt.audioUrl ?: detectedAudio,
+                        masterUrl = opt.masterUrl ?: detectedMaster
+                    )
                 }
             } else if (isWebsiteStreamCaptured && !streamUrl.isNullOrBlank()) {
                 val fallbackQualities = listOf(
@@ -2381,7 +2412,8 @@ class WatchActivity : ComponentActivity() {
                         durationFormatted = detectedDuration,
                         resolution = res,
                         containerFormat = selectedVideoFormat,
-                        masterUrl = streamUrl
+                        audioUrl = detectedAudio,
+                        masterUrl = detectedMaster
                     )
                 }
             } else {
@@ -2402,6 +2434,7 @@ class WatchActivity : ComponentActivity() {
         // Audio options extracted from the website stream!
         val audioOptions = remember(streamUrl, isWebsiteStreamCaptured, selectedAudioFormat, syncedWebsiteOptions) {
             val detectedAudioUrl = syncedWebsiteOptions.firstOrNull { !it.audioUrl.isNullOrEmpty() }?.audioUrl
+            val detectedMasterUrl = syncedWebsiteOptions.firstOrNull { !it.masterUrl.isNullOrEmpty() }?.masterUrl ?: streamUrl
             listOf(
                 DownloadQualityOption(
                     id = "audio_m4a",
@@ -2415,7 +2448,7 @@ class WatchActivity : ComponentActivity() {
                     containerFormat = selectedAudioFormat,
                     isSyncedFromWebsite = isWebsiteStreamCaptured,
                     audioUrl = detectedAudioUrl,
-                    masterUrl = streamUrl
+                    masterUrl = detectedMasterUrl
                 ),
                 DownloadQualityOption(
                     id = "audio_mp3",
@@ -2429,7 +2462,7 @@ class WatchActivity : ComponentActivity() {
                     containerFormat = selectedAudioFormat,
                     isSyncedFromWebsite = isWebsiteStreamCaptured,
                     audioUrl = detectedAudioUrl,
-                    masterUrl = streamUrl
+                    masterUrl = detectedMasterUrl
                 ),
                 DownloadQualityOption(
                     id = "audio_aac",
@@ -2443,7 +2476,7 @@ class WatchActivity : ComponentActivity() {
                     containerFormat = selectedAudioFormat,
                     isSyncedFromWebsite = isWebsiteStreamCaptured,
                     audioUrl = detectedAudioUrl,
-                    masterUrl = streamUrl
+                    masterUrl = detectedMasterUrl
                 )
             )
         }

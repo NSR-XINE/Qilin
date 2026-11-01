@@ -77,6 +77,9 @@ class WebsiteVideoDetector(
     private val _detectedVideos = MutableStateFlow<List<DetectedVideo>>(emptyList())
     val detectedVideos: StateFlow<List<DetectedVideo>> = _detectedVideos.asStateFlow()
 
+    @Volatile private var lastKnownMasterAudioUrl: String? = null
+    @Volatile private var lastKnownMasterUrl: String? = null
+
     private var onVideoDetectedCallback: ((DetectedVideo) -> Unit)? = null
 
     fun setOnVideoDetectedListener(listener: ((DetectedVideo) -> Unit)?) {
@@ -86,6 +89,8 @@ class WebsiteVideoDetector(
     fun reset() {
         inspectedUrls.clear()
         _detectedVideos.value = emptyList()
+        lastKnownMasterAudioUrl = null
+        lastKnownMasterUrl = null
     }
 
     fun inspectUrlAsync(
@@ -249,7 +254,8 @@ class WebsiteVideoDetector(
                             url = variantUrl,
                             quality = "${h}p",
                             bandwidth = bw,
-                            resolution = "${(h * 16) / 9}x$h"
+                            resolution = "${(h * 16) / 9}x$h",
+                            audioUrl = lastKnownMasterAudioUrl
                         )
                     )
                 }
@@ -259,7 +265,8 @@ class WebsiteVideoDetector(
                 variants.add(
                     VideoQualityVariant(
                         url = url,
-                        quality = guessedQuality ?: "AUTO"
+                        quality = guessedQuality ?: "AUTO",
+                        audioUrl = lastKnownMasterAudioUrl
                     )
                 )
             }
@@ -267,10 +274,17 @@ class WebsiteVideoDetector(
 
         val primaryQuality = variants.firstOrNull()?.quality ?: "HLS"
         val defaultAudio = if (parsed is HlsPlaylistParser.ParsedHlsResult.Master) {
-            parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+            val audio = parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
                 ?: parsed.master.audioTracks.firstOrNull()?.url
                 ?: parsed.master.audioUris.firstOrNull()
-        } else null
+            if (!audio.isNullOrEmpty()) {
+                lastKnownMasterAudioUrl = audio
+                lastKnownMasterUrl = url
+            }
+            audio
+        } else {
+            lastKnownMasterAudioUrl
+        }
 
         return DetectedVideo(
             url = url,
@@ -338,7 +352,18 @@ class WebsiteVideoDetector(
             return
         }
 
-        val updated = currentList + video
+        // If a master playlist is already captured, do not add child media variant playlists
+        if (lastKnownMasterUrl != null && video.url != lastKnownMasterUrl && video.contentType == ContentType.M3U8) {
+            return
+        }
+
+        // If this is a master playlist, replace any previously captured temporary child media playlists
+        val updated = if (lastKnownMasterUrl != null && lastKnownMasterUrl == video.url) {
+            currentList.filterNot { it.contentType == ContentType.M3U8 && it.url != video.url } + video
+        } else {
+            currentList + video
+        }
+
         _detectedVideos.value = updated
         try {
             onVideoDetectedCallback?.invoke(video)
@@ -400,8 +425,8 @@ class WebsiteVideoDetector(
                     durationFormatted = durationFormatted,
                     resolution = resStr,
                     containerFormat = containerFormat,
-                    audioUrl = variant.audioUrl ?: detected.defaultAudioUrl,
-                    masterUrl = detected.url
+                    audioUrl = variant.audioUrl ?: detected.defaultAudioUrl ?: lastKnownMasterAudioUrl,
+                    masterUrl = lastKnownMasterUrl ?: detected.url
                 )
             }.distinctBy { it.badge }.sortedByDescending { it.badge.removeSuffix("p").toIntOrNull() ?: 0 }
         } else {
@@ -423,8 +448,8 @@ class WebsiteVideoDetector(
                     isPlayingNow = true,
                     durationFormatted = durationFormatted,
                     containerFormat = if (detected.contentType == ContentType.AUDIO) "M4A" else containerFormat,
-                    audioUrl = detected.defaultAudioUrl,
-                    masterUrl = detected.url
+                    audioUrl = detected.defaultAudioUrl ?: lastKnownMasterAudioUrl,
+                    masterUrl = lastKnownMasterUrl ?: detected.url
                 )
             )
         }

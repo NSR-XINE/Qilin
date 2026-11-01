@@ -960,6 +960,7 @@ class DownloadService : Service() {
         return hlsDownloader.download(
             m3u8Url = url,
             audioM3u8Url = audioUrl,
+            masterM3u8Url = masterUrl,
             downloadDir = tempDir,
             outputFileName = fileName,
             outputFormat = format,

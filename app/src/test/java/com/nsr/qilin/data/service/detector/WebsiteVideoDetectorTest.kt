@@ -221,4 +221,67 @@ class WebsiteVideoDetectorTest {
         assertEquals("https://example.com/audio/manifest.m3u8", options[0].audioUrl)
         assertEquals(masterUrl, options[0].masterUrl)
     }
+
+    @Test
+    fun testWebsiteVideoDetector_childPlaylistInheritsMasterAudioAndDoesNotDisplaceMaster() {
+        val masterManifest = """
+            #EXTM3U
+            #EXT-X-VERSION:7
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio1",NAME="Stereo",DEFAULT=YES,URI="audio/manifest.m3u8"
+            #EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720,AUDIO="audio1"
+            video/720p/manifest.m3u8
+        """.trimIndent()
+
+        val childManifest = """
+            #EXTM3U
+            #EXT-X-VERSION:7
+            #EXT-X-TARGETDURATION:6
+            #EXT-X-MEDIA-SEQUENCE:1
+            #EXTINF:6.0,
+            seg_1.m4s
+            #EXT-X-ENDLIST
+        """.trimIndent()
+
+        val mockClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val url = chain.request().url.toString()
+                val bodyText = if (url.contains("master.m3u8")) masterManifest else childManifest
+                Response.Builder()
+                    .request(chain.request())
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(200)
+                    .message("OK")
+                    .header("Content-Type", "application/vnd.apple.mpegurl")
+                    .body(bodyText.toResponseBody("application/vnd.apple.mpegurl".toMediaTypeOrNull()))
+                    .build()
+            }
+            .build()
+
+        val detector = WebsiteVideoDetector(mockClient)
+        val masterUrl = "https://example.com/master.m3u8"
+        val childUrl = "https://example.com/video/720p/manifest.m3u8"
+
+        // 1. Inspect master first
+        val capturedMaster = detector.inspectUrl(masterUrl, pageTitle = "Donghua Master")
+        assertNotNull(capturedMaster)
+        assertEquals(1, detector.detectedVideos.value.size)
+        assertEquals("https://example.com/audio/manifest.m3u8", capturedMaster?.defaultAudioUrl)
+
+        // 2. Web player starts playing child playlist -> inspect child
+        val capturedChild = detector.inspectUrl(childUrl, pageTitle = "Donghua Child")
+        assertNotNull(capturedChild)
+
+        // Child media playlist should inherit cached master audio URL
+        assertEquals("https://example.com/audio/manifest.m3u8", capturedChild?.defaultAudioUrl)
+
+        // Options generated for child should have audioUrl and masterUrl pointing to master
+        val childOptions = detector.toQualityOptions(capturedChild!!)
+        assertTrue(childOptions.isNotEmpty())
+        assertEquals("https://example.com/audio/manifest.m3u8", childOptions[0].audioUrl)
+        assertEquals(masterUrl, childOptions[0].masterUrl)
+
+        // pushDetectedVideo should NOT displace or add single-variant child if master is present
+        assertEquals(1, detector.detectedVideos.value.size)
+        assertEquals(masterUrl, detector.detectedVideos.value[0].url)
+    }
 }

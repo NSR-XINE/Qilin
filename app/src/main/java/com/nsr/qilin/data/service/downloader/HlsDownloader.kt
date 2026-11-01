@@ -43,6 +43,7 @@ class HlsDownloader(
     suspend fun download(
         m3u8Url: String,
         audioM3u8Url: String? = null,
+        masterM3u8Url: String? = null,
         downloadDir: File,
         outputFileName: String,
         outputFormat: String = "mp4",
@@ -53,11 +54,29 @@ class HlsDownloader(
         controller.start()
 
         // 1. Fetch playlist manifest and resolve media playlists for video and audio
-        Log.d(TAG, "Fetching HLS manifest: $m3u8Url")
+        Log.d(TAG, "Fetching HLS manifest: $m3u8Url (master=$masterM3u8Url, audio=$audioM3u8Url)")
         var currentVideoUrl = m3u8Url
         var resolvedAudioUrl = audioM3u8Url
         var videoMediaPlaylist: HlsPlaylistParser.MediaPlaylist? = null
         var iterations = 0
+
+        // If audioM3u8Url is missing and masterM3u8Url is provided, probe master first for audio
+        if (resolvedAudioUrl.isNullOrEmpty() && !masterM3u8Url.isNullOrEmpty() && masterM3u8Url != m3u8Url) {
+            try {
+                Log.d(TAG, "Probing master playlist for audio track: $masterM3u8Url")
+                val masterText = fetchText(masterM3u8Url)
+                val masterParsed = HlsPlaylistParser.parse(masterText, masterM3u8Url)
+                if (masterParsed is HlsPlaylistParser.ParsedHlsResult.Master) {
+                    resolvedAudioUrl = masterParsed.master.variants.firstOrNull { it.url == m3u8Url }?.audioUrl
+                        ?: masterParsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+                        ?: masterParsed.master.audioTracks.firstOrNull()?.url
+                        ?: masterParsed.master.audioUris.firstOrNull()
+                    Log.d(TAG, "Discovered audio URL from master: $resolvedAudioUrl")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to probe master URL for audio: ${e.message}")
+            }
+        }
 
         while (iterations < MAX_PLAYLIST_REDIRECTIONS) {
             val manifestContent = fetchText(currentVideoUrl)
@@ -68,12 +87,13 @@ class HlsDownloader(
                     break
                 }
                 is HlsPlaylistParser.ParsedHlsResult.Master -> {
-                    val bestVariant = parsed.master.variants.firstOrNull()
+                    val matchedVariant = parsed.master.variants.firstOrNull { it.url == currentVideoUrl }
+                        ?: parsed.master.variants.firstOrNull()
                         ?: throw IOException("No media variants found in master playlist: $currentVideoUrl")
-                    Log.d(TAG, "Selected master variant bandwidth=${bestVariant.bandwidth}, res=${bestVariant.resolution}, url=${bestVariant.url}")
-                    currentVideoUrl = bestVariant.url
+                    Log.d(TAG, "Selected master variant bandwidth=${matchedVariant.bandwidth}, res=${matchedVariant.resolution}, url=${matchedVariant.url}")
+                    currentVideoUrl = matchedVariant.url
                     if (resolvedAudioUrl.isNullOrEmpty()) {
-                        resolvedAudioUrl = bestVariant.audioUrl
+                        resolvedAudioUrl = matchedVariant.audioUrl
                             ?: parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
                             ?: parsed.master.audioTracks.firstOrNull()?.url
                             ?: parsed.master.audioUris.firstOrNull()
@@ -83,19 +103,58 @@ class HlsDownloader(
             }
         }
 
+        // If audio track is still unresolved (e.g. child variant URL was downloaded directly),
+        // inspect relative parent directories to find the master manifest with demuxed audio
+        if (resolvedAudioUrl.isNullOrEmpty()) {
+            val candidateMasters = listOf(
+                HlsPlaylistParser.resolveUrl(m3u8Url, "../manifest.m3u8"),
+                HlsPlaylistParser.resolveUrl(m3u8Url, "../../manifest.m3u8"),
+                HlsPlaylistParser.resolveUrl(m3u8Url, "../../../manifest.m3u8"),
+                HlsPlaylistParser.resolveUrl(m3u8Url, "../master.m3u8"),
+                HlsPlaylistParser.resolveUrl(m3u8Url, "../../master.m3u8")
+            ).distinct().filter { it != m3u8Url }
+
+            for (candidate in candidateMasters) {
+                try {
+                    val candText = fetchText(candidate)
+                    if (candText.contains("#EXT-X-STREAM-INF") || candText.contains("#EXT-X-MEDIA:TYPE=AUDIO")) {
+                        val candParsed = HlsPlaylistParser.parse(candText, candidate)
+                        if (candParsed is HlsPlaylistParser.ParsedHlsResult.Master) {
+                            val audio = candParsed.master.variants.firstOrNull { it.url == m3u8Url }?.audioUrl
+                                ?: candParsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+                                ?: candParsed.master.audioTracks.firstOrNull()?.url
+                                ?: candParsed.master.audioUris.firstOrNull()
+                            if (!audio.isNullOrEmpty()) {
+                                resolvedAudioUrl = audio
+                                Log.d(TAG, "Discovered audio URL from relative master ($candidate): $resolvedAudioUrl")
+                                break
+                            }
+                        }
+                    }
+                } catch (ignored: Exception) {}
+            }
+        }
+
         val resolvedVideoPlaylist = videoMediaPlaylist ?: resolveMediaPlaylistWithSlidingWindow(currentVideoUrl)
         val resolvedAudioPlaylist = if (!resolvedAudioUrl.isNullOrEmpty()) {
             try {
                 Log.d(TAG, "Resolving separate audio playlist: $resolvedAudioUrl")
-                resolveMediaPlaylistWithSlidingWindow(resolvedAudioUrl)
+                resolveAudioMediaPlaylist(resolvedAudioUrl)
             } catch (e: Exception) {
                 Log.w(TAG, "Could not resolve separate audio playlist: ${e.message}")
                 null
             }
         } else null
 
-        val videoSegments = resolvedVideoPlaylist.segments
-        val audioSegments = resolvedAudioPlaylist?.segments ?: emptyList()
+        val isAudioOnlyOutput = outputFormat.equals("m4a", ignoreCase = true) ||
+                outputFormat.equals("mp3", ignoreCase = true) ||
+                outputFormat.equals("aac", ignoreCase = true)
+
+        val downloadVideoTrack = !isAudioOnlyOutput || resolvedAudioPlaylist == null
+        val downloadAudioTrack = resolvedAudioPlaylist != null
+
+        val videoSegments = if (downloadVideoTrack) resolvedVideoPlaylist.segments else emptyList()
+        val audioSegments = if (downloadAudioTrack) (resolvedAudioPlaylist?.segments ?: emptyList()) else emptyList()
         val totalSegmentsAll = videoSegments.size + audioSegments.size
 
         if (videoSegments.isEmpty() && audioSegments.isEmpty()) {
@@ -106,7 +165,7 @@ class HlsDownloader(
             TAG,
             "HLS parsed: videoSegments=${videoSegments.size} (isFmp4=${resolvedVideoPlaylist.isFmp4}), " +
                     "audioSegments=${audioSegments.size} (isFmp4=${resolvedAudioPlaylist?.isFmp4 == true}), " +
-                    "totalDuration=${resolvedVideoPlaylist.totalDuration}s"
+                    "isAudioOnly=$isAudioOnlyOutput, totalDuration=${resolvedVideoPlaylist.totalDuration}s"
         )
 
         val segmentsBaseDir = File(downloadDir, ".hls_segments").apply { if (!exists()) mkdirs() }
@@ -172,19 +231,21 @@ class HlsDownloader(
         val semaphore = Semaphore(effectiveThreads)
 
         // 2. Download Video Segments and Assemble
-        val rawVideoFile = downloadAndAssembleTrack(
-            playlist = resolvedVideoPlaylist,
-            targetDir = videoDir,
-            label = "video",
-            segmentDownloader = segmentDownloader,
-            semaphore = semaphore,
-            downloadedBytesCount = downloadedBytesCount,
-            completedSegmentsCount = completedSegmentsCount,
-            updateProgress = { updateProgress() }
-        )
+        val rawVideoFile = if (downloadVideoTrack) {
+            downloadAndAssembleTrack(
+                playlist = resolvedVideoPlaylist,
+                targetDir = videoDir,
+                label = "video",
+                segmentDownloader = segmentDownloader,
+                semaphore = semaphore,
+                downloadedBytesCount = downloadedBytesCount,
+                completedSegmentsCount = completedSegmentsCount,
+                updateProgress = { updateProgress() }
+            )
+        } else null
 
         // 3. Download Audio Segments and Assemble (if separate audio stream exists)
-        val rawAudioFile = if (resolvedAudioPlaylist != null && audioSegments.isNotEmpty()) {
+        val rawAudioFile = if (downloadAudioTrack && resolvedAudioPlaylist != null && audioSegments.isNotEmpty()) {
             downloadAndAssembleTrack(
                 playlist = resolvedAudioPlaylist,
                 targetDir = audioDir,
@@ -216,13 +277,16 @@ class HlsDownloader(
 
         Log.d(TAG, "Assembling output file: ${finalFile.absolutePath}")
 
+        val primarySourceFile = rawVideoFile ?: rawAudioFile ?: throw IOException("No media files were downloaded")
+        val secondaryAudioFile = if (primarySourceFile == rawAudioFile) null else rawAudioFile
+
         var muxSucceeded = false
 
         if (finalExt == "mp4" || finalExt == "mkv" || finalExt == "m4a" || finalExt == "mp3") {
             // Use MediaMuxerHelper to produce standard, seekable file with both video and audio tracks
             muxSucceeded = MediaMuxerHelper.mux(
-                videoFile = rawVideoFile,
-                audioFile = rawAudioFile,
+                videoFile = primarySourceFile,
+                audioFile = secondaryAudioFile,
                 outputFile = finalFile,
                 context = context,
                 format = finalExt
@@ -230,13 +294,10 @@ class HlsDownloader(
         }
 
         if (!muxSucceeded) {
-            // Fallback: Copy raw video file or raw audio file directly
-            if (rawVideoFile.exists() && rawVideoFile.length() > 0L) {
-                if (finalFile.exists()) finalFile.delete()
-                rawVideoFile.copyTo(finalFile, overwrite = true)
-            } else if (rawAudioFile != null && rawAudioFile.exists()) {
-                if (finalFile.exists()) finalFile.delete()
-                rawAudioFile.copyTo(finalFile, overwrite = true)
+            // Fallback: Copy primary source file directly
+            if (finalFile.exists()) finalFile.delete()
+            if (primarySourceFile.exists() && primarySourceFile.length() > 0L) {
+                primarySourceFile.copyTo(finalFile, overwrite = true)
             }
         }
 
@@ -304,6 +365,30 @@ class HlsDownloader(
         }
 
         return mediaPlaylist.copy(segments = allSegments, hasEndList = true)
+    }
+
+    private suspend fun resolveAudioMediaPlaylist(url: String): HlsPlaylistParser.MediaPlaylist? {
+        var currentUrl = url
+        var iterations = 0
+        while (iterations < MAX_PLAYLIST_REDIRECTIONS) {
+            val content = fetchText(currentUrl)
+            val parsed = HlsPlaylistParser.parse(content, currentUrl)
+            when (parsed) {
+                is HlsPlaylistParser.ParsedHlsResult.Media -> {
+                    return if (parsed.media.hasEndList) parsed.media else resolveMediaPlaylistWithSlidingWindow(currentUrl)
+                }
+                is HlsPlaylistParser.ParsedHlsResult.Master -> {
+                    val nextAudio = parsed.master.audioTracks.firstOrNull { it.isDefault }?.url
+                        ?: parsed.master.audioTracks.firstOrNull()?.url
+                        ?: parsed.master.audioUris.firstOrNull()
+                        ?: parsed.master.variants.firstOrNull()?.url
+                    if (nextAudio.isNullOrEmpty() || nextAudio == currentUrl) return null
+                    currentUrl = nextAudio
+                    iterations++
+                }
+            }
+        }
+        return null
     }
 
     private suspend fun downloadAndAssembleTrack(

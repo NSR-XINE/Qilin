@@ -123,13 +123,13 @@ object MediaMuxerHelper {
             } else {
                 cmd.add("-i")
                 cmd.add(videoFile.absolutePath)
-                if (hasSeparateAudio) {
+                if (hasSeparateAudio && audioFile != null) {
                     cmd.add("-i")
                     cmd.add(audioFile.absolutePath)
                     cmd.add("-map")
                     cmd.add("0:v:0")
                     cmd.add("-map")
-                    cmd.add("1:a:0?")
+                    cmd.add("1:a?")
                 } else {
                     cmd.add("-map")
                     cmd.add("0:v:0")
