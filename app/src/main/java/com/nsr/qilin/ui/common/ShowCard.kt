@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -59,9 +60,11 @@ fun ShowCard(
     onEpDecrement: (Show) -> Unit,
     onCardClick: (Show) -> Unit,
     modifier: Modifier = Modifier,
+    cardClickable: Boolean = false,
     highlightQuery: String? = null
 ) {
     val context = LocalContext.current
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
@@ -146,13 +149,13 @@ fun ShowCard(
     val cardInteractionSource = remember { MutableInteractionSource() }
     val isCardPressed by cardInteractionSource.collectIsPressedAsState()
     val cardScale by animateFloatAsState(
-        targetValue = if (isCardPressed) 0.98f else 1f,
+        targetValue = if (isCardPressed && cardClickable) 0.98f else 1f,
         animationSpec = ColorOSMotion.TouchBounceSpring,
         label = "showCardScale"
     )
 
-    Box(
-        modifier = modifier
+    val cardModifier = if (cardClickable) {
+        modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             .graphicsLayer {
@@ -174,6 +177,24 @@ fun ShowCard(
                 indication = null,
                 onClick = { onCardClick(show) }
             )
+    } else {
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+            .clip(cardShape)
+            .background(
+                brush = cardBgBrush,
+                shape = cardShape
+            )
+            .border(
+                width = 0.85.dp,
+                brush = cardBorderBrush,
+                shape = cardShape
+            )
+    }
+
+    Box(
+        modifier = cardModifier
     ) {
         Column {
             // Hero Poster Header (16:9 Aspect Ratio)
@@ -510,48 +531,64 @@ fun ShowCard(
                     )
                     val actionButtonBg = if (isLight) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.08f)
 
-                    // Left Hero Action: Signature ColorOS 17 50% Capsule Watch Pill
-                    if (!show.watchUrl.isNullOrEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(percent = 50))
-                                .background(if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB))
-                                .clickable { onWatchClick(show.watchUrl ?: "") }
-                                .colorOSPressBounce(pressedScale = 0.94f)
-                                .padding(horizontal = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    // Left Hero Actions: Watch pill and/or Details button
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (!show.watchUrl.isNullOrEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .height(36.dp)
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(if (isLight) Color(0xFF0072E5) else Color(0xFF0082FB))
+                                    .clickable { onWatchClick(show.watchUrl) }
+                                    .colorOSPressBounce(pressedScale = 0.94f)
+                                    .padding(horizontal = 12.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.PlayArrow,
-                                    contentDescription = "Watch",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.White
-                                )
-                                Text(
-                                    text = "Watch",
-                                    fontSize = 13.sp,
-                                    fontFamily = JustSansFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.PlayArrow,
+                                        contentDescription = "Watch",
+                                        modifier = Modifier.size(15.dp),
+                                        tint = Color.White
+                                    )
+                                    Text(
+                                        text = "Watch",
+                                        fontSize = 12.5.sp,
+                                        fontFamily = JustSansFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
                             }
                         }
-                    } else {
-                        // Clean Details pill
+
+                        // Clean Details button (Pill with label if no watchUrl or wide screen; icon button if both exist on compact screen)
                         Box(
                             modifier = Modifier
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(percent = 50))
-                                .background(actionButtonBg)
-                                .border(0.75.dp, actionButtonBorder, RoundedCornerShape(percent = 50))
+                                .height(36.dp)
+                                .then(
+                                    if (show.watchUrl.isNullOrEmpty() || screenWidthDp >= 400) {
+                                        Modifier
+                                            .clip(RoundedCornerShape(percent = 50))
+                                            .background(actionButtonBg)
+                                            .border(0.75.dp, actionButtonBorder, RoundedCornerShape(percent = 50))
+                                            .padding(horizontal = 12.dp)
+                                    } else {
+                                        Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(actionButtonBg)
+                                            .border(0.75.dp, actionButtonBorder, CircleShape)
+                                    }
+                                )
                                 .clickable { onCardClick(show) }
-                                .colorOSPressBounce(pressedScale = 0.94f)
-                                .padding(horizontal = 14.dp),
+                                .colorOSPressBounce(pressedScale = 0.92f),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -560,30 +597,32 @@ fun ShowCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Info,
-                                    contentDescription = null,
+                                    contentDescription = "Details",
                                     modifier = Modifier.size(15.dp),
                                     tint = if (isLight) Color(0xFF475569) else Color(0xFF94A3B8)
                                 )
-                                Text(
-                                    text = "Details",
-                                    fontSize = 12.5.sp,
-                                    fontFamily = JustSansFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (isLight) Color(0xFF0F172A) else Color.White
-                                )
+                                if (show.watchUrl.isNullOrEmpty() || screenWidthDp >= 400) {
+                                    Text(
+                                        text = "Details",
+                                        fontSize = 12.sp,
+                                        fontFamily = JustSansFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isLight) Color(0xFF0F172A) else Color.White
+                                    )
+                                }
                             }
                         }
                     }
 
                     // Action Circular Buttons (Favorite, Notify, Edit, Delete)
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Favorite Heart Button
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(
                                     if (show.isFavorite == 1) Color(0xFFFF2D55).copy(alpha = if (isLight) 0.15f else 0.22f)
@@ -603,7 +642,7 @@ fun ShowCard(
                                 imageVector = if (show.isFavorite == 1) Icons.Outlined.Favorite
                                 else Icons.Outlined.FavoriteBorder,
                                 contentDescription = "Favorite",
-                                modifier = Modifier.size(17.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = if (show.isFavorite == 1) Color(0xFFFF2D55)
                                 else (if (isLight) Color(0xFF64748B) else Color(0xFFA0A6B5))
                             )
@@ -612,7 +651,7 @@ fun ShowCard(
                         // Notification Bell Button
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(
                                     if (show.alarmRequestCode != null) Color(0xFF0082FB).copy(alpha = if (isLight) 0.15f else 0.22f)
@@ -632,7 +671,7 @@ fun ShowCard(
                                 imageVector = if (show.alarmRequestCode != null) Icons.Outlined.Notifications
                                 else Icons.Outlined.NotificationsNone,
                                 contentDescription = "Notifications",
-                                modifier = Modifier.size(17.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = if (show.alarmRequestCode != null) Color(0xFF0082FB)
                                 else (if (isLight) Color(0xFF64748B) else Color(0xFFA0A6B5))
                             )
@@ -641,7 +680,7 @@ fun ShowCard(
                         // Edit Pencil Button
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(actionButtonBg)
                                 .border(0.75.dp, actionButtonBorder, CircleShape)
@@ -652,7 +691,7 @@ fun ShowCard(
                             Icon(
                                 imageVector = Icons.Outlined.Edit,
                                 contentDescription = "Edit",
-                                modifier = Modifier.size(17.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = if (isLight) Color(0xFF64748B) else Color(0xFFA0A6B5)
                             )
                         }
@@ -660,7 +699,7 @@ fun ShowCard(
                         // Delete Trash Button
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFFF3B30).copy(alpha = if (isLight) 0.08f else 0.12f))
                                 .border(
@@ -680,7 +719,7 @@ fun ShowCard(
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
                                 contentDescription = "Delete",
-                                modifier = Modifier.size(17.dp),
+                                modifier = Modifier.size(16.dp),
                                 tint = Color(0xFFFF3B30).copy(alpha = 0.85f)
                             )
                         }

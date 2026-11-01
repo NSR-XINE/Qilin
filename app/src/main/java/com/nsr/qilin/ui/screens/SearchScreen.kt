@@ -491,6 +491,7 @@ fun SearchScreen(
                                     onEpIncrement = onIncrement,
                                     onEpDecrement = onDecrement,
                                     onCardClick = onShowClickById,
+                                    cardClickable = true,
                                     highlightQuery = query
                                 )
                             }
@@ -550,7 +551,8 @@ fun SearchScreen(
                                     onNotifyToggle = {},
                                     onEpIncrement = {},
                                     onEpDecrement = {},
-                                    onCardClick = { showToAdd = show }
+                                    onCardClick = { showToAdd = show },
+                                    cardClickable = true
                                 )
                             }
                         }
