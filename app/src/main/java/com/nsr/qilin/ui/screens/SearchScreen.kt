@@ -270,23 +270,10 @@ fun SearchScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = "🔥",
-                                                fontSize = 15.sp
-                                            )
-                                            Text(
-                                                text = "Trending on AniList",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 16.sp,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                        }
+                                        SearchSectionTitle("Trending on AniList", Color(0xFF02A9FF))
                                         Text(
                                             text = "Top Donghua",
+                                            fontFamily = JustSansFamily,
                                             fontSize = 11.5.sp,
                                             fontWeight = FontWeight.Medium,
                                             color = Color(0xFF02A9FF)
@@ -1495,13 +1482,14 @@ private fun SearchSectionTitle(title: String, color: Color = MaterialTheme.color
         Box(
             modifier = Modifier
                 .width(4.dp)
-                .height(13.dp)
+                .height(14.dp)
                 .clip(RoundedCornerShape(2.dp))
                 .background(color)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = title,
+            fontFamily = JustSansFamily,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = color
@@ -1526,8 +1514,7 @@ private fun TrendingDonghuaCard(
     Column(
         modifier = Modifier
             .width(112.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .colorOSPressBounce(pressedScale = 0.95f, onClick = onClick)
     ) {
         Box(
             modifier = Modifier
@@ -1558,6 +1545,7 @@ private fun TrendingDonghuaCard(
                 ) {
                     Text(
                         text = "★ ${media.averageScore}%",
+                        fontFamily = JustSansFamily,
                         color = Color(0xFFFFB300),
                         fontWeight = FontWeight.Bold,
                         fontSize = 9.sp
@@ -1576,6 +1564,7 @@ private fun TrendingDonghuaCard(
                 ) {
                     Text(
                         text = "In Library",
+                        fontFamily = JustSansFamily,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 9.5.sp
@@ -1584,32 +1573,39 @@ private fun TrendingDonghuaCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = media.preferredTitle,
+                fontFamily = JustSansFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.5.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 16.5.sp,
+                modifier = Modifier.heightIn(min = 34.dp)
+            )
 
-        Text(
-            text = media.preferredTitle,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            lineHeight = 15.sp
-        )
+            Spacer(modifier = Modifier.height(3.dp))
 
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = buildString {
-                if (media.episodes > 0) append("${media.episodes} eps")
-                if (media.releaseYear != null && media.releaseYear > 0) {
-                    if (isNotEmpty()) append(" • ")
-                    append(media.releaseYear)
-                }
-            }.ifEmpty { media.status?.replaceFirstChar { it.uppercase() } ?: "Donghua" },
-            fontSize = 10.5.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+            Text(
+                text = buildString {
+                    if (media.episodes > 0) append("${media.episodes} eps")
+                    if (media.releaseYear != null && media.releaseYear > 0) {
+                        if (isNotEmpty()) append(" • ")
+                        append(media.releaseYear)
+                    }
+                }.ifEmpty { media.status?.replaceFirstChar { it.uppercase() } ?: "Donghua" },
+                fontFamily = JustSansFamily,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
