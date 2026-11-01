@@ -167,15 +167,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            var isDataReady by remember { mutableStateOf(false) }
+            val minLoadingDuration = 3200L
+
             LaunchedEffect(Unit) {
+                val startTime = System.currentTimeMillis()
                 val readyFlow = combine(
                     homeViewModel.uiState,
                     showsViewModel.isLoading
                 ) { home, sLoading ->
                     !home.isLoading && !sLoading
                 }
-                withTimeoutOrNull(4000L) {
+                withTimeoutOrNull(6000L) {
                     readyFlow.filter { it }.first()
+                }
+                isDataReady = true
+                val elapsed = System.currentTimeMillis() - startTime
+                val remaining = minLoadingDuration - elapsed
+                if (remaining > 0L) {
+                    delay(remaining)
                 }
                 isAppLoading = false
             }
@@ -1091,7 +1101,9 @@ class MainActivity : ComponentActivity() {
             ) {
                 AppLoadingScreen(
                     isDark = settingsState.themeMode.lowercase() != "light",
-                    isAmoled = settingsState.themeMode.lowercase() == "amoled"
+                    isAmoled = settingsState.themeMode.lowercase() == "amoled",
+                    isDataReady = isDataReady,
+                    targetDurationMillis = minLoadingDuration
                 )
             }
         }
