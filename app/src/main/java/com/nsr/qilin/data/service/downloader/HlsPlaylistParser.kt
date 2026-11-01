@@ -18,7 +18,9 @@ object HlsPlaylistParser {
         val isFmp4: Boolean = false,
         val initSegmentUrl: String? = null,
         val keyUrl: String? = null,
-        val keyIv: String? = null
+        val keyIv: String? = null,
+        val byteRangeOffset: Long? = null,
+        val byteRangeLength: Long? = null
     )
 
     data class Variant(
@@ -122,6 +124,9 @@ object HlsPlaylistParser {
         var currentInitSegment: String? = null
         var currentKeyUrl: String? = null
         var currentKeyIv: String? = null
+        var currentByteRangeOffset: Long? = null
+        var currentByteRangeLength: Long? = null
+        var previousByteRangeEnd: Long = 0L
         var segmentIndex = 0
 
         var i = 0
@@ -153,6 +158,17 @@ object HlsPlaylistParser {
                         currentKeyIv = null
                     }
                 }
+                line.startsWith("#EXT-X-BYTERANGE:") -> {
+                    val spec = line.substringAfter(':')
+                    val parts = spec.split('@')
+                    val length = parts[0].trim().toLongOrNull()
+                    val offset = if (parts.size > 1) parts[1].trim().toLongOrNull() else previousByteRangeEnd
+                    currentByteRangeLength = length
+                    currentByteRangeOffset = offset
+                    if (length != null && offset != null) {
+                        previousByteRangeEnd = offset + length
+                    }
+                }
                 line.startsWith("#EXTINF:") -> {
                     val durationStr = line.substringAfter(':').substringBefore(',')
                     val duration = durationStr.toDoubleOrNull() ?: 0.0
@@ -160,10 +176,33 @@ object HlsPlaylistParser {
 
                     var j = i + 1
                     while (j < lines.size && lines[j].startsWith("#")) {
-                        if (lines[j].startsWith("#EXT-X-MAP:")) {
-                            val attrs = parseAttributes(lines[j].substringAfter(':'))
+                        val subLine = lines[j]
+                        if (subLine.startsWith("#EXT-X-MAP:")) {
+                            val attrs = parseAttributes(subLine.substringAfter(':'))
                             attrs["URI"]?.let { uri ->
                                 currentInitSegment = resolveUrl(baseUri, uri)
+                            }
+                        } else if (subLine.startsWith("#EXT-X-KEY:")) {
+                            val attrs = parseAttributes(subLine.substringAfter(':'))
+                            val method = attrs["METHOD"] ?: "NONE"
+                            if (!method.equals("NONE", ignoreCase = true)) {
+                                attrs["URI"]?.let { uri ->
+                                    currentKeyUrl = resolveUrl(baseUri, uri)
+                                }
+                                currentKeyIv = attrs["IV"]
+                            } else {
+                                currentKeyUrl = null
+                                currentKeyIv = null
+                            }
+                        } else if (subLine.startsWith("#EXT-X-BYTERANGE:")) {
+                            val spec = subLine.substringAfter(':')
+                            val parts = spec.split('@')
+                            val length = parts[0].trim().toLongOrNull()
+                            val offset = if (parts.size > 1) parts[1].trim().toLongOrNull() else previousByteRangeEnd
+                            currentByteRangeLength = length
+                            currentByteRangeOffset = offset
+                            if (length != null && offset != null) {
+                                previousByteRangeEnd = offset + length
                             }
                         }
                         j++
@@ -180,11 +219,35 @@ object HlsPlaylistParser {
                                 isFmp4 = isFmp4,
                                 initSegmentUrl = currentInitSegment,
                                 keyUrl = currentKeyUrl,
-                                keyIv = currentKeyIv
+                                keyIv = currentKeyIv,
+                                byteRangeOffset = currentByteRangeOffset,
+                                byteRangeLength = currentByteRangeLength
                             )
                         )
+                        currentByteRangeOffset = null
+                        currentByteRangeLength = null
                         i = j
                     }
+                }
+                !line.startsWith("#") -> {
+                    // Direct segment URL without #EXTINF tag
+                    val segmentUrl = resolveUrl(baseUri, line)
+                    val isFmp4 = currentInitSegment != null || segmentUrl.endsWith(".m4s", ignoreCase = true)
+                    segments.add(
+                        MediaSegment(
+                            url = segmentUrl,
+                            duration = targetDuration.toDouble(),
+                            index = segmentIndex++,
+                            isFmp4 = isFmp4,
+                            initSegmentUrl = currentInitSegment,
+                            keyUrl = currentKeyUrl,
+                            keyIv = currentKeyIv,
+                            byteRangeOffset = currentByteRangeOffset,
+                            byteRangeLength = currentByteRangeLength
+                        )
+                    )
+                    currentByteRangeOffset = null
+                    currentByteRangeLength = null
                 }
             }
             i++

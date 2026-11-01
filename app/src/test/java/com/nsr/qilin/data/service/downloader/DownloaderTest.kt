@@ -199,4 +199,39 @@ class DownloaderTest {
         assertFalse(request.headers.names().contains("Invalid\nKey"))
         assertFalse(request.headers.names().contains(""))
     }
+
+    @Test
+    fun testHlsPlaylistParser_byteRangeAndSlidingWindow() {
+        val m3u8 = """
+            #EXTM3U
+            #EXT-X-VERSION:4
+            #EXT-X-TARGETDURATION:6
+            #EXT-X-MEDIA-SEQUENCE:100
+            #EXTINF:6.0,
+            #EXT-X-BYTERANGE:500000@0
+            video.mp4
+            #EXTINF:6.0,
+            #EXT-X-BYTERANGE:450000@500000
+            video.mp4
+        """.trimIndent() // Note: No #EXT-X-ENDLIST (sliding window live/rolling stream)
+
+        val baseUri = "https://example.com/vod/playlist.m3u8"
+        val result = HlsPlaylistParser.parse(m3u8, baseUri)
+
+        assertTrue(result is HlsPlaylistParser.ParsedHlsResult.Media)
+        val media = (result as HlsPlaylistParser.ParsedHlsResult.Media).media
+
+        assertFalse(media.hasEndList)
+        assertEquals(2, media.segments.size)
+
+        val seg0 = media.segments[0]
+        assertEquals("https://example.com/vod/video.mp4", seg0.url)
+        assertEquals(500000L, seg0.byteRangeLength)
+        assertEquals(0L, seg0.byteRangeOffset)
+
+        val seg1 = media.segments[1]
+        assertEquals("https://example.com/vod/video.mp4", seg1.url)
+        assertEquals(450000L, seg1.byteRangeLength)
+        assertEquals(500000L, seg1.byteRangeOffset)
+    }
 }

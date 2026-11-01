@@ -31,7 +31,8 @@ class SegmentDownloader(
         segmentUrl: String,
         outputFile: File,
         logPrefix: String = "Segment",
-        segmentIdentifier: Any = 0
+        segmentIdentifier: Any = 0,
+        byteRange: Pair<Long, Long>? = null
     ): Long {
         if (outputFile.exists() && outputFile.length() > 0) {
             return outputFile.length()
@@ -45,6 +46,9 @@ class SegmentDownloader(
 
             try {
                 val requestBuilder = Request.Builder().url(segmentUrl).applySafeHeaders(headers)
+                if (byteRange != null) {
+                    requestBuilder.header("Range", "bytes=${byteRange.first}-${byteRange.second}")
+                }
 
                 client.newCall(requestBuilder.build()).execute().use { response ->
                     if (response.code == 404 || response.code == 410) {
@@ -52,7 +56,7 @@ class SegmentDownloader(
                         return 0L
                     }
 
-                    if (!response.isSuccessful) {
+                    if (!response.isSuccessful && response.code != 206) {
                         throw IOException("HTTP ${response.code} downloading segment $segmentIdentifier")
                     }
 

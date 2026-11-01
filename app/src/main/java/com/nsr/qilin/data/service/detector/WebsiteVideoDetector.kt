@@ -45,6 +45,31 @@ class WebsiteVideoDetector(
                 Log.d(TAG, msg)
             } catch (ignored: Throwable) {}
         }
+
+        fun formatBytes(bytes: Long): String {
+            if (bytes <= 0L) return "0 B"
+            val kb = bytes / 1024.0
+            val mb = kb / 1024.0
+            val gb = mb / 1024.0
+            return when {
+                gb >= 1.0 -> String.format(java.util.Locale.US, "%.1f GB", gb)
+                mb >= 1.0 -> String.format(java.util.Locale.US, "%.0f MB", mb)
+                kb >= 1.0 -> String.format(java.util.Locale.US, "%.0f KB", kb)
+                else -> "$bytes B"
+            }
+        }
+
+        fun formatDuration(totalSeconds: Long): String {
+            if (totalSeconds <= 0L) return ""
+            val s = totalSeconds % 60
+            val m = (totalSeconds / 60) % 60
+            val h = totalSeconds / 3600
+            return if (h > 0) {
+                String.format(java.util.Locale.US, "%d:%02d:%02d", h, m, s)
+            } else {
+                String.format(java.util.Locale.US, "%02d:%02d", m, s)
+            }
+        }
     }
 
     private val inspectedUrls = ConcurrentHashMap.newKeySet<String>()
@@ -159,6 +184,22 @@ class WebsiteVideoDetector(
 
         when (parsed) {
             is HlsPlaylistParser.ParsedHlsResult.Master -> {
+                val firstVariantUrl = parsed.master.variants.firstOrNull()?.url
+                if (!firstVariantUrl.isNullOrEmpty()) {
+                    try {
+                        val childReq = Request.Builder().url(firstVariantUrl).applySafeHeaders(headers).build()
+                        client.newCall(childReq).execute().use { childResp ->
+                            if (childResp.isSuccessful) {
+                                val childBody = childResp.body.string()
+                                val childParsed = HlsPlaylistParser.parse(childBody, firstVariantUrl)
+                                if (childParsed is HlsPlaylistParser.ParsedHlsResult.Media) {
+                                    durationSec = childParsed.media.totalDuration
+                                }
+                            }
+                        }
+                    } catch (ignored: Throwable) {}
+                }
+
                 parsed.master.variants.forEach { v ->
                     val h = v.resolution?.substringAfter('x')?.toIntOrNull()
                     val badge = if (h != null && h > 0) "${h}p" else {
@@ -174,7 +215,7 @@ class WebsiteVideoDetector(
                             url = v.url,
                             quality = badge,
                             bandwidth = v.bandwidth,
-                            resolution = v.resolution,
+                            resolution = v.resolution ?: (if (h != null && h > 0) "${(h * 16) / 9}x$h" else null),
                             codecs = v.codecs
                         )
                     )
@@ -182,13 +223,31 @@ class WebsiteVideoDetector(
             }
             is HlsPlaylistParser.ParsedHlsResult.Media -> {
                 durationSec = parsed.media.totalDuration
-                val guessedQuality = guessQualityFromUrl(url)
-                variants.add(
-                    VideoQualityVariant(
-                        url = url,
-                        quality = guessedQuality ?: "AUTO"
+                val guessedQuality = guessQualityFromUrl(url) ?: "1080p"
+                val baseH = guessedQuality.removeSuffix("p").toIntOrNull() ?: 1080
+                val standardHeights = listOf(1080, 720, 480, 360).filter { it <= baseH }
+                val targetHeights = if (standardHeights.isNotEmpty()) standardHeights else listOf(baseH)
+
+                targetHeights.forEach { h ->
+                    val bw = when (h) {
+                        1080 -> 2_800_000L
+                        720 -> 1_500_000L
+                        480 -> 800_000L
+                        360 -> 450_000L
+                        else -> 1_000_000L
+                    }
+                    val variantUrl = if (h == baseH) url else {
+                        url.replace("${baseH}p", "${h}p").replace("$baseH", "$h")
+                    }
+                    variants.add(
+                        VideoQualityVariant(
+                            url = variantUrl,
+                            quality = "${h}p",
+                            bandwidth = bw,
+                            resolution = "${(h * 16) / 9}x$h"
+                        )
                     )
-                )
+                }
             }
             null -> {
                 val guessedQuality = guessQualityFromUrl(url)
@@ -288,13 +347,26 @@ class WebsiteVideoDetector(
 
     fun toQualityOptions(
         detected: DetectedVideo,
-        currentPlaybackHeight: Int = 0
+        currentPlaybackHeight: Int = 0,
+        containerFormat: String = "MP4"
     ): List<DownloadQualityOption> {
+        val durationFormatted = if (detected.durationSec > 0) formatDuration(detected.durationSec.toLong()) else null
+
         if (detected.variants.isNotEmpty()) {
             return detected.variants.map { variant ->
                 val h = variant.quality
-                val sizeStr = if (variant.bandwidth > 0) "${variant.bandwidth / 1000} kbps" else null
+                val sizeBytes = if (variant.bandwidth > 0 && detected.durationSec > 0) {
+                    ((variant.bandwidth / 8.0) * detected.durationSec).toLong()
+                } else 0L
+                val sizeStr = if (sizeBytes > 0) formatBytes(sizeBytes)
+                              else if (variant.bandwidth > 0) "${variant.bandwidth / 1000} kbps"
+                              else null
                 val isCurrentHeight = h.removeSuffix("p").toIntOrNull() == currentPlaybackHeight
+
+                val durPrefix = if (!durationFormatted.isNullOrEmpty()) "$durationFormatted • " else ""
+                val resStr = variant.resolution ?: h
+                val subtitle = "$durPrefix$resStr • ${sizeStr ?: "Direct Stream"}"
+
                 DownloadQualityOption(
                     id = "detected_${variant.quality}_${variant.url.hashCode()}",
                     title = when (h) {
@@ -306,28 +378,37 @@ class WebsiteVideoDetector(
                         "360p" -> "360p Data Saver"
                         else -> "$h Stream"
                     },
-                    subtitle = "Website Stream • ${variant.resolution ?: h} • ${sizeStr ?: "Direct CDN"}",
+                    subtitle = subtitle,
                     badge = h,
                     formatId = variant.url,
                     isAudio = false,
                     fileSizeFormatted = sizeStr,
                     isSyncedFromWebsite = true,
-                    isPlayingNow = isCurrentHeight
+                    isPlayingNow = isCurrentHeight,
+                    durationFormatted = durationFormatted,
+                    resolution = resStr,
+                    containerFormat = containerFormat
                 )
             }.distinctBy { it.badge }.sortedByDescending { it.badge.removeSuffix("p").toIntOrNull() ?: 0 }
         } else {
             val badge = detected.quality ?: "DIRECT"
+            val sizeStr = if (detected.contentLength > 0) {
+                formatBytes(detected.contentLength)
+            } else null
+            val durPrefix = if (!durationFormatted.isNullOrEmpty()) "$durationFormatted • " else ""
             return listOf(
                 DownloadQualityOption(
                     id = "detected_direct_${detected.url.hashCode()}",
                     title = if (badge != "DIRECT") "$badge Website Stream" else "Website Video Stream",
-                    subtitle = "Direct stream detected from website",
+                    subtitle = "${durPrefix}Direct stream detected from website",
                     badge = badge,
                     formatId = detected.url,
                     isAudio = detected.contentType == ContentType.AUDIO,
-                    fileSizeFormatted = if (detected.contentLength > 0) "${detected.contentLength / (1024 * 1024)} MB" else null,
+                    fileSizeFormatted = sizeStr,
                     isSyncedFromWebsite = true,
-                    isPlayingNow = true
+                    isPlayingNow = true,
+                    durationFormatted = durationFormatted,
+                    containerFormat = if (detected.contentType == ContentType.AUDIO) "M4A" else containerFormat
                 )
             )
         }

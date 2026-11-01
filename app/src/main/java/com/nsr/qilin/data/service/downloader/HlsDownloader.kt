@@ -41,7 +41,8 @@ class HlsDownloader(
     suspend fun download(
         m3u8Url: String,
         downloadDir: File,
-        outputFileName: String
+        outputFileName: String,
+        outputFormat: String = "mp4"
     ): File = withContext(Dispatchers.IO) {
         if (!downloadDir.exists()) downloadDir.mkdirs()
 
@@ -74,7 +75,47 @@ class HlsDownloader(
         val resolvedMediaPlaylist = mediaPlaylist
             ?: throw IOException("Could not resolve media playlist from $m3u8Url after $iterations redirects")
 
-        val segments = resolvedMediaPlaylist.segments
+        // Dynamic sliding window accumulation if #EXT-X-ENDLIST is absent
+        val allSegments = mutableListOf<HlsPlaylistParser.MediaSegment>()
+        allSegments.addAll(resolvedMediaPlaylist.segments)
+        val knownSegmentUrls = resolvedMediaPlaylist.segments.map { it.url }.toMutableSet()
+        var hasEnd = resolvedMediaPlaylist.hasEndList
+
+        if (!hasEnd && allSegments.size < 25) {
+            Log.d(TAG, "Sliding window HLS detected (#EXT-X-ENDLIST absent). Polling for segments...")
+            var consecutiveEmpty = 0
+            val pollDelayMs = (resolvedMediaPlaylist.targetDuration * 1000L).coerceIn(1500L, 5000L)
+            while (!hasEnd && consecutiveEmpty < 6 && !controller.isInterrupted()) {
+                kotlinx.coroutines.delay(pollDelayMs)
+                try {
+                    val freshText = fetchText(currentUrl)
+                    val freshParsed = HlsPlaylistParser.parse(freshText, currentUrl)
+                    if (freshParsed is HlsPlaylistParser.ParsedHlsResult.Media) {
+                        var added = 0
+                        freshParsed.media.segments.forEach { seg ->
+                            if (knownSegmentUrls.add(seg.url)) {
+                                allSegments.add(seg.copy(index = allSegments.size))
+                                added++
+                            }
+                        }
+                        if (added > 0) {
+                            consecutiveEmpty = 0
+                            Log.d(TAG, "Accumulated $added new segments (total=${allSegments.size})")
+                        } else {
+                            consecutiveEmpty++
+                        }
+                        if (freshParsed.media.hasEndList) {
+                            hasEnd = true
+                            Log.d(TAG, "Found #EXT-X-ENDLIST; stream complete.")
+                        }
+                    }
+                } catch (pollEx: Exception) {
+                    consecutiveEmpty++
+                }
+            }
+        }
+
+        val segments = allSegments
         if (segments.isEmpty()) {
             throw IOException("No segments found in HLS playlist")
         }
@@ -199,11 +240,15 @@ class HlsDownloader(
                         if (controller.isInterrupted()) {
                             throw CancellationException("Download interrupted")
                         }
+                        val byteRange = if (segment.byteRangeLength != null && segment.byteRangeOffset != null) {
+                            Pair(segment.byteRangeOffset, segment.byteRangeOffset + segment.byteRangeLength - 1)
+                        } else null
                         val downloaded = segmentDownloader.download(
                             segmentUrl = segment.url,
                             outputFile = segFile,
                             logPrefix = "HLS",
-                            segmentIdentifier = segment.index
+                            segmentIdentifier = segment.index,
+                            byteRange = byteRange
                         )
                         if (downloaded > 0) {
                             downloadedBytesCount.addAndGet(downloaded)
@@ -223,7 +268,13 @@ class HlsDownloader(
         updateProgress(force = true)
 
         // 6. Concatenate segments into final output file
-        val finalExt = if (isFmp4) "mp4" else "ts"
+        val finalExt = when {
+            outputFormat.equals("mkv", ignoreCase = true) -> "mkv"
+            outputFormat.equals("ts", ignoreCase = true) -> "ts"
+            outputFormat.equals("mp3", ignoreCase = true) -> "mp3"
+            outputFormat.equals("m4a", ignoreCase = true) -> "m4a"
+            else -> "mp4"
+        }
         val cleanName = if (outputFileName.contains(".")) outputFileName.substringBeforeLast('.') else outputFileName
         val finalFile = File(downloadDir, "$cleanName.$finalExt")
 

@@ -40,11 +40,34 @@ class WebsiteVideoDetectorTest {
         assertTrue(VideoUtils.isSegmentUrl("https://example.com/subtitles/sub.srt"))
         assertTrue(VideoUtils.isSegmentUrl("https://example.com/hls/segment/42"))
 
+        // Progressive chunk patterns that must be detected as segments (not full files)
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/chunk_1.mp4"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/frag-002.mp4"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/part1.mp4"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/video_0001.mp4"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/media.mp4?range=0-1048576"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/media.mp4?bytes=0-50000"))
+        assertTrue(VideoUtils.isSegmentUrl("https://example.com/stream/media.mp4?start=0&end=1000"))
+
         assertFalse(VideoUtils.isSegmentUrl("https://example.com/stream/playlist.m3u8"))
         assertFalse(VideoUtils.isSegmentUrl("https://example.com/dash/manifest.mpd"))
         assertFalse(VideoUtils.isSegmentUrl("https://example.com/video.mp4"))
         assertFalse(VideoUtils.isSegmentUrl("https://example.com/video.mkv"))
         assertFalse(VideoUtils.isSegmentUrl("https://example.com/audio.m4a"))
+    }
+
+    @Test
+    fun testWebsiteVideoDetector_formattingHelpers() {
+        assertEquals("0 B", WebsiteVideoDetector.formatBytes(0))
+        assertEquals("500 B", WebsiteVideoDetector.formatBytes(500))
+        assertEquals("2 KB", WebsiteVideoDetector.formatBytes(1536))
+        assertEquals("100 MB", WebsiteVideoDetector.formatBytes(100 * 1024 * 1024))
+        assertEquals("1.5 GB", WebsiteVideoDetector.formatBytes((1.5 * 1024 * 1024 * 1024).toLong()))
+
+        assertEquals("", WebsiteVideoDetector.formatDuration(0))
+        assertEquals("00:45", WebsiteVideoDetector.formatDuration(45))
+        assertEquals("24:15", WebsiteVideoDetector.formatDuration(1455))
+        assertEquals("1:05:30", WebsiteVideoDetector.formatDuration(3930))
     }
 
     @Test

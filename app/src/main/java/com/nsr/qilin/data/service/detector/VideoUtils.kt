@@ -16,7 +16,11 @@ object VideoUtils {
     )
 
     private val SEGMENT_REGEX = Regex(
-        "\\.(ts|m4s|key|vtt|srt)(\\?.*)?$|/segment[/\\d_\\-]+|/seg[/\\d_\\-]+|range=\\d+-\\d+",
+        "\\.(ts|m4s|key|vtt|srt)(\\?.*)?$|" +
+        "/(segment|seg|chunk|part|frag|fragment|slice)[/_\\-\\d]|" +
+        "[/_\\-](chunk|part|frag|segment|seg|slice)[_\\-\\d]|" +
+        "[/_\\-](\\d{3,5})\\.(mp4|m4s|ts)|" +
+        "(range|bytes|start|end|part|chunk)=\\d+",
         RegexOption.IGNORE_CASE
     )
 

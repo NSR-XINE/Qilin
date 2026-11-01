@@ -162,10 +162,12 @@ class DownloadService : Service() {
                         url.contains(".m3u8", ignoreCase = true) ||
                         url.contains("/hls/", ignoreCase = true)
                 val isResume = intent.getBooleanExtra("resume", false)
+                val format = intent.getStringExtra("format") ?: if (isAudioOnly) "m4a" else "mp4"
+                val resolution = intent.getStringExtra("resolution") ?: "HD"
 
                 pausedIds.remove(downloadId)
                 cancelledIds.remove(downloadId)
-                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly, isHls, isResume)
+                startDownload(downloadId, url, formatId, title, path, expectedSize, referer, isAudioOnly, isHls, isResume, format, resolution)
             }
             "PAUSE_DOWNLOAD" -> {
                 val downloadId = intent.getStringExtra("downloadId")
@@ -215,7 +217,9 @@ class DownloadService : Service() {
         referer: String? = null,
         isAudioOnly: Boolean = false,
         isHls: Boolean = false,
-        isResume: Boolean = false
+        isResume: Boolean = false,
+        format: String = "mp4",
+        resolution: String = "HD"
     ) {
         try {
             if (wakeLock?.isHeld == false) {
@@ -475,7 +479,7 @@ class DownloadService : Service() {
                         try {
                             if (hls) {
                                 downloadedFile = withContext(Dispatchers.IO) {
-                                    downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, controller) { percent, speed, down, total, eta ->
+                                    downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, format, controller) { percent, speed, down, total, eta ->
                                         publishProgressExplicit(percent, speed, down, total, eta)
                                     }
                                 }
@@ -497,7 +501,7 @@ class DownloadService : Service() {
                     Log.i(TAG, "Engaging HlsDownloader native parallel engine for $id")
                     try {
                         downloadedFile = withContext(Dispatchers.IO) {
-                            downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, controller) { percent, speed, down, total, eta ->
+                            downloadNativeHls(url, tempDir, sanitizedTitle, finalReferer, format, controller) { percent, speed, down, total, eta ->
                                 publishProgressExplicit(percent, speed, down, total, eta)
                             }
                         }
@@ -923,6 +927,7 @@ class DownloadService : Service() {
         tempDir: File,
         fileName: String,
         referer: String?,
+        format: String = "mp4",
         controller: FileBasedDownloadController,
         onProgress: (Float, Long, Long, Long, Long) -> Unit
     ): File? {
@@ -948,7 +953,8 @@ class DownloadService : Service() {
         return hlsDownloader.download(
             m3u8Url = url,
             downloadDir = tempDir,
-            outputFileName = fileName
+            outputFileName = fileName,
+            outputFormat = format
         )
     }
 

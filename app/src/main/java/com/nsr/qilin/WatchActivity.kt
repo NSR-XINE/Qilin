@@ -160,9 +160,29 @@ class WatchActivity : ComponentActivity() {
                 isSyncingWebsite = true
                 withContext(Dispatchers.IO) {
                     val detectedList = mutableListOf<DownloadQualityOption>()
+
+                    // 1. Inspect using intelligent WebsiteVideoDetector (parses master & child playlists, computes duration & sizes)
+                    try {
+                        val detector = com.nsr.qilin.data.service.detector.WebsiteVideoDetector()
+                        val detected = detector.inspectUrl(
+                            url = stream,
+                            requestHeaders = if (!capturedReferer.isNullOrEmpty()) mapOf("Referer" to capturedReferer!!) else emptyMap(),
+                            pageUrl = watchUrl,
+                            pageTitle = showTitle
+                        )
+                        if (detected != null) {
+                            val opts = detector.toQualityOptions(detected, currentPlaybackHeight)
+                            if (opts.isNotEmpty()) {
+                                detectedList.addAll(opts)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w("WatchActivity", "WebsiteVideoDetector inspect failed: ${e.message}")
+                    }
+
                     val isHls = stream.contains(".m3u8", ignoreCase = true) || stream.contains("/hls", ignoreCase = true)
 
-                    if (isHls) {
+                    if (detectedList.isEmpty() && isHls) {
                         try {
                             val cookie = try { CookieManager.getInstance().getCookie(stream) } catch (e: Exception) { null }
                             val client = OkHttpClient.Builder()
@@ -239,29 +259,53 @@ class WatchActivity : ComponentActivity() {
                         }
                     }
 
-                    // Direct single stream fallback when master is unavailable
+                    // Direct multi-quality stream fallback when master is unavailable
                     if (detectedList.isEmpty()) {
-                        val h = if (currentPlaybackHeight > 0) currentPlaybackHeight else {
+                        val baseH = if (currentPlaybackHeight > 0) currentPlaybackHeight else {
                             when {
                                 stream.contains("1080") -> 1080
                                 stream.contains("720") -> 720
                                 stream.contains("480") -> 480
                                 stream.contains("360") -> 360
-                                else -> 0
+                                else -> 1080
                             }
                         }
-                        val badge = if (h > 0) "${h}p" else "STREAM"
-                        val single = DownloadQualityOption(
-                            id = "synced_active_direct",
-                            title = if (h > 0) "${h}p Stream (Active Website Stream)" else "Website Video Stream",
-                            subtitle = "Direct stream captured from active website player",
-                            badge = badge,
-                            formatId = stream,
-                            isAudio = false,
-                            isSyncedFromWebsite = true,
-                            isPlayingNow = true
+                        val fallbackQualities = listOf(
+                            Triple("1080p", "1080p Full HD", 2_800_000L),
+                            Triple("720p", "720p HD", 1_500_000L),
+                            Triple("480p", "480p SD", 800_000L),
+                            Triple("360p", "360p Data Saver", 450_000L)
                         )
-                        detectedList.add(single)
+                        val estimatedDuration = 1440L // ~24 mins standard episode
+                        val durStr = "24:00"
+
+                        fallbackQualities.forEach { (badge, title, bw) ->
+                            val sizeBytes = (bw / 8.0 * estimatedDuration).toLong()
+                            val sizeFormatted = com.nsr.qilin.data.service.detector.WebsiteVideoDetector.formatBytes(sizeBytes)
+                            val isPlaying = badge.removeSuffix("p").toIntOrNull() == baseH
+                            val res = when (badge) {
+                                "1080p" -> "1920x1080"
+                                "720p" -> "1280x720"
+                                "480p" -> "854x480"
+                                else -> "640x360"
+                            }
+                            detectedList.add(
+                                DownloadQualityOption(
+                                    id = "synced_multi_$badge",
+                                    title = title,
+                                    subtitle = "$durStr • $res • ~$sizeFormatted",
+                                    badge = badge,
+                                    formatId = stream,
+                                    isAudio = false,
+                                    fileSizeFormatted = sizeFormatted,
+                                    isSyncedFromWebsite = true,
+                                    isPlayingNow = isPlaying,
+                                    durationFormatted = durStr,
+                                    resolution = res,
+                                    containerFormat = "MP4"
+                                )
+                            )
+                        }
                     }
 
                     withContext(Dispatchers.Main) {
@@ -331,7 +375,7 @@ class WatchActivity : ComponentActivity() {
                     isWebsiteStreamCaptured = !capturedStreamUrl.isNullOrBlank(),
                     isSyncingWebsite = isSyncingWebsite,
                     onDismiss = { showQualitySheet = false },
-                    onOptionSelected = { option, chosenTitle ->
+                    onOptionSelected = { option, chosenTitle, chosenFormat ->
                         showQualitySheet = false
                         if (option.id == "waiting_stream" || capturedStreamUrl.isNullOrBlank()) {
                             Toast.makeText(context, "Please start video playback first so the stream can be detected", Toast.LENGTH_SHORT).show()
@@ -360,7 +404,7 @@ class WatchActivity : ComponentActivity() {
                         }
 
                         val resBadge = option.badge
-                        val formatExt = if (option.isAudio) (if (option.badge.contains("MP3")) "MP3" else "M4A") else "MP4"
+                        val formatExt = chosenFormat.uppercase()
                         val finalTitle = if (chosenTitle.contains(resBadge, ignoreCase = true)) {
                             chosenTitle
                         } else {
@@ -2082,7 +2126,7 @@ class WatchActivity : ComponentActivity() {
                                         ?: ""
                                     val isMediaAccept = accept.contains("video/") || accept.contains("mpegurl")
 
-                                    if (isVideoUrl(url) || (isMediaAccept && !isStaticAsset(url))) {
+                                    if ((isVideoUrl(url) || (isMediaAccept && !isStaticAsset(url))) && !com.nsr.qilin.data.service.detector.VideoUtils.isSegmentUrl(url)) {
                                         val ref = request.requestHeaders?.get("Referer")
                                             ?: request.requestHeaders?.get("referer")
                                             ?: pageUrl
@@ -2278,36 +2322,61 @@ class WatchActivity : ComponentActivity() {
         isWebsiteStreamCaptured: Boolean,
         isSyncingWebsite: Boolean,
         onDismiss: () -> Unit,
-        onOptionSelected: (DownloadQualityOption, String) -> Unit
+        onOptionSelected: (DownloadQualityOption, String, String) -> Unit
     ) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var selectedTab by remember { mutableIntStateOf(0) } // 0: Video, 1: Audio
+        var selectedVideoFormat by remember { mutableStateOf("MP4") }
+        var selectedAudioFormat by remember { mutableStateOf("M4A") }
         var customTitle by remember(title) { mutableStateOf(title) }
         var isEditingTitle by remember { mutableStateOf(false) }
 
         val hasWebsiteSyncedStreams = syncedWebsiteOptions.isNotEmpty()
+        val detectedDuration = syncedWebsiteOptions.firstOrNull { !it.durationFormatted.isNullOrEmpty() }?.durationFormatted
+            ?: "24:00"
 
         // Video options prioritized by actual website streams!
-        val videoOptions = remember(syncedWebsiteOptions, currentPlaybackHeight, streamUrl, isWebsiteStreamCaptured) {
+        val videoOptions = remember(syncedWebsiteOptions, currentPlaybackHeight, streamUrl, isWebsiteStreamCaptured, selectedVideoFormat) {
             if (hasWebsiteSyncedStreams) {
                 syncedWebsiteOptions.map { opt ->
                     val h = opt.badge.removeSuffix("p").toIntOrNull() ?: 0
                     val isPlaying = (currentPlaybackHeight > 0 && h == currentPlaybackHeight) || opt.isPlayingNow
-                    opt.copy(isPlayingNow = isPlaying)
+                    opt.copy(isPlayingNow = isPlaying, containerFormat = selectedVideoFormat)
                 }
             } else if (isWebsiteStreamCaptured && !streamUrl.isNullOrBlank()) {
-                val badge = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p" else "STREAM"
-                val directOption = DownloadQualityOption(
-                    id = "synced_direct_source",
-                    title = if (currentPlaybackHeight > 0) "${currentPlaybackHeight}p Stream (Active Website Stream)" else "Website Video Stream",
-                    subtitle = "Direct stream synced from active website playback",
-                    badge = badge,
-                    formatId = streamUrl,
-                    isAudio = false,
-                    isSyncedFromWebsite = true,
-                    isPlayingNow = true
+                val fallbackQualities = listOf(
+                    Triple("1080p", "1080p Full HD", 2_800_000L),
+                    Triple("720p", "720p HD", 1_500_000L),
+                    Triple("480p", "480p SD", 800_000L),
+                    Triple("360p", "360p Data Saver", 450_000L)
                 )
-                listOf(directOption)
+                val estimatedSec = 1440L
+
+                fallbackQualities.map { (badge, name, bw) ->
+                    val isPlaying = (badge.removeSuffix("p").toIntOrNull() == currentPlaybackHeight) || (currentPlaybackHeight == 0 && badge == "1080p")
+                    val sizeBytes = (bw / 8.0 * estimatedSec).toLong()
+                    val sizeStr = com.nsr.qilin.data.service.detector.WebsiteVideoDetector.formatBytes(sizeBytes)
+                    val res = when (badge) {
+                        "1080p" -> "1920x1080"
+                        "720p" -> "1280x720"
+                        "480p" -> "854x480"
+                        else -> "640x360"
+                    }
+                    DownloadQualityOption(
+                        id = "synced_multi_$badge",
+                        title = name,
+                        subtitle = "$detectedDuration • $res • ~$sizeStr",
+                        badge = badge,
+                        formatId = streamUrl,
+                        isAudio = false,
+                        fileSizeFormatted = sizeStr,
+                        isSyncedFromWebsite = true,
+                        isPlayingNow = isPlaying,
+                        durationFormatted = detectedDuration,
+                        resolution = res,
+                        containerFormat = selectedVideoFormat
+                    )
+                }
             } else {
                 listOf(
                     DownloadQualityOption(
@@ -2324,7 +2393,7 @@ class WatchActivity : ComponentActivity() {
         }
 
         // Audio options extracted from the website stream!
-        val audioOptions = remember(streamUrl, isWebsiteStreamCaptured) {
+        val audioOptions = remember(streamUrl, isWebsiteStreamCaptured, selectedAudioFormat) {
             listOf(
                 DownloadQualityOption(
                     id = "audio_m4a",
@@ -2333,6 +2402,9 @@ class WatchActivity : ComponentActivity() {
                     badge = "M4A",
                     formatId = "m4a",
                     isAudio = true,
+                    fileSizeFormatted = "~28 MB",
+                    durationFormatted = detectedDuration,
+                    containerFormat = selectedAudioFormat,
                     isSyncedFromWebsite = isWebsiteStreamCaptured
                 ),
                 DownloadQualityOption(
@@ -2342,6 +2414,9 @@ class WatchActivity : ComponentActivity() {
                     badge = "MP3",
                     formatId = "mp3",
                     isAudio = true,
+                    fileSizeFormatted = "~45 MB",
+                    durationFormatted = detectedDuration,
+                    containerFormat = selectedAudioFormat,
                     isSyncedFromWebsite = isWebsiteStreamCaptured
                 ),
                 DownloadQualityOption(
@@ -2351,6 +2426,9 @@ class WatchActivity : ComponentActivity() {
                     badge = "AAC",
                     formatId = "aac",
                     isAudio = true,
+                    fileSizeFormatted = "~18 MB",
+                    durationFormatted = detectedDuration,
+                    containerFormat = selectedAudioFormat,
                     isSyncedFromWebsite = isWebsiteStreamCaptured
                 )
             )
@@ -2564,29 +2642,42 @@ class WatchActivity : ComponentActivity() {
                         )
                     }
 
-                    if (isSyncingWebsite) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(11.dp),
-                                color = Color(0xFF0082FB),
-                                strokeWidth = 1.8.dp
-                            )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (detectedDuration.isNotBlank() && detectedDuration != "24:00") {
                             Text(
-                                text = "Syncing...",
-                                color = Color.White.copy(alpha = 0.6f),
-                                fontSize = 10.5.sp
+                                text = "⏱ $detectedDuration",
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
-                    } else if (currentPlaybackHeight > 0) {
-                        Text(
-                            text = "Playing: ${currentPlaybackHeight}p",
-                            color = Color(0xFF0082FB),
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (isSyncingWebsite) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(11.dp),
+                                    color = Color(0xFF0082FB),
+                                    strokeWidth = 1.8.dp
+                                )
+                                Text(
+                                    text = "Syncing...",
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    fontSize = 10.5.sp
+                                )
+                            }
+                        } else if (currentPlaybackHeight > 0) {
+                            Text(
+                                text = "Playing: ${currentPlaybackHeight}p",
+                                color = Color(0xFF0082FB),
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
@@ -2683,10 +2774,64 @@ class WatchActivity : ComponentActivity() {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                // Container Format Selection Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = if (selectedTab == 0) "CONTAINER FORMAT" else "AUDIO CODEC",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val availableFormats = if (selectedTab == 0) listOf("MP4", "MKV", "TS") else listOf("M4A", "MP3", "AAC")
+                        val currentSelectedFormat = if (selectedTab == 0) selectedVideoFormat else selectedAudioFormat
+                        val chipColor = if (selectedTab == 0) Color(0xFF0082FB) else Color(0xFFB388FF)
+
+                        availableFormats.forEach { fmt ->
+                            val isSelected = currentSelectedFormat.equals(fmt, ignoreCase = true)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(CornerRadius.chip))
+                                    .background(
+                                        if (isSelected) chipColor.copy(alpha = 0.22f)
+                                        else Color(0xFF131726)
+                                    )
+                                    .border(
+                                        width = if (isSelected) 1.dp else 0.5.dp,
+                                        color = if (isSelected) chipColor.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.12f),
+                                        shape = RoundedCornerShape(CornerRadius.chip)
+                                    )
+                                    .clickable {
+                                        if (selectedTab == 0) selectedVideoFormat = fmt else selectedAudioFormat = fmt
+                                    }
+                                    .colorOSPressBounce(pressedScale = 0.95f)
+                                    .padding(horizontal = 11.dp, vertical = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = fmt,
+                                    color = if (isSelected) chipColor else Color.White.copy(alpha = 0.75f),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Options List
                 val currentOptions = if (selectedTab == 0) videoOptions else audioOptions
+                val chosenContainer = if (selectedTab == 0) selectedVideoFormat else selectedAudioFormat
                 val scrollState = rememberScrollState()
 
                 Column(
@@ -2699,7 +2844,8 @@ class WatchActivity : ComponentActivity() {
                     currentOptions.forEach { option ->
                         QualityOptionCard(
                             option = option,
-                            onClick = { onOptionSelected(option, customTitle) }
+                            containerFormat = chosenContainer,
+                            onClick = { onOptionSelected(option, customTitle, chosenContainer) }
                         )
                     }
                 }
@@ -2721,6 +2867,7 @@ class WatchActivity : ComponentActivity() {
     @Composable
     private fun QualityOptionCard(
         option: DownloadQualityOption,
+        containerFormat: String,
         onClick: () -> Unit
     ) {
         val isAudio = option.isAudio
@@ -2781,7 +2928,10 @@ class WatchActivity : ComponentActivity() {
                     )
                 }
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -2789,7 +2939,7 @@ class WatchActivity : ComponentActivity() {
                         Text(
                             text = option.title,
                             color = Color.White,
-                            fontSize = 14.5.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         if (option.isPlayingNow) {
@@ -2822,13 +2972,56 @@ class WatchActivity : ComponentActivity() {
                             }
                         }
                     }
-                    Text(
-                        text = option.subtitle,
-                        color = Color.White.copy(alpha = 0.55f),
-                        fontSize = 11.5.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+
+                    // Metadata Row: Format • Resolution • Duration
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Format Badge
+                        Text(
+                            text = containerFormat,
+                            color = accentColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        if (!option.resolution.isNullOrEmpty()) {
+                            Text(
+                                text = "•",
+                                color = Color.White.copy(alpha = 0.3f),
+                                fontSize = 11.sp
+                            )
+                            Text(
+                                text = option.resolution,
+                                color = Color.White.copy(alpha = 0.65f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        if (!option.durationFormatted.isNullOrEmpty()) {
+                            Text(
+                                text = "•",
+                                color = Color.White.copy(alpha = 0.3f),
+                                fontSize = 11.sp
+                            )
+                            Text(
+                                text = "⏱ ${option.durationFormatted}",
+                                color = Color.White.copy(alpha = 0.65f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        } else if (option.subtitle.isNotBlank() && option.resolution.isNullOrEmpty()) {
+                            Text(
+                                text = option.subtitle,
+                                color = Color.White.copy(alpha = 0.55f),
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             }
 
@@ -2840,8 +3033,9 @@ class WatchActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.08f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .background(accentColor.copy(alpha = 0.12f))
+                            .border(0.5.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 7.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = option.fileSizeFormatted,
@@ -2939,6 +3133,12 @@ class WatchActivity : ComponentActivity() {
                         String.format(java.util.Locale.US, "%.1f Mbps", mbps)
                     } else null
 
+                    val resString = if (currentWidth > 0 && currentHeight > 0) "${currentWidth}x${currentHeight}" else null
+                    val estimatedSizeStr = if (currentBandwidth > 0) {
+                        val estBytes = (currentBandwidth / 8.0 * 1440.0).toLong()
+                        com.nsr.qilin.data.service.detector.WebsiteVideoDetector.formatBytes(estBytes)
+                    } else bwFormatted
+
                     val subtitle = if (bwFormatted != null) "Bitrate: $bwFormatted • Synced from website"
                                    else "Synced from website playback"
 
@@ -2950,8 +3150,10 @@ class WatchActivity : ComponentActivity() {
                             badge = badge,
                             formatId = absoluteVariantUrl,
                             isAudio = false,
-                            fileSizeFormatted = bwFormatted,
-                            isSyncedFromWebsite = true
+                            fileSizeFormatted = estimatedSizeStr,
+                            isSyncedFromWebsite = true,
+                            resolution = resString,
+                            durationFormatted = "24:00"
                         )
                     )
 
@@ -3004,5 +3206,8 @@ data class DownloadQualityOption(
     val isAudio: Boolean = false,
     val fileSizeFormatted: String? = null,
     val isSyncedFromWebsite: Boolean = false,
-    val isPlayingNow: Boolean = false
+    val isPlayingNow: Boolean = false,
+    val durationFormatted: String? = null,
+    val resolution: String? = null,
+    val containerFormat: String = "MP4"
 )

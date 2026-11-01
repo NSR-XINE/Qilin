@@ -243,6 +243,8 @@ object DownloadEngine {
                 putExtra("referer", referer)
             }
             putExtra("isAudioOnly", isAudioOnly)
+            putExtra("format", format)
+            putExtra("resolution", resolution)
         }
 
         try {
