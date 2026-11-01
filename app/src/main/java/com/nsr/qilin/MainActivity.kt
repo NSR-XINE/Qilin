@@ -824,18 +824,23 @@ class MainActivity : ComponentActivity() {
                         isAmoledMode = isAmoledMode,
                         isLightMode = isLightMode
                     ) {
+                        val menuScrollState = rememberScrollState()
+                        LaunchedEffect(isDrawerOpen) {
+                            if (isDrawerOpen) {
+                                menuScrollState.scrollTo(0)
+                            }
+                        }
+
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .statusBarsPadding()
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Header
-                            RevealOnEnter(index = 0, distance = 16.dp, scaleFrom = 0.94f) {
+                            // Pinned Header (Always visible and reachable at the top)
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 14.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -920,12 +925,20 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            }
 
-                            // AniList drawer card (opens AniList screen)
-                            val aniListUser by AniListService.userFlow.collectAsState()
-                            RevealOnEnter(index = 1, distance = 18.dp, scaleFrom = 0.94f) {
-                            AniListDrawerCard(
+                            // Scrollable Drawer Body
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f, fill = false)
+                                    .verticalScroll(menuScrollState)
+                                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // AniList drawer card (opens AniList screen)
+                                val aniListUser by AniListService.userFlow.collectAsState()
+                                RevealOnEnter(index = 0, distance = 16.dp, scaleFrom = 0.94f) {
+                                AniListDrawerCard(
                                 user = aniListUser,
                                 isLight = isLightMode,
                                 isSelected = currentRoute == "anilist",
@@ -1079,6 +1092,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
 
             AnimatedVisibility(
                 visible = isAppLoading,
