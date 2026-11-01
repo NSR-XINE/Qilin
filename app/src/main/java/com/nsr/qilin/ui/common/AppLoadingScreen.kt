@@ -1,10 +1,8 @@
 package com.nsr.qilin.ui.common
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -12,11 +10,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,8 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,21 +42,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nsr.qilin.R
 import com.nsr.qilin.ui.theme.ColorOSMotion
 import com.nsr.qilin.ui.theme.OnePlusSansFamily
+import kotlinx.coroutines.delay
 
 /**
  * ColorOS 17 / OxygenOS 17 Signature App Loading Experience.
  * Features:
+ * - Strictly Monotonic Progress (never decreases, never jumps up & down)
+ * - Fixed baseline typography (zero physical vertical shift or jitter)
  * - Ambient Aurora Canvas with breathing multi-layered radial bloom
  * - Specular liquid glass pedestal with dual counter-orbiting celestial arcs
  * - Floating breathing dragon crest with micro-bob physical motion
  * - Metallic specular shimmer sweep across "QILIN" brand typography
  * - Dynamic fluid capsule progress beam with glowing leading point
- * - Staged animated status updates & real-time numeric percentage tracking
  * - Bottom flagship engine anchor badge
  */
 @Composable
@@ -149,61 +150,56 @@ fun AppLoadingScreen(
         label = "loadingEnter"
     )
 
-    // Coordinated Progress Simulation matching target loading duration
-    val progress = remember { Animatable(0f) }
-    LaunchedEffect(targetDurationMillis) {
-        // Phase 1: Fast initial ignition to 30%
-        progress.animateTo(
-            targetValue = 0.30f,
-            animationSpec = tween(
-                durationMillis = (targetDurationMillis * 0.26f).toInt(),
-                easing = FastOutSlowInEasing
-            )
-        )
-        // Phase 2: Steady network & catalog sync to 68%
-        progress.animateTo(
-            targetValue = 0.68f,
-            animationSpec = tween(
-                durationMillis = (targetDurationMillis * 0.38f).toInt(),
-                easing = LinearEasing
-            )
-        )
-        // Phase 3: Finalizing repositories to 92%
-        progress.animateTo(
-            targetValue = 0.92f,
-            animationSpec = tween(
-                durationMillis = (targetDurationMillis * 0.24f).toInt(),
-                easing = FastOutSlowInEasing
-            )
-        )
-        // Phase 4: Settle to 100%
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = (targetDurationMillis * 0.12f).toInt(),
-                easing = LinearOutSlowInEasing
-            )
-        )
-    }
+    // Strictly Monotonic Progress Driver (Mathematically Guaranteed Non-Decreasing)
+    var maxPercent by rememberSaveable { mutableIntStateOf(0) }
+    var currentProgress by rememberSaveable { mutableFloatStateOf(0f) }
+    val startTime = rememberSaveable { mutableLongStateOf(System.currentTimeMillis()) }
 
-    // Smooth snap to 1f if data becomes ready near the end
-    LaunchedEffect(isDataReady) {
-        if (isDataReady && progress.value >= 0.88f && progress.value < 1f) {
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 250, easing = LinearOutSlowInEasing)
-            )
+    LaunchedEffect(targetDurationMillis) {
+        while (maxPercent < 100) {
+            val elapsed = (System.currentTimeMillis() - startTime.longValue).coerceAtLeast(0L)
+            val raw = (elapsed.toFloat() / targetDurationMillis).coerceIn(0f, 1f)
+
+            // Organic progressive easing curve
+            val eased = if (raw < 0.35f) {
+                (raw / 0.35f) * 0.40f
+            } else if (raw < 0.80f) {
+                0.40f + ((raw - 0.35f) / 0.45f) * 0.45f
+            } else {
+                0.85f + ((raw - 0.80f) / 0.20f) * 0.15f
+            }
+
+            val calculated = (eased * 100).toInt().coerceIn(0, 100)
+            if (calculated > maxPercent) {
+                maxPercent = calculated
+            }
+            if (eased > currentProgress) {
+                currentProgress = eased
+            }
+
+            if (raw >= 1f || maxPercent >= 100) {
+                maxPercent = 100
+                currentProgress = 1f
+                break
+            }
+            delay(16L) // 60fps smooth progression
         }
     }
 
-    val currentProgress = progress.value.coerceIn(0f, 1f)
+    // Accelerate to 100% when data is fully ready near the finish
+    LaunchedEffect(isDataReady) {
+        if (isDataReady && maxPercent >= 88 && maxPercent < 100) {
+            maxPercent = 100
+            currentProgress = 1f
+        }
+    }
+
     val statusText = when {
-        currentProgress < 0.28f -> "Initializing Tidal Engine..."
-        currentProgress < 0.65f -> "Connecting to Donghua Repositories..."
-        currentProgress < 0.92f -> "Syncing Episode Catalog..."
+        maxPercent < 25 -> "Initializing Tidal Engine..."
+        maxPercent < 60 -> "Connecting to archive..."
+        maxPercent < 90 -> "Syncing episode catalog..."
         else -> "Welcome to Qilin"
     }
-    val percentInt = (currentProgress * 100).toInt().coerceIn(0, 100)
 
     Box(
         modifier = modifier
@@ -389,7 +385,7 @@ fun AppLoadingScreen(
             Spacer(modifier = Modifier.height(34.dp))
 
             // Fluid Liquid Progress Capsule Bar
-            val capsuleWidth = 220.dp
+            val capsuleWidth = 240.dp
             val capsuleHeight = 5.dp
 
             Box(
@@ -437,44 +433,55 @@ fun AppLoadingScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Dynamic Status Stage Label & Percentage
+            // Fixed-Height Row for Status & Percentage: Locked coordinates with ZERO vertical shift
             Row(
-                modifier = Modifier.width(capsuleWidth),
+                modifier = Modifier
+                    .width(capsuleWidth)
+                    .height(22.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AnimatedContent(
-                    targetState = statusText,
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(220, easing = ColorOSMotion.EmphasizedDecelerate)) +
-                            slideInVertically(
-                                animationSpec = tween(220, easing = ColorOSMotion.EmphasizedDecelerate),
-                                initialOffsetY = { it / 2 }
-                            )) togetherWith
-                            (fadeOut(animationSpec = tween(180, easing = ColorOSMotion.EmphasizedAccelerate)) +
-                                slideOutVertically(
-                                    animationSpec = tween(180, easing = ColorOSMotion.EmphasizedAccelerate),
-                                    targetOffsetY = { -it / 2 }
-                                ))
-                    },
-                    label = "statusTransition"
-                ) { animatedText ->
-                    Text(
-                        text = animatedText,
-                        fontFamily = OnePlusSansFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = textColor.copy(alpha = 0.55f)
-                    )
+                // Left: Fixed-height Status label using smooth crossfade (no vertical offset/slide)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(22.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Crossfade(
+                        targetState = statusText,
+                        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+                        label = "statusCrossfade"
+                    ) { animatedText ->
+                        Text(
+                            text = animatedText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontFamily = OnePlusSansFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = textColor.copy(alpha = 0.55f)
+                        )
+                    }
                 }
 
-                Text(
-                    text = "$percentInt%",
-                    fontFamily = OnePlusSansFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    color = accent
-                )
+                // Right: Percentage indicator with locked width and end-alignment (no jumping)
+                Box(
+                    modifier = Modifier
+                        .width(44.dp)
+                        .height(22.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Text(
+                        text = "$maxPercent%",
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                        fontFamily = OnePlusSansFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        color = accent
+                    )
+                }
             }
         }
 
