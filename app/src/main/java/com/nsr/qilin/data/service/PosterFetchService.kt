@@ -451,14 +451,84 @@ object PosterFetchService {
         }
     }
 
-    fun resolveWatchUrl(showTitle: String, customWatchUrl: String?, providerPreference: String): String {
-        if (providerPreference.lowercase() == "direct" && !customWatchUrl.isNullOrBlank()) {
-            return customWatchUrl
+    fun formatCustomUrl(template: String, query: String): String {
+        if (template.isBlank()) return ""
+        var trimmed = template.trim()
+        if (!trimmed.startsWith("http://", ignoreCase = true) &&
+            !trimmed.startsWith("https://", ignoreCase = true) &&
+            !trimmed.startsWith("file://", ignoreCase = true) &&
+            !trimmed.startsWith("content://", ignoreCase = true) &&
+            !trimmed.startsWith("/")
+        ) {
+            trimmed = "https://$trimmed"
         }
-        return when (providerPreference.lowercase()) {
+        val encodedQuery = try {
+            URLEncoder.encode(query, "UTF-8")
+        } catch (_: Exception) {
+            query
+        }
+        return when {
+            trimmed.contains("{title}", ignoreCase = true) ->
+                trimmed.replace("{title}", encodedQuery, ignoreCase = true)
+            trimmed.contains("{query}", ignoreCase = true) ->
+                trimmed.replace("{query}", encodedQuery, ignoreCase = true)
+            trimmed.contains("{search}", ignoreCase = true) ->
+                trimmed.replace("{search}", encodedQuery, ignoreCase = true)
+            trimmed.contains("{q}", ignoreCase = true) ->
+                trimmed.replace("{q}", encodedQuery, ignoreCase = true)
+            trimmed.endsWith("=") || trimmed.endsWith("?") ->
+                "$trimmed$encodedQuery"
+            trimmed.endsWith("/") ->
+                "$trimmed?s=$encodedQuery"
+            trimmed.contains("?") ->
+                "$trimmed&$encodedQuery"
+            else ->
+                "$trimmed/?s=$encodedQuery"
+        }
+    }
+
+    fun resolveWatchUrl(
+        showTitle: String,
+        customWatchUrl: String?,
+        providerPreference: String,
+        customProviderUrl: String? = null
+    ): String {
+        val normPref = providerPreference.lowercase().trim()
+
+        // 1. If this specific show has an individual custom watch URL explicitly saved on it:
+        if (!customWatchUrl.isNullOrBlank()) {
+            val url = customWatchUrl.trim()
+            return if (!url.startsWith("http://", ignoreCase = true) &&
+                !url.startsWith("https://", ignoreCase = true) &&
+                !url.startsWith("file://", ignoreCase = true) &&
+                !url.startsWith("content://", ignoreCase = true) &&
+                !url.startsWith("/")
+            ) {
+                "https://$url"
+            } else {
+                url
+            }
+        }
+
+        // 2. If provider preference is direct or custom:
+        if (normPref == "direct" || normPref == "custom") {
+            if (!customProviderUrl.isNullOrBlank()) {
+                return formatCustomUrl(customProviderUrl, showTitle)
+            }
+            return getDonghuaStreamUrl(showTitle)
+        }
+
+        // 3. Built-in providers:
+        return when (normPref) {
             "luciferdonghua" -> getLuciferDonghuaUrl(showTitle)
             "donghuastream" -> getDonghuaStreamUrl(showTitle)
-            else -> if (!customWatchUrl.isNullOrBlank()) customWatchUrl else getDonghuaStreamUrl(showTitle)
+            else -> {
+                if (!customProviderUrl.isNullOrBlank()) {
+                    formatCustomUrl(customProviderUrl, showTitle)
+                } else {
+                    getDonghuaStreamUrl(showTitle)
+                }
+            }
         }
     }
 }

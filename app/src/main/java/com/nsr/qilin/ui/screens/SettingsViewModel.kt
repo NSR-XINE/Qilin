@@ -39,6 +39,7 @@ data class SettingsUiState(
     val showRecent: Boolean = true,
     val autoOpenKeyboard: Boolean = true,
     val defaultStreamProvider: String = "donghuastream",
+    val customStreamUrl: String = "",
     val adBlockerEnabled: Boolean = true
 )
 
@@ -51,6 +52,7 @@ data class DashboardPrefs(
 data class StreamPrefs(
     val autoOpenKeyboard: Boolean,
     val defaultStreamProvider: String,
+    val customStreamUrl: String,
     val adBlockerEnabled: Boolean
 )
 
@@ -69,9 +71,10 @@ class SettingsViewModel @Inject constructor(
         combine(
             settingsRepository.getBoolFlow(SettingsKeys.AUTO_OPEN_KEYBOARD, true),
             settingsRepository.getSettingFlow(SettingsKeys.DEFAULT_STREAM_PROVIDER, "donghuastream"),
+            settingsRepository.getSettingFlow(SettingsKeys.CUSTOM_STREAM_URL, ""),
             AdBlocker.enabledFlow(appContext)
-        ) { autoOpen, provider, adBlocker ->
-            StreamPrefs(autoOpen, provider, adBlocker)
+        ) { autoOpen, provider, customUrl, adBlocker ->
+            StreamPrefs(autoOpen, provider, customUrl, adBlocker)
         },
         combine(
             settingsRepository.getBoolFlow(SettingsKeys.SHOW_BANNER, true),
@@ -89,6 +92,7 @@ class SettingsViewModel @Inject constructor(
             showRecent = prefs.showRecent,
             autoOpenKeyboard = streamPrefs.autoOpenKeyboard,
             defaultStreamProvider = streamPrefs.defaultStreamProvider,
+            customStreamUrl = streamPrefs.customStreamUrl,
             adBlockerEnabled = streamPrefs.adBlockerEnabled
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
@@ -133,6 +137,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setDefaultStreamProvider(provider: String) {
         viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.DEFAULT_STREAM_PROVIDER, provider) }
+    }
+
+    fun setCustomStreamUrl(url: String) {
+        viewModelScope.launch { settingsRepository.putSetting(SettingsKeys.CUSTOM_STREAM_URL, url.trim()) }
     }
 
     suspend fun exportBackup(context: Context): File? {

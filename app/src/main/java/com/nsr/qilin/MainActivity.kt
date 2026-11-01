@@ -188,7 +188,9 @@ class MainActivity : ComponentActivity() {
 
             val launchWatch: (String) -> Unit = remember(allShows) {
                 { url: String ->
-                    val targetShow = allShows.find { it.watchUrl == url }
+                    val targetShow = allShows.find {
+                        it.watchUrl == url || (it.title.isNotBlank() && url.contains(it.title, ignoreCase = true))
+                    }
                     val intent = Intent(this@MainActivity, WatchActivity::class.java).apply {
                         putExtra("watch_url", url)
                         putExtra("show_title", targetShow?.title ?: "Donghua Episode")
@@ -548,6 +550,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = homeViewModel,
                                 topPadding = innerPadding.calculateTopPadding(),
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
+                                customStreamUrl = settingsState.customStreamUrl,
                                 onSearchClick = {
                                     isSearchOpen = true
                                 },
@@ -633,6 +636,7 @@ class MainActivity : ComponentActivity() {
                                 showId = showIdArg,
                                 viewModel = showsViewModel,
                                 defaultStreamProvider = settingsState.defaultStreamProvider,
+                                customStreamUrl = settingsState.customStreamUrl,
                                 onWatchClick = launchWatch,
                                 onEditClick = { show ->
                                     navController.navigate("add_edit_show?showId=${show.id}")

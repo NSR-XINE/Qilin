@@ -73,7 +73,8 @@ fun ShowDetailScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     topPadding: Dp = 0.dp,
-    defaultStreamProvider: String = "donghuastream"
+    defaultStreamProvider: String = "donghuastream",
+    customStreamUrl: String = ""
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -356,7 +357,8 @@ fun ShowDetailScreen(
             val providerLabel = when (defaultStreamProvider.lowercase()) {
                 "luciferdonghua" -> "LuciferDonghua ⚡"
                 "donghuastream" -> "DonghuaStream 🎬"
-                else -> "Direct Link 🔗"
+                "direct", "custom" -> if (!show?.watchUrl.isNullOrBlank()) "Direct Link 🔗" else "Custom Stream 🌐"
+                else -> if (!show?.watchUrl.isNullOrBlank()) "Direct Link 🔗" else "Watch Stream 🎬"
             }
 
             Row(
@@ -387,7 +389,8 @@ fun ShowDetailScreen(
                                 val targetUrl = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
                                     showTitle = show.title,
                                     customWatchUrl = show.watchUrl,
-                                    providerPreference = defaultStreamProvider
+                                    providerPreference = defaultStreamProvider,
+                                    customProviderUrl = customStreamUrl
                                 )
                                 onWatchClick(targetUrl)
                             }

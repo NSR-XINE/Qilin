@@ -8,6 +8,7 @@ object SettingsKeys {
     const val SHOW_RECENT = "show_recent"
     const val AUTO_OPEN_KEYBOARD = "auto_open_keyboard"
     const val DEFAULT_STREAM_PROVIDER = "default_stream_provider"
+    const val CUSTOM_STREAM_URL = "custom_stream_url"
     const val AD_BLOCKER_ENABLED = "ad_blocker_enabled"
     const val RECENT_SEARCHES = "recent_searches"
     const val SEARCH_FREQUENCY = "search_frequency"

@@ -80,6 +80,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     topPadding: androidx.compose.ui.unit.Dp = 0.dp,
     defaultStreamProvider: String = "donghuastream",
+    customStreamUrl: String = "",
 ) {
     val state by viewModel.uiState.collectAsState()
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -120,7 +121,8 @@ fun HomeScreen(
                                     val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
                                         showTitle = media.preferredTitle,
                                         customWatchUrl = null,
-                                        providerPreference = defaultStreamProvider
+                                        providerPreference = defaultStreamProvider,
+                                        customProviderUrl = customStreamUrl
                                     )
                                     onWatchClick(url)
                                 }
@@ -157,7 +159,8 @@ fun HomeScreen(
                                             val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
                                                 showTitle = media.preferredTitle,
                                                 customWatchUrl = null,
-                                                providerPreference = defaultStreamProvider
+                                                providerPreference = defaultStreamProvider,
+                                                customProviderUrl = customStreamUrl
                                             )
                                             onWatchClick(url)
                                         }
@@ -203,7 +206,8 @@ fun HomeScreen(
                                     val url = com.nsr.qilin.data.service.PosterFetchService.resolveWatchUrl(
                                         showTitle = show.title,
                                         customWatchUrl = show.watchUrl,
-                                        providerPreference = defaultStreamProvider
+                                        providerPreference = defaultStreamProvider,
+                                        customProviderUrl = customStreamUrl
                                     )
                                     onWatchClick(url)
                                 }

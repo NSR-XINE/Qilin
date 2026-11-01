@@ -115,13 +115,25 @@ class WatchActivity : ComponentActivity() {
             hideSystemUI()
         }
 
-        val watchUrl = intent.getStringExtra("watch_url") ?: ""
+        val rawWatchUrl = intent.getStringExtra("watch_url")?.trim() ?: ""
         val showTitle = intent.getStringExtra("show_title") ?: "Donghua Episode"
 
-        if (watchUrl.isBlank()) {
+        if (rawWatchUrl.isBlank()) {
             Toast.makeText(this, "Empty stream URL", Toast.LENGTH_SHORT).show()
             finish()
             return
+        }
+
+        val watchUrl = if (
+            !rawWatchUrl.startsWith("/") &&
+            !rawWatchUrl.startsWith("file://") &&
+            !rawWatchUrl.startsWith("content://") &&
+            !rawWatchUrl.startsWith("http://", ignoreCase = true) &&
+            !rawWatchUrl.startsWith("https://", ignoreCase = true)
+        ) {
+            "https://$rawWatchUrl"
+        } else {
+            rawWatchUrl
         }
 
         val isLocalFile = watchUrl.startsWith("/") || watchUrl.startsWith("file://") || watchUrl.startsWith("content://")

@@ -7,8 +7,14 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import com.nsr.qilin.ui.theme.ColorOSMotion
+import com.nsr.qilin.ui.theme.CornerRadius
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -30,6 +36,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -514,15 +521,23 @@ fun SettingsScreen(
                             val providers = listOf(
                                 Triple("donghuastream", "DonghuaStream", "donghuastream.org"),
                                 Triple("luciferdonghua", "LuciferDonghua", "luciferdonghua.in"),
-                                Triple("direct", "Custom Saved URL", "Direct show URL")
+                                Triple(
+                                    "direct",
+                                    "Custom Streaming URL",
+                                    if (uiState.customStreamUrl.isNotBlank()) uiState.customStreamUrl else "Direct show URL or custom provider template"
+                                )
                             )
+
+                            val clipboardManager = LocalClipboardManager.current
+                            var customUrlInput by remember(uiState.customStreamUrl) { mutableStateOf(uiState.customStreamUrl) }
 
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 providers.forEach { (key, title, domain) ->
-                                    val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true)
+                                    val isSelected = uiState.defaultStreamProvider.equals(key, ignoreCase = true) ||
+                                            (key == "direct" && uiState.defaultStreamProvider.equals("custom", ignoreCase = true))
                                     val providerIcon: ImageVector = when (key) {
                                         "donghuastream" -> Icons.Rounded.Tv
                                         "luciferdonghua" -> Icons.Rounded.AutoAwesome
@@ -544,6 +559,40 @@ fun SettingsScreen(
                                         isDark = isDark,
                                         onClick = { viewModel.setDefaultStreamProvider(key) }
                                     )
+
+                                    if (key == "direct") {
+                                        AnimatedVisibility(
+                                            visible = isSelected,
+                                            enter = expandVertically() + fadeIn(),
+                                            exit = shrinkVertically() + fadeOut()
+                                        ) {
+                                            OxygenCustomUrlCard(
+                                                customUrl = customUrlInput,
+                                                isDark = isDark,
+                                                onUrlChange = { newUrl ->
+                                                    customUrlInput = newUrl
+                                                    viewModel.setCustomStreamUrl(newUrl)
+                                                },
+                                                onPaste = {
+                                                    val clipText = clipboardManager.getText()?.text?.trim().orEmpty()
+                                                    if (clipText.isNotBlank()) {
+                                                        customUrlInput = clipText
+                                                        viewModel.setCustomStreamUrl(clipText)
+                                                        Haptics.tick()
+                                                        Toast.makeText(context, "URL pasted from clipboard", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                },
+                                                onClear = {
+                                                    customUrlInput = ""
+                                                    viewModel.setCustomStreamUrl("")
+                                                    Haptics.tick()
+                                                    Toast.makeText(context, "Custom URL cleared (using direct show URLs)", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1198,6 +1247,186 @@ private fun OxygenProviderItem(
                         contentDescription = "Selected",
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(12.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OxygenCustomUrlCard(
+    customUrl: String,
+    isDark: Boolean,
+    onUrlChange: (String) -> Unit,
+    onPaste: () -> Unit,
+    onClear: () -> Unit
+) {
+    val cardShape = RoundedCornerShape(16.dp)
+    val specularBorder = Brush.linearGradient(
+        colors = listOf(
+            if (isDark) Color.White.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.08f),
+            if (isDark) Color.White.copy(alpha = 0.04f) else Color.Black.copy(alpha = 0.02f)
+        )
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(cardShape)
+            .background(
+                if (isDark) Color(0xFF161B22).copy(alpha = 0.70f)
+                else Color(0xFFF6F8FA).copy(alpha = 0.90f),
+                cardShape
+            )
+            .border(1.dp, specularBorder, cardShape)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Edit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Custom Donghua Stream URL",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (customUrl.isNotBlank()) Color(0xFF43A047).copy(alpha = 0.18f)
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    text = if (customUrl.isNotBlank()) "URL Active" else "Per-Show Link",
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (customUrl.isNotBlank()) Color(0xFF43A047) else MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = customUrl,
+            onValueChange = onUrlChange,
+            placeholder = {
+                Text(
+                    text = "e.g. https://donghuastream.org/?s= or https://site.com/?s={title}",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.12f),
+                focusedContainerColor = if (isDark) Color.Black.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.6f),
+                unfocusedContainerColor = if (isDark) Color.Black.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.4f)
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Rounded.Language,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            trailingIcon = {
+                if (customUrl.isNotBlank()) {
+                    IconButton(
+                        onClick = onClear,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = "Clear",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = onPaste,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ContentPaste,
+                            contentDescription = "Paste",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        )
+
+        Text(
+            text = "💡 Use {title} as query placeholder or leave query blank to append show title automatically. If this field is empty, the player will use each donghua's individual custom watch link.",
+            fontSize = 11.sp,
+            lineHeight = 15.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+        )
+
+        // Presets quick chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val presets = listOf(
+                "DonghuaWorld" to "https://donghuaworld.net/?s=",
+                "AnimeSchedule" to "https://animeschedule.net",
+                "DonghuaStream" to "https://donghuastream.org/?s=",
+                "LuciferDonghua" to "https://luciferdonghua.in/?s="
+            )
+
+            presets.forEach { (label, presetUrl) ->
+                val isCurrent = customUrl.equals(presetUrl, ignoreCase = true)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(CornerRadius.pill))
+                        .background(
+                            if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+                            else if (isDark) Color.White.copy(alpha = 0.06f) else Color.Black.copy(alpha = 0.04f)
+                        )
+                        .border(
+                            1.dp,
+                            if (isCurrent) MaterialTheme.colorScheme.primary
+                            else if (isDark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f),
+                            RoundedCornerShape(CornerRadius.pill)
+                        )
+                        .clickable {
+                            Haptics.tick()
+                            onUrlChange(presetUrl)
+                        }
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 11.sp,
+                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
